@@ -1,0 +1,22 @@
+name: Deploy to Firebase
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip game
+        run: |
+          n=$(ls *.zip | wc -l)
+          if [ "$n" -ne 1 ]; then echo "Потрібен рівно один .zip файл, зараз: $n"; exit 1; fi
+          mkdir site && unzip -q *.zip -d site
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: popal-4da6b
+          entryPoint: site
