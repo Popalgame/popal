@@ -105,7 +105,7 @@ function planFor(){const P=GC('P'),it=ITEMS[cur],y0=py==null?H(P.x,P.z):py,fd=(f
   if(at(0,fcx,fcz)){ok=false;why='Тут уже є фундамент'}
   else if(groundMin(fcx,fcz)<-.9){ok=false;why='Тут вода'}
   else if(p.y-groundMin(fcx,fcz)>3.2){ok=false;why='Занадто нерівно'}
-  else{const SP=G('SP')||[];const[x,z]=cxz(fcx,fcz);if(SP.some(s=>Math.hypot(s[0]-x,s[1]-z)<8)){ok=false;why='Занадто близько до табору'}
+  else{const C=(G('inv')||{})._cen;const[x,z]=cxz(fcx,fcz);if(!C){ok=false;why='Спершу збудуйте Попал-центр'}else{const dc=Math.hypot(C[0]-x,C[1]-z);if(dc>30){ok=false;why='Будувати можна в радіусі 30 м від Попал-центру'}else if(dc<3.6){ok=false;why='Занадто близько до Попал-центру'}}
    const wp=[...(GC('wild')||[])].concat([]);}}
  else if(it.t==1){let b=base(pcx,pcz),cx=pcx,cz=pcz,s=fd;
   if(b==null){cx=fcx;cz=fcz;s=(fd+2)%4;b=base(cx,cz)}

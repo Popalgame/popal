@@ -51,12 +51,12 @@ let T0=performance.now();
  if(anim){let end=0;try{end=anim.run(dt)}catch(e){end=1}if(end){const d=anim.done;anim=null;cdT=performance.now()+CD;d&&d();paint()}}loop()})})();
 /* --- керування --- */
 const blocked=()=>(typeof menuO!=='undefined'&&menuO)||document.body.classList.contains('hedit');
-window.palToggle=function(){if(!pals.length){msg('Спочатку зловіть істоту 🔮');return}if(anim||blocked())return;
+window.palToggle=function(){if(!pals[selP]){msg(pals.length?'З вами немає попалів: заберіть когось із Попал-центру':'Спочатку зловіть істоту 🔮');return}if(anim||blocked())return;
  if(performance.now()<cdT)return;const p=pals[selP];
  if(out){recall(()=>msg('🔮 '+T[p.ty].n+' повернувся у сферу'))}else summon(()=>msg('✨ '+T[p.ty].n+' з вами!'));paint()};
-/* ◀ ▶: обраний попал іде в табір, новий — з анімацією, якщо попал був призваний */
-const toCamp=p=>{if(!p)return;p.m.visible=true;p.m.scale.setScalar(s0(p));p.x=rn(-3,3);p.z=rn(-3,3)};
-const sw0=pwSw;pwSw=function(d){if(pals.length<2||anim||blocked())return;const old=pals[selP];
+/* ◀ ▶: обраний попал повертається у сферу (0.1.17: табору більше немає), новий — з анімацією, якщо попал був призваний */
+const toCamp=p=>{if(!p)return;p.m.scale.setScalar(s0(p))};
+const sw0=pwSw;pwSw=function(d){if(palTeam().length<2||anim||blocked())return;const old=pals[selP];
  if(!out){sw0(d);toCamp(old);paint();return}
  recall(()=>{sw0(d);toCamp(old);summon()})};
 /* портрет: дотик — призов/відкликання, довге натискання — меню захисту */

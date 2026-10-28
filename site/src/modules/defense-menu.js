@@ -7,7 +7,7 @@
  const KEY='zi_nd';
  const save2=()=>{try{localStorage.setItem(KEY,JSON.stringify(pals.map((p,i)=>p.nd?i:-1).filter(i=>i>=0)))}catch(e){}};
  try{const a=JSON.parse(localStorage.getItem(KEY)||'[]');pals.forEach((p,i)=>{p.nd=a.includes(i)})}catch(e){}
- const cur=()=>pals[selP]||pals[0];
+ const cur=()=>pals[selP];
  const paint=()=>{const p=cur();if(!p){badge.style.display='none';return}badge.style.display='block';badge.textContent=p.nd?'🚫':'🛡️';[...menu.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',(b.dataset.d==='1')===!p.nd))};
  function open(){const p=cur();if(!p){msg('Спочатку зловіть істоту');return}menu.querySelector('small').textContent=T[p.ty].n+' у бою';paint();menu.style.display='flex';const r=pm.getBoundingClientRect();menu.style.left=Math.max(4,r.left+r.width/2-75)+'px';menu.style.bottom=(innerHeight-r.top+6)+'px'}
  const close=()=>{menu.style.display='none'};
