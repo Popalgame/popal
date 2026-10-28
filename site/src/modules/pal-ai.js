@@ -35,7 +35,9 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
  switch(A.s){
  case'pick':{A.tg=null;A.t=0;
   const gj=['chop','mine','gather'].filter(j=>wk[j]);/* порядок: спершу ліс, тоді камінь, тоді ягоди й гриби */
-  if(bagW(A)>=cap*.999&&Object.keys(A.bag).length){A.s='deliver';break}
+  /* повний вантаж (або наступна порція вже не влізе) — спершу все в скриню, а тоді знову до роботи */
+  const UNIT={chop:W('w')*(wk.chop>=3?2:1),mine:W('s')*(wk.mine>=3?2:1),gather:W('be')*2};
+  if(Object.keys(A.bag).length&&(bagW(A)>=cap*.999||(gj.length&&gj.every(j=>bagW(A)+UNIT[j]>cap+1e-6)))){A.s='deliver';break}
   for(const j of gj){const e=findTarget(p,j,C);if(e){A.job=j;A.tg=e[0];A.L=e[1];A.k=e[2];e[0]._cl=p;A.s='go';break}}
   if(A.s!='pick')break;
   if(Object.keys(A.bag).length){A.s='deliver';break}
