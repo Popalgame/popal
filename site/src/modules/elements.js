@@ -12,7 +12,7 @@ window.coolF=()=>{const l=lv('cool');return l?1-.12*l:1};
 const ACT=['chop','mine','gather','carry','cook'];
 window.palWork=function(p,dt){const wk=T[p.ty].wk||{},jobs=ACT.filter(j=>wk[j]);if(!jobs.length)return;p.w=(p.w||0)+dt*(1+.15*lv('water'));if(p.w<(cf>0?7:18))return;p.w=0;p.j=((p.j||0)+1)%jobs.length;const job=jobs[p.j],L=wk[job],n=L>=3?2:1;let t='';
 switch(job){case'chop':res.w+=n;t='+'+n+' 🪵';break;
-case'mine':res.s+=n;t='+'+n+' 🪨';if(L>=3&&Math.random()<.3){inv.ore=(inv.ore||0)+1;t+=' +1 🟤'}break;
+case'mine':res.s+=n;t='+'+n+' 🪨';break;
 case'gather':{const k=Math.random()<.6?'be':'mu';inv[k]+=n;t='+'+n+(k=='be'?' 🫐':' 🍄');break}
 case'cook':if(inv.mu>=2){inv.mu-=2;inv.gm++;t='+1 🍢'}break;
 case'carry':if(cf<20){const k=['be','mu','gm','pie'].find(k=>inv[k]>0);if(k){inv[k]--;cf+=FOOD[k];t='📦 +'+FOOD[k]+' 🍖'}}break}
