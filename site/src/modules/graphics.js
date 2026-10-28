@@ -4,7 +4,7 @@ const KEY='zi_gfx';let G={fps:0,dist:1,show:0};
 try{Object.assign(G,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 const sv=()=>{try{localStorage.setItem(KEY,JSON.stringify(G))}catch(e){}};
 const FPS=[[30,'30'],[60,'60'],[0,'Без обмеження']];
-const DIST=[['Близько',45,16,42],['Середня',80,34,76],['Далеко',125,55,118],['Максимум',180,80,170]];
+const DIST=[['Близько',45,22,43],['Середня',80,44,78],['Далеко',125,70,122],['Максимум',180,100,175]];
 /* --- обмеження FPS: усі кадри гри проходять через один «насос» --- */
 const raf0=window.requestAnimationFrame.bind(window),caf0=window.cancelAnimationFrame.bind(window);
 let q=new Map(),nid=1,sched=0,last=0;

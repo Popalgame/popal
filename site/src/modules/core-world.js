@@ -1,10 +1,10 @@
 const _sh=THREE.Color.prototype.setHex;THREE.Color.prototype.setHex=function(h){_sh.call(this,h);return this.convertSRGBToLinear()};
-const R=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});R.outputEncoding=THREE.sRGBEncoding;R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.15;document.body.appendChild(R.domElement);
-const sc=new THREE.Scene();const sk=document.createElement('canvas');sk.width=2;sk.height=256;const sx=sk.getContext('2d'),gd=sx.createLinearGradient(0,0,0,256);gd.addColorStop(0,'#2f86f0');gd.addColorStop(.6,'#86c6ff');gd.addColorStop(1,'#e4f4ff');sx.fillStyle=gd;sx.fillRect(0,0,2,256);const bt=new THREE.CanvasTexture(sk);bt.encoding=THREE.sRGBEncoding;sc.background=bt;sc.fog=new THREE.Fog(0xd2ecff,34,76);
+const R=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});R.outputEncoding=THREE.sRGBEncoding;R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=.86;document.body.appendChild(R.domElement);
+const sc=new THREE.Scene();const sk=document.createElement('canvas');sk.width=2;sk.height=256;const sx=sk.getContext('2d'),gd=sx.createLinearGradient(0,0,0,256);gd.addColorStop(0,'#2f7fe0');gd.addColorStop(.6,'#7db8ef');gd.addColorStop(1,'#bcdcf3');sx.fillStyle=gd;sx.fillRect(0,0,2,256);const bt=new THREE.CanvasTexture(sk);bt.encoding=THREE.sRGBEncoding;sc.background=bt;sc.fog=new THREE.Fog(0xa9cfee,44,78);
 const cam=new THREE.PerspectiveCamera(50,1,.1,80);let ang=0,CD=8,CHt=7,LA=0,pit=.72,ly=0;
 function rs(){const cw=R.domElement.clientWidth||innerWidth,ch=R.domElement.clientHeight||innerHeight;R.setSize(cw,ch,false);const a=cw/ch;cam.aspect=a;cam.fov=50;CD=8;CHt=7;LA=0;cam.updateProjectionMatrix();try{screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}addEventListener('resize',rs);rs();
-sc.add(new THREE.HemisphereLight(0xdff0ff,0x7aa040,1));
-const sun=new THREE.DirectionalLight(0xfff0d0,1.9);sun.position.set(10,18,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-.0005;
+sc.add(new THREE.HemisphereLight(0xcde4ff,0x4f6b2e,.7));
+const sun=new THREE.DirectionalLight(0xffe6bf,2.2);sun.position.set(10,18,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-.0005;
 Object.assign(sun.shadow.camera,{left:-18,right:18,top:18,bottom:-18,near:1,far:60});sc.add(sun,sun.target);
 const gmT=(()=>{const t=new THREE.DataTexture(new Uint8Array([120,120,120,255,175,175,175,255,225,225,225,255,255,255,255,255]),4,1,THREE.RGBAFormat);t.minFilter=t.magFilter=THREE.NearestFilter;t.needsUpdate=true;return t})();
 const OM=new THREE.MeshBasicMaterial({color:0x2b1830,side:THREE.BackSide});
@@ -64,9 +64,10 @@ for(let i=0;i<GN;i++){grd0.push([rn(0,GL_),rn(0,GL_),rn(-.2,.2),rn(0,6),rn(-.2,.
 const fm=new THREE.InstancedMesh(new THREE.SphereGeometry(.09,6,4),new THREE.MeshStandardMaterial({roughness:.6}),FN),fc=[0xffffff,0xffe040,0xff5c9a,0xa870ff];
 for(let i=0;i<FN;i++){fld0.push([rn(0,GL_),rn(0,GL_)]);fm.setColorAt(i,new THREE.Color(fc[i%4]))}sc.add(fm);fm.frustumCulled=false;
 let gcx=1e9,gcz=1e9;
+const NOGR={lava:1,ash:1,snow:1},SPGR={desert:1,sand:1,rock:1};/* 0.1.16: без трави на лаві, попелі й снігу; рідка — на піску, у пустелі й на скелях */
 function regrass(cx,cz){gcx=cx;gcz=cz;
-for(let i=0;i<GN;i++){const d=grd0[i],x=d[0]+GL_*Math.round((cx-d[0])/GL_),z=d[1]+GL_*Math.round((cz-d[1])/GL_),h=H(x,z);du.position.set(x,(h<-.35||h>5.5||Math.hypot(x,z)<4.6||pathD(x,z)<1.5)?-5:h+.2,z);du.rotation.set(d[2],d[3],d[4]);du.scale.setScalar(d[5]);du.updateMatrix();gm.setMatrixAt(i,du.matrix)}
-for(let i=0;i<FN;i++){const d=fld0[i],x=d[0]+GL_*Math.round((cx-d[0])/GL_),z=d[1]+GL_*Math.round((cz-d[1])/GL_),h=H(x,z);du.position.set(x,(h<-.35||h>5.5||Math.hypot(x,z)<4.6||pathD(x,z)<1.5)?-5:h+.1,z);du.rotation.set(0,0,0);du.scale.setScalar(1);du.updateMatrix();fm.setMatrixAt(i,du.matrix)}
+for(let i=0;i<GN;i++){const d=grd0[i],x=d[0]+GL_*Math.round((cx-d[0])/GL_),z=d[1]+GL_*Math.round((cz-d[1])/GL_),h=H(x,z),bi=BIO(x,z);du.position.set(x,(h<-.35||h>5.5||Math.hypot(x,z)<4.6||pathD(x,z)<1.5||NOGR[bi]||(SPGR[bi]&&i%5))?-5:h+.2,z);du.rotation.set(d[2],d[3],d[4]);du.scale.setScalar(d[5]);du.updateMatrix();gm.setMatrixAt(i,du.matrix)}
+for(let i=0;i<FN;i++){const d=fld0[i],x=d[0]+GL_*Math.round((cx-d[0])/GL_),z=d[1]+GL_*Math.round((cz-d[1])/GL_),h=H(x,z),bi=BIO(x,z);du.position.set(x,(h<-.35||h>5.5||Math.hypot(x,z)<4.6||pathD(x,z)<1.5||NOGR[bi]||SPGR[bi])?-5:h+.1,z);du.rotation.set(0,0,0);du.scale.setScalar(1);du.updateMatrix();fm.setMatrixAt(i,du.matrix)}
 gm.instanceMatrix.needsUpdate=true;fm.instanceMatrix.needsUpdate=true}
 regrass(0,0);
 /* base */
@@ -286,7 +287,7 @@ $('pv3').appendChild(R2.domElement);$('pni').value=pname;$('pns').onclick=()=>{p
 if(t=='o'){c.innerHTML=`<div class='pcol'><h4>Графіка</h4><button class='ob' id='gqb'>Якість: ${gq?'Висока':'Низька'}</button></div>`;
 $('gqb').onclick=()=>{gq=gq?0:1;R.setPixelRatio(gq?Math.min(devicePixelRatio,2):1);sun.castShadow=!!gq;gm.visible=!!gq;rs();pfTab('o')};
 return}
-c.innerHTML=`<div id='pfv'>Версія 0.1.15</div>`}
+c.innerHTML=`<div id='pfv'>Версія 0.1.16</div>`}
 document.addEventListener('gesturestart',e=>e.preventDefault());
 if(/iPhone|iPad/.test(navigator.userAgent)&&!navigator.standalone)setTimeout(()=>msg('📲 Повний екран на iPhone: Поділитись → «На початковий екран»'),4500);
 function mmShow(){menuO=1;dlgX();$('mm').style.display='flex';$('mc').textContent=look?'▶ Продовжити':'▶ Почати гру'}

@@ -61,15 +61,15 @@ const em=window.elM?elM(s.p.ty,s.w.ty):1,v=Math.round((8+2*(s.p.lv||1))*em);s.w.
 /* ---------- день і ніч ---------- */
 /* 0.1.11: день триває 45 хв, ніч — 15 хв реального часу. Ніч — коли tod поза (N0, N1), тобто d>.5 у dn() */
 const DAYS=2700,NIGHTS=900,N0=.22,N1=.78;let tod=.32;try{const v=parseFloat(localStorage.getItem('zi_tod'));if(v>=0&&v<1)tod=v}catch(_){}
-const hemi=sc.children.find(o=>o.isHemisphereLight),h0=hemi?hemi.intensity:1,s0=sun.intensity,e0=R.toneMappingExposure||1,fog0=sc.fog?sc.fog.color.clone():null,NIG=new THREE.Color(0x0c1430);
-const bgc=sc.background&&sc.background.image&&sc.background.image.getContext?sc.background.image:null,DC=['#4d8fd9','#a9d0f0','#dfeef5'],NC=['#050a1e','#14204a','#2a3a6a'];
+const hemi=sc.children.find(o=>o.isHemisphereLight),h0=hemi?hemi.intensity:1,s0=sun.intensity,e0=R.toneMappingExposure||1,fog0=sc.fog?sc.fog.color.clone():null,NIG=new THREE.Color(0x0c1430),hc0=hemi?hemi.color.clone():null,sc0=sun.color.clone(),MOON=new THREE.Color(0x8fb0ff),MOONH=new THREE.Color(0x5a74c0);/* 0.1.16: уночі — холодне місячне світло */
+const bgc=sc.background&&sc.background.image&&sc.background.image.getContext?sc.background.image:null,DC=['#2f7fe0','#7db8ef','#bcdcf3'],NC=['#050a1e','#14204a','#2a3a6a'];
 const mix=(a,b,t)=>{const A=parseInt(a.slice(1),16),C=parseInt(b.slice(1),16),f=s=>((A>>s&255)+((C>>s&255)-(A>>s&255))*t)|0;return`rgb(${f(16)},${f(8)},${f(0)})`};
 const sg=new THREE.BufferGeometry(),sp=new Float32Array(900);for(let i=0;i<300;i++){const a=Math.random()*6.28,e=.15+Math.random()*1.3,r=70;sp[i*3]=Math.cos(a)*Math.cos(e)*r;sp[i*3+1]=Math.sin(e)*r;sp[i*3+2]=Math.sin(a)*Math.cos(e)*r}sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
 const stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:.7,transparent:true,opacity:0,depthWrite:false,fog:false}));stars.frustumCulled=false;sc.add(stars);
 const hud0=document.getElementById('hud');let clk=null;if(hud0){clk=document.createElement('span');clk.id='clk';hud0.appendChild(clk)}
 let bgT=9,lastD=-1,clT=9,svT=0;window.isNight=()=>Math.max(0,Math.min(1,(Math.abs(tod-.5)-.24)/.08))>.5;
 function dn(dt){tod=(tod+dt*(tod>=N0&&tod<N1?(N1-N0)/DAYS:(1-N1+N0)/NIGHTS))%1;const d=Math.max(0,Math.min(1,(Math.abs(tod-.5)-.24)/.08));
-R.toneMappingExposure=e0*(1-.5*d);if(hemi)hemi.intensity=h0*(1-.6*d);sun.intensity=s0*(1-.85*d);if(fog0)sc.fog.color.copy(fog0).lerp(NIG,d);
+R.toneMappingExposure=e0*(1-.42*d);if(hemi){hemi.intensity=h0*(1-.7*d);hemi.color.copy(hc0).lerp(MOONH,d)}sun.intensity=s0*(1-.88*d);sun.color.copy(sc0).lerp(MOON,d);if(fog0)sc.fog.color.copy(fog0).lerp(NIG,d);
 placed.forEach(b=>{if(b.g.userData.light)b.g.userData.light.intensity=1.8*d});stars.material.opacity=d;stars.position.set(P.x,0,P.z);
 bgT+=dt;if(bgc&&bgT>.4&&Math.abs(d-lastD)>.005){bgT=0;lastD=d;const x=bgc.getContext('2d'),g=x.createLinearGradient(0,0,0,bgc.height);g.addColorStop(0,mix(DC[0],NC[0],d));g.addColorStop(.6,mix(DC[1],NC[1],d));g.addColorStop(1,mix(DC[2],NC[2],d));x.fillStyle=g;x.fillRect(0,0,bgc.width,bgc.height);sc.background.needsUpdate=true}
 clT+=dt;if(clk&&clT>.5){clT=0;const m=Math.floor(tod*1440),h=Math.floor(m/60),mi=m%60;clk.textContent=(d>.5?'🌙 ':'☀️ ')+String(h).padStart(2,'0')+':'+String(mi).padStart(2,'0')}
