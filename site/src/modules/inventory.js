@@ -15,7 +15,7 @@ let sl='';for(let i=0;i<24;i++){const k=ks[i];sl+=k?`<button class='i2s ${k==sel
 let det="<small>Торкніться предмета, щоб побачити деталі</small>";
 if(sel){const isB=BALL.find(b=>b.id==sel),isT=!!(window.TT&&TT[sel]),d=isB?'Сила ловлі ×'+fx(isB.m):FOOD[sel]?(DS[sel]||'')+'. Їжа для істот: +'+FOOD[sel]+' ситості':(DS[sel]||'');let a='';
 if(FOOD[sel])a=`<button data-f='${sel}'>Нагодувати</button>`;else if(isB)a=eq.ball==sel?'<small>✔ Вибрана</small>':`<button data-eqb='${sel}'>Вибрати</button>`;else if(/^bp/.test(sel))a=eq.bag==sel?"<button data-eqg=''>Зняти</button>":`<button data-eqg='${sel}'>Надіти</button>`;else if(isT)a=eq.tool==sel?"<button data-eqt=''>Прибрати</button>":`<button data-eqt='${sel}'>Взяти в руки</button>`;
-if(!isT)a+=`<button data-drop='${sel}'>Викинути 1</button>`;det=`<span class='ic'>${ico(sel)}</span><div class='tx'><b>${IT[sel][1]} ×${cnt(sel)}</b><small>${d}</small></div>${a}`}
+a+=`<button data-drop='${sel}' data-n='1'>🗑️ Викинути 1</button>`+(cnt(sel)>1?`<button data-drop='${sel}' data-n='all'>🗑️ Усе</button>`:'');/* 0.1.25: викинути можна будь-що, зокрема інструменти */det=`<span class='ic'>${ico(sel)}</span><div class='tx'><b>${IT[sel][1]} ×${cnt(sel)}</b><small>${d}</small></div>${a}`}
 const w=wt(),cp=cap(),B=BALL.find(b=>b.id==eq.ball)||BALL[0],nx=xpN(plv),cb=pals[selP]?4+(pals[selP].lv||1):0,pp=pals[selP];
 const fd=['be','mu','gm','pie'].map(k=>`<button class='i2q' ${cnt(k)?`data-f='${k}'`:''} aria-label='${IT[k][1]}'>${IT[k][0]}<b>${cnt(k)||''}</b></button>`).join('');
 c.innerHTML=`<div class='i2'><div><h5>Рюкзак</h5><div class='i2g'>${sl}</div><div class='i2w'>⚖️ Вага<span><i style='width:${Math.min(100,w/cp*100)}%'></i></span>${w.toFixed(1).replace('.',',')} / ${cp}</div><div class='i2d'>${det}</div></div>
@@ -27,7 +27,7 @@ $('ivc').addEventListener('click',e=>{const t=e.target.closest('[data-sl],[data-
 if(d.sl!==undefined){sel=d.sl==sel?null:d.sl;ivR();return}
 if(d.eqb!==undefined){eq.ball=d.eqb;after('🔮 Вибрано: '+IT[d.eqb][1]);return}
 if(d.eqt!==undefined){eq.tool=d.eqt||null;buildHero(pl,look||DLOOK);after(eq.tool?'🛠️ У руках: '+IT[eq.tool][1]:'✋ Руки вільні');return}
-if(d.drop!==undefined){if(cnt(d.drop)>0){addI(d.drop,-1);after('🗑️ Викинуто: '+IT[d.drop][1])}return}
+if(d.drop!==undefined){const k=d.drop,h=cnt(k);if(h>0){const n=d.n=='all'?h:1;addI(k,-n);if(cnt(k)<=0){if(eq.tool==k){eq.tool=null;buildHero(pl,look||DLOOK)}if(eq.bag==k)eq.bag=null;sel=null}if(window.dropLoot)dropLoot(k,n);after('🗑️ Викинуто: '+IT[k][1]+(n>1?' ×'+n:'')+(window.dropLoot?' — лежить на землі, «Дія» поруч підбере':''))}return}
 if(d.cyc=='t'){const o=[null].concat(['axw','axe','axm','pkw','pick','pkm'].filter(own));eq.tool=o[(o.indexOf(eq.tool)+1)%o.length];buildHero(pl,look||DLOOK);after(eq.tool?'🛠️ У руках: '+IT[eq.tool][1]:'✋ Руки вільні');return}
 if(d.cyc=='b'){const o=BALL.filter(b=>b.id=='b'||own(b.id)).map(b=>b.id);eq.ball=o[(o.indexOf(eq.ball)+1)%o.length];after('🔮 Вибрано: '+IT[eq.ball][1]);return}
 if(d.cyc=='p'){if(pals.length>1)pwSw(1);ivR();return}
