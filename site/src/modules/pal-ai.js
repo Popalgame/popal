@@ -4,7 +4,8 @@
      Рівень перенесення кожному попалу випадає під час ловлі: що вищий рівень попала, то більший шанс на високий.
    • Вантаж повний або роботу скінчено — несе до найближчої скрині з вільним місцем.
    • На базі скінчився ліс — лісоруб береться за інше своє вміння (камінь, ягоди), а як іншого немає — відпочиває біля центру.
-   • Кухар бере гриби зі скрині й кладе туди смажені; носій бере їжу зі скрині й несе в годівницю центру. */
+   • Кухар бере гриби зі скрині й кладе туди смажені; носій бере їжу зі скрині й несе в годівницю центру.
+   • 0.1.27: вогняний попал працює з плавильнею (furnace.js): носить руду й паливо, плавить, відносить злитки. */
 (function(){try{
 const BASE=30,CAP=[0,5,10,15,20,30],SPD=2.2;
 /* ---------- рівень перенесення ---------- */
@@ -39,6 +40,11 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
   /* повний вантаж (або наступна порція вже не влізе) — спершу все в скриню, а тоді знову до роботи */
   const UNIT={chop:W('w')*(wk.chop>=3?2:1),mine:W('s')*(wk.mine>=3?2:1),gather:W('be')*2};
   if(Object.keys(A.bag).length&&(bagW(A)>=cap*.999||(gj.length&&gj.every(j=>bagW(A)+UNIT[j]>cap+1e-6)))){A.s='deliver';break}
+  /* 0.1.27: вогняний попал спершу працює з плавильнею: плавить, підносить руду й паливо, відносить злитки */
+  if(window.FUR&&FUR.fire(p)&&FUR.pos()&&!Object.keys(A.bag).length){const Fu=FUR.get();
+   if(Fu.ore>=2&&Fu.w>=1){A.s='fsmelt';break}
+   if(window.chCount&&chCount('ore')>=2&&chCount('w')>=1){A.s='ffeed';A.ph=0;break}
+   if(Fu.ing>0&&window.chNearFor&&chNearFor('ing',p.x,p.z)){A.s='fhaul';break}}
   for(const j of gj){const e=findTarget(p,j,C);if(e){A.job=j;A.tg=e[0];A.L=e[1];A.k=e[2];e[0]._cl=p;A.s='go';break}}
   if(A.s!='pick')break;
   if(Object.keys(A.bag).length){A.s='deliver';break}
@@ -69,6 +75,18 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
  case'fetch':{if(!A.food){const k=['be','mu','gm','pie'].find(k=>chCount(k)>0),ch=window.chNearest?chNearest(p.x,p.z):null;if(!k||!ch||cf>=20){A.s='pick';break}
    p.st='📦 бере їжу зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;if(chTake(k,1))A.food=k;else{A.s='pick';break}}
   p.st='🍖 несе їжу в годівницю';p.job='carry';moving=!moveTo(p,C[0],C[1],dt,2.9);if(moving)break;cf+=(FOOD[A.food]||1);say('🍖 +'+(FOOD[A.food]||1),p.m);A.food=null;XP(p);A.s='pick';break}
+ case'fsmelt':{const fp=FUR.pos(),Fu=FUR.get();if(!fp||Fu.ore<2||Fu.w<1){A.s='pick';break}const T0=FUR.time(p);
+  p.st='🔥 плавить руду ('+Math.round(Fu.p/T0*100)+'%)';p.job='smelt';moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;
+  p.a=Math.atan2(fp[0]-p.x,fp[1]-p.z);Fu.act=Date.now();Fu.p+=dt;if(Fu.p>=T0){Fu.p=0;Fu.ore-=2;Fu.w-=1;Fu.ing++;say('+1 🔩',p.m,'#ffb070');XP(p)}break}
+ case'ffeed':{const fp=FUR.pos();if(!fp){A.s='pick';break}
+  if(!A.ph){const ch=window.chNearest?chNearest(p.x,p.z):null;if(!ch||chCount('ore')<2||chCount('w')<1){A.s='pick';break}
+   p.st='📦 бере руду й деревину зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;
+   const n=Math.max(1,Math.min(5,Math.floor(cap/(2*W('ore')+W('w'))),Math.floor(chCount('ore')/2),chCount('w')));
+   if(chTake('ore',2*n)){if(chTake('w',n)){A.bag.ore=(A.bag.ore||0)+2*n;A.bag.w=(A.bag.w||0)+n;A.ph=1}else{chStore('ore',2*n,p.x,p.z);A.s='pick';break}}else{A.s='pick';break}}
+  p.st='🔥 несе руду й паливо до плавильні';moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;
+  const Fu=FUR.get();Fu.ore+=A.bag.ore||0;Fu.w+=A.bag.w||0;delete A.bag.ore;delete A.bag.w;A.ph=0;say('🟤 у піч',p.m,'#ffb070');A.s='pick';break}
+ case'fhaul':{const fp=FUR.pos(),Fu=FUR.get();if(!fp||Fu.ing<=0){A.s='pick';break}p.st='🔩 забирає злитки з плавильні';
+  moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;const n=Math.min(Fu.ing,Math.max(1,Math.floor(cap/W('ing'))));Fu.ing-=n;A.bag.ing=(A.bag.ing||0)+n;A.s='deliver';break}
  case'rest':{p.st='😴 відпочиває: '+(A.why||'немає роботи');p.job=null;A.t-=dt;
   const d=Math.hypot(p.x-C[0],p.z-C[1]);if(d>6){moving=!moveTo(p,C[0],C[1],dt,4)}else{p.t=(p.t||0)-dt;if(p.t<=0){p.t=rn(2,4);p.a=rn(0,6.3)}{const nx=p.x+Math.sin(p.a)*.35*dt,nz=p.z+Math.cos(p.a)*.35*dt;if(window.colStep){const q=colStep(p.x,p.z,nx,nz,.42);if(Math.hypot(q[0]-nx,q[1]-nz)>.001)p.t=0;p.x=q[0];p.z=q[1]}else{p.x=nx;p.z=nz}}moving=true}
   if(A.t<=0)A.s=Object.keys(A.bag).length?'deliver':'pick';break}}

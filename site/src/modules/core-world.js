@@ -242,7 +242,7 @@ $('pv3').appendChild(R2.domElement);$('pni').value=pname;$('pns').onclick=()=>{p
 if(t=='o'){c.innerHTML=`<div class='pcol'><h4>Графіка</h4><button class='ob' id='gqb'>Якість: ${gq?'Висока':'Низька'}</button></div>`;
 $('gqb').onclick=()=>{gq=gq?0:1;R.setPixelRatio(gq?Math.min(devicePixelRatio,2):1);sun.castShadow=!!gq;gm.visible=!!gq;rs();pfTab('o')};
 return}
-c.innerHTML=`<div id='pfv'>Версія 0.1.26</div>`}
+c.innerHTML=`<div id='pfv'>Версія 0.1.27</div>`}
 document.addEventListener('gesturestart',e=>e.preventDefault());
 if(/iPhone|iPad/.test(navigator.userAgent)&&!navigator.standalone)setTimeout(()=>msg('📲 Повний екран на iPhone: Поділитись → «На початковий екран»'),4500);
 function mmShow(){menuO=1;dlgX();$('mm').style.display='flex';$('mc').textContent=look?'▶ Продовжити':'▶ Почати гру'}

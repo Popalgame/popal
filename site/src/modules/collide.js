@@ -5,12 +5,12 @@
    • попал, який кілька секунд не може дійти до цілі (стіна без проходу), перескакує до неї зі спалахом;
    • попал-супутник, що відстав за стіною, з’являється поруч із гравцем. */
 (function(){try{
-const BR={B_bed:1.0,B_kit:.75,B_wb:.85,B_fur:.8,B_farm:1.0,B_lamp:.25,B_fen:.9};
+const BR={B_bed:1.0,B_kit:.75,B_wb:.85,B_fur:1.15,B_farm:1.0,B_lamp:.25,B_fen:.9};
 /* круглі перешкоди: центр, скрині, будівлі бази */
 function cols(){const L=[],C=inv._cen;if(C)L.push({x:C[0],z:C[1],r:2.2});
  for(const c of inv._ch||[])L.push({x:c.x,z:c.z,r:.7});
  for(const b of window.BPLACED||[])L.push({x:b.x,z:b.z,r:BR[b.id]||.8});return L}
-window.colList=cols;
+window.colList=cols;window.colR=BR;
 const wall=(ax,az,bx,bz)=>{try{return !!(window.BLDBLK&&BLDBLK(ax,az,bx,bz,H(bx,bz)))}catch(_){return false}};
 /* виштовхування з кіл (ковзання по дотичній виходить само собою) */
 function circles(x,z,r,L){for(const c of L){const dx=x-c.x,dz=z-c.z,d=Math.hypot(dx,dz),R=c.r+r;if(d<R){if(d<1e-4){x=c.x+R}else{x=c.x+dx/d*R;z=c.z+dz/d*R}}}return[x,z]}

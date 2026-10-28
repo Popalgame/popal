@@ -43,9 +43,11 @@ ANI.push(t=>{if(!cenG)return;orb.rotation.y=t*.6;orb.position.y=2.05+Math.sin(t*
  const n=window.isNight&&isNight();cenG.userData.light.intensity=n?1.6:0});
 
 /* ---------- встановлення ---------- */
+/* 0.1.27: спершу передперегляд (place.js) з кільцем майбутньої бази, тоді встановлення */
 function placeCen(){if(inv._cen){msg('🏠 Попал-центр уже стоїть — він може бути лише один');return}if(!(inv.B_cen>0))return;
- const x=P.x+Math.sin(P.face||0)*3,z=P.z+Math.cos(P.face||0)*3;
- if(H(x,z)<-.3||H(P.x,P.z)<-.3){msg('🌊 Попал-центр не можна ставити у воді');return}
+ if(window.plPlace){plPlace({name:'🏠 Попал-центр',r:2.2,dist:4,center:true,mk:()=>{const o=orb,r=ring,g=mkCen();orb=o;ring=r;return g},onOk:(x,z)=>doPlaceCen(x,z)});return}
+ doPlaceCen(P.x+Math.sin(P.face||0)*3,P.z+Math.cos(P.face||0)*3)}
+function doPlaceCen(x,z){if(inv._cen||!(inv.B_cen>0))return;if(H(x,z)<-.3){msg('🌊 Попал-центр не можна ставити у воді');return}
  inv.B_cen--;inv._cen=[+x.toFixed(2),+z.toFixed(2)];showCen();if(window.respawnB)respawnB();
  /* перший центр: попали, які раніше працювали в таборі (усі, крім того, що з вами), переходять у центр */
  if(!inv._cenM){inv._cenM=1;const keep=pals[selP];for(const p of pals){if(p!==keep&&p.cs==null){const f=cenFree();if(f>=0){p.cs=f;if(crew().length<wMax())p.wk=1}}}}

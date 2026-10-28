@@ -37,13 +37,16 @@ window.chCount=k=>CH.reduce((a,c)=>a+((c.it||{})[k]||0),0);
 window.chTake=(k,n)=>{if(chCount(k)<n)return false;let left=n;for(const c of CH){const h=(c.it||{})[k]||0,t=Math.min(h,left);if(t){c.it[k]-=t;if(!c.it[k])delete c.it[k];left-=t}if(!left)break}return true};
 
 /* ---------- встановлення ---------- */
+/* 0.1.27: спершу передперегляд (place.js), тоді встановлення */
 function placeCh(){if(!(inv.B_ch>0))return;const C=inv._cen;if(!C){msg('🏠 Спершу поставте Попал-центр: скрині стоять на базі');return}
- const x=P.x+Math.sin(P.face||0)*1.6,z=P.z+Math.cos(P.face||0)*1.6,dc=Math.hypot(x-C[0],z-C[1]);
+ if(window.plPlace){plPlace({name:'📦 Скриня',r:.7,dist:2,ry:(P.face||0)+Math.PI,mk:mkChest,onOk:(x,z,ry)=>doPlaceCh(x,z,ry)});return}
+ doPlaceCh(P.x+Math.sin(P.face||0)*1.6,P.z+Math.cos(P.face||0)*1.6,(P.face||0)+Math.PI)}
+function doPlaceCh(x,z,ry){if(!(inv.B_ch>0))return;const C=inv._cen;if(!C)return;const dc=Math.hypot(x-C[0],z-C[1]);
  if(dc>BASE){msg('📦 Скриню можна поставити лише на базі — до '+BASE+' м від Попал-центру');return}
  if(dc<4){msg('📦 Занадто близько до Попал-центру');return}
  if(H(x,z)<-.3){msg('🌊 Скриню не можна ставити у воді');return}
- if(CH.some(c=>Math.hypot(c.x-x,c.z-z)<1.3)){msg('📦 Тут уже стоїть скриня');return}
- inv.B_ch--;CH.push({x:+x.toFixed(2),z:+z.toFixed(2),ry:+((P.face||0)+Math.PI).toFixed(2),it:{}});showAll();hud();save();msg('📦 Скриню поставлено! Попали складатимуть сюди здобуте')}
+ if(CH.some(c=>Math.hypot(c.x-x,c.z-z)<1.2)){msg('📦 Тут уже стоїть скриня');return}
+ inv.B_ch--;CH.push({x:+x.toFixed(2),z:+z.toFixed(2),ry:+(+ry).toFixed(2),it:{}});showAll();hud();save();msg('📦 Скриню поставлено! Попали складатимуть сюди здобуте')}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-chplace]');if(!t)return;placeCh();ivR()});
 const _r=ivR;ivR=function(){_r.apply(this,arguments);const c=$('ivc');if(!c||ivTab!='i')return;const on=c.querySelector('.i2g .i2s.on'),d=c.querySelector('.i2d');
  if(on&&on.dataset.sl=='B_ch'&&d&&!d.querySelector('[data-chplace]')){const b=document.createElement('button');b.dataset.chplace=1;b.textContent='📦 Поставити тут';d.appendChild(b)}};

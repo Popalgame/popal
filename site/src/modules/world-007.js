@@ -26,21 +26,26 @@ function mkB(id){const g=new THREE.Group(),W=0x8e5a3a,D=0x5a3418,ST=0x8b8f9a;
 if(id=='B_bed'){add(g,B(1,.25,1.8),W,0,.18,0);add(g,B(.9,.15,1.7),0xf4ede0,0,.37,0);add(g,B(.7,.12,.35),0xffffff,0,.48,-.62);add(g,B(.92,.1,1.05),0x5b6bd6,0,.47,.3);add(g,B(1,.6,.1),W,0,.4,-.9)}
 else if(id=='B_kit'){for(let i=0;i<8;i++){const a=i/8*6.28;add(g,S(.14),ST,Math.cos(a)*.5,.1,Math.sin(a)*.5)}add(g,Cy(.28,.22,.3,10),0x3a3a44,0,.62,0);for(const a of[0,2.1,4.2])add(g,Cy(.03,.03,1.2,5),D,Math.cos(a)*.38,.55,Math.sin(a)*.38).rotation.set(Math.sin(a)*.35,0,-Math.cos(a)*.35);const f=new THREE.Mesh(Co(.18,.42,6),FIRE);f.position.y=.24;g.add(f);g.userData.fire=f}
 else if(id=='B_wb'){add(g,B(1.4,.12,.7),W,0,.8,0);for(const x of[-.6,.6])for(const z of[-.28,.28])add(g,B(.1,.8,.1),D,x,.4,z);add(g,B(.5,.04,.2),0xc8cdd8,-.3,.88,.1);add(g,Cy(.03,.03,.4,6),D,.35,.9,0).rotation.z=Math.PI/2;add(g,B(.12,.08,.06),0x8a8f9e,.55,.9,0)}
+else if(id=='B_fur'&&window.mkFurnace){return mkFurnace()}/* 0.1.27: нова реалістична плавильня — furnace.js */
 else if(id=='B_fur'){add(g,S(.7),ST,0,.55,0).scale.set(1,.85,1);add(g,Cy(.15,.18,.8,8),0x6a6f7a,.32,1.3,-.2);const m=new THREE.Mesh(S(.25),FIRE);m.position.set(0,.42,.56);m.scale.set(1,.8,.4);g.add(m);g.userData.fire=m}
 else if(id=='B_farm'){add(g,B(1.8,.15,1.1),0x6a4a2a,0,.07,0);for(let i=0;i<6;i++){const x=(i%3-1)*.55,z=i<3?-.25:.25;add(g,S(.17),0x3f8a3a,x,.28,z);add(g,S(.05),0x4a5fd6,x+.08,.36,z+.08);add(g,S(.05),0xd93b3b,x-.07,.33,z-.05)}}
 else if(id=='B_lamp'){add(g,Cy(.05,.06,1.6,6),0x2a2a33,0,.8,0);const l=new THREE.Mesh(B(.22,.28,.22),LAMP);l.position.y=1.72;g.add(l);add(g,Co(.2,.15,4),0x2a2a33,0,1.94,0,Math.PI/4);const lt=new THREE.PointLight(0xffc070,0,10);lt.position.y=1.7;g.add(lt);g.userData.light=lt}
 else{for(const x of[-.8,0,.8])add(g,B(.12,.8,.12),W,x,.4,0);for(const y of[.3,.6])add(g,B(1.8,.08,.06),D,0,y,0)}
 return g}
 const placed=[];window.BPLACED=placed;
-function spawnB(id,si){const[x,z]=spos(si),g=mkB(id);const C=inv._cen||[0,0];g.position.set(x,H(x,z),z);g.rotation.y=Math.atan2(C[0]-x,C[1]-z);sc.add(g);placed.push({id,g,x,z});for(let i=trees.length-1;i>=0;i--){const t=trees[i];if(Math.hypot(t.x-x,t.z-z)<2.2){sc.remove(t.m);trees.splice(i,1)}}}
-if(inv._cen)inv._b.forEach(([id,si])=>{if(BI[id])spawnB(id,si)});
-window.respawnB=()=>{placed.forEach(b=>sc.remove(b.g));placed.length=0;if(inv._cen)inv._b.forEach(([id,si])=>{if(BI[id])spawnB(id,si)})};
-function placeB(id){if(!inv._cen){msg('🏠 Спершу збудуйте й поставте Попал-центр');return}if(Math.hypot(P.x-inv._cen[0],P.z-inv._cen[1])>15){msg('🏠 Ставити будівлі можна лише біля Попал-центру');return}if(!(inv[id]>0))return;if(BI[id].u&&built(id)){msg('Це вже збудовано');return}
-const used=new Set(inv._b.map(x=>x[1]));let si=-1;for(let i=0;i<SLOTS.length;i++)if(!used.has(i)){si=i;break}if(si<0){msg('🏠 Навколо Попал-центру більше немає місця');return}
-const l0=campLv();inv[id]--;inv._b.push([id,si]);spawnB(id,si);msg('🏗️ Збудовано: '+BI[id].n);const l1=campLv();if(l1>l0)setTimeout(()=>msg('🏠 Рівень бази '+l1+'! Тепер з вами може бути до '+palCap()+' попалів'),1500);try{hud();save()}catch(_){}}
+/* 0.1.27: будівлю ставлять вільно (x,z,ry у сейві); старі записи без координат — на місці слота в кільці */
+function spawnB(id,si,X,Z,RY){const[x,z]=X!=null?[X,Z]:spos(si),g=mkB(id);const C=inv._cen||[0,0];g.position.set(x,H(x,z),z);g.rotation.y=RY!=null?RY:Math.atan2(C[0]-x,C[1]-z);sc.add(g);placed.push({id,g,x,z});for(let i=trees.length-1;i>=0;i--){const t=trees[i];if(Math.hypot(t.x-x,t.z-z)<2.2){sc.remove(t.m);trees.splice(i,1)}}}
+if(inv._cen)inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)});
+window.respawnB=()=>{placed.forEach(b=>sc.remove(b.g));placed.length=0;if(inv._cen)inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)})};
+function placeB(id){if(!inv._cen){msg('🏠 Спершу збудуйте й поставте Попал-центр');return}if(!(inv[id]>0))return;if(BI[id].u&&built(id)){msg('Це вже збудовано');return}
+ const r=(window.colR&&colR[id])||.8;
+ if(window.plPlace){plPlace({name:'🏗️ '+BI[id].n,r,dist:r+1.6,ry:(P.face||0)+Math.PI,mk:()=>mkB(id),onOk:(x,z,ry)=>doPlaceB(id,x,z,ry)});return}
+ doPlaceB(id,P.x+Math.sin(P.face||0)*(r+1.6),P.z+Math.cos(P.face||0)*(r+1.6),(P.face||0)+Math.PI)}
+function doPlaceB(id,x,z,ry){if(!(inv[id]>0)||(BI[id].u&&built(id)))return;
+const l0=campLv();inv[id]--;inv._b.push([id,-1,+x.toFixed(2),+z.toFixed(2),+(+ry).toFixed(2)]);spawnB(id,-1,x,z,ry);msg('🏗️ Збудовано: '+BI[id].n);const l1=campLv();if(l1>l0)setTimeout(()=>msg('🏠 Рівень бази '+l1+'! Тепер з вами може бути до '+palCap()+' попалів'),1500);try{hud();save()}catch(_){}}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-place]');if(!t)return;placeB(t.dataset.place);ivR()});
 const _r=ivR;ivR=function(){_r();const c=$('ivc');if(!c)return;
-if(ivTab=='i'){const on=c.querySelector('.i2g .i2s.on'),d=c.querySelector('.i2d');if(on&&BI[on.dataset.sl]&&d){const b=document.createElement('button');b.dataset.place=on.dataset.sl;b.textContent='🏗️ Поставити біля центру';d.appendChild(b)}}
+if(ivTab=='i'){const on=c.querySelector('.i2g .i2s.on'),d=c.querySelector('.i2d');if(on&&BI[on.dataset.sl]&&d){const b=document.createElement('button');b.dataset.place=on.dataset.sl;b.textContent='🏗️ Поставити';d.appendChild(b)}}
 if(ivTab=='c'){const h=document.createElement('div');h.className='cmlv';const l=campLv(),nx=LV[l];h.innerHTML=`🏠 <b>Рівень бази ${l}</b> · попалів з вами: до ${palCap()}${nx!=null?` · до рівня ${l+1}: ${nx-campPts()} очок будівель`:' · максимум'}`;c.insertBefore(h,c.firstChild);
 c.querySelectorAll('[data-r]').forEach(bt=>{const R=RC[+bt.dataset.r];if(!R)return;if(R.bld&&BI[R.id].u&&(built(R.id)||cnt(R.id)>0)){bt.disabled=true;bt.textContent=built(R.id)?'✔ Збудовано':'✔ У рюкзаку'}else if(REQ[R.id]&&!built(REQ[R.id])){bt.disabled=true;bt.textContent='🔒 '+BI[REQ[R.id]].n}})}};
 /* ---------- рівні попалів ---------- */
