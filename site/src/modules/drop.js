@@ -7,7 +7,9 @@ if(!Array.isArray(inv._gd))inv._gd=[];
 const GD=inv._gd;
 const SACK=new THREE.MeshStandardMaterial({color:0xa8783f,roughness:.9,flatShading:true}),TIE=new THREE.MeshStandardMaterial({color:0x6b4422,roughness:.8});
 function icoTex(k){const c=document.createElement('canvas');c.width=c.height=96;const x=c.getContext('2d');x.fillStyle='rgba(14,20,42,.75)';x.beginPath();x.arc(48,48,44,0,7);x.fill();x.strokeStyle='#e2bf67';x.lineWidth=5;x.stroke();
- const ic=(IT[k]?IT[k][0]:'❔').replace(/<[^>]+>/g,'');x.font='52px serif';x.textAlign='center';x.textBaseline='middle';x.fillText(ic,48,52);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t}
+ const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const src=window.plIconSrc&&plIconSrc(k);
+ if(src){const im=new Image();im.onload=()=>{x.drawImage(im,16,16,64,64);t.needsUpdate=true};im.src=src;return t}
+ const ic=(IT[k]?IT[k][0]:'❔').replace(/<[^>]+>/g,'');x.font='52px serif';x.textAlign='center';x.textBaseline='middle';x.fillText(ic,48,52);t.needsUpdate=true;return t}
 const GRV=new THREE.MeshStandardMaterial({color:0x8a8a94,roughness:.9,flatShading:true}),BEAM=new THREE.MeshBasicMaterial({color:0xc070ff,transparent:true,opacity:.35,depthWrite:false,fog:false,toneMapped:false});
 function mkGrave(g){const o=new THREE.Group(),m=(geo,mat,x,y,z)=>{const q=new THREE.Mesh(geo,mat);q.position.set(x,y,z);q.castShadow=true;o.add(q);return q};
  m(new THREE.BoxGeometry(.5,.7,.14),GRV,0,.35,-.25);m(new THREE.CylinderGeometry(.25,.25,.14,12,1,false,0,Math.PI),GRV,0,.7,-.25).rotation.set(Math.PI/2,0,Math.PI/2);
