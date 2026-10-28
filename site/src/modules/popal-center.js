@@ -101,10 +101,12 @@ const box=document.createElement('div');box.id='cen';document.body.appendChild(b
 let page=0,sel=null,tab=0;
 const JI={chop:'🪓',mine:'⛏️',gather:'🫐',carry:'📦',cook:'🍳',water:'💧',cool:'❄️'},JN={chop:'рубає дерева',mine:'добуває камінь',gather:'збирає ягоди й гриби',carry:'носить їжу в годівницю',cook:'готує їжу'};
 const jobs=p=>Object.keys((T[p.ty]||{}).wk||{}).map(j=>JI[j]||'').join('');
+const crL=p=>`🎒 Перенос Lv${p.cr||1} (${window.palCarry?palCarry(p):5} кг)`;
 const cv=(p,s)=>{const c=document.createElement('canvas');c.width=c.height=s;try{drawCrit(c,T[p.ty].c)}catch(_){}return c};
 function openCen(){ivO=1;box.style.display='flex';render()}
 function closeCen(){box.style.display='none';ivO=0;sel=null}
 window.openCen=openCen;
+setInterval(()=>{if(box.style.display=='flex'&&tab==0)render()},1000);
 const done=t=>{pwUp();hud();save();render();if(t)msg(t)};
 /* поставити попала в бригаду (з команди — спершу в сховище) */
 function toCrew(p){if(crew().length>=wMax()){msg('⚒️ У бригаді вже '+wMax()+' попали — це максимум для рівня '+cenLv());return}
@@ -117,19 +119,19 @@ function render(){box.innerHTML=head()+(tab==0?crewHTML():storeHTML());box.query
  if(tab==0)crewBind();else storeBind()}
 /* ---------- вкладка «Бригада» ---------- */
 function crewHTML(){return `<div class='cb'><div class='cw'><div class='wg'></div>
- <div class='box em'>⚒️ Бригада — попали, які працюють на базі: рубають, добувають, збирають і складають усе у скрині. На ${cenLv()}-му рівні центру працюють лише ${wMax()}. Решта відпочиває у сховищі.</div>
+ <div class='box em'>⚒️ Бригада працює лише на території бази (30 м від центру): рубає, добуває, збирає й носить усе у скрині. Скільки попал несе за раз — залежить від його рівня перенесення. На ${cenLv()}-му рівні центру працюють лише ${wMax()}.</div>
  <div class='lk'>${[2,3,4,5].map(l=>`<div>🔒 Рівень ${l}<br>більше місць</div>`).join('')}</div><div class='em' style='text-align:center'>Підвищення рівня Попал-центру з'явиться пізніше</div></div>
  <div class='cr'><div class='box tm'><h5>Кого поставити на роботу</h5></div></div></div>`}
 function crewBind(){const g=box.querySelector('.wg'),cr=crew();
  for(let k=0;k<wMax();k++){const p=cr[k],d=document.createElement('div');
-  if(p){d.className='wc';d.appendChild(cv(p,96));d.insertAdjacentHTML('beforeend',`<div><b>${T[p.ty].n}</b><br>рів. ${p.lv||1} · ${jobs(p)}<br><span class='em'>${p.job&&JN[p.job]?'⚙️ Зараз '+JN[p.job]:'⚙️ Береться до роботи'}</span></div><button>↩ Відпочити</button>`);d.querySelector('button').onclick=()=>offCrew(p)}
+  if(p){d.className='wc';d.appendChild(cv(p,96));d.insertAdjacentHTML('beforeend',`<div><b>${T[p.ty].n}</b><br>рів. ${p.lv||1} · ${jobs(p)}<br>${crL(p)}${window.palLoad?' · вантаж '+(Math.round(palLoad(p)*10)/10)+' кг':''}<br><span class='em'>${p.st||'⚙️ Береться до роботи'}</span></div><button>↩ Відпочити</button>`);d.querySelector('button').onclick=()=>offCrew(p)}
   else{d.className='wc e';d.textContent='＋ Вільне місце — оберіть попала праворуч'}
   g.appendChild(d)}
  const tl=box.querySelector('.tm'),full=cr.length>=wMax();
  const cand=pals.filter(p=>!(p.cs!=null&&p.wk)).sort((a,b)=>(a.cs==null)-(b.cs==null));
  if(!cand.length)tl.insertAdjacentHTML('beforeend',`<div class='em'>${pals.length?'Усі ваші попали вже в бригаді.':'Зловіть попала кулею 🔮 — і поставте сюди.'}</div>`);
  for(const p of cand){const i=pals.indexOf(p),r=document.createElement('div');r.className='tr';r.appendChild(cv(p,40));
-  r.insertAdjacentHTML('beforeend',`<span>${T[p.ty].n} · рів. ${p.lv||1} ${jobs(p)}<br><small class='em'>${p.cs!=null?'🗄️ у сховищі':i===selP?'🚶 з вами':'🔮 з вами у сфері'}</small></span><button ${full?'disabled':''}>⚒️ На роботу</button>`);
+  r.insertAdjacentHTML('beforeend',`<span>${T[p.ty].n} · рів. ${p.lv||1} ${jobs(p)}<br><small class='em'>${crL(p)} · ${p.cs!=null?'🗄️ у сховищі':i===selP?'🚶 з вами':'🔮 з вами у сфері'}</small></span><button ${full?'disabled':''}>⚒️ На роботу</button>`);
   r.querySelector('button').onclick=()=>toCrew(p);tl.appendChild(r)}}
 /* ---------- вкладка «Сховище» ---------- */
 function storeHTML(){const inC=pals.filter(p=>p.cs!=null),pages=[...Array(NP)].map((_,k)=>inC.some(p=>p.cs>=k*PG&&p.cs<(k+1)*PG));
@@ -142,7 +144,7 @@ function storeBind(){const inC=pals.filter(p=>p.cs!=null),tm=palTeam(),cap=windo
   if(p){d.appendChild(cv(p,64));d.insertAdjacentHTML('beforeend',`<span class='lv'>${p.lv||1}</span><span class='jb'>${jobs(p)}</span>${p.wk?"<span class='wb'>⚒️</span>":''}`)}else d.innerHTML=`<span class='pl'>＋</span>`;
   d.onclick=()=>{sel=si;render()};g.appendChild(d)}
  const dt=box.querySelector('.dt'),sp=sel!=null&&inC.find(q=>q.cs===sel);
- if(sp){const t=T[sp.ty];dt.appendChild(cv(sp,88));dt.insertAdjacentHTML('beforeend',`<div><b>${t.n}</b> · рів. ${sp.lv||1}<br><span class='em'>${sp.wk?'⚒️ У бригаді — працює':'🗄️ Відпочиває'} ${jobs(sp)}</span></div>${sp.wk?"<button data-off>↩ Відпочити</button>":`<button data-on ${crew().length>=wMax()?'disabled':''}>⚒️ На роботу</button>`}<button data-out ${tm.length>=cap?'disabled':''}>🎒 Забрати</button>`);
+ if(sp){const t=T[sp.ty];dt.appendChild(cv(sp,88));dt.insertAdjacentHTML('beforeend',`<div><b>${t.n}</b> · рів. ${sp.lv||1}<br><span class='em'>${sp.wk?'⚒️ У бригаді — працює':'🗄️ Відпочиває'} ${jobs(sp)}<br>${crL(sp)}</span></div>${sp.wk?"<button data-off>↩ Відпочити</button>":`<button data-on ${crew().length>=wMax()?'disabled':''}>⚒️ На роботу</button>`}<button data-out ${tm.length>=cap?'disabled':''}>🎒 Забрати</button>`);
   const on=dt.querySelector('[data-on]'),off=dt.querySelector('[data-off]');if(on)on.onclick=()=>toCrew(sp);if(off)off.onclick=()=>offCrew(sp);
   dt.querySelector('[data-out]').onclick=()=>{if(palTeam().length>=cap){msg('З вами вже повна команда');return}sp.cs=null;sp.wk=0;sel=null;done('🐾 '+t.n+' тепер з вами у сфері')}}
  else if(sel!=null)dt.innerHTML=`<div class='em'>Слот ${sel+1} вільний. Натисніть «➕ У сховище» біля попала праворуч.</div>`;

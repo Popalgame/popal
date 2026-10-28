@@ -1,8 +1,8 @@
-/* 0.1.20: скрині на базі. Крафт 10 🪵 + 4 🥢, ставиться в радіусі 30 м від Попал-центру, скринь може бути скільки завгодно.
+/* 0.1.20: скрині на базі. 0.1.22: у кожній скрині 30 слотів, у слоті — до 100 однакових речей (ваги немає). Крафт 10 🪵 + 4 🥢, ставиться в радіусі 30 м від Попал-центру, скринь може бути скільки завгодно.
    Попали в центрі складають усе здобуте (деревину, палки, камінь, ягоди, гриби, страви) у найближчу скриню, а не гравцю в рюкзак.
    Кухарі беруть гриби, а носії — їжу для годівниці теж зі скринь. Ваги в скрині немає: гравець забирає, скільки потрібно. */
 (function(){try{
-const NEAR=1.9,BASE=30;
+const NEAR=1.9,BASE=30,SLOTS=30,STK=100;
 IT.B_ch=['📦','Скриня'];if(inv.B_ch==null)inv.B_ch=0;
 {const i=RC.findIndex(r=>r.id=='B_cen');RC.splice(i+1,0,{id:'B_ch',n:'📦 Скриня',c:{w:10,sti:4},d:'Ставиться на базі. Попали складають сюди все, що добули. Без обмеження ваги'})}
 if(!Array.isArray(inv._ch))inv._ch=[];
@@ -25,7 +25,14 @@ const total=c=>Object.values(c.it||{}).reduce((a,n)=>a+n,0);
 const near=(x,z)=>{let b=null,bd=1e9;for(const c of CH){const d=Math.hypot(c.x-x,c.z-z);if(d<bd){bd=d;b=c}}return b};
 let wT=0;const warn=()=>{if(Date.now()-wT<90000)return;wT=Date.now();msg('📦 Попали не мають куди складати здобуте — поставте скриню на базі')};
 window.chAny=()=>CH.length>0;
-window.chStore=(k,n,x,z)=>{const c=near(x==null?P.x:x,z==null?P.z:z);if(!c){warn();return false}c.it=c.it||{};c.it[k]=(c.it[k]||0)+n;return true};
+const used=c=>Object.values(c.it||{}).reduce((a,n)=>a+Math.ceil(n/STK),0);
+const room=(c,k)=>{const h=(c.it||{})[k]||0;return (SLOTS-used(c))*STK+(h%STK?STK-h%STK:0)};
+const byDist=(x,z)=>CH.slice().sort((a,b)=>Math.hypot(a.x-x,a.z-z)-Math.hypot(b.x-x,b.z-z));
+/* кладе скільки влізе, починаючи з найближчої скрині; повертає, скільки поклало */
+window.chStore=(k,n,x,z)=>{if(!CH.length){warn();return 0}let left=n;for(const c of byDist(x==null?P.x:x,z==null?P.z:z)){const t=Math.min(left,room(c,k));if(t>0){c.it=c.it||{};c.it[k]=(c.it[k]||0)+t;left-=t}if(!left)break}return n-left};
+window.chRoom=(k,x,z)=>CH.reduce((a,c)=>a+room(c,k),0);
+window.chNearFor=(k,x,z)=>byDist(x,z).find(c=>room(c,k)>0)||null;
+window.chNearest=(x,z)=>byDist(x,z)[0]||null;window.chList=CH;
 window.chCount=k=>CH.reduce((a,c)=>a+((c.it||{})[k]||0),0);
 window.chTake=(k,n)=>{if(chCount(k)<n)return false;let left=n;for(const c of CH){const h=(c.it||{})[k]||0,t=Math.min(h,left);if(t){c.it[k]-=t;if(!c.it[k])delete c.it[k];left-=t}if(!left)break}return true};
 
@@ -57,7 +64,12 @@ const css=document.createElement('style');css.id='ch-css';css.textContent=`
 #chs .r{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:4px 8px}
 #chs .r .ic{font-size:22px;width:30px;text-align:center}#chs .r .nm{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#chs .r .n{font-weight:700;color:#ffe7a8;min-width:34px;text-align:right}
 #chs button.b{background:linear-gradient(#f39a4a,#d9532e);border:2px solid #e2bf67;color:#fff;border-radius:9px;padding:2px 9px;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit}
-#chs button.b.g{background:linear-gradient(#5fb04a,#2f8a3a)}#chs .em{opacity:.65;font-size:12px;padding:6px}#chs .wt{font-size:12px;opacity:.85}`;document.head.appendChild(css);
+#chs button.b.g{background:linear-gradient(#5fb04a,#2f8a3a)}#chs .em{opacity:.65;font-size:12px;padding:6px}
+#chs .sg{flex:1;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(5,1fr);gap:4px;min-height:0}
+#chs .sl{position:relative;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;min-height:0}
+#chs .sl.f{background:rgba(226,191,103,.1);border-color:rgba(226,191,103,.45);cursor:pointer}#chs .sl.on{border:2px solid #ffd34e;box-shadow:0 0 8px rgba(255,211,78,.5)}
+#chs .sl .ic{font-size:22px}#chs .sl .n{position:absolute;right:4px;bottom:1px;font-size:11px;font-weight:700;color:#ffe7a8;text-shadow:0 1px 2px #000}
+#chs .tk{display:flex;align-items:center;gap:6px;padding-top:6px;min-height:34px}#chs .tk .ic{font-size:22px}#chs .tk .nm{flex:1;font-size:13px}#chs .wt{font-size:12px;opacity:.85}`;document.head.appendChild(css);
 const box=document.createElement('div');box.id='chs';document.body.appendChild(box);
 let cur=null;
 const nm=k=>IT[k]?IT[k][1]:k,ic=k=>IT[k]?IT[k][0]:'❔';
@@ -65,13 +77,18 @@ const ownList=()=>Object.keys(IT).filter(k=>(cnt(k)||0)>0&&k!=eq.tool&&k!=eq.bag
 function openCh(c){cur=c;ivO=1;box.style.display='flex';render()}
 function closeCh(){box.style.display='none';ivO=0;cur=null;hud();save()}
 function take(k,n){const h=(cur.it||{})[k]||0;n=Math.min(n,h);if(!n)return;cur.it[k]-=n;if(!cur.it[k])delete cur.it[k];addI(k,n);render()}
-function put(k,n){const h=cnt(k)||0;n=Math.min(n,h);if(!n)return;addI(k,-n);cur.it=cur.it||{};cur.it[k]=(cur.it[k]||0)+n;render()}
+function put(k,n){const h=cnt(k)||0;n=Math.min(n,h,room(cur,k));if(!n){msg('📦 У скрині немає вільних слотів');return}addI(k,-n);cur.it=cur.it||{};cur.it[k]=(cur.it[k]||0)+n;render()}
+let sk=null;
 function render(){if(!cur)return;const it=cur.it||{},ks=Object.keys(it).filter(k=>it[k]>0).sort((a,b)=>it[b]-it[a]),own=ownList(),i=CH.indexOf(cur)+1;
- const w=window.invWt?invWt():0,cp=window.invCap?invCap():0;
- box.innerHTML=`<header><b>📦 Скриня ${CH.length>1?'№'+i:''}</b><small>Усього: ${total(cur)} · без обмеження ваги</small><button class='cx'>✕</button></header>
- <div class='cb'><div class='col'><h5><span>У скрині</span>${ks.length?"<button class='b g' data-all>⬇ Забрати все</button>":''}</h5><div class='ls'>${ks.length?ks.map(k=>`<div class='r'><span class='ic'>${ic(k)}</span><span class='nm'>${nm(k)}</span><span class='n'>${it[k]}</span><button class='b g' data-t='${k}' data-n='1'>1</button><button class='b g' data-t='${k}' data-n='10'>10</button><button class='b g' data-t='${k}' data-n='1e9'>Усе</button></div>`).join(''):"<div class='em'>Порожньо. Попали в Попал-центрі складатимуть сюди деревину, палки, камінь, ягоди й гриби.</div>"}</div></div>
+ const w=window.invWt?invWt():0,cp=window.invCap?invCap():0,st=[];for(const k of ks){let n=it[k];while(n>0){st.push([k,Math.min(STK,n)]);n-=STK}}
+ if(sk&&!it[sk])sk=null;
+ box.innerHTML=`<header><b>📦 Скриня ${CH.length>1?'№'+i:''}</b><small>Слотів: ${used(cur)} / ${SLOTS} · у слоті до ${STK} · без ваги</small><button class='cx'>✕</button></header>
+ <div class='cb'><div class='col'><h5><span>У скрині</span>${ks.length?"<button class='b g' data-all>⬇ Забрати все</button>":''}</h5>
+ <div class='sg'>${Array.from({length:SLOTS},(_,q)=>{const s2=st[q];return s2?`<div class='sl f ${s2[0]==sk?'on':''}' data-sk='${s2[0]}'><span class='ic'>${ic(s2[0])}</span><span class='n'>${s2[1]}</span></div>`:"<div class='sl'></div>"}).join('')}</div>
+ <div class='tk'>${sk?`<span class='ic'>${ic(sk)}</span><span class='nm'>${nm(sk)} ×${it[sk]}</span><button class='b g' data-t='${sk}' data-n='1'>1</button><button class='b g' data-t='${sk}' data-n='10'>10</button><button class='b g' data-t='${sk}' data-n='1e9'>Усе</button>`:`<span class='em'>${ks.length?'Торкніться слота, щоб забрати речі':'Порожньо. Попали з бригади складатимуть сюди здобуте.'}</span>`}</div></div>
  <div class='col'><h5><span>🎒 Рюкзак</span><span class='wt'>⚖️ ${Math.round(w*10)/10} / ${cp}</span></h5><div class='ls'>${own.length?own.map(k=>`<div class='r'><span class='ic'>${ic(k)}</span><span class='nm'>${nm(k)}</span><span class='n'>${cnt(k)}</span><button class='b' data-p='${k}' data-n='1'>1</button><button class='b' data-p='${k}' data-n='1e9'>Усе</button></div>`).join(''):"<div class='em'>Рюкзак порожній.</div>"}</div></div></div>`;
  box.querySelector('.cx').onclick=closeCh;
+ box.querySelectorAll('[data-sk]').forEach(b=>b.onclick=()=>{sk=b.dataset.sk;render()});
  box.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>take(b.dataset.t,+b.dataset.n));
  box.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>put(b.dataset.p,+b.dataset.n));
  const a=box.querySelector('[data-all]');if(a)a.onclick=()=>{for(const k of Object.keys(cur.it||{}))take(k,1e9)}}
