@@ -91,6 +91,7 @@ const blocks=(ax,az,bx,bz,y)=>{for(const p of pieces){if(p.t==0){if(p.y>y+1.25){
   const[cx,cz]=cxz(p.cx,p.cz),[dx,dz]=DIRS[p.s],ex=cx+dx*C/2,ez=cz+dz*C/2,R=.45;
   if(p.s%2){if((ax-ex)*(bx-ex)<=0||Math.abs(bx-ex)<R){if(Math.abs(bz-ez)<C/2+.1&&(Math.abs(bx-ex)<R||(ax-ex)*(bx-ex)<0))return true}}
   else{if((az-ez)*(bz-ez)<=0||Math.abs(bz-ez)<R){if(Math.abs(bx-ex)<C/2+.1&&(Math.abs(bz-ez)<R||(az-ez)*(bz-ez)<0))return true}}}return false};
+window.BLDBLK=blocks;/* 0.1.23: та сама перевірка стін — для попалів і диких істот (collide.js) */
 window.BLDC=function(ox,oz){const P=GC('P');if(!P||!pieces.length)return;const y=py==null?H(P.x,P.z):py;
  if(!blocks(ox,oz,P.x,P.z,y))return;if(!blocks(ox,oz,P.x,oz,y)){P.z=oz;return}if(!blocks(ox,oz,ox,P.z,y)){P.x=ox;return}P.x=ox;P.z=oz};
 /* ---------- розміщення ---------- */

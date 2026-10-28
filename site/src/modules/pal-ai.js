@@ -23,7 +23,8 @@ function findTarget(p,job,C){let L=[];if(job=='chop')L=trees.map(o=>[o,trees,'w'
 const WHAT={chop:['🪓','рубає дерево','дерев'],mine:['⛏️','довбає камінь','каміння'],gather:['🫐','збирає ягоди й гриби','ягід і грибів']};
 
 /* ---------- рух ---------- */
-function moveTo(p,x,z,dt,stop){const dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);if(d<=stop+.08)return true;const s=Math.min(d-stop,SPD*(cf>0?1.2:1)*dt);p.x+=dx/d*s;p.z+=dz/d*s;p.a=Math.atan2(dx,dz);return false}
+function moveTo(p,x,z,dt,stop){const dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);if(d<=stop+.08)return true;const s=Math.min(d-stop,SPD*(cf>0?1.2:1)*dt),nx=p.x+dx/d*s,nz=p.z+dz/d*s;p.a=Math.atan2(dx,dz);
+ if(window.colPalStep)colPalStep(p,nx,nz,x,z,stop,dt);else{p.x=nx;p.z=nz}return false}/* 0.1.23: обходить будівлі (collide.js) */
 function place(p,tm,moving){p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(moving?Math.abs(Math.sin(tm*9+p.x))*.06:0),p.z);p.m.rotation.y=p.a||0}
 const bagW=A=>Object.entries(A.bag).reduce((a,[k,n])=>a+W(k)*n,0);
 const say=(t,o,c)=>{if(o&&Math.hypot(P.x-o.position.x,P.z-o.position.z)<18)dmg(t,o,c||'#bdf5c9')};
@@ -67,9 +68,9 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
   if(chTake('mu',2)){chStore('gm',1,ch.x,ch.z);say('+1 🍢',p.m);XP(p);if(window.isBuilt&&isBuilt('B_kit')&&chCount('mu')>=2&&chTake('mu',2))chStore('gm',1,ch.x,ch.z)}A.s='pick';break}
  case'fetch':{if(!A.food){const k=['be','mu','gm','pie'].find(k=>chCount(k)>0),ch=window.chNearest?chNearest(p.x,p.z):null;if(!k||!ch||cf>=20){A.s='pick';break}
    p.st='📦 бере їжу зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;if(chTake(k,1))A.food=k;else{A.s='pick';break}}
-  p.st='🍖 несе їжу в годівницю';p.job='carry';moving=!moveTo(p,C[0],C[1],dt,2.4);if(moving)break;cf+=(FOOD[A.food]||1);say('🍖 +'+(FOOD[A.food]||1),p.m);A.food=null;XP(p);A.s='pick';break}
+  p.st='🍖 несе їжу в годівницю';p.job='carry';moving=!moveTo(p,C[0],C[1],dt,2.9);if(moving)break;cf+=(FOOD[A.food]||1);say('🍖 +'+(FOOD[A.food]||1),p.m);A.food=null;XP(p);A.s='pick';break}
  case'rest':{p.st='😴 відпочиває: '+(A.why||'немає роботи');p.job=null;A.t-=dt;
-  const d=Math.hypot(p.x-C[0],p.z-C[1]);if(d>6){moving=!moveTo(p,C[0],C[1],dt,4)}else{p.t=(p.t||0)-dt;if(p.t<=0){p.t=rn(2,4);p.a=rn(0,6.3)}p.x+=Math.sin(p.a)*.35*dt;p.z+=Math.cos(p.a)*.35*dt;moving=true}
+  const d=Math.hypot(p.x-C[0],p.z-C[1]);if(d>6){moving=!moveTo(p,C[0],C[1],dt,4)}else{p.t=(p.t||0)-dt;if(p.t<=0){p.t=rn(2,4);p.a=rn(0,6.3)}{const nx=p.x+Math.sin(p.a)*.35*dt,nz=p.z+Math.cos(p.a)*.35*dt;if(window.colStep){const q=colStep(p.x,p.z,nx,nz,.42);if(Math.hypot(q[0]-nx,q[1]-nz)>.001)p.t=0;p.x=q[0];p.z=q[1]}else{p.x=nx;p.z=nz}}moving=true}
   if(A.t<=0)A.s=Object.keys(A.bag).length?'deliver':'pick';break}}
  place(p,tm,moving)};
 /* знятий з бригади попал віддає вантаж назад у скриню, щоб нічого не губилось */
