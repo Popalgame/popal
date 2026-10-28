@@ -166,11 +166,12 @@ function say(nm,t,bs){const d=$('dlg');d.style.display='block';$('dn').textConte
 function dlgX(){$('dlg').style.display='none';clearInterval(say.iv)}
 function qUp(){const el=$('qt');if(el)el.style.display='none'}
 /* save/load */
-try{const s=JSON.parse(localStorage.getItem('zi')||'null');if(s){hasSave=1;Object.assign(res,s.res);plv=s.plv||1;xp=s.xp||0;qi=s.qi||0;pname=s.pname||pname;look=s.look||null;Object.assign(inv,s.inv||{});cf=s.cf||0;qa=s.qa||0;Object.assign(st,s.st||{});Object.assign(eq,s.eq||{});(s.pals||[]).forEach(t=>Array.isArray(t)?addPal(t[0],true,t[1],t[2]>=0?t[2]:null):addPal(t,true))}}catch(e){}
-/* 0.1.17: cs — номер слота в Попал-центрі (0…239) або null, якщо попал з гравцем (у сфері) */
+try{const s=JSON.parse(localStorage.getItem('zi')||'null');if(s){hasSave=1;Object.assign(res,s.res);plv=s.plv||1;xp=s.xp||0;qi=s.qi||0;pname=s.pname||pname;look=s.look||null;Object.assign(inv,s.inv||{});cf=s.cf||0;qa=s.qa||0;Object.assign(st,s.st||{});Object.assign(eq,s.eq||{});(s.pals||[]).forEach(t=>{if(Array.isArray(t)){addPal(t[0],true,t[1],t[2]>=0?t[2]:null);if(t[3])pals[pals.length-1].wk=1}else addPal(t,true)})}}catch(e){}
+/* 0.1.17: cs — номер слота в Попал-центрі (0…239) або null, якщо попал з гравцем (у сфері).
+   0.1.21: wk — попал у бригаді центру: лише такі ходять базою й працюють, решта в сховищі відпочиває */
 function addPal(ty,quiet,lv,cs){const m=mkPal(T[ty].c);const a=rn(0,6);m.position.set(Math.cos(a)*3,0,Math.sin(a)*3);sc.add(m);pals.push({m,ty,lv:lv||1,t:rn(0,6),x:m.position.x,z:m.position.z,a:0,cs:cs==null?null:cs})}
 const palTeam=()=>pals.reduce((a,p,i)=>(p.cs==null&&a.push(i),a),[]);window.palTeam=palTeam;
-function save(){try{localStorage.setItem('zi',JSON.stringify({res,plv,xp,qi,qa,st,pname,look,inv,eq,cf,t:Date.now(),pals:pals.map(p=>[p.ty,p.lv||1,p.cs==null?-1:p.cs])}))}catch(e){}cloudPush()}setInterval(save,5000);
+function save(){try{localStorage.setItem('zi',JSON.stringify({res,plv,xp,qi,qa,st,pname,look,inv,eq,cf,t:Date.now(),pals:pals.map(p=>[p.ty,p.lv||1,p.cs==null?-1:p.cs,p.wk&&p.cs!=null?1:0])}))}catch(e){}cloudPush()}setInterval(save,5000);
 /* ui */
 const $=id=>document.getElementById(id);let mt;
 function msg(s){$('msg').textContent=s;$('msg').style.display='block';clearTimeout(mt);mt=setTimeout(()=>$('msg').style.display='none',3500)}
@@ -209,7 +210,7 @@ for(const w of wild){w.t-=dt;const d=Math.hypot(P.x-w.x,P.z-w.z);let sp=0;
 if(w.ag&&d<8&&!menuO&&!ivO){w.a=Math.atan2(P.x-w.x,P.z-w.z);sp=2.6;w.cd-=dt;if(d<1.3&&w.cd<=0){w.cd=1;P.hp-=(w.dm||10);dmg('-'+(w.dm||10),pl,'#ff6b6b');if(window.palDefend)palDefend(w);hud();if(P.hp<=0){P.hp=HPM;const C=inv._cen;P.x=C?C[0]:0;P.z=C?C[1]+3:3;msg(C?'Вас повалили! Ви прокинулись біля Попал-центру.':'Вас повалили! Ви прокинулись на початку шляху.')}}}
 else{if(w.t<=0){w.t=rn(1,4);w.a=rn(0,6.3);w.stop=Math.random()<.4}sp=w.stop?0:1}
 {const nx=Math.max(-SZ,Math.min(SZ,w.x+Math.sin(w.a)*sp*dt)),nz=Math.max(-SZ,Math.min(SZ,w.z+Math.cos(w.a)*sp*dt));if(H(nx,nz)<-.4){w.a+=Math.PI*(.6+Math.random()*.8)}else{w.x=nx;w.z=nz}}w.m.position.set(w.x,H(w.x,w.z),w.z);w.m.rotation.y=w.a}
-for(const p of pals){if(p===pals[selP]){if(window.palShown&&!palShown()){p.m.visible=false;p.x=P.x;p.z=P.z;continue}const tx=P.x-Math.sin(P.face)*1.3+Math.cos(P.face)*.9,tz=P.z-Math.cos(P.face)*1.3-Math.sin(P.face)*.9,dx=tx-p.x,dz=tz-p.z,dd=Math.hypot(dx,dz),kf=Math.min(1,dt*(dd>8?6:3));p.x+=dx*kf;p.z+=dz*kf;if(dd>.25)p.a=Math.atan2(dx,dz);p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(dd>.3?Math.abs(Math.sin(tm*12))*.07:0),p.z);p.m.rotation.y=p.a;continue}const C=inv._cen;if(p.cs==null||!C){p.m.visible=false;p.x=P.x;p.z=P.z;continue}if(!p.m.visible||Math.hypot(p.x-C[0],p.z-C[1])>12){p.m.visible=true;const a0=rn(0,6.3);p.x=C[0]+Math.cos(a0)*rn(2,5);p.z=C[1]+Math.sin(a0)*rn(2,5)}
+for(const p of pals){if(p===pals[selP]){if(window.palShown&&!palShown()){p.m.visible=false;p.x=P.x;p.z=P.z;continue}const tx=P.x-Math.sin(P.face)*1.3+Math.cos(P.face)*.9,tz=P.z-Math.cos(P.face)*1.3-Math.sin(P.face)*.9,dx=tx-p.x,dz=tz-p.z,dd=Math.hypot(dx,dz),kf=Math.min(1,dt*(dd>8?6:3));p.x+=dx*kf;p.z+=dz*kf;if(dd>.25)p.a=Math.atan2(dx,dz);p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(dd>.3?Math.abs(Math.sin(tm*12))*.07:0),p.z);p.m.rotation.y=p.a;continue}const C=inv._cen;if(p.cs==null||!p.wk||!C){p.m.visible=false;p.x=P.x;p.z=P.z;continue}if(!p.m.visible||Math.hypot(p.x-C[0],p.z-C[1])>12){p.m.visible=true;const a0=rn(0,6.3);p.x=C[0]+Math.cos(a0)*rn(2,5);p.z=C[1]+Math.sin(a0)*rn(2,5)}
 p.t-=dt;if(p.t<=0){p.t=rn(1,3);p.a=rn(0,6.3)}p.x+=Math.sin(p.a)*.8*dt;p.z+=Math.cos(p.a)*.8*dt;const d=Math.hypot(p.x-C[0],p.z-C[1]);if(d>7||d<1.6){p.a=Math.atan2(C[0]-p.x,C[1]-p.z)+(d<1.6?Math.PI:0)}p.m.position.set(p.x,H(p.x,p.z)+Math.abs(Math.sin(tm*5+p.x))*.08,p.z);p.m.rotation.y=p.a;
 if(window.palWork)palWork(p,dt);else{p.w=(p.w||0)+dt;if(p.w>(cf>0?6:16)){p.w=0;res[T[p.ty].d]++;hud()}}}
 for(let i=fx.length-1;i>=0;i--){const e=fx[i];e.t+=dt*2;const k=Math.min(1,e.t);e.s.position.set(e.x0+(e.w.x-e.x0)*k,1+Math.sin(k*Math.PI)*1.5,e.z0+(e.w.z-e.z0)*k);
@@ -218,7 +219,7 @@ if(Math.random()<ch){sc.remove(e.w.m);wild.splice(wild.indexOf(e.w),1);addPal(e.
 else{e.w.ag=1;msg('Вирвалась! Ослабте істоту ⚔️ і спробуйте ще (шанс '+Math.round(ch*100)+'%)')}hud()}}
 spT+=dt;if(spT>6){spT=0;if(wild.length<WILDN)spawnWild()}
 water.position.y=-.5+Math.sin(tm*1.5)*.04;envUp(tm);
-{const H2=((-ang*57.2958)%360+360)%360;$('cmps').style.transform='translateX('+(120-(H2+360)*2)+'px)'}cfT+=dt*(pals.length-palTeam().length)*(window.coolF?coolF():1);if(cfT>30){cfT=0;if(cf>0){cf--;if(!cf)msg('🍖 Годівниця порожня: істоти працюють повільніше')}}qT+=dt;if(qT>.35){qT=0;qUp()}if(pfO||ccO||ivO){if(ivO)hp2.rotation.y=-.35;else hp2.rotation.y+=dt*.7;R2.render(sc2,cam2)}
+{const H2=((-ang*57.2958)%360+360)%360;$('cmps').style.transform='translateX('+(120-(H2+360)*2)+'px)'}cfT+=dt*pals.filter(q=>q.wk&&q.cs!=null).length*(window.coolF?coolF():1);if(cfT>30){cfT=0;if(cf>0){cf--;if(!cf)msg('🍖 Годівниця порожня: істоти працюють повільніше')}}qT+=dt;if(qT>.35){qT=0;qUp()}if(pfO||ccO||ivO){if(ivO)hp2.rotation.y=-.35;else hp2.rotation.y+=dt*.7;R2.render(sc2,cam2)}
 
 {const q=pg.attributes.position;for(let i=0;i<NP;i++){q.array[i*3+1]+=dt*.35;if(q.array[i*3+1]>6)q.array[i*3+1]=0}q.needsUpdate=true;pts.position.set(P.x,H(P.x,P.z),P.z);const tw=nearest(wild,9);if(tw){tgR.visible=true;tgR.position.set(tw.x,H(tw.x,tw.z)+.08,tw.z);tgR.scale.setScalar(1+Math.sin(tm*6)*.08)}else tgR.visible=false}
 R.render(sc,cam);requestAnimationFrame(frame)}
@@ -240,7 +241,7 @@ $('pv3').appendChild(R2.domElement);$('pni').value=pname;$('pns').onclick=()=>{p
 if(t=='o'){c.innerHTML=`<div class='pcol'><h4>Графіка</h4><button class='ob' id='gqb'>Якість: ${gq?'Висока':'Низька'}</button></div>`;
 $('gqb').onclick=()=>{gq=gq?0:1;R.setPixelRatio(gq?Math.min(devicePixelRatio,2):1);sun.castShadow=!!gq;gm.visible=!!gq;rs();pfTab('o')};
 return}
-c.innerHTML=`<div id='pfv'>Версія 0.1.20</div>`}
+c.innerHTML=`<div id='pfv'>Версія 0.1.21</div>`}
 document.addEventListener('gesturestart',e=>e.preventDefault());
 if(/iPhone|iPad/.test(navigator.userAgent)&&!navigator.standalone)setTimeout(()=>msg('📲 Повний екран на iPhone: Поділитись → «На початковий екран»'),4500);
 function mmShow(){menuO=1;dlgX();$('mm').style.display='flex';$('mc').textContent=look?'▶ Продовжити':'▶ Почати гру'}

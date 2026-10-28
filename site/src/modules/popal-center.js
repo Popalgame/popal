@@ -1,8 +1,14 @@
 /* 0.1.17: Попал-центр — серце бази гравця. Крафтиться (20 🪵 + 15 🪨) і ставиться один раз будь-де на суші.
-   Навколо нього будується база. Працюють лише попали, покладені в сховище центру: 8 сторінок по 30 слотів.
+   Навколо нього будується база. Попали лежать у сховищі центру (8 сторінок по 30 слотів); працюють лише ті, що в бригаді (0.1.21).
    Решта попалів — з гравцем у сфері (команда, яку можна призивати). */
 (function(){try{
 const CN=240,PG=30,NP=CN/PG,NEAR=3.2;
+/* 0.1.21: рівень центру визначає, скільки попалів працює (бригада). Поки що є лише 1 рівень — 2 працівники, підвищення з'явиться пізніше.
+   Решта попалів у сховищі центру відпочиває. */
+const LVW=[0,2],cenLv=()=>1,wMax=()=>LVW[cenLv()]||2;window.cenLv=cenLv;window.cenWMax=wMax;
+const crew=()=>pals.filter(p=>p.cs!=null&&p.wk);
+/* перехід із 0.1.17–0.1.20, де працювали всі попали в центрі: на роботі лишаються перші двоє */
+if(!inv._wkM){inv._wkM=1;if(!crew().length)pals.filter(p=>p.cs!=null).sort((a,b)=>a.cs-b.cs).slice(0,LVW[1]).forEach(p=>p.wk=1)}
 IT.B_cen=['🏠','Попал-центр'];if(inv.B_cen==null)inv.B_cen=0;
 RC.unshift({id:'B_cen',n:'🏠 Попал-центр',c:{w:20,s:15},d:'Серце вашої бази: ставиться один раз. Навколо нього будуєте базу, а попали в ньому працюють',one:1});
 
@@ -42,8 +48,8 @@ function placeCen(){if(inv._cen){msg('🏠 Попал-центр уже стої
  if(H(x,z)<-.3||H(P.x,P.z)<-.3){msg('🌊 Попал-центр не можна ставити у воді');return}
  inv.B_cen--;inv._cen=[+x.toFixed(2),+z.toFixed(2)];showCen();if(window.respawnB)respawnB();
  /* перший центр: попали, які раніше працювали в таборі (усі, крім того, що з вами), переходять у центр */
- if(!inv._cenM){inv._cenM=1;const keep=pals[selP];for(const p of pals){if(p!==keep&&p.cs==null){const f=cenFree();if(f>=0)p.cs=f}}}
- pwUp();hud();save();msg('🏠 Попал-центр збудовано! Біля нього натисніть «Дія», щоб покласти попалів на роботу');if(window.plBurst)plBurst(x,H(x,z)+2,z,0x7fe3f5,40,3.5,.5)}
+ if(!inv._cenM){inv._cenM=1;const keep=pals[selP];for(const p of pals){if(p!==keep&&p.cs==null){const f=cenFree();if(f>=0){p.cs=f;if(crew().length<wMax())p.wk=1}}}}
+ pwUp();hud();save();msg('🏠 Попал-центр збудовано! Біля нього натисніть «Дія» й поставте попалів у бригаду — вони почнуть працювати');if(window.plBurst)plBurst(x,H(x,z)+2,z,0x7fe3f5,40,3.5,.5)}
 window.placeCen=placeCen;
 document.addEventListener('click',e=>{const t=e.target.closest('[data-cenplace]');if(!t)return;placeCen();ivR()});
 const _r=ivR;ivR=function(){_r.apply(this,arguments);const c=$('ivc');if(!c)return;
@@ -80,38 +86,72 @@ const css=document.createElement('style');css.id='cen-css';css.textContent=`
 #cen .tr button,#cen .dt button{background:linear-gradient(#f39a4a,#d9532e);border:2px solid #e2bf67;color:#fff;border-radius:10px;padding:3px 10px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap}
 #cen .tr button:disabled,#cen .dt button:disabled{opacity:.4;filter:grayscale(1)}
 #cen .dt{display:flex;align-items:center;gap:8px;font-size:13px}#cen .dt canvas{width:44px;height:44px}#cen .dt div{flex:1;min-width:0}
-#cen .em{opacity:.7;font-size:12px}`;document.head.appendChild(css);
+#cen .em{opacity:.7;font-size:12px}
+#cen .tabs{display:flex;gap:6px;flex:1}#cen .tabs button{background:rgba(255,255,255,.06);border:2px solid rgba(226,191,103,.45);color:#e8dcc0;border-radius:10px;padding:4px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
+#cen .tabs button.on{background:linear-gradient(#f39a4a,#d9532e);color:#fff;border-color:#e2bf67}#cen .lvb{font-size:12px;color:#ffe7a8;background:rgba(226,191,103,.15);border:1px solid rgba(226,191,103,.5);border-radius:8px;padding:2px 8px;white-space:nowrap}
+#cen .cw{display:flex;flex-direction:column;gap:8px;flex:1.35;min-width:0;overflow:auto}
+#cen .wg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#cen .wc{position:relative;border:2px solid #3a8ee6;border-radius:14px;background:rgba(58,142,230,.14);padding:8px 10px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;min-height:96px;min-width:0}
+#cen .wc.e{border-style:dashed;border-color:rgba(127,227,245,.4);background:rgba(127,227,245,.04);justify-content:center;opacity:.8;font-size:13px}
+#cen .wc canvas{width:56px;height:56px;flex:none}#cen .wc div{flex:1;min-width:0;font-size:12.5px;line-height:1.35}#cen .wc b{font-size:15px}
+#cen .wc button{flex-basis:100%;background:linear-gradient(#5a6a8a,#3a4560);border:2px solid #e2bf67;color:#fff;border-radius:10px;padding:3px 8px;font-weight:700;cursor:pointer;font-size:12px;white-space:nowrap}
+#cen .lk{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}#cen .lk div{border:2px dashed rgba(255,255,255,.15);border-radius:12px;padding:8px 4px;text-align:center;font-size:11px;opacity:.55}
+#cen .cs .wb{position:absolute;right:3px;top:1px;font-size:12px}`;document.head.appendChild(css);
 const box=document.createElement('div');box.id='cen';document.body.appendChild(box);
-let page=0,sel=null;
-const JI={chop:'🪓',mine:'⛏️',gather:'🫐',carry:'📦',cook:'🍳',water:'💧',cool:'❄️'};
+let page=0,sel=null,tab=0;
+const JI={chop:'🪓',mine:'⛏️',gather:'🫐',carry:'📦',cook:'🍳',water:'💧',cool:'❄️'},JN={chop:'рубає дерева',mine:'добуває камінь',gather:'збирає ягоди й гриби',carry:'носить їжу в годівницю',cook:'готує їжу'};
 const jobs=p=>Object.keys((T[p.ty]||{}).wk||{}).map(j=>JI[j]||'').join('');
 const cv=(p,s)=>{const c=document.createElement('canvas');c.width=c.height=s;try{drawCrit(c,T[p.ty].c)}catch(_){}return c};
 function openCen(){ivO=1;box.style.display='flex';render()}
 function closeCen(){box.style.display='none';ivO=0;sel=null}
 window.openCen=openCen;
-function render(){const inC=pals.filter(p=>p.cs!=null),tm=palTeam(),cap=window.palCap?palCap():8;
- const pages=[...Array(NP)].map((_,k)=>inC.some(p=>p.cs>=k*PG&&p.cs<(k+1)*PG));
- box.innerHTML=`<header><b>🏠 Попал-центр</b><small>Працюють: ${inC.length} / ${CN} · 🍖 Годівниця: ${cf} · ${(inv._ch||[]).length?'📦 Скринь: '+inv._ch.length:'⚠️ Немає скрині — попалам нікуди складати здобуте'}</small><button class='cx'>✕</button></header>
- <div class='cb'><div class='cl'><div class='cg'></div><div class='pn'><button data-pg='-1' ${page?'':'disabled'}>◀</button><div class='pd'>${pages.map((h,k)=>`<i class='${k==page?'on':''} ${h?'h':''}'></i>`).join('')}</div><b>${page+1} / ${NP}</b><button data-pg='1' ${page<NP-1?'':'disabled'}>▶</button></div></div>
- <div class='cr'><div class='box dt'></div><div class='box tm'><h5>🎒 З вами (${tm.length}/${cap}) — у центрі вони працюють</h5></div></div></div>`;
- box.querySelector('.cx').onclick=closeCen;
+const done=t=>{pwUp();hud();save();render();if(t)msg(t)};
+/* поставити попала в бригаду (з команди — спершу в сховище) */
+function toCrew(p){if(crew().length>=wMax()){msg('⚒️ У бригаді вже '+wMax()+' попали — це максимум для рівня '+cenLv());return}
+ if(p.cs==null){const f=cenFree();if(f<0){msg('🏠 Попал-центр заповнений');return}p.cs=f}p.wk=1;done('⚒️ '+T[p.ty].n+' у бригаді — працює на базі')}
+function offCrew(p){p.wk=0;done('🗄️ '+T[p.ty].n+' відпочиває у сховищі')}
+function head(){const inC=pals.filter(p=>p.cs!=null);return `<header><div class='tabs'><button data-tab='0' class='${tab==0?'on':''}'>⚒️ Бригада ${crew().length}/${wMax()}</button><button data-tab='1' class='${tab==1?'on':''}'>🗄️ Сховище ${inC.length}/${CN}</button></div>
+ <span class='lvb'>🏠 Рівень ${cenLv()}</span><small>🍖 ${cf} · ${(inv._ch||[]).length?'📦 '+inv._ch.length:'⚠️ Немає скрині'}</small><button class='cx'>✕</button></header>`}
+function render(){box.innerHTML=head()+(tab==0?crewHTML():storeHTML());box.querySelector('.cx').onclick=closeCen;
+ box.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=+b.dataset.tab;sel=null;render()});
+ if(tab==0)crewBind();else storeBind()}
+/* ---------- вкладка «Бригада» ---------- */
+function crewHTML(){return `<div class='cb'><div class='cw'><div class='wg'></div>
+ <div class='box em'>⚒️ Бригада — попали, які працюють на базі: рубають, добувають, збирають і складають усе у скрині. На ${cenLv()}-му рівні центру працюють лише ${wMax()}. Решта відпочиває у сховищі.</div>
+ <div class='lk'>${[2,3,4,5].map(l=>`<div>🔒 Рівень ${l}<br>більше місць</div>`).join('')}</div><div class='em' style='text-align:center'>Підвищення рівня Попал-центру з'явиться пізніше</div></div>
+ <div class='cr'><div class='box tm'><h5>Кого поставити на роботу</h5></div></div></div>`}
+function crewBind(){const g=box.querySelector('.wg'),cr=crew();
+ for(let k=0;k<wMax();k++){const p=cr[k],d=document.createElement('div');
+  if(p){d.className='wc';d.appendChild(cv(p,96));d.insertAdjacentHTML('beforeend',`<div><b>${T[p.ty].n}</b><br>рів. ${p.lv||1} · ${jobs(p)}<br><span class='em'>${p.job&&JN[p.job]?'⚙️ Зараз '+JN[p.job]:'⚙️ Береться до роботи'}</span></div><button>↩ Відпочити</button>`);d.querySelector('button').onclick=()=>offCrew(p)}
+  else{d.className='wc e';d.textContent='＋ Вільне місце — оберіть попала праворуч'}
+  g.appendChild(d)}
+ const tl=box.querySelector('.tm'),full=cr.length>=wMax();
+ const cand=pals.filter(p=>!(p.cs!=null&&p.wk)).sort((a,b)=>(a.cs==null)-(b.cs==null));
+ if(!cand.length)tl.insertAdjacentHTML('beforeend',`<div class='em'>${pals.length?'Усі ваші попали вже в бригаді.':'Зловіть попала кулею 🔮 — і поставте сюди.'}</div>`);
+ for(const p of cand){const i=pals.indexOf(p),r=document.createElement('div');r.className='tr';r.appendChild(cv(p,40));
+  r.insertAdjacentHTML('beforeend',`<span>${T[p.ty].n} · рів. ${p.lv||1} ${jobs(p)}<br><small class='em'>${p.cs!=null?'🗄️ у сховищі':i===selP?'🚶 з вами':'🔮 з вами у сфері'}</small></span><button ${full?'disabled':''}>⚒️ На роботу</button>`);
+  r.querySelector('button').onclick=()=>toCrew(p);tl.appendChild(r)}}
+/* ---------- вкладка «Сховище» ---------- */
+function storeHTML(){const inC=pals.filter(p=>p.cs!=null),pages=[...Array(NP)].map((_,k)=>inC.some(p=>p.cs>=k*PG&&p.cs<(k+1)*PG));
+ return `<div class='cb'><div class='cl'><div class='cg'></div><div class='pn'><button data-pg='-1' ${page?'':'disabled'}>◀</button><div class='pd'>${pages.map((h,k)=>`<i class='${k==page?'on':''} ${h?'h':''}'></i>`).join('')}</div><b>${page+1} / ${NP}</b><button data-pg='1' ${page<NP-1?'':'disabled'}>▶</button></div></div>
+ <div class='cr'><div class='box dt'></div><div class='box tm'><h5>🎒 З вами (${palTeam().length}/${window.palCap?palCap():8})</h5></div></div></div>`}
+function storeBind(){const inC=pals.filter(p=>p.cs!=null),tm=palTeam(),cap=window.palCap?palCap():8;
  box.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>{page=Math.max(0,Math.min(NP-1,page+ +b.dataset.pg));sel=null;render()});
  const g=box.querySelector('.cg');
  for(let k=0;k<PG;k++){const si=page*PG+k,p=inC.find(q=>q.cs===si),d=document.createElement('div');d.className='cs'+(p?' f':'')+(sel===si?' on':'');
-  if(p){d.appendChild(cv(p,64));d.insertAdjacentHTML('beforeend',`<span class='lv'>${p.lv||1}</span><span class='jb'>${jobs(p)}</span>`)}else d.innerHTML=`<span class='pl'>＋</span>`;
+  if(p){d.appendChild(cv(p,64));d.insertAdjacentHTML('beforeend',`<span class='lv'>${p.lv||1}</span><span class='jb'>${jobs(p)}</span>${p.wk?"<span class='wb'>⚒️</span>":''}`)}else d.innerHTML=`<span class='pl'>＋</span>`;
   d.onclick=()=>{sel=si;render()};g.appendChild(d)}
- /* панель деталей обраного слота */
  const dt=box.querySelector('.dt'),sp=sel!=null&&inC.find(q=>q.cs===sel);
- if(sp){const t=T[sp.ty];dt.appendChild(cv(sp,88));dt.insertAdjacentHTML('beforeend',`<div><b>${t.n}</b> · рів. ${sp.lv||1}<br><span class='em'>${sp.job?'⚙️ Зараз працює':'⚙️ Працює в центрі'} ${jobs(sp)}</span></div><button data-out ${tm.length>=cap?'disabled':''}>↩ Забрати</button>`);
-  dt.querySelector('[data-out]').onclick=()=>{if(palTeam().length>=cap){msg('З вами вже повна команда');return}sp.cs=null;sel=null;pwUp();hud();save();render();msg('🐾 '+t.n+' тепер з вами у сфері')}}
- else if(sel!=null)dt.innerHTML=`<div class='em'>Слот ${sel+1} вільний. Натисніть «➕ У центр» біля попала праворуч — він займе цей слот і почне працювати.</div>`;
- else dt.innerHTML=`<div class='em'>Попали в центрі працюють: рубають, добувають, збирають, готують. Оберіть слот, щоб побачити попала, або додайте попалів праворуч.</div>`;
- /* команда */
+ if(sp){const t=T[sp.ty];dt.appendChild(cv(sp,88));dt.insertAdjacentHTML('beforeend',`<div><b>${t.n}</b> · рів. ${sp.lv||1}<br><span class='em'>${sp.wk?'⚒️ У бригаді — працює':'🗄️ Відпочиває'} ${jobs(sp)}</span></div>${sp.wk?"<button data-off>↩ Відпочити</button>":`<button data-on ${crew().length>=wMax()?'disabled':''}>⚒️ На роботу</button>`}<button data-out ${tm.length>=cap?'disabled':''}>🎒 Забрати</button>`);
+  const on=dt.querySelector('[data-on]'),off=dt.querySelector('[data-off]');if(on)on.onclick=()=>toCrew(sp);if(off)off.onclick=()=>offCrew(sp);
+  dt.querySelector('[data-out]').onclick=()=>{if(palTeam().length>=cap){msg('З вами вже повна команда');return}sp.cs=null;sp.wk=0;sel=null;done('🐾 '+t.n+' тепер з вами у сфері')}}
+ else if(sel!=null)dt.innerHTML=`<div class='em'>Слот ${sel+1} вільний. Натисніть «➕ У сховище» біля попала праворуч.</div>`;
+ else dt.innerHTML=`<div class='em'>У сховищі попали відпочивають. Працюють лише ті, що в бригаді (вкладка «⚒️ Бригада»). Оберіть слот, щоб побачити попала.</div>`;
  const tl=box.querySelector('.tm');
  if(!tm.length)tl.insertAdjacentHTML('beforeend',`<div class='em'>${pals.length?'Усі ваші попали вже в центрі.':'Зловіть попала кулею 🔮 — і покладіть сюди.'}</div>`);
- for(const i of tm){const p=pals[i],r=document.createElement('div');r.className='tr';r.appendChild(cv(p,40));r.insertAdjacentHTML('beforeend',`<span>${T[p.ty].n} · рів. ${p.lv||1} ${jobs(p)}${i===selP?' · 🚶 з вами':''}</span><button>➕ У центр</button>`);
+ for(const i of tm){const p=pals[i],r=document.createElement('div');r.className='tr';r.appendChild(cv(p,40));r.insertAdjacentHTML('beforeend',`<span>${T[p.ty].n} · рів. ${p.lv||1} ${jobs(p)}${i===selP?' · 🚶 з вами':''}</span><button>➕ У сховище</button>`);
   r.querySelector('button').onclick=()=>{const want=sel!=null&&!inC.some(q=>q.cs===sel)?sel:cenFree(page*PG);if(want<0){msg('🏠 Попал-центр заповнений');return}
-   p.cs=want;sel=want;page=Math.floor(want/PG);pwUp();hud();save();render();msg('🏠 '+T[p.ty].n+' тепер працює в Попал-центрі')};
+   p.cs=want;p.wk=0;sel=want;page=Math.floor(want/PG);done('🗄️ '+T[p.ty].n+' у сховищі Попал-центру')};
   tl.appendChild(r)}}
 addEventListener('keydown',e=>{if(e.key=='Escape'&&box.style.display=='flex')closeCen()});
 }catch(e){console.warn('popal-center',e)}})();
