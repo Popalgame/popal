@@ -1,8 +1,8 @@
-/* 0.1.20: скрині на базі. 0.1.22: у кожній скрині 30 слотів, у слоті — до 100 однакових речей (ваги немає). Крафт 10 🪵 + 4 🥢, ставиться в радіусі 30 м від Попал-центру, скринь може бути скільки завгодно.
+/* 0.1.20: скрині на базі. 0.1.22: у кожній скрині 30 слотів; 0.1.24: один слот — один вид ресурсу без обмеження кількості (ваги немає). Крафт 10 🪵 + 4 🥢, ставиться в радіусі 30 м від Попал-центру, скринь може бути скільки завгодно.
    Попали в центрі складають усе здобуте (деревину, палки, камінь, ягоди, гриби, страви) у найближчу скриню, а не гравцю в рюкзак.
    Кухарі беруть гриби, а носії — їжу для годівниці теж зі скринь. Ваги в скрині немає: гравець забирає, скільки потрібно. */
 (function(){try{
-const NEAR=1.9,BASE=30,SLOTS=30,STK=100;
+const NEAR=1.9,BASE=30,SLOTS=30;
 IT.B_ch=['📦','Скриня'];if(inv.B_ch==null)inv.B_ch=0;
 {const i=RC.findIndex(r=>r.id=='B_cen');RC.splice(i+1,0,{id:'B_ch',n:'📦 Скриня',c:{w:10,sti:4},d:'Ставиться на базі. Попали складають сюди все, що добули. Без обмеження ваги'})}
 if(!Array.isArray(inv._ch))inv._ch=[];
@@ -25,8 +25,8 @@ const total=c=>Object.values(c.it||{}).reduce((a,n)=>a+n,0);
 const near=(x,z)=>{let b=null,bd=1e9;for(const c of CH){const d=Math.hypot(c.x-x,c.z-z);if(d<bd){bd=d;b=c}}return b};
 let wT=0;const warn=()=>{if(Date.now()-wT<90000)return;wT=Date.now();msg('📦 Попали не мають куди складати здобуте — поставте скриню на базі')};
 window.chAny=()=>CH.length>0;
-const used=c=>Object.values(c.it||{}).reduce((a,n)=>a+Math.ceil(n/STK),0);
-const room=(c,k)=>{const h=(c.it||{})[k]||0;return (SLOTS-used(c))*STK+(h%STK?STK-h%STK:0)};
+const used=c=>Object.values(c.it||{}).filter(n=>n>0).length;
+const room=(c,k)=>((c.it||{})[k]>0||used(c)<SLOTS)?Infinity:0;
 const byDist=(x,z)=>CH.slice().sort((a,b)=>Math.hypot(a.x-x,a.z-z)-Math.hypot(b.x-x,b.z-z));
 /* кладе скільки влізе, починаючи з найближчої скрині; повертає, скільки поклало */
 window.chStore=(k,n,x,z)=>{if(!CH.length){warn();return 0}let left=n;for(const c of byDist(x==null?P.x:x,z==null?P.z:z)){const t=Math.min(left,room(c,k));if(t>0){c.it=c.it||{};c.it[k]=(c.it[k]||0)+t;left-=t}if(!left)break}return n-left};
@@ -77,14 +77,14 @@ const ownList=()=>Object.keys(IT).filter(k=>(cnt(k)||0)>0&&k!=eq.tool&&k!=eq.bag
 function openCh(c){cur=c;ivO=1;box.style.display='flex';render()}
 function closeCh(){box.style.display='none';ivO=0;cur=null;hud();save()}
 function take(k,n){const h=(cur.it||{})[k]||0;n=Math.min(n,h);if(!n)return;cur.it[k]-=n;if(!cur.it[k])delete cur.it[k];addI(k,n);render()}
-function put(k,n){const h=cnt(k)||0;n=Math.min(n,h,room(cur,k));if(!n){msg('📦 У скрині немає вільних слотів');return}addI(k,-n);cur.it=cur.it||{};cur.it[k]=(cur.it[k]||0)+n;render()}
+function put(k,n){const h=cnt(k)||0;n=Math.min(n,h,room(cur,k));if(!n){msg('📦 У скрині всі 30 слотів зайняті іншими ресурсами');return}addI(k,-n);cur.it=cur.it||{};cur.it[k]=(cur.it[k]||0)+n;render()}
 let sk=null;
 function render(){if(!cur)return;const it=cur.it||{},ks=Object.keys(it).filter(k=>it[k]>0).sort((a,b)=>it[b]-it[a]),own=ownList(),i=CH.indexOf(cur)+1;
- const w=window.invWt?invWt():0,cp=window.invCap?invCap():0,st=[];for(const k of ks){let n=it[k];while(n>0){st.push([k,Math.min(STK,n)]);n-=STK}}
+ const w=window.invWt?invWt():0,cp=window.invCap?invCap():0,st=ks.map(k=>[k,it[k]]),fmt=n=>n>=1e6?(Math.round(n/1e5)/10+'M').replace('.',','):n>=1e4?(Math.round(n/100)/10+'k').replace('.',','):String(n);
  if(sk&&!it[sk])sk=null;
- box.innerHTML=`<header><b>📦 Скриня ${CH.length>1?'№'+i:''}</b><small>Слотів: ${used(cur)} / ${SLOTS} · у слоті до ${STK} · без ваги</small><button class='cx'>✕</button></header>
+ box.innerHTML=`<header><b>📦 Скриня ${CH.length>1?'№'+i:''}</b><small>Слотів: ${used(cur)} / ${SLOTS} · у слоті без обмежень · без ваги</small><button class='cx'>✕</button></header>
  <div class='cb'><div class='col'><h5><span>У скрині</span>${ks.length?"<button class='b g' data-all>⬇ Забрати все</button>":''}</h5>
- <div class='sg'>${Array.from({length:SLOTS},(_,q)=>{const s2=st[q];return s2?`<div class='sl f ${s2[0]==sk?'on':''}' data-sk='${s2[0]}'><span class='ic'>${ic(s2[0])}</span><span class='n'>${s2[1]}</span></div>`:"<div class='sl'></div>"}).join('')}</div>
+ <div class='sg'>${Array.from({length:SLOTS},(_,q)=>{const s2=st[q];return s2?`<div class='sl f ${s2[0]==sk?'on':''}' data-sk='${s2[0]}'><span class='ic'>${ic(s2[0])}</span><span class='n'>${fmt(s2[1])}</span></div>`:"<div class='sl'></div>"}).join('')}</div>
  <div class='tk'>${sk?`<span class='ic'>${ic(sk)}</span><span class='nm'>${nm(sk)} ×${it[sk]}</span><button class='b g' data-t='${sk}' data-n='1'>1</button><button class='b g' data-t='${sk}' data-n='10'>10</button><button class='b g' data-t='${sk}' data-n='1e9'>Усе</button>`:`<span class='em'>${ks.length?'Торкніться слота, щоб забрати речі':'Порожньо. Попали з бригади складатимуть сюди здобуте.'}</span>`}</div></div>
  <div class='col'><h5><span>🎒 Рюкзак</span><span class='wt'>⚖️ ${Math.round(w*10)/10} / ${cp}</span></h5><div class='ls'>${own.length?own.map(k=>`<div class='r'><span class='ic'>${ic(k)}</span><span class='nm'>${nm(k)}</span><span class='n'>${cnt(k)}</span><button class='b' data-p='${k}' data-n='1'>1</button><button class='b' data-p='${k}' data-n='1e9'>Усе</button></div>`).join(''):"<div class='em'>Рюкзак порожній.</div>"}</div></div></div>`;
  box.querySelector('.cx').onclick=closeCh;
