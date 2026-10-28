@@ -17,16 +17,14 @@ window.cenPos=()=>inv._cen||null;
 /* ---------- модель ---------- */
 const GLOW=new THREE.MeshStandardMaterial({color:0x7fe3f5,emissive:0x2ab8e0,emissiveIntensity:1.6,roughness:.25});
 const STN=new THREE.MeshStandardMaterial({color:0xb9b4c4,roughness:.85,flatShading:true}),STD=new THREE.MeshStandardMaterial({color:0x7d7890,roughness:.9,flatShading:true});
-const RED=new THREE.MeshStandardMaterial({color:0xe8433a,roughness:.35}),WHT=new THREE.MeshStandardMaterial({color:0xf4f2ee,roughness:.35}),DRK=new THREE.MeshStandardMaterial({color:0x2a2a36,roughness:.5});
 let cenG=null,orb=null,ring=null;
 function mkCen(){const g=new THREE.Group(),m=(geo,mat,x,y,z)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;g.add(o);return o};
  m(new THREE.CylinderGeometry(2.1,2.3,.3,10),STD,0,.15,0);m(new THREE.CylinderGeometry(1.75,1.9,.22,10),STN,0,.4,0);
  for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.26,x=Math.cos(a)*1.55,z=Math.sin(a)*1.55;m(new THREE.BoxGeometry(.26,1.1,.26),STN,x,1.0,z).rotation.y=-a;m(new THREE.OctahedronGeometry(.16,0),GLOW,x,1.7,z)}
  m(new THREE.CylinderGeometry(.42,.6,.9,8),STN,0,.95,0);
  orb=new THREE.Group();orb.position.y=2.05;g.add(orb);
- const top=new THREE.Mesh(new THREE.SphereGeometry(.55,24,12,0,Math.PI*2,0,Math.PI/2),RED),bot=new THREE.Mesh(new THREE.SphereGeometry(.55,24,12,0,Math.PI*2,Math.PI/2,Math.PI/2),WHT);
- const band=new THREE.Mesh(new THREE.TorusGeometry(.555,.05,8,32),DRK);band.rotation.x=Math.PI/2;const btn=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.08,16),GLOW);btn.rotation.x=Math.PI/2;btn.position.z=.55;
- [top,bot,band,btn].forEach(o=>{o.castShadow=true;orb.add(o)});
+ /* та сама світло-синя куля, якою гравець ловить попалів */
+ const ball=new THREE.Mesh(new THREE.SphereGeometry(.55,32,20),window.plBallMat?plBallMat('b'):GLOW);ball.castShadow=true;orb.add(ball);
  ring=new THREE.Mesh(new THREE.TorusGeometry(.95,.035,6,48),GLOW);ring.rotation.x=Math.PI/2;ring.position.y=2.05;g.add(ring);
  const lt=new THREE.PointLight(0x7fe3f5,0,9);lt.position.y=2.2;g.add(lt);g.userData.light=lt;
  const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.font='bold 46px system-ui';x.textAlign='center';x.textBaseline='middle';x.lineWidth=8;x.strokeStyle='#1a1430';x.strokeText('🏠 Попал-центр',256,48);x.fillStyle='#ffe7a8';x.fillText('🏠 Попал-центр',256,48);
