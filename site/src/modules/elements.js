@@ -11,11 +11,13 @@ const camp=()=>pals.filter(p=>p.cs!=null),lv=j=>camp().reduce((a,p)=>Math.max(a,
 window.coolF=()=>{const l=lv('cool');return l?1-.12*l:1};
 const ACT=['chop','mine','gather','carry','cook'];
 window.palWork=function(p,dt){const wk=T[p.ty].wk||{},jobs=ACT.filter(j=>wk[j]);if(!jobs.length)return;p.w=(p.w||0)+dt*(1+.15*lv('water'));if(p.w<(cf>0?7:18))return;p.w=0;p.j=((p.j||0)+1)%jobs.length;const job=jobs[p.j],L=wk[job],n=L>=3?2:1;let t='';
-switch(job){case'chop':res.w+=n;t='+'+n+' 🪵';break;
-case'mine':res.s+=n;t='+'+n+' 🪨';break;
-case'gather':{const k=Math.random()<.6?'be':'mu';inv[k]+=n;t='+'+n+(k=='be'?' 🫐':' 🍄');break}
-case'cook':if(inv.mu>=2){inv.mu-=2;inv.gm++;t='+1 🍢'}break;
-case'carry':if(cf<20){const k=['be','mu','gm','pie'].find(k=>inv[k]>0);if(k){inv[k]--;cf+=FOOD[k];t='📦 +'+FOOD[k]+' 🍖'}}break}
+/* 0.1.20: усе здобуте попал несе в найближчу скриню на базі, а не гравцю в рюкзак; кухарі й носії беруть продукти теж зі скринь */
+const S=(k,m)=>!!(window.chStore&&chStore(k,m,p.x,p.z)),TK=(k,m)=>!!(window.chTake&&chTake(k,m)),CC=k=>window.chCount?chCount(k):0;
+switch(job){case'chop':if(S('w',n)){t='+'+n+' 🪵';if(Math.random()<.35&&S('sti',1))t+=' +1 🥢'}break;
+case'mine':if(S('s',n))t='+'+n+' 🪨';break;
+case'gather':{const k=Math.random()<.6?'be':'mu';if(S(k,n))t='+'+n+(k=='be'?' 🫐':' 🍄');break}
+case'cook':if(CC('mu')>=2&&TK('mu',2)){S('gm',1);t='+1 🍢'}break;
+case'carry':if(cf<20){const k=['be','mu','gm','pie'].find(k=>CC(k)>0);if(k&&TK(k,1)){cf+=FOOD[k];t='📦 +'+FOOD[k]+' 🍖'}}break}
 p.job=job;if(t&&Math.hypot(P.x-p.x,P.z-p.z)<16)dmg(t,p.m,'#bdf5c9');hud()};
 const _iv=ivR;ivR=function(){_iv();const c=$('ivc');
 if(ivTab=='d'&&c.children.length>1){const d=document.createElement('div');d.className='elc';d.innerHTML='<b>Сила стихій</b>'+Object.entries(BEATS).filter(([k,v])=>v.length).map(([k,v])=>E[k][0]+' '+E[k][1]+' → '+v.map(x=>E[x][0]+' '+E[x][1]).join(', ')).join(' · ')+'<br><small>Сильна стихія: удар ×1,5. Слабка: ×0,75.</small>';c.insertBefore(d,c.children[1])}

@@ -51,7 +51,7 @@ const PXMAX=50,PXM=30,pxN=l=>XPT[Math.min(PXMAX,l+1)];
 function gainPx(p,n){const cap=Math.min(PXMAX,plv);if((p.lv||1)>=cap){p.xp=0;if((p.lv||1)<PXMAX&&!p.capM){p.capM=1;msg('🐾 '+T[p.ty].n+' досяг рівня героя. Підвищіть рівень героя, щоб попал ріс далі')}return}p.capM=0;
 n=Math.round(n*PXM*(1+.1*((p.lv||1)-1)));p.xp=(p.xp||0)+n;let up=0;while((p.lv||1)<cap&&p.xp>=pxN(p.lv||1)){p.xp-=pxN(p.lv||1);p.lv=(p.lv||1)+1;up=1}if((p.lv||1)>=cap)p.xp=0;inv._px=pals.map(q=>q.xp||0);if(up){msg('🐾 '+T[p.ty].n+' досяг рівня '+p.lv+'!');try{pwUp();save()}catch(_){}}}
 window.palXp=gainPx;window.palXpNeed=pxN;
-const pw0=window.palWork;if(pw0)window.palWork=(p,dt)=>{const b=p.w||0;pw0(p,dt);if((p.w||0)<b){gainPx(p,2);if(p.job=='cook'&&built('B_kit')&&inv.mu>=2){inv.mu-=2;inv.gm++}if(p.job=='gather'&&built('B_farm'))inv.be++}};
+const pw0=window.palWork;if(pw0)window.palWork=(p,dt)=>{const b=p.w||0;pw0(p,dt);if((p.w||0)<b){gainPx(p,2);if(p.job=='cook'&&built('B_kit')&&window.chCount&&chCount('mu')>=2&&chTake('mu',2))chStore('gm',1,p.x,p.z);if(p.job=='gather'&&built('B_farm')&&window.chStore)chStore('be',1,p.x,p.z)}};
 /* ---------- стихійні атаки ---------- */
 const EC={wa:[0x3ad0ff,'💧 Водяний струмінь'],fi:[0xff7a2a,'🔥 Вогняний плювок'],ea:[0xa8713f,'⛰️ Кам’яний удар'],ai:[0xe8f4ff,'🌪️ Вихор'],gr:[0x5fdc7a,'🌿 Бамбуковий смерч'],da:[0x9a6ad6,'🌑 Тіньова куля'],ne:[0xf4f4f8,'⚪ Наскок']};
 const ecOf=ty=>EC[((T[ty]&&T[ty].e)||['ne'])[0]]||EC.ne;

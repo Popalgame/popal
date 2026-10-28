@@ -91,7 +91,7 @@ function closeCen(){box.style.display='none';ivO=0;sel=null}
 window.openCen=openCen;
 function render(){const inC=pals.filter(p=>p.cs!=null),tm=palTeam(),cap=window.palCap?palCap():8;
  const pages=[...Array(NP)].map((_,k)=>inC.some(p=>p.cs>=k*PG&&p.cs<(k+1)*PG));
- box.innerHTML=`<header><b>🏠 Попал-центр</b><small>Працюють: ${inC.length} / ${CN} · 🍖 Годівниця: ${cf}</small><button class='cx'>✕</button></header>
+ box.innerHTML=`<header><b>🏠 Попал-центр</b><small>Працюють: ${inC.length} / ${CN} · 🍖 Годівниця: ${cf} · ${(inv._ch||[]).length?'📦 Скринь: '+inv._ch.length:'⚠️ Немає скрині — попалам нікуди складати здобуте'}</small><button class='cx'>✕</button></header>
  <div class='cb'><div class='cl'><div class='cg'></div><div class='pn'><button data-pg='-1' ${page?'':'disabled'}>◀</button><div class='pd'>${pages.map((h,k)=>`<i class='${k==page?'on':''} ${h?'h':''}'></i>`).join('')}</div><b>${page+1} / ${NP}</b><button data-pg='1' ${page<NP-1?'':'disabled'}>▶</button></div></div>
  <div class='cr'><div class='box dt'></div><div class='box tm'><h5>🎒 З вами (${tm.length}/${cap}) — у центрі вони працюють</h5></div></div></div>`;
  box.querySelector('.cx').onclick=closeCen;
