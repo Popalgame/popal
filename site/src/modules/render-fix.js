@@ -1,0 +1,1 @@
+(function(){try{R.domElement.id='gl';document.body.insertBefore(R.domElement,document.body.firstChild);const f=()=>{try{rs()}catch(e){}};f();setTimeout(f,300);addEventListener('orientationchange',()=>setTimeout(f,350));if(window.visualViewport)visualViewport.addEventListener('resize',f)}catch(e){console.warn('fix11',e)}})();

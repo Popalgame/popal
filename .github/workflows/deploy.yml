@@ -8,11 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip game
+      - name: Check site
         run: |
-          n=$(ls *.zip | wc -l)
-          if [ "$n" -ne 1 ]; then echo "Потрібен рівно один .zip файл, зараз: $n"; exit 1; fi
-          mkdir site && unzip -q *.zip -d site
+          if ls *.zip >/dev/null 2>&1; then echo "Гра тепер лежить у папці site/ — не завантажуйте zip, а оновлюйте файли в site/"; exit 1; fi
+          test -f site/index.html && test -f site/game.html && test -f site/firebase.json
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

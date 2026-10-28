@@ -8,27 +8,20 @@ Popal (PopalGame) — браузерна 3D-гра (three.js r128) про лов
 
 ## Структура репозиторію й деплой
 
-У git лежить **лише zip-архів сайту** (`popalgame-site-vX.Y.Z.zip`), а не розпаковані вихідники. Власник оновлює гру через «Add files via upload» на GitHub: видаляє старий zip і завантажує новий.
+Уся гра лежить у папці `site/` — це і є корінь сайту (до v0.1.14 включно в git зберігався zip-архів; з тих пір — розпаковані файли).
 
-`.github/workflows/deploy.yml` на кожен push у `main`: перевіряє, що в корені **рівно один** `.zip` (інакше збій), розпаковує його в `site/` і деплоїть на Firebase Hosting (канал `live`). Отже:
-
-- щоб змінити гру, розпакуйте zip у scratchpad/тимчасову папку, правте там, потім запакуйте назад (файли в корені архіву, без вкладеної папки) і замініть старий zip новим з новою назвою версії;
-- ніколи не залишайте в корені два zip — деплой впаде;
-- `firebase.json` усередині архіву задає хостинг (`public: "."`, `cleanUrls`, `no-cache` для html/js/css).
+`.github/workflows/deploy.yml` на кожен push у `main` деплоїть `site/` на Firebase Hosting (канал `live`). Якщо в корені репозиторію з'явиться `.zip` (стара звичка завантажувати архів), деплой навмисно падає з підказкою — файли треба оновлювати в `site/`. `site/firebase.json` задає хостинг (`public: "."`, `cleanUrls`, `no-cache` для html/js/css).
 
 ```bash
-mkdir -p /tmp/site && unzip -qo popalgame-site-v*.zip -d /tmp/site      # розпакувати
-(cd /tmp/site && python3 -m http.server 8765)                            # запустити локально → http://localhost:8765/game.html
-for f in /tmp/site/src/modules/*.js /tmp/site/sw.js; do node --check "$f"; done   # перевірка синтаксису
-(cd /tmp/site && zip -qr /home/user/popal/popalgame-site-vNEW.zip .)     # запакувати назад
+(cd site && python3 -m http.server 8765)                              # запустити локально → http://localhost:8765/game.html
+for f in site/src/modules/*.js site/sw.js; do node --check "$f"; done  # перевірка синтаксису
 ```
 
 Збірки, лінтера й тестів немає — це статичні файли. Перевірка змін: `node --check` + відкрити `game.html` у Playwright (Chromium встановлений) і зібрати `pageerror`/console errors. Помилки завантаження Firebase SDK з CDN у пісочниці очікувані (мережа закрита), гра працює й без них.
 
 ## Оновлення версії
 
-Номер версії продубльований у кількох місцях — оновлюйте всі разом:
-- назва zip-файлу;
+Номер версії продубльований у кількох місцях (шляхи відносно `site/`) — оновлюйте всі разом:
 - `index.html` — футер «версія X.Y.Z»;
 - `game.html` — `core-world.js?v=X.Y.Z`;
 - `src/modules/core-world.js` — `Версія X.Y.Z` у профілі;
