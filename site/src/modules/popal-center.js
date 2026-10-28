@@ -1,8 +1,8 @@
 /* 0.1.17: Попал-центр — серце бази гравця. Крафтиться (20 🪵 + 15 🪨) і ставиться один раз будь-де на суші.
-   Навколо нього будується база. Працюють лише попали, покладені в сховище центру: 8 сторінок по 20 слотів.
+   Навколо нього будується база. Працюють лише попали, покладені в сховище центру: 8 сторінок по 30 слотів.
    Решта попалів — з гравцем у сфері (команда, яку можна призивати). */
 (function(){try{
-const CN=160,PG=20,NP=CN/PG,NEAR=3.2;
+const CN=240,PG=30,NP=CN/PG,NEAR=3.2;
 IT.B_cen=['🏠','Попал-центр'];if(inv.B_cen==null)inv.B_cen=0;
 RC.unshift({id:'B_cen',n:'🏠 Попал-центр',c:{w:20,s:15},d:'Серце вашої бази: ставиться один раз. Навколо нього будуєте базу, а попали в ньому працюють',one:1});
 
@@ -65,10 +65,10 @@ const css=document.createElement('style');css.id='cen-css';css.textContent=`
 #cen .cx{background:none;border:none;color:#e2bf67;font-size:24px;cursor:pointer}
 #cen .cb{flex:1;display:flex;gap:12px;padding:10px 12px;min-height:0}
 #cen .cl{display:flex;flex-direction:column;min-width:0;flex:1.35}
-#cen .cg{flex:1;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,1fr);gap:6px;min-height:0}
+#cen .cg{flex:1;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(5,1fr);gap:5px;min-height:0}
 #cen .cs{position:relative;border:2px dashed rgba(127,227,245,.35);border-radius:10px;background:rgba(127,227,245,.05);display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:0;overflow:hidden}
 #cen .cs.f{border-style:solid;border-color:#3a8ee6;background:rgba(58,142,230,.15)}#cen .cs.on{border-color:#ffd34e;box-shadow:0 0 0 2px #ffd34e inset}
-#cen .cs canvas{width:70%;max-width:52px;aspect-ratio:1}#cen .cs .lv{position:absolute;left:4px;top:2px;font-size:11px;font-weight:700;color:#ffe7a8}
+#cen .cs canvas{width:42px;height:42px;flex:none}#cen .cs .lv{position:absolute;left:4px;top:2px;font-size:11px;font-weight:700;color:#ffe7a8}
 #cen .cs .jb{position:absolute;right:3px;bottom:1px;font-size:11px}#cen .cs .pl{opacity:.35;font-size:20px}
 #cen .pn{display:flex;align-items:center;justify-content:center;gap:10px;padding-top:6px}
 #cen .pn button{background:#2e3658;border:2px solid #e2bf67;color:#fff;border-radius:10px;padding:2px 14px;font-size:16px;cursor:pointer}#cen .pn button:disabled{opacity:.35}

@@ -167,7 +167,7 @@ function dlgX(){$('dlg').style.display='none';clearInterval(say.iv)}
 function qUp(){const el=$('qt');if(el)el.style.display='none'}
 /* save/load */
 try{const s=JSON.parse(localStorage.getItem('zi')||'null');if(s){hasSave=1;Object.assign(res,s.res);plv=s.plv||1;xp=s.xp||0;qi=s.qi||0;pname=s.pname||pname;look=s.look||null;Object.assign(inv,s.inv||{});cf=s.cf||0;qa=s.qa||0;Object.assign(st,s.st||{});Object.assign(eq,s.eq||{});(s.pals||[]).forEach(t=>Array.isArray(t)?addPal(t[0],true,t[1],t[2]>=0?t[2]:null):addPal(t,true))}}catch(e){}
-/* 0.1.17: cs — номер слота в Попал-центрі (0…159) або null, якщо попал з гравцем (у сфері) */
+/* 0.1.17: cs — номер слота в Попал-центрі (0…239) або null, якщо попал з гравцем (у сфері) */
 function addPal(ty,quiet,lv,cs){const m=mkPal(T[ty].c);const a=rn(0,6);m.position.set(Math.cos(a)*3,0,Math.sin(a)*3);sc.add(m);pals.push({m,ty,lv:lv||1,t:rn(0,6),x:m.position.x,z:m.position.z,a:0,cs:cs==null?null:cs})}
 const palTeam=()=>pals.reduce((a,p,i)=>(p.cs==null&&a.push(i),a),[]);window.palTeam=palTeam;
 function save(){try{localStorage.setItem('zi',JSON.stringify({res,plv,xp,qi,qa,st,pname,look,inv,eq,cf,t:Date.now(),pals:pals.map(p=>[p.ty,p.lv||1,p.cs==null?-1:p.cs])}))}catch(e){}cloudPush()}setInterval(save,5000);
