@@ -21,16 +21,20 @@ const voice=(ty,kind,v,d)=>{if(ty==null||!PALS[ty])return;play('pals/'+PALS[ty]+
 window.PSFX={sfx,voice};
 /* ---------- музика ---------- */
 const mus={};let musOn=0,nightMix=0;
-function mkMusic(id){const a=new Audio(BASE+'music/'+id+'.mp3');a.loop=true;a.preload='auto';a.crossOrigin='anonymous';const c=ac();const g=c.createGain();g.gain.value=0;try{c.createMediaElementSource(a).connect(g)}catch(e){}g.connect(Sound.musicNode);return{a,g}}
+/* 0.1.26: музика грає через Web Audio (буфер), а не через <audio>: інакше iPhone вважає гру медіаплеєром
+   і показує в Dynamic Island «Зараз грає» з анімацією звуку */
+function mkMusic(id){const c=ac();const g=c.createGain();g.gain.value=0;g.connect(Sound.musicNode);const m={g,path:'music/'+id,src:null};load(m.path);return m}
+function mStart(m){if(m.src||m.ld)return;m.ld=1;load(m.path).then(b=>{m.ld=0;if(!b||m.src||document.hidden)return;const c=ac(),s=c.createBufferSource();s.buffer=b;s.loop=true;s.connect(m.g);s.start();m.src=s})}
+function mStop(m){if(!m.src)return;try{m.src.stop()}catch(e){}try{m.src.disconnect()}catch(e){}m.src=null}
 function startMusic(){if(musOn)return;const c=ac();if(!c)return;musOn=1;mus.day=mkMusic('day');mus.night=mkMusic('night');tickMusic(true)}
 function tickMusic(now){if(!musOn)return;const c=ac(),hidden=document.hidden,want=!Sound.on||!Sound.vol('music')||hidden?-1:(window.isNight&&isNight()?1:0);
  const tgt={day:want==0?1:0,night:want==1?1:0},t=c.currentTime;
  for(const k of['day','night']){const m=mus[k];if(!m)continue;m.g.gain.setTargetAtTime(tgt[k],t,now?.05:1.2);
-  if(tgt[k]>0&&m.a.paused&&!document.hidden){m.a.play().catch(()=>{})}
-  if(tgt[k]==0&&!m.a.paused){clearTimeout(m.st);m.st=setTimeout(()=>{if(m.g.gain.value<.02)m.a.pause()},4000)}}}
+  if(tgt[k]>0&&!m.src&&!document.hidden){clearTimeout(m.st);mStart(m)}
+  if(tgt[k]==0&&m.src){clearTimeout(m.st);m.st=setTimeout(()=>{if(m.g.gain.value<.02)mStop(m)},4000)}}}
 setInterval(()=>tickMusic(false),1500);
 /* гра згорнута або закрита: повністю зупиняємо звук, щоб iPhone не показував «грає» */
-function sleepAudio(){for(const k in mus){const m=mus[k];try{clearTimeout(m.st);m.g.gain.value=0;m.a.pause()}catch(e){}}const c=Sound.ctx&&ac();if(c&&c.state=='running')c.suspend().catch(()=>{});try{if(navigator.mediaSession)navigator.mediaSession.playbackState='none'}catch(e){}}
+function sleepAudio(){for(const k in mus){const m=mus[k];try{clearTimeout(m.st);m.g.gain.value=0;mStop(m)}catch(e){}}const c=Sound.ctx&&ac();if(c&&c.state=='running')c.suspend().catch(()=>{});try{if(navigator.mediaSession)navigator.mediaSession.playbackState='none'}catch(e){}}
 function wakeAudio(){if(document.hidden||!ready)return;const c=ac();if(c&&c.state!='running')c.resume().catch(()=>{});tickMusic(true)}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)sleepAudio();else wakeAudio()});
 window.addEventListener('pagehide',sleepAudio);window.addEventListener('freeze',sleepAudio);window.addEventListener('pageshow',wakeAudio);

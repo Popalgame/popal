@@ -85,7 +85,7 @@ const css=document.createElement('style');css.id='cen-css';css.textContent=`
 #cen .tr canvas{width:34px;height:34px}#cen .tr span{flex:1;font-size:13px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #cen .tr button,#cen .dt button{background:linear-gradient(#f39a4a,#d9532e);border:2px solid #e2bf67;color:#fff;border-radius:10px;padding:3px 10px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap}
 #cen .tr button:disabled,#cen .dt button:disabled{opacity:.4;filter:grayscale(1)}
-#cen .dt{display:flex;align-items:center;gap:8px;font-size:13px}#cen .dt canvas{width:44px;height:44px}#cen .dt div{flex:1;min-width:0}
+#cen .dt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:13px}#cen .dt canvas{width:44px;height:44px;flex:none}#cen .dt div{flex:1 1 120px;min-width:0;line-height:1.35}#cen .dt button{flex:1 1 auto}
 #cen .em{opacity:.7;font-size:12px}
 #cen .tabs{display:flex;gap:6px;flex:1}#cen .tabs button{background:rgba(255,255,255,.06);border:2px solid rgba(226,191,103,.45);color:#e8dcc0;border-radius:10px;padding:4px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
 #cen .tabs button.on{background:linear-gradient(#f39a4a,#d9532e);color:#fff;border-color:#e2bf67}#cen .lvb{font-size:12px;color:#ffe7a8;background:rgba(226,191,103,.15);border:1px solid rgba(226,191,103,.5);border-radius:8px;padding:2px 8px;white-space:nowrap}
