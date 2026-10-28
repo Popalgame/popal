@@ -77,6 +77,7 @@ const WIND={},windMat=(src,mode)=>{const key=src.uuid+mode;if(WIND[key])return W
    :mode==1?`transformed.x+=sin(wp)*.07*gust+sin(uT*4.7+position.y*6.+position.x*4.)*.015;transformed.z+=cos(wp*.9)*.05*gust+cos(uT*5.3+position.z*5.)*.012;`
    :`transformed.x+=sin(wp*1.3)*.025*gust;transformed.z+=cos(wp)*.02*gust;`}`);};
  m.customProgramCacheKey=()=>'pl-wind'+mode;return WIND[key]=m};
+window.plWind=windMat;/* 0.1.28: для нових дерев (trees.js) */
 const GM=G('gm');if(GM&&GM.material)GM.material=windMat(GM.material,0);
 function windTree(g){g.children.forEach((c,i)=>{if(i>0&&c.isMesh&&c.geometry&&c.geometry.type=='IcosahedronGeometry')c.material=windMat(c.material,1)});return g}
 function windBush(g){g.children.forEach(c=>{if(c.isMesh)c.material=windMat(c.material,2)});return g}

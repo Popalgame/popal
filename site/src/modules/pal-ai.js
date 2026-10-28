@@ -18,7 +18,7 @@ const _ap=addPal;addPal=function(){const r=_ap.apply(this,arguments),p=pals[pals
 const W=k=>window.itemW?itemW(k):.5;
 const inBase=(o,C)=>Math.hypot(o.x-C[0],o.z-C[1])<=BASE;
 const busy=(o,p)=>{const q=o._cl;return q&&q!==p&&q.wk&&q.cs!=null&&q.ai&&q.ai.tg===o};
-function findTarget(p,job,C){let L=[];if(job=='chop')L=trees.map(o=>[o,trees,'w']);else if(job=='mine')L=rocks.filter(o=>!(o.m&&o.m.userData.ore)).map(o=>[o,rocks,'s']);
+function findTarget(p,job,C){let L=[];if(job=='chop')L=trees.map(o=>[o,trees,'w']);else if(job=='mine')L=rocks.filter(o=>!(o.m&&(o.m.userData.ore||o.m.userData.coal))).map(o=>[o,rocks,'s']);
  else if(job=='gather')L=bushes.map(o=>[o,bushes,'be']).concat(shrooms.map(o=>[o,shrooms,'mu']));
  let b=null,bd=1e9;for(const e of L){const o=e[0];if(!inBase(o,C)||busy(o,p))continue;const d=Math.hypot(o.x-p.x,o.z-p.z);if(d<bd){bd=d;b=e}}return b}
 const WHAT={chop:['🪓','рубає дерево','дерев'],mine:['⛏️','довбає камінь','каміння'],gather:['🫐','збирає ягоди й гриби','ягід і грибів']};
@@ -42,8 +42,8 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
   if(Object.keys(A.bag).length&&(bagW(A)>=cap*.999||(gj.length&&gj.every(j=>bagW(A)+UNIT[j]>cap+1e-6)))){A.s='deliver';break}
   /* 0.1.27: вогняний попал спершу працює з плавильнею: плавить, підносить руду й паливо, відносить злитки */
   if(window.FUR&&FUR.fire(p)&&FUR.pos()&&!Object.keys(A.bag).length){const Fu=FUR.get();
-   if(Fu.ore>=2&&Fu.w>=1){A.s='fsmelt';break}
-   if(window.chCount&&chCount('ore')>=2&&chCount('w')>=1){A.s='ffeed';A.ph=0;break}
+   if(Fu.ore>=2&&Fu.fuel>=1){A.s='fsmelt';break}
+   if(window.chCount&&chCount('ore')>=2&&(chCount('coal')>=1||chCount('w')>=1)){A.s='ffeed';A.ph=0;break}
    if(Fu.ing>0&&window.chNearFor&&chNearFor('ing',p.x,p.z)){A.s='fhaul';break}}
   for(const j of gj){const e=findTarget(p,j,C);if(e){A.job=j;A.tg=e[0];A.L=e[1];A.k=e[2];e[0]._cl=p;A.s='go';break}}
   if(A.s!='pick')break;
@@ -75,16 +75,18 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
  case'fetch':{if(!A.food){const k=['be','mu','gm','pie'].find(k=>chCount(k)>0),ch=window.chNearest?chNearest(p.x,p.z):null;if(!k||!ch||cf>=20){A.s='pick';break}
    p.st='📦 бере їжу зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;if(chTake(k,1))A.food=k;else{A.s='pick';break}}
   p.st='🍖 несе їжу в годівницю';p.job='carry';moving=!moveTo(p,C[0],C[1],dt,2.9);if(moving)break;cf+=(FOOD[A.food]||1);say('🍖 +'+(FOOD[A.food]||1),p.m);A.food=null;XP(p);A.s='pick';break}
- case'fsmelt':{const fp=FUR.pos(),Fu=FUR.get();if(!fp||Fu.ore<2||Fu.w<1){A.s='pick';break}const T0=FUR.time(p);
+ case'fsmelt':{const fp=FUR.pos(),Fu=FUR.get();if(!fp||Fu.ore<2||Fu.fuel<1){A.s='pick';break}const T0=FUR.time(p);
   p.st='🔥 плавить руду ('+Math.round(Fu.p/T0*100)+'%)';p.job='smelt';moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;
-  p.a=Math.atan2(fp[0]-p.x,fp[1]-p.z);Fu.act=Date.now();Fu.p+=dt;if(Fu.p>=T0){Fu.p=0;Fu.ore-=2;Fu.w-=1;Fu.ing++;say('+1 🔩',p.m,'#ffb070');XP(p)}break}
+  p.a=Math.atan2(fp[0]-p.x,fp[1]-p.z);Fu.act=Date.now();Fu.p+=dt;if(Fu.p>=T0){Fu.p=0;Fu.ore-=2;Fu.fuel-=1;Fu.ing++;say('+1 🔩',p.m,'#ffb070');XP(p)}break}
  case'ffeed':{const fp=FUR.pos();if(!fp){A.s='pick';break}
-  if(!A.ph){const ch=window.chNearest?chNearest(p.x,p.z):null;if(!ch||chCount('ore')<2||chCount('w')<1){A.s='pick';break}
+  if(!A.ph){const ch=window.chNearest?chNearest(p.x,p.z):null;if(!ch||chCount('ore')<2||(chCount('coal')<1&&chCount('w')<1)){A.s='pick';break}
    p.st='📦 бере руду й деревину зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;
-   const n=Math.max(1,Math.min(5,Math.floor(cap/(2*W('ore')+W('w'))),Math.floor(chCount('ore')/2),chCount('w')));
-   if(chTake('ore',2*n)){if(chTake('w',n)){A.bag.ore=(A.bag.ore||0)+2*n;A.bag.w=(A.bag.w||0)+n;A.ph=1}else{chStore('ore',2*n,p.x,p.z);A.s='pick';break}}else{A.s='pick';break}}
+   /* 0.1.28: паливо — краще вугілля (1 шт. = 3 злитки), інакше деревина (1 шт. = 1 злиток) */
+   const uc=chCount('coal')>0,fk=uc?'coal':'w',per=uc?3:1;
+   const n=Math.max(1,Math.min(5,Math.floor(cap/(2*W('ore')+W(fk)/per)),Math.floor(chCount('ore')/2),chCount(fk)*per)),nf=Math.ceil(n/per);
+   if(chTake('ore',2*n)){if(chTake(fk,nf)){A.bag.ore=(A.bag.ore||0)+2*n;A.bag[fk]=(A.bag[fk]||0)+nf;A.ph=1}else{chStore('ore',2*n,p.x,p.z);A.s='pick';break}}else{A.s='pick';break}}
   p.st='🔥 несе руду й паливо до плавильні';moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;
-  const Fu=FUR.get();Fu.ore+=A.bag.ore||0;Fu.w+=A.bag.w||0;delete A.bag.ore;delete A.bag.w;A.ph=0;say('🟤 у піч',p.m,'#ffb070');A.s='pick';break}
+  const Fu=FUR.get();Fu.ore+=A.bag.ore||0;Fu.fuel+=(A.bag.w||0)+(A.bag.coal||0)*3;delete A.bag.ore;delete A.bag.w;delete A.bag.coal;A.ph=0;say('🟤 у піч',p.m,'#ffb070');A.s='pick';break}
  case'fhaul':{const fp=FUR.pos(),Fu=FUR.get();if(!fp||Fu.ing<=0){A.s='pick';break}p.st='🔩 забирає злитки з плавильні';
   moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;const n=Math.min(Fu.ing,Math.max(1,Math.floor(cap/W('ing'))));Fu.ing-=n;A.bag.ing=(A.bag.ing||0)+n;A.s='deliver';break}
  case'rest':{p.st='😴 відпочиває: '+(A.why||'немає роботи');p.job=null;A.t-=dt;

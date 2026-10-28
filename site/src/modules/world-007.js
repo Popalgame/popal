@@ -92,6 +92,7 @@ x.fillStyle='rgba(10,20,40,.18)';x.fillRect(0,0,240,240);
 (window.MT||[]).forEach(m=>{const[a,c]=tp(m[0],m[1]),s=Math.max(5,m[2]*.3);x.fillStyle='rgba(240,244,252,.9)';x.strokeStyle='rgba(50,60,80,.9)';x.lineWidth=1;x.beginPath();x.moveTo(a,c-s);x.lineTo(a+s*1.1,c+s*.7);x.lineTo(a-s*1.1,c+s*.7);x.closePath();x.fill();x.stroke()});
 (window.SIGNS||[]).forEach(s=>{const[a,c]=tp(s.x,s.z);x.fillStyle='#ff9a3c';x.strokeStyle='#1a2040';x.lineWidth=1;x.beginPath();x.moveTo(a,c-4);x.lineTo(a+4,c);x.lineTo(a,c+4);x.lineTo(a-4,c);x.closePath();x.fill();x.stroke()});
 placed.forEach(b=>{const[a,c]=tp(b.x,b.z);x.fillStyle='#8e5a3a';x.fillRect(a-3,c-3,6,6)});
+(inv._gd||[]).forEach(g=>{if(!g.d)return;const[a,c]=tp(g.x,g.z);x.font='bold 13px serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#c070ff';x.fillText('☠',a,c)});/* 0.1.28: могила з речами */
 if(inv._cen){const[a,c]=tp(inv._cen[0],inv._cen[1]);x.fillStyle='#7fe3f5';x.strokeStyle='#1a2040';x.lineWidth=1.5;x.beginPath();x.arc(a,c,5,0,7);x.fill();x.stroke()}
 pals.forEach((p,i)=>{if(i===selP||p.cs==null||!p.wk)return;const[a,c]=tp(p.x,p.z);x.fillStyle='#5fe08a';x.beginPath();x.arc(a,c,2.5,0,7);x.fill()});
 wild.forEach(w=>{if(Math.hypot(w.x-P.x,w.z-P.z)>26)return;const[a,c]=tp(w.x,w.z);x.fillStyle=w.ag?'#ff4d4d':'#ffb0b0';x.beginPath();x.arc(a,c,2.2,0,7);x.fill()});

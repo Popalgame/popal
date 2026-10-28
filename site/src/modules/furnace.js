@@ -1,12 +1,13 @@
 /* 0.1.27: плавильня. Нова модель (кам’яна піч із куполом, цегляний димар, жерло з вогнем, міхи, купки руди й злитків),
    жар, світло й дим, коли піч працює. Руду плавить лише вогняний попал з бригади (Ігніс-Виверг, Сонцеклюв):
    сам бере зі скринь руду й деревину, несе в піч, плавить і відносить злитки назад у скриню.
-   Рецепт: 2 руди + 1 деревина (паливо) → 1 залізний злиток. Час на злиток: 30 с / (1 + 0,5 × (навичка вогню − 1)),
+   Рецепт: 2 руди + 1 паливо → 1 залізний злиток (0.1.28: деревина = 1 паливо, вугілля = 3). Час на злиток: 30 с / (1 + 0,5 × (навичка вогню − 1)),
    тобто 30 с на 1-му рівні, 20 с на 2-му, 15 с на 3-му; нагодовані попали — на чверть швидше.
    Гравець сам злитки більше не крафтить, але може покласти руду/деревину в піч і забрати злитки. */
 (function(){try{
 if(!inv._fur||typeof inv._fur!='object')inv._fur={ore:0,w:0,ing:0,p:0};
-const F=inv._fur;for(const k of['ore','w','ing','p'])F[k]=+F[k]||0;
+const F=inv._fur;for(const k of['ore','fuel','ing','p'])F[k]=+F[k]||0;
+/* 0.1.28: паливо в одиницях: деревина = 1, вугілля = 3 (стара деревина в печі переходить у паливо) */if(F.w){F.fuel+=+F.w||0;delete F.w}
 /* гравець більше не плавить сам */
 {const i=RC.findIndex(r=>r.id=='ing');if(i>=0)RC.splice(i,1)}
 
@@ -73,22 +74,23 @@ const box=document.createElement('div');box.id='fur';document.body.appendChild(b
 const smelter=()=>pals.find(p=>p.wk&&p.cs!=null&&p.ai&&p.ai.s=='fsmelt');
 const fireCrew=()=>pals.filter(p=>p.wk&&p.cs!=null&&isFire(p));
 function render(){const s=smelter(),fc=fireCrew(),t=s?tIngot(s):fc.length?tIngot(fc[0]):30,pc=Math.min(100,F.p/t*100);
- const can=F.ore>=2&&F.w>=1;let st,no=0;
+ const can=F.ore>=2&&F.fuel>=1;let st,no=0;
  if(s)st=`🔥 ${T[s.ty].n} плавить руду · злиток кожні ${Math.round(t)} с`;
  else if(!fc.length){st='⚠️ Плавить лише вогняний попал у бригаді: Ігніс-Виверг або Сонцеклюв';no=1}
- else if(!can)st=`${T[fc[0].ty].n} чекає: потрібні 2 руди й 1 деревина — у печі чи у скрині`;
+ else if(!can)st=`${T[fc[0].ty].n} чекає: потрібні 2 руди й паливо (деревина або вугілля) — у печі чи у скрині`;
  else st=`${T[fc[0].ty].n} іде до печі…`;
  box.innerHTML=`<header><b>🔥 Плавильня</b><button class='cx'>✕</button></header>
- <div class='fl'><div class='bx'><i>🟤</i><b>${F.ore}</b><small>руда</small></div><div class='bx'><i>🪵</i><b>${F.w}</b><small>паливо</small></div>
+ <div class='fl'><div class='bx'><i>🟤</i><b>${F.ore}</b><small>руда</small></div><div class='bx'><i>🔥</i><b>${F.fuel}</b><small>паливо</small></div>
  <div class='ar'>➜<div class='pb'><i style='width:${pc}%'></i></div></div><div class='bx'><i>🔩</i><b>${F.ing}</b><small>злитки</small></div></div>
  <div class='st ${no?'no':''}'>${st}</div>
  <div class='bt'><button data-a='ore2' ${cnt('ore')>=2?'':'disabled'}>🟤 Покласти 2 руди</button><button data-a='oreA' ${cnt('ore')>=1?'':'disabled'}>🟤 Усю руду (${cnt('ore')||0})</button>
- <button data-a='w1' ${cnt('w')>=1?'':'disabled'}>🪵 Покласти 1 деревину</button><button data-a='wA' ${cnt('w')>=1?'':'disabled'}>🪵 Усю (${cnt('w')||0})</button><button class='g' data-a='take' ${F.ing?'':'disabled'}>🔩 Забрати злитки</button></div>
- <div class='em'>2 руди + 1 деревина → 1 залізний злиток. Вогняний попал з бригади сам носить руду й деревину зі скринь, плавить і відносить злитки у скриню.</div>`;
+ <button data-a='w1' ${cnt('w')>=1?'':'disabled'}>🪵 +1 деревина</button><button data-a='wA' ${cnt('w')>=1?'':'disabled'}>🪵 Усю (${cnt('w')||0})</button><button data-a='c1' ${cnt('coal')>=1?'':'disabled'}>⚫ +1 вугілля</button><button data-a='cA' ${cnt('coal')>=1?'':'disabled'}>⚫ Усе (${cnt('coal')||0})</button><button class='g' data-a='take' ${F.ing?'':'disabled'}>🔩 Забрати злитки</button></div>
+ <div class='em'>2 руди + 1 паливо → 1 залізний злиток. Паливо: деревина = 1, вугілля = 3. Вогняний попал з бригади сам носить руду й паливо зі скринь (спершу вугілля), плавить і відносить злитки у скриню.</div>`;
  box.querySelector('.cx').onclick=close;
  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;
   if(a=='ore2'||a=='oreA'){const n=a=='ore2'?2:cnt('ore');addI('ore',-n);F.ore+=n}
-  else if(a=='w1'||a=='wA'){const n=a=='w1'?1:cnt('w');addI('w',-n);F.w+=n}
+  else if(a=='w1'||a=='wA'){const n=a=='w1'?1:cnt('w');addI('w',-n);F.fuel+=n}
+  else if(a=='c1'||a=='cA'){const n=a=='c1'?1:cnt('coal');addI('coal',-n);F.fuel+=3*n}
   else if(a=='take'){addI('ing',F.ing);msg('🔩 Забрано злитків: '+F.ing);F.ing=0}
   hud();save();render()})}
 let iv=0;function open(){ivO=1;box.style.display='flex';render();clearInterval(iv);iv=setInterval(render,600)}
