@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Popal — гра для телефона</title>
+<meta name="description" content="Ловіть істот, збирайте ресурси й будуйте власну базу. Безкоштовна 3D-гра, що працює просто в браузері телефона.">
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.jpg"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0e1c44"><meta property="og:image" content="https://popalgame.pl/logo.jpg">
+<link rel="canonical" href="https://popalgame.pl/"><meta property="og:title" content="Popal"><meta property="og:description" content="Ловіть істот, збирайте ресурси й будуйте власну базу. Безкоштовна 3D-гра в браузері."><meta property="og:url" content="https://popalgame.pl/">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--sky:#6fa6dc;--haze:#f6dfb4;--grass:#8fb94e;--moss:#4f8a3e;--night:#1a2040;--gold:#e2bf67;--ember:#e8803a;--ink:#1d2433;--paper:#fffaf0}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:400 17px/1.6 Nunito,system-ui,sans-serif;color:var(--ink);background:var(--paper)}
+h1,h2,h3{font-family:Unbounded,system-ui,sans-serif;line-height:1.1;margin:0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--ember);outline-offset:3px}
+.hero{position:relative;min-height:100svh;overflow:hidden;background:linear-gradient(var(--sky) 0%,#a9c9e8 38%,var(--haze) 62%);display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 9vh) 20px 0;text-align:center}
+.hero h1 img{display:block;margin:0 auto;width:min(78vw,360px);height:auto;border-radius:32px;box-shadow:0 12px 40px rgba(14,28,68,.45)}
+.hero h1{font-size:clamp(44px,11vw,112px);font-weight:800;color:#fff;letter-spacing:-.02em;text-shadow:0 4px 0 var(--night),0 10px 30px rgba(26,32,64,.35)}
+.hero p{max-width:30ch;margin:18px auto 28px;font-size:clamp(17px,2.4vw,21px);color:var(--night);font-weight:700}
+.play{display:inline-block;font:800 20px Unbounded,system-ui,sans-serif;text-decoration:none;color:#fff;background:radial-gradient(circle at 35% 30%,#ffa356,#c8431f);border:3px solid var(--gold);padding:16px 40px;border-radius:999px;box-shadow:0 0 0 6px rgba(226,191,103,.25),0 8px 20px rgba(200,67,31,.4);position:relative;z-index:3}
+.play:active{transform:translateY(2px)}
+.hint{margin-top:14px;font-size:14px;color:var(--night);opacity:.8;position:relative;z-index:3}
+.scene{position:absolute;left:0;right:0;bottom:0;height:46%;pointer-events:none}
+.scene svg{width:100%;height:100%;display:block}
+.bob{animation:bob 2.4s ease-in-out infinite}
+.bob:nth-of-type(2){animation-delay:-.8s}.bob:nth-of-type(3){animation-delay:-1.6s}
+@keyframes bob{50%{transform:translateY(-10px)}}
+@media (prefers-reduced-motion:reduce){.bob{animation:none}html{scroll-behavior:auto}}
+section{padding:72px 20px}
+.wrap{max-width:980px;margin:0 auto}
+h2{font-size:clamp(28px,5vw,44px);color:var(--night);margin-bottom:12px}
+.lead{max-width:60ch;margin:0 0 36px}
+.meadow{background:var(--grass);color:#fff}
+.meadow h2{color:#fff}
+.crits{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+@media (max-width:520px){.crits{grid-template-columns:1fr 1fr;gap:10px}.crit{padding:12px 8px 14px;border-radius:18px}.crit img{width:104px!important;height:104px!important}.crit h3{font-size:16px}.crit p{font-size:13px}.crit .jobs li{font-size:11.5px;padding:2px 6px}}
+.crit{background:rgba(26,32,64,.18);border-radius:24px;padding:18px 18px 22px;text-align:center}
+.crit img{width:140px;height:140px;display:block;margin:0 auto;filter:drop-shadow(0 8px 6px rgba(0,0,0,.22));animation:bob 3.2s ease-in-out infinite;animation-delay:calc(var(--d,0s)*-1);transition:transform .25s}
+.crit:hover img{animation:hop .6s ease}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-5px) scale(1.015,.985)}}
+@keyframes hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-18px) rotate(-4deg)}60%{transform:translateY(0) scale(1.06,.94)}80%{transform:translateY(-4px)}}
+.crit .el{display:inline-block;font-size:13px;font-weight:700;background:rgba(255,255,255,.35);border-radius:20px;padding:2px 10px;margin-bottom:6px}
+.crit .jobs{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-wrap:wrap;gap:5px;justify-content:center}.crit .jobs li{font-size:13px;background:rgba(26,32,64,.22);border-radius:10px;padding:3px 8px}
+@media (prefers-reduced-motion:reduce){.crit img,.crit:hover img{animation:none}}
+.crit h3{font-size:19px;margin:8px 0 4px}
+.crit p{margin:0;font-size:15px;opacity:.95}
+.steps{list-style:none;padding:0;margin:0;display:grid;gap:14px;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:56px 1fr;gap:14px;align-items:start;max-width:62ch}
+.steps li::before{content:counter(s);font:800 22px Unbounded,system-ui,sans-serif;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--night);color:var(--gold)}
+.steps b{display:block;font-size:18px}
+.night{background:var(--night);color:#e9ecf8}
+.night h2{color:var(--gold)}
+.npcs{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
+.npcs li{border:2px solid var(--gold);border-radius:14px;padding:8px 14px}
+.npcs li span{color:#7fe3f5;font-weight:700}
+.end{text-align:center;background:linear-gradient(var(--haze),var(--paper))}
+.end p{margin:10px auto 26px;max-width:40ch}
+footer{padding:24px 20px calc(env(safe-area-inset-bottom,0px) + 24px);text-align:center;font-size:14px;color:#5b6274}
+
+/* меню */
+section{scroll-margin-top:64px}
+.nav{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 8px;background:rgba(26,32,64,.95);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:2px solid rgba(226,191,103,.5)}
+.brand{font:800 19px Unbounded,system-ui,sans-serif;color:var(--gold);text-decoration:none}
+.links{display:flex;gap:4px;align-items:center;overflow-x:auto}
+.links a{color:#e9ecf8;text-decoration:none;font-weight:700;font-size:15px;padding:8px 13px;border-radius:999px;white-space:nowrap}
+.links a:hover{background:rgba(226,191,103,.2)}
+.links a.navplay{background:var(--ember);color:#fff}
+@media (max-width:560px){.brand{display:none}.links{width:100%;justify-content:space-between}.links a{padding:8px 10px;font-size:14px}}
+.hero{min-height:calc(100svh - 56px)!important;padding-top:6vh!important}
+/* про гру */
+.about .feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:8px}
+.feat{background:#fff;border:2px solid #eadfc2;border-radius:22px;padding:18px}
+.feat .ic{font-size:34px;line-height:1}
+.feat h3{font-size:17px;margin:8px 0 4px;color:var(--night)}
+.feat p{margin:0;font-size:15px}
+/* завантаження */
+.dl{background:var(--night);color:#e9ecf8}
+.dl h2{color:var(--gold)}
+.dls{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px;margin-top:8px}
+.dc{position:relative;background:rgba(255,255,255,.06);border:2px solid rgba(226,191,103,.4);border-radius:24px;padding:24px 22px;display:flex;flex-direction:column;gap:12px}
+.dc.rec{border-color:var(--gold);box-shadow:0 0 0 4px rgba(226,191,103,.2)}
+.dc .ic{font-size:42px;line-height:1}
+.dc h3{font-size:20px;color:var(--gold)}
+.dc ol{margin:0;padding-left:20px;font-size:15px}
+.dc li{margin:4px 0}
+.dc small{opacity:.8;font-size:13px;line-height:1.4}
+.dc a:not(.dbtn){color:#7fe3f5}
+.dbtn{display:block;text-align:center;font:800 16px Unbounded,system-ui,sans-serif;text-decoration:none;color:#fff;background:radial-gradient(circle at 35% 30%,#ffa356,#c8431f);border:3px solid var(--gold);padding:14px 18px;border-radius:999px;box-shadow:0 6px 16px rgba(200,67,31,.35)}
+.dbtn:active{transform:translateY(2px)}
+.badge{position:absolute;top:-12px;right:18px;background:var(--gold);color:var(--night);font:800 11px Unbounded,system-ui,sans-serif;padding:5px 10px;border-radius:999px;display:none}
+.rec .badge{display:block}
+.dnote{margin-top:22px;font-size:14px;opacity:.85;max-width:70ch}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+</defs></svg>
+<nav class="nav" aria-label="Головне меню"><a class="brand" href="#top">Popal</a><div class="links"><a href="#about">Про гру</a><a href="#creatures">Істоти</a><a href="#download">Завантажити</a><a class="navplay" href="game.html">Грати</a></div></nav>
+<header class="hero" id="top">
+<h1><img src="logo.jpg" alt="PopalGame" width="440" height="394"></h1>
+<p>Ловіть істот, збирайте ресурси й будуйте базу, де помічники працюють на вас.</p>
+<a class="play" href="game.html">Грати</a>
+<div class="hint">Безкоштовно, без реєстрації. Тримайте телефон горизонтально.</div>
+<div class="scene" aria-hidden="true"><svg viewBox="0 0 1200 400" preserveAspectRatio="xMidYMax slice">
+<path d="M0 170 Q200 90 420 150 T820 120 T1200 140 V400 H0Z" fill="#a6c457"/>
+<path d="M0 240 Q260 170 560 230 T1200 210 V400 H0Z" fill="#8fb94e"/>
+<path d="M0 320 Q300 270 640 310 T1200 300 V400 H0Z" fill="#6ea443"/>
+<g fill="#4f9a4a"><path d="M150 210 175 120 200 210Z"/><path d="M1010 190 1040 90 1070 190Z"/><path d="M1060 200 1082 130 1104 200Z"/></g>
+<g fill="#e8803a"><path d="M220 225 240 160 260 225Z"/></g>
+<g class="bob"><image href="img/pals/0.webp" x="290" y="205" width="150" height="150"/></g>
+<g class="bob"><image href="img/pals/5.webp" x="90" y="70" width="120" height="120"/></g>
+<g class="bob"><image href="img/pals/4.webp" x="830" y="215" width="145" height="145"/></g>
+</svg></div>
+</header>
+<section class="about" id="about"><div class="wrap">
+<h2>Про гру</h2>
+<p class="lead">Popal — безкоштовна 3D-гра про пригоди й власну базу, яка працює просто на телефоні чи комп’ютері. Ви потрапляєте в яскравий край з островами, горами та стежками, ловите істот кулями, а вони стають вашими помічниками: добувають ресурси, захищають вас і допомагають розвивати вашу базу.</p>
+<div class="feats">
+<div class="feat"><div class="ic">🌍</div><h3>Великий світ</h3><p>П’ять островів, гори, вказівники між ними й міні-карта, щоб не заблукати.</p></div>
+<div class="feat"><div class="ic">🔮</div><h3>Ловіть істот</h3><p>Десять видів істот і чарівні кулі різних кольорів. Ослабте істоту та киньте кулю.</p></div>
+<div class="feat"><div class="ic">🏠</div><h3>Будуйте базу</h3><p>Поставте Попал-центр будь-де у світі, будуйте навколо нього, а помічники працюють на вас.</p></div>
+<div class="feat"><div class="ic">🌙</div><h3>День і ніч</h3><p>Час у світі змінюється: уночі світять ліхтарі й літають світлячки.</p></div>
+</div></div></section>
+<section class="dl" id="download"><div class="wrap">
+<h2>Завантажити гру</h2>
+<p class="lead">Popal встановлюється як застосунок з власною іконкою й відкривається на весь екран. Обирайте свій пристрій.</p>
+<div class="dls">
+<div class="dc" data-p="android"><span class="badge">Для вашого пристрою</span><div class="ic">🤖</div><h3>Android</h3>
+<a class="dbtn" id="btnAndroid" href="game.html">Завантажити для Android</a>
+<ol><li>Відкрийте popalgame.pl у браузері <b>Chrome</b>.</li><li>Натисніть кнопку вище. Якщо з’явиться вікно, підтвердьте встановлення.</li><li>Інакше в грі відкрийте меню Chrome ⋮ і виберіть «Установити застосунок».</li><li>Іконка Popal з’явиться на головному екрані.</li></ol></div>
+<div class="dc" data-p="pc"><span class="badge">Для вашого пристрою</span><div class="ic">💻</div><h3>ПК (Windows, Mac, Linux)</h3>
+<a class="dbtn" id="btnPC" href="game.html">Завантажити для ПК</a>
+<ol><li>Відкрийте popalgame.pl у <b>Chrome</b> або <b>Edge</b>.</li><li>Натисніть кнопку вище або значок встановлення в правій частині адресного рядка.</li><li>Підтвердьте. Popal відкриється в окремому вікні з ярликом на робочому столі чи в меню.</li><li>На Mac у Safari: меню «Файл» → «Додати в Dock».</li></ol></div>
+<div class="dc" data-p="ios"><span class="badge">Для вашого пристрою</span><div class="ic">🍎</div><h3>iPhone та iPad</h3>
+<a class="dbtn" id="btnIOS" href="game.html">Завантажити для iOS</a>
+<ol><li>Відкрийте гру в <b>Safari</b>: <a href="https://popalgame.pl/game.html">popalgame.pl/game.html</a>.</li><li>Натисніть «Поділитися» (квадрат зі стрілкою вгору ⬆️).</li><li>Виберіть «<b>На початковий екран</b>» і натисніть «Додати».</li><li>Запускайте Popal з нової іконки: гра відкриється без панелей браузера.</li></ol></div>
+</div>
+<p class="dnote">Гра безкоштовна й без реєстрації. Прогрес зберігається на вашому пристрої. Гру можна просто відкрити в браузері кнопкою «Грати» і встановити пізніше з розділу «Налаштування» всередині гри.</p>
+</div></section>
+<section class="meadow" id="creatures"><div class="wrap">
+<h2>Кого можна зловити</h2>
+<p class="lead">У світі живуть десять видів істот. Додайте спійману істоту до бригади Попал-центру — і вона сама добуватиме ресурси, плавитиме руду чи готуватиме їжу.</p>
+<div class="crits">
+<div class="crit" style="--d:0.00s"><img src="img/pals/0.webp" width="140" height="140" loading="lazy" alt="Бамбузл"><h3>Бамбузл</h3><span class="el">🌿 Трава</span><p>Добродушна панда з бамбуковим списом.</p><ul class="jobs"><li>🪓 Рубає дерева</li><li>🫐 Збирає ягоди й гриби</li></ul></div>
+<div class="crit" style="--d:0.37s"><img src="img/pals/1.webp" width="140" height="140" loading="lazy" alt="Грумрок"><h3>Грумрок</h3><span class="el">💎 Земля</span><p>Броньований копач із кристалами на спині.</p><ul class="jobs"><li>⛏️ Добуває камінь</li><li>📦 Носить вантажі</li></ul></div>
+<div class="crit" style="--d:0.74s"><img src="img/pals/2.webp" width="140" height="140" loading="lazy" alt="Ігніс-Виверг"><h3>Ігніс-Виверг</h3><span class="el">🔥 Вогонь</span><p>Вогняний павук. Нападає першим, тож бережіть здоровʼя.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує на кухні-багатті</li></ul></div>
+<div class="crit" style="--d:1.11s"><img src="img/pals/3.webp" width="140" height="140" loading="lazy" alt="Міражбр"><h3>Міражбр</h3><span class="el">👻 Темрява</span><p>Напівпрозорий хамелеон, ловиться легше за інших.</p><ul class="jobs"><li>📦 Найкращий носій: годує бригаду</li></ul></div>
+<div class="crit" style="--d:1.48s"><img src="img/pals/4.webp" width="140" height="140" loading="lazy" alt="Пухоклуб"><h3>Пухоклуб</h3><span class="el">⚪ Нейтральний</span><p>Хмаринка-овечка з золотими ріжками.</p><ul class="jobs"><li>🫐 Збирає ягоди й гриби</li><li>📦 Носить вантажі</li></ul></div>
+<div class="crit" style="--d:1.85s"><img src="img/pals/5.webp" width="140" height="140" loading="lazy" alt="Крилоша"><h3>Крилоша</h3><span class="el">🌪️ Повітря</span><p>Метелик-фея з чотирма крилами.</p><ul class="jobs"><li>🫐 Найкращий збирач урожаю</li></ul></div>
+<div class="crit" style="--d:2.22s"><img src="img/pals/6.webp" width="140" height="140" loading="lazy" alt="Мороріг"><h3>Мороріг</h3><span class="el">❄️ Вода й лід</span><p>Крижаний олень з кришталевими рогами.</p><ul class="jobs"><li>⛏️ Добуває камінь</li></ul></div>
+<div class="crit" style="--d:2.59s"><img src="img/pals/7.webp" width="140" height="140" loading="lazy" alt="Грозовик"><h3>Грозовик</h3><span class="el">⚡ Темрява й повітря</span><p>Чорний вовк з неоновими блискавками. Нападає першим.</p><ul class="jobs"><li>📦 Носить вантажі</li><li>🪓 Рубає дерева</li></ul></div>
+<div class="crit" style="--d:2.96s"><img src="img/pals/8.webp" width="140" height="140" loading="lazy" alt="Хвилезуб"><h3>Хвилезуб</h3><span class="el">💧 Вода</span><p>Сухопутна акула на лапках.</p><ul class="jobs"><li>🪓 Рубає дерева</li></ul></div>
+<div class="crit" style="--d:3.33s"><img src="img/pals/9.webp" width="140" height="140" loading="lazy" alt="Сонцеклюв"><h3>Сонцеклюв</h3><span class="el">☀️ Вогонь і повітря</span><p>Високий птах із сонячним вінцем за головою.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує</li><li>📦 Носить</li></ul></div>
+</div></div></section>
+<section><div class="wrap">
+<h2>Як грати</h2>
+<p class="lead">Перша істота на вашій базі за кілька хвилин.</p>
+<ol class="steps">
+<li><div><b>Зберіть ресурси</b>Підійдіть до дерева чи скелі й натискайте «Дія».</div></li>
+<li><div><b>Створіть кулю</b>Кнопка «Крафт» робить кулю з 3 деревини та 2 каменю.</div></li>
+<li><div><b>Ослабте істоту</b>Кілька ударів знижують її здоровʼя, і шанс ловлі росте.</div></li>
+<li><div><b>Киньте кулю</b>Спіймана істота буде з вами у сфері.</div></li>
+<li><div><b>Поставте Попал-центр</b>Скрафтіть його з 20 деревини й 15 каменю, покладіть туди істот — і вони почнуть працювати.</div></li>
+</ol></div></section>
+<section class="night"><div class="wrap">
+<h2>Ваша база — де забажаєте</h2>
+<p class="lead">Попал-центр ставиться будь-де на суші. Навколо нього ви будуєте дім, кухню, верстак і стіни, а в його сховищі — 8 сторінок по 30 місць — живуть і працюють ваші помічники.</p>
+</div></section>
+<section class="end"><div class="wrap">
+<h2>Готові до пригоди?</h2>
+<p>Гра працює в браузері телефона чи компʼютера. Прогрес зберігається на вашому пристрої.</p>
+<a class="play" href="game.html">Грати</a>
+</div></section>
+<footer>Popal, 2026. popalgame.pl · версія 0.5.0</footer>
+<script>
+/* Прямі посилання на файли (необов'язково): коли з'являться APK чи інсталятор для ПК, впишіть сюди шлях, і кнопка стане завантаженням файлу. */
+const ANDROID_URL='',PC_URL='';
+let bip=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();bip=e});
+if('serviceWorker' in navigator&&location.protocol==='https:'&&/popalgame/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});
+function wire(id,url){const b=document.getElementById(id);if(!b)return;if(url){b.href=url;b.setAttribute('download','');return}
+ b.addEventListener('click',e=>{if(bip){e.preventDefault();bip.prompt();bip.userChoice.then(()=>{bip=null})}})}
+wire('btnAndroid',ANDROID_URL);wire('btnPC',PC_URL);
+const ua=navigator.userAgent,kind=/android/i.test(ua)?'android':(/iphone|ipad|ipod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))?'ios':'pc';
+const card=document.querySelector('.dc[data-p="'+kind+'"]');if(card)card.classList.add('rec');
+</script>
+</body></html>

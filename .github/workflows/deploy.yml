@@ -1,0 +1,44 @@
+name: Deploy to Firebase
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check site
+        run: |
+          if ls *.zip >/dev/null 2>&1; then echo "Гра тепер лежить у папці site/ — не завантажуйте zip, а оновлюйте файли в site/"; exit 1; fi
+          test -f site/index.html && test -f site/game.html && test -f site/firebase.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dev dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Tests
+        run: npm test
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dev dependencies
+        run: npm ci
+      - name: Stamp service-worker cache version
+        run: node scripts/sw-version.mjs --sha "${{ github.sha }}"
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: popal-4da6b
+          entryPoint: site

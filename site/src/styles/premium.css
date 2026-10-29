@@ -1,0 +1,59 @@
+/* Popal 0.3 — expedition UI: quiet surfaces, clear hierarchy, warm accents. */
+:root{--panel:rgba(13,28,36,.88);--accent:#eac785;--ice:#a3dfdc;--line:rgba(205,230,229,.25)}
+body button{cursor:pointer;transition:background .16s ease,border-color .16s ease,box-shadow .16s ease}
+body button:focus-visible{outline:3px solid #b8f0eb;outline-offset:3px}
+body button:disabled{cursor:default}
+html body #pc{top:calc(env(safe-area-inset-top,0px) + 14px);left:calc(env(safe-area-inset-left,0px) + 14px);filter:drop-shadow(0 3px 8px #07161c66)}
+html body #av{border:2px solid #d9c59c;border-radius:15px;box-shadow:0 0 0 3px #102b32a6}
+html body #nm{color:#f0f6ec;font-size:19px;letter-spacing:.15px}
+html body #hb,html body #xb{border:1px solid #c7d4c780;height:12px;box-shadow:none;background:#102c31}
+html body #hf{background:linear-gradient(90deg,#b84e54,#ed9290)}
+html body #xf{background:linear-gradient(90deg,#468d96,#a1ddd0)}
+html body #lv{border-width:1px;background:#163439;border-color:#dac699;box-shadow:none}
+html body #bag,html body #mbt{border:1px solid var(--line);border-radius:12px;background:rgba(13,28,36,.9);box-shadow:0 4px 14px #05151d40}
+html body #bag{top:calc(env(safe-area-inset-top,0px) + 14px)}
+html body #mbt{top:calc(env(safe-area-inset-top,0px) + 14px)}
+html body #bld{border:1px solid #cbdca84d;background:linear-gradient(145deg,#345b4eea,#142e2cea);box-shadow:0 4px 16px #071d2559}
+html body #btns button{border:1px solid #d9e6dd70;background:linear-gradient(145deg,#2c4c59ed,#132831ed);box-shadow:0 5px 18px #071d2559}
+html body #btns #hit{background:linear-gradient(145deg,#d7b675,#9e7842);border:1px solid #f1d79c;color:#fff}
+html body #btns button:hover,html body #bag:hover,html body #mbt:hover{border-color:#b8ebe2;box-shadow:0 0 0 2px #a3dfdc22,0 5px 18px #071d2559}
+html body #btns button:active{filter:brightness(1.14)}
+html body #eqp{left:50%!important;bottom:calc(env(safe-area-inset-bottom,0px) + 16px)!important;transform:translateX(-50%)!important;gap:8px}
+html body #eqp .eqs{width:136px!important;height:70px!important;border:1px solid #cadfd34d!important;border-radius:12px!important;padding:6px 10px!important;background:rgba(13,28,36,.9)!important;box-shadow:0 4px 18px #071d2540!important;display:grid;grid-template-columns:40px 1fr!important;grid-template-rows:17px 1fr!important;gap:1px 5px;align-items:center;text-align:left;overflow:hidden}
+html body #eqp .eqs small{grid-column:1/3;max-width:110px;color:#d1e8db;font-size:10px;line-height:15px;text-shadow:none}
+html body #eqp .eqi{grid-column:1;height:31px;font-size:26px;justify-content:flex-start}
+html body #eqp .eqs b{grid-column:2;font-size:12px;line-height:14px;color:#f0f4e6;overflow:hidden;text-overflow:ellipsis}
+html body #eqp .eqs u{right:8px;bottom:5px;color:#b8d4c5;font-size:10px}
+html body #joy{border:1px solid #d7e6d06b;background:rgba(15,36,40,.58);box-shadow:inset 0 0 30px #abc9b019,0 4px 16px #071d2533}
+html body #knob{background:#d4c39e;box-shadow:0 2px 8px #071d2533}
+html body #msg{top:calc(env(safe-area-inset-top,0px) + 100px);border:1px solid #cbdcc84d;border-radius:9px;background:rgba(13,28,36,.91);font-size:13px;line-height:1.45;font-weight:600;padding:8px 15px;box-shadow:0 4px 16px #071d2533;max-width:min(600px,70vw);z-index:21}
+html body #cmp{opacity:.85;font-size:10px;text-shadow:0 1px 3px #071d25}
+html body #pwn{background:rgba(13,28,36,.85);font-size:11px;border-radius:6px}
+html body #mmap{border:1px solid #d4d9af99;box-shadow:0 4px 18px #071d254d}
+html body #clk.inmap{border:1px solid #cbdcc84d;background:rgba(13,28,36,.94);font-size:10px;box-shadow:none}
+html body #mm{box-sizing:border-box;padding:5vw 8vw;background:linear-gradient(90deg,rgba(7,19,26,.96),rgba(7,19,26,.79) 35%,rgba(7,19,26,.12));justify-content:flex-start}
+html body #mmb{width:min(350px,72vw);gap:10px;padding:20px 0;overflow:visible}
+html body #mmb::before{content:'ДОСЛІДЖУЙ · ПРИРУЧАЙ · БУДУЙ';font-size:10px;letter-spacing:2.2px;color:#d5c69f;margin-bottom:10px;text-align:center}
+html body #mmb h1 img{height:130px}
+html body #mmb button{border:1px solid #d3e1d34d;border-radius:10px;background:rgba(32,54,65,.8);padding:13px 18px!important;font-size:15px!important;box-shadow:0 4px 14px #0002;text-shadow:0 1px 2px #0004;letter-spacing:.2px}
+html body #mmb #mc{background:linear-gradient(110deg,#d9bb7a,#af884b);border-color:#ead6a6;color:#112b32;text-shadow:none;font-weight:800}
+html body #mmb button:hover{background-color:#476962;border-color:#e7d6ad}
+html body #acc{color:#cedcd5;font-size:12px;text-align:center;line-height:1.5}
+html body #pf,html body #cc{background:radial-gradient(ellipse at 30% 40%,#244958,#10252f 65%,#0b1c26)}
+html body #pfh{background:#0b2029;border-bottom:1px solid #d7c69c66}
+html body #pfs button{border:1px solid #d3e1d340;background:rgba(34,63,73,.7);color:#dbe9df}
+html body #pfs button.on{background:#315c60;border-color:#a8d7c3;color:#fff}
+html body #iv,html body #cen,html body #fur,html body #chs{border-color:#b9d4c070;box-shadow:0 12px 50px #0005}
+html body #guide{border-color:#d3debc66;background:rgba(13,28,36,.9);box-shadow:0 4px 18px #071d2533}
+body .dmg{font-size:24px;text-shadow:0 2px 3px #071d25,0 0 4px #071d25}
+@media(min-width:1000px){html body #btns{right:22px;bottom:24px;gap:12px}html body #btns button{width:62px;height:62px}html body #btns #hit{width:74px;height:74px}}
+@media(max-height:500px){html body #pc{top:6px;left:8px}html body #msg{top:78px;max-width:52vw;font-size:11px;padding:6px 10px}html body #eqp{bottom:10px!important}html body #eqp .eqs{width:115px!important;height:62px!important;padding:4px 8px!important}html body #eqp .eqs small{font-size:9px}html body #mmb{padding:0;gap:7px}html body #mmb h1 img{height:78px}html body #mmb::before{margin:0;font-size:8px;letter-spacing:1.6px}html body #mmb button{padding:8px 12px!important;font-size:14px!important}}
+@media(pointer:coarse) and (max-width:960px){html body #eqp{left:calc(100% - 349px)!important}}
+@media(pointer:coarse) and (max-height:500px){html body #msg{left:220px;right:100px;max-width:none;transform:none;box-sizing:border-box;top:84px}}
+@media(pointer:coarse) and (max-width:740px){html body #pw2{left:145px;width:108px}html body #pwa,html body #pwb{display:none}html body #pwm{left:22px}html body #pwl{left:0}html body #pwr{left:88px}html body #pwn{width:108px;font-size:9px}html body #pwh{width:96px;left:6px}html body #eqp{left:calc(100% - 276px)!important}html body #eqp .eqs{width:100px!important}}
+body.pmode #eqp{display:none!important}
+@media(prefers-reduced-motion:reduce){body button{transition:none}}
+/* Imported reference hero has a fixed authored outfit; name remains editable. */
+body.imported-hero-ready #ccp .ccr:not(:has(#ccn)){display:none}
+.imported-hero-note{max-width:46ch;margin:12px 0 20px;color:#c9dedb;font-size:14px;line-height:1.55}
+body.imported-hero-ready #ccp{align-self:center}

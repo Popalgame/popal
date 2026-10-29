@@ -1,0 +1,114 @@
+/* 0.1.22: робота попалів бригади.
+   • Попал добуває лише на території бази (до 30 м від Попал-центру): сам іде до дерева, скелі, куща чи гриба й б’є, поки не повалить.
+   • Здобуте несе у власному вантажі. Скільки може нести — залежить від рівня перенесення (1–5): 5 / 10 / 15 / 20 / 30 кг.
+     Рівень перенесення кожному попалу випадає під час ловлі: що вищий рівень попала, то більший шанс на високий.
+   • Вантаж повний або роботу скінчено — несе до найближчої скрині з вільним місцем.
+   • На базі скінчився ліс — лісоруб береться за інше своє вміння (камінь, ягоди), а як іншого немає — відпочиває біля центру.
+   • Кухар бере гриби зі скрині й кладе туди смажені; носій бере їжу зі скрині й несе в годівницю центру.
+   • 0.1.27: вогняний попал працює з плавильнею (furnace.js): носить руду й паливо, плавить, відносить злитки. */
+(function(){try{
+const BASE=30,CAP=[0,5,10,15,20,30],SPD=2.2;
+/* ---------- рівень перенесення ---------- */
+function rollCr(lv){const v=Math.random()+Math.min(.6,(lv||1)*.012);return v<.45?1:v<.75?2:v<.92?3:v<1.02?4:5}
+window.palCrRoll=rollCr;window.palCarry=p=>CAP[p.cr||1];
+pals.forEach(p=>{if(!p.cr)p.cr=rollCr(p.lv||1)});
+const _ap=addPal;addPal=function(){const r=_ap.apply(this,arguments),p=pals[pals.length-1];if(p&&!p.cr)p.cr=rollCr(p.lv||1);return r};
+
+/* ---------- цілі ---------- */
+const W=k=>window.itemW?itemW(k):.5;
+const inBase=(o,C)=>Math.hypot(o.x-C[0],o.z-C[1])<=BASE;
+const busy=(o,p)=>{const q=o._cl;return q&&q!==p&&q.wk&&q.cs!=null&&q.ai&&q.ai.tg===o};
+function findTarget(p,job,C){let L=[];if(job=='chop')L=trees.map(o=>[o,trees,'w']);else if(job=='mine')L=rocks.filter(o=>!(o.m&&(o.m.userData.ore||o.m.userData.coal))).map(o=>[o,rocks,'s']);
+ else if(job=='gather')L=bushes.map(o=>[o,bushes,'be']).concat(shrooms.map(o=>[o,shrooms,'mu']));
+ let b=null,bd=1e9;for(const e of L){const o=e[0];if(!inBase(o,C)||busy(o,p))continue;const d=Math.hypot(o.x-p.x,o.z-p.z);if(d<bd){bd=d;b=e}}return b}
+const kitPos=()=>{const b=(window.BPLACED||[]).find(q=>q.id=='B_kit');return b?[b.x,b.z]:null};
+const WHAT={chop:['🪓','рубає дерево','дерев'],mine:['⛏️','довбає камінь','каміння'],gather:['🫐','збирає ягоди й гриби','ягід і грибів']};
+
+/* ---------- рух ---------- */
+function moveTo(p,x,z,dt,stop){const dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);if(d<=stop+.08)return true;const s=Math.min(d-stop,SPD*(cf>0?1.2:1)*dt),nx=p.x+dx/d*s,nz=p.z+dz/d*s;p.a=Math.atan2(dx,dz);
+ if(window.colPalStep)colPalStep(p,nx,nz,x,z,stop,dt);else{p.x=nx;p.z=nz}return false}/* 0.1.23: обходить будівлі (collide.js) */
+function place(p,tm,moving){p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(moving?Math.abs(Math.sin(tm*9+p.x))*.06:0),p.z);p.m.rotation.y=p.a||0}
+const bagW=A=>Object.entries(A.bag).reduce((a,[k,n])=>a+W(k)*n,0);
+const say=(t,o,c)=>{if(o&&Math.hypot(P.x-o.position.x,P.z-o.position.z)<18)dmg(t,o,c||'#bdf5c9')};
+const XP=p=>{try{if(window.palXp)palXp(p,1)}catch(_){}};
+
+/* ---------- головний цикл працівника ---------- */
+window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai={s:'pick',bag:{},t:0});const wk=T[p.ty].wk||{},cap=CAP[p.cr||1];let moving=false;
+ const per=cf>0?1.4:3;
+ switch(A.s){
+ case'pick':{A.tg=null;A.t=0;
+  if(A.food){A.s='fetch';break}
+  const gj=['chop','mine','gather'].filter(j=>wk[j]);/* порядок: спершу ліс, тоді камінь, тоді ягоди й гриби */
+  /* повний вантаж (або наступна порція вже не влізе) — спершу все в скриню, а тоді знову до роботи */
+  const UNIT={chop:W('w')*(wk.chop>=3?2:1),mine:W('s')*(wk.mine>=3?2:1),gather:W('be')*2};
+  if(Object.keys(A.bag).length&&(bagW(A)>=cap*.999||(gj.length&&gj.every(j=>bagW(A)+UNIT[j]>cap+1e-6)))){A.s='deliver';break}
+  /* 0.1.27: вогняний попал спершу працює з плавильнею: плавить, підносить руду й паливо, відносить злитки */
+  if(window.FUR&&FUR.fire(p)&&FUR.pos()&&!Object.keys(A.bag).length){const Fu=FUR.get();
+   /* 0.1.28: лише під замовлення гравця (FUR.get().ord) */
+   if(Fu.ord>0&&Fu.ore>=2&&Fu.fuel>=1){A.s='fsmelt';break}
+   if(Fu.ord>Math.min(Math.floor(Fu.ore/2),Fu.fuel)&&window.chCount&&chCount('ore')>=2&&(chCount('coal')>=1||chCount('w')>=1)){A.s='ffeed';A.ph=0;break}
+   if(Fu.ing>0&&window.chNearFor&&chNearFor('ing',p.x,p.z)){A.s='fhaul';break}}
+  for(const j of gj){const e=findTarget(p,j,C);if(e){A.job=j;A.tg=e[0];A.L=e[1];A.k=e[2];e[0]._cl=p;A.s='go';break}}
+  if(A.s!='pick')break;
+  if(Object.keys(A.bag).length){A.s='deliver';break}
+  if(wk.cook&&kitPos()&&window.KIT&&KIT.dish()){A.s='cook';A.ph=0;break}
+  if(wk.carry&&cf<20&&window.chCount&&['be','mu','gm','pie'].some(k=>chCount(k)>0)){A.s='fetch';break}
+  A.s='rest';A.t=5;A.why=gj.length?'на базі не лишилось '+gj.map(j=>WHAT[j][2]).join(', '):wk.cook?(!kitPos()?'немає кухні-багаття — ніде готувати':window.KIT&&KIT.any()?'у скринях бракує продуктів для замовлення':'немає замовлень на кухні'):wk.carry?'годівниця повна або немає їжі':'немає роботи';break}
+ case'go':{const o=A.tg;if(!o||!A.L.includes(o)||!inBase(o,C)){if(o&&o._cl===p)o._cl=null;A.s='pick';break}
+  p.st='🚶 іде '+(A.job=='chop'?'до дерева':A.job=='mine'?'до скелі':'по ягоди');moving=!moveTo(p,o.x,o.z,dt,1.25);if(!moving){A.s='work';A.t=per}break}
+ case'work':{const o=A.tg;if(!o||!A.L.includes(o)){A.s='pick';break}p.st=WHAT[A.job][0]+' '+WHAT[A.job][1];p.job=A.job;p.a=Math.atan2(o.x-p.x,o.z-p.z);
+  A.t-=dt;if(A.t>0)break;A.t=per;
+  const L=wk[A.job]||1,n=(A.k=='w'||A.k=='s')?(L>=3?2:1):(A.k=='be'?2:1);
+  if(bagW(A)+W(A.k)*n>cap+1e-6){o._cl=null;A.s='deliver';break}
+  A.bag[A.k]=(A.bag[A.k]||0)+n;let tx='+'+n+' '+(A.k=='w'?'🪵':A.k=='s'?'🪨':A.k=='be'?'🫐':'🍄');
+  if(A.k=='w'&&Math.random()<.35&&bagW(A)+W('sti')<=cap){A.bag.sti=(A.bag.sti||0)+1;tx+=' +1 🥢'}
+  if(!o.mx)o.mx=o.hp=(A.L===trees||A.L===rocks)?8:Math.max(1,o.hp||1);o.hp-=(A.L===trees||A.L===rocks)?1+L:1;
+  try{if(window.flash)flash(o)}catch(_){}say(tx,o.m);XP(p);
+  if(o.hp<=0){const L2=A.L,ix=L2.indexOf(o);if(ix>=0){sc.remove(o.m);L2.splice(ix,1)}
+   const mk=L2===trees?mkTree:L2===rocks?mkRock:L2===bushes?mkBush:mkShroom,hp=L2===bushes?2:L2===shrooms?1:3;setTimeout(()=>spawn(L2,mk,hp),L2===trees||L2===rocks?20000:25000);A.s='pick'}
+  if(bagW(A)>=cap-.05){if(o._cl===p)o._cl=null;A.s='deliver'}break}
+ case'deliver':{const k0=Object.keys(A.bag)[0];if(!k0){A.s='pick';break}
+  const ch=window.chNearFor?chNearFor(k0,p.x,p.z):null;if(!ch){A.s='rest';A.t=6;A.why=window.chAny&&chAny()?'скрині заповнені — вантаж чекає':'немає скрині — нікуди нести';break}
+  p.st='📦 несе до скрині ('+Math.round(bagW(A)*10)/10+' / '+cap+' кг)';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;
+  for(const k of Object.keys(A.bag)){const put=chStore(k,A.bag[k],ch.x,ch.z);A.bag[k]-=put;if(!A.bag[k])delete A.bag[k]}
+  say('📦 у скриню',p.m,'#ffe28a');A.s=Object.keys(A.bag).length?'rest':'pick';A.t=4;A.why='скрині заповнені — вантаж чекає';break}
+ case'cook':{/* 0.1.28: кухар готує лише на кухні-багатті й лише під замовлення (cooking.js, KIT): бере продукти зі скрині → несе до котелка → готує → відносить страви у скриню */
+  const kp=kitPos();if(!kp||!window.KIT){A.s='pick';break}
+  if(!A.ph){const ch=window.chNearest?chNearest(p.x,p.z):null,d=A.dish=KIT.dish();if(!ch||!d){A.s='pick';break}p.st='📦 бере продукти зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;
+   const c=KIT.rc(d),w1=Object.keys(c).reduce((s,k)=>s+W(k)*c[k],0),n=Math.max(1,Math.min(5,KIT.ord[d],KIT.avail(d),Math.floor(cap/w1)));
+   const got={};for(const k in c){if(chTake(k,c[k]*n))got[k]=c[k]*n;else{for(const q in got)chStore(q,got[q],p.x,p.z);A.s='pick';break}}if(A.s!='cook')break;
+   for(const k in got)A.bag[k]=(A.bag[k]||0)+got[k];A.n=n;A.ph=1}
+  if(A.ph==1){p.st='🍳 несе продукти до кухні-багаття';moving=!moveTo(p,kp[0],kp[1],dt,1.6);if(moving)break;A.ph=2;A.t=0}
+  if(A.ph==2){const d=A.dish,c=KIT.rc(d);p.st='🍳 готує на багатті: '+IT[d][1].toLowerCase();p.job='cook';p.a=Math.atan2(kp[0]-p.x,kp[1]-p.z);window.KIT_ACT=Date.now();A.t+=dt;if(A.t<per*2)break;A.t=0;
+   if(A.n>0){for(const k in c){A.bag[k]-=c[k];if(A.bag[k]<=0)delete A.bag[k]}A.n--;A.bag[d]=(A.bag[d]||0)+1;KIT.done(d);say('+1 '+IT[d][0],p.m);XP(p)}
+   if(!(A.n>0)){A.ph=0;A.s='deliver'}}break}
+ case'fetch':{if(!A.food){const k=['be','mu','gm','pie'].find(k=>chCount(k)>0),ch=window.chNearest?chNearest(p.x,p.z):null;if(!k||!ch||cf>=20){A.s='pick';break}
+   p.st='📦 бере їжу зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;if(chTake(k,1))A.food=k;else{A.s='pick';break}}
+  p.st='🍖 несе їжу в годівницю';p.job='carry';moving=!moveTo(p,C[0],C[1],dt,2.9);if(moving)break;cf+=(FOOD[A.food]||1);say('🍖 +'+(FOOD[A.food]||1),p.m);A.food=null;XP(p);A.s='pick';break}
+ case'fsmelt':{const fp=FUR.pos(),Fu=FUR.get();if(!fp||Fu.ore<2||Fu.fuel<1||Fu.ord<=0){A.s='pick';break}const T0=FUR.time(p);
+  p.st='🔥 плавить руду ('+Math.round(Fu.p/T0*100)+'%)';p.job='smelt';moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;
+  p.a=Math.atan2(fp[0]-p.x,fp[1]-p.z);Fu.act=Date.now();Fu.p+=dt;if(Fu.p>=T0){Fu.p=0;Fu.ore-=2;Fu.fuel-=1;Fu.ing++;FUR.done();say('+1 🔩',p.m,'#ffb070');XP(p)}break}
+ case'ffeed':{const fp=FUR.pos();if(!fp){A.s='pick';break}
+  if(!A.ph){const ch=window.chNearest?chNearest(p.x,p.z):null;if(!ch||chCount('ore')<2||(chCount('coal')<1&&chCount('w')<1)){A.s='pick';break}
+   p.st='📦 бере руду й деревину зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;
+   /* 0.1.28: паливо — краще вугілля (1 шт. = 3 злитки), інакше деревина (1 шт. = 1 злиток) */
+   const uc=chCount('coal')>0,fk=uc?'coal':'w',per=uc?3:1;
+   const Fq=FUR.get(),need=Math.max(1,Fq.ord-Math.min(Math.floor(Fq.ore/2),Fq.fuel));
+   const n=Math.max(1,Math.min(5,need,Math.floor(cap/(2*W('ore')+W(fk)/per)),Math.floor(chCount('ore')/2),chCount(fk)*per)),nf=Math.ceil(n/per);
+   if(chTake('ore',2*n)){if(chTake(fk,nf)){A.bag.ore=(A.bag.ore||0)+2*n;A.bag[fk]=(A.bag[fk]||0)+nf;A.ph=1}else{chStore('ore',2*n,p.x,p.z);A.s='pick';break}}else{A.s='pick';break}}
+  p.st='🔥 несе руду й паливо до плавильні';moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;
+  const Fu=FUR.get();Fu.ore+=A.bag.ore||0;Fu.fuel+=(A.bag.w||0)+(A.bag.coal||0)*3;delete A.bag.ore;delete A.bag.w;delete A.bag.coal;A.ph=0;say('🟤 у піч',p.m,'#ffb070');A.s='pick';break}
+ case'fhaul':{const fp=FUR.pos(),Fu=FUR.get();if(!fp||Fu.ing<=0){A.s='pick';break}p.st='🔩 забирає злитки з плавильні';
+  moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;const n=Math.min(Fu.ing,Math.max(1,Math.floor(cap/W('ing'))));Fu.ing-=n;A.bag.ing=(A.bag.ing||0)+n;A.s='deliver';break}
+ case'rest':{p.st='😴 відпочиває: '+(A.why||'немає роботи');p.job=null;A.t-=dt;
+  const d=Math.hypot(p.x-C[0],p.z-C[1]);if(d>6){moving=!moveTo(p,C[0],C[1],dt,4)}else{p.t=(p.t||0)-dt;if(p.t<=0){p.t=rn(2,4);p.a=rn(0,6.3)}{const nx=p.x+Math.sin(p.a)*.35*dt,nz=p.z+Math.cos(p.a)*.35*dt;if(window.colStep){const q=colStep(p.x,p.z,nx,nz,.42);if(Math.hypot(q[0]-nx,q[1]-nz)>.001)p.t=0;p.x=q[0];p.z=q[1]}else{p.x=nx;p.z=nz}}moving=true}
+  if(A.t<=0)A.s=Object.keys(A.bag).length?'deliver':'pick';break}}
+ place(p,tm,moving)};
+/* A removed worker keeps anything a full or missing chest cannot accept. */
+setInterval(()=>{for(const p of pals){if(!p.ai||p.wk&&p.cs!=null)continue;const A=p.ai;
+ for(const k of Object.keys(A.bag||{})){const put=window.chStore?chStore(k,A.bag[k],p.x,p.z):0;A.bag[k]-=put;if(A.bag[k]<=0)delete A.bag[k]}
+ if(A.food&&window.chStore&&chStore(A.food,1,p.x,p.z)===1)A.food=null;
+ if(A.tg&&A.tg._cl===p)A.tg._cl=null;A.tg=null;
+ if(!Object.keys(A.bag||{}).length&&!A.food){p.ai=null;p.st=null}else{A.s=Object.keys(A.bag).length?'deliver':'fetch';p.st='📦 вантаж чекає на скриню'}}},1000);
+window.palLoad=p=>p.ai?bagW(p.ai):0;
+}catch(e){console.warn('pal-ai',e)}})();
