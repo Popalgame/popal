@@ -21,6 +21,7 @@ const busy=(o,p)=>{const q=o._cl;return q&&q!==p&&q.wk&&q.cs!=null&&q.ai&&q.ai.t
 function findTarget(p,job,C){let L=[];if(job=='chop')L=trees.map(o=>[o,trees,'w']);else if(job=='mine')L=rocks.filter(o=>!(o.m&&(o.m.userData.ore||o.m.userData.coal))).map(o=>[o,rocks,'s']);
  else if(job=='gather')L=bushes.map(o=>[o,bushes,'be']).concat(shrooms.map(o=>[o,shrooms,'mu']));
  let b=null,bd=1e9;for(const e of L){const o=e[0];if(!inBase(o,C)||busy(o,p))continue;const d=Math.hypot(o.x-p.x,o.z-p.z);if(d<bd){bd=d;b=e}}return b}
+const kitPos=()=>{const b=(window.BPLACED||[]).find(q=>q.id=='B_kit');return b?[b.x,b.z]:null};
 const WHAT={chop:['🪓','рубає дерево','дерев'],mine:['⛏️','довбає камінь','каміння'],gather:['🫐','збирає ягоди й гриби','ягід і грибів']};
 
 /* ---------- рух ---------- */
@@ -48,9 +49,9 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
   for(const j of gj){const e=findTarget(p,j,C);if(e){A.job=j;A.tg=e[0];A.L=e[1];A.k=e[2];e[0]._cl=p;A.s='go';break}}
   if(A.s!='pick')break;
   if(Object.keys(A.bag).length){A.s='deliver';break}
-  if(wk.cook&&window.chCount&&chCount('mu')>=2){A.s='cook';break}
+  if(wk.cook&&kitPos()&&window.chCount&&chCount('mu')>=2){A.s='cook';A.ph=0;break}
   if(wk.carry&&cf<20&&window.chCount&&['be','mu','gm','pie'].some(k=>chCount(k)>0)){A.s='fetch';break}
-  A.s='rest';A.t=5;A.why=gj.length?'на базі не лишилось '+gj.map(j=>WHAT[j][2]).join(', '):wk.cook?'немає грибів у скрині':wk.carry?'годівниця повна або немає їжі':'немає роботи';break}
+  A.s='rest';A.t=5;A.why=gj.length?'на базі не лишилось '+gj.map(j=>WHAT[j][2]).join(', '):wk.cook?(kitPos()?'немає грибів у скрині':'немає кухні-багаття — ніде готувати'):wk.carry?'годівниця повна або немає їжі':'немає роботи';break}
  case'go':{const o=A.tg;if(!o||!A.L.includes(o)||!inBase(o,C)){if(o&&o._cl===p)o._cl=null;A.s='pick';break}
   p.st='🚶 іде '+(A.job=='chop'?'до дерева':A.job=='mine'?'до скелі':'по ягоди');moving=!moveTo(p,o.x,o.z,dt,1.25);if(!moving){A.s='work';A.t=per}break}
  case'work':{const o=A.tg;if(!o||!A.L.includes(o)){A.s='pick';break}p.st=WHAT[A.job][0]+' '+WHAT[A.job][1];p.job=A.job;p.a=Math.atan2(o.x-p.x,o.z-p.z);
@@ -69,9 +70,14 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
   p.st='📦 несе до скрині ('+Math.round(bagW(A)*10)/10+' / '+cap+' кг)';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;
   for(const k of Object.keys(A.bag)){const put=chStore(k,A.bag[k],ch.x,ch.z);A.bag[k]-=put;if(!A.bag[k])delete A.bag[k]}
   say('📦 у скриню',p.m,'#ffe28a');A.s=Object.keys(A.bag).length?'rest':'pick';A.t=4;A.why='скрині заповнені — вантаж чекає';break}
- case'cook':{const ch=window.chNearest?chNearest(p.x,p.z):null;if(!ch||chCount('mu')<2){A.s='pick';break}
-  p.st='🍳 готує гриби';p.job='cook';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;A.t+=dt;if(A.t<per*2)break;A.t=0;
-  if(chTake('mu',2)){chStore('gm',1,ch.x,ch.z);say('+1 🍢',p.m);XP(p);if(window.isBuilt&&isBuilt('B_kit')&&chCount('mu')>=2&&chTake('mu',2))chStore('gm',1,ch.x,ch.z)}A.s='pick';break}
+ case'cook':{/* 0.1.28: кухар готує лише на кухні-багатті: бере гриби зі скрині → несе до котелка → готує → відносить страви у скриню */
+  const kp=kitPos();if(!kp){A.s='pick';break}
+  if(!A.ph){const ch=window.chNearest?chNearest(p.x,p.z):null;if(!ch||chCount('mu')<2){A.s='pick';break}p.st='📦 бере гриби зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;
+   const n=Math.max(1,Math.min(5,Math.floor(chCount('mu')/2),Math.floor(cap/(2*W('mu')))));if(!chTake('mu',2*n)){A.s='pick';break}A.bag.mu=(A.bag.mu||0)+2*n;A.ph=1}
+  if(A.ph==1){p.st='🍳 несе гриби до кухні-багаття';moving=!moveTo(p,kp[0],kp[1],dt,1.6);if(moving)break;A.ph=2;A.t=0}
+  if(A.ph==2){p.st='🍳 готує на багатті';p.job='cook';p.a=Math.atan2(kp[0]-p.x,kp[1]-p.z);window.KIT_ACT=Date.now();A.t+=dt;if(A.t<per*2)break;A.t=0;
+   if((A.bag.mu||0)>=2){A.bag.mu-=2;if(!A.bag.mu)delete A.bag.mu;A.bag.gm=(A.bag.gm||0)+1;say('+1 🍢',p.m);XP(p)}
+   if(!((A.bag.mu||0)>=2)){A.ph=0;A.s='deliver'}}break}
  case'fetch':{if(!A.food){const k=['be','mu','gm','pie'].find(k=>chCount(k)>0),ch=window.chNearest?chNearest(p.x,p.z):null;if(!k||!ch||cf>=20){A.s='pick';break}
    p.st='📦 бере їжу зі скрині';moving=!moveTo(p,ch.x,ch.z,dt,1.5);if(moving)break;if(chTake(k,1))A.food=k;else{A.s='pick';break}}
   p.st='🍖 несе їжу в годівницю';p.job='carry';moving=!moveTo(p,C[0],C[1],dt,2.9);if(moving)break;cf+=(FOOD[A.food]||1);say('🍖 +'+(FOOD[A.food]||1),p.m);A.food=null;XP(p);A.s='pick';break}

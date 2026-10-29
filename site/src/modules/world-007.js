@@ -3,7 +3,7 @@
 const FIRE=new THREE.MeshStandardMaterial({color:0xff8a3a,emissive:0xff5a10,emissiveIntensity:1.4}),LAMP=new THREE.MeshStandardMaterial({color:0xffe0a0,emissive:0xffb050,emissiveIntensity:1.2});
 const BUI=[
 {id:'B_bed',n:'Ліжко',i:'🛏️',c:{w:5,sti:2},d:'Уночі біля ліжка натисніть «Дія», щоб проспати до ранку',p:2,u:1},
-{id:'B_kit',n:'Кухня-багаття',i:'🍲',c:{s:4,w:3},d:'Попали-кухарі готують удвічі швидше',p:2,u:1},
+{id:'B_kit',n:'Кухня-багаття',i:'🍲',c:{s:4,w:3},d:'Котелок над багаттям. Без неї їжу не приготувати: тут готуєте ви й попали-кухарі',p:2,u:1},
 {id:'B_wb',n:'Верстак',i:'🪚',c:{w:8,s:4,sti:2},d:'Відкриває металеві інструменти й рюкзак слідопита',p:3,u:1},
 {id:'B_fur',n:'Плавильня',i:'🏭',c:{s:10,w:4},d:'Відкриває залізні злитки',p:3,u:1},
 {id:'B_farm',n:'Ягідна грядка',i:'🌱',c:{w:6,be:3},d:'Попали-збирачі приносять більше ягід',p:2,u:1},
@@ -12,7 +12,7 @@ const BUI=[
 const BI={};BUI.forEach(b=>{BI[b.id]=b;IT[b.id]=[b.i,b.n];if(inv[b.id]==null)inv[b.id]=0});
 if(!Array.isArray(inv._b))inv._b=[];
 RC.push(...BUI.map(b=>({id:b.id,n:b.n,c:b.c,d:b.d+' · +'+b.p+' до бази',bld:1})));
-const REQ={axm:'B_wb',pkm:'B_wb',bp3:'B_wb',ing:'B_fur'};
+const REQ={axm:'B_wb',pkm:'B_wb',bp3:'B_wb',ing:'B_fur',gm:'B_kit',pie:'B_kit'}/* 0.1.28: їжу готують лише на кухні-багатті */;
 const built=id=>inv._b.some(x=>x[0]==id);window.isBuilt=built;
 const LV=[0,2,5,9,14];
 window.campPts=()=>inv._b.reduce((a,x)=>a+(BI[x[0]]?BI[x[0]].p:0),0);
