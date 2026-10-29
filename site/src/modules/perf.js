@@ -3,19 +3,26 @@
 const read=n=>{try{return eval(n)}catch(_){return undefined}};
 const worldScene=read('sc'),renderer=read('R');if(!worldScene||!renderer)return;
 const coarse=matchMedia('(pointer:coarse)').matches,KEY='zi_quality';
-const profiles={battery:{name:'Економія',dpr:1,fps:30,dist:0,grass:6500,hq:0},balanced:{name:'Збалансована',dpr:1.25,fps:60,dist:1,grass:12000,hq:0},high:{name:'Кінематографічна',dpr:1.75,fps:60,dist:2,grass:20000,hq:1}};
+const profiles={battery:{name:'Економія',dpr:1,fps:30,dist:0,grass:6500,hq:0},balanced:{name:'Збалансована',dpr:1.25,fps:60,dist:1,grass:12000,hq:0},high:{name:'Кінематографічна',dpr:2,fps:60,dist:2,grass:20000,hq:1},k2:{name:'2K (2560)',res:2560,fps:60,dist:2,grass:20000,hq:1},k3:{name:'3K (3200)',res:3200,fps:60,dist:3,grass:20000,hq:1,shadow:4096}};
 let mode='auto',scale=1,averageMs=16.7,slowWindows=0,fastWindows=0,qualityAt=0;
 try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved&&['auto',...Object.keys(profiles)].includes(saved.mode))mode=saved.mode}catch(_){}
 const profile=()=>profiles[mode==='auto'?(coarse?'balanced':'high'):mode];
-function applyQuality(reset){const cfg=profile(),ratio=Math.max(.7,Math.min(devicePixelRatio||1,cfg.dpr)*scale);
+/* 2K/3K target the long edge of the drawing buffer regardless of devicePixelRatio,
+   so even a 1x display renders a supersampled 2560/3200 px frame. */
+const longEdge=()=>{const el=renderer.domElement||{};return Math.max(1,el.clientWidth||(typeof innerWidth==='number'?innerWidth:1280),el.clientHeight||(typeof innerHeight==='number'?innerHeight:720))};
+function ratioFor(cfg){if(cfg.res)return Math.max(1,Math.min(4,cfg.res/longEdge()));return Math.max(.7,Math.min(devicePixelRatio||1,cfg.dpr)*scale)}
+function setShadow(size){if(!size)return;try{const sun=read('sun');if(!sun||!sun.shadow)return;if(sun.shadow.mapSize.x!==size){sun.shadow.mapSize.set(size,size);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}}catch(_){}}
+function applyQuality(reset){const cfg=profile(),ratio=ratioFor(cfg);
  if(Math.abs(renderer.getPixelRatio()-ratio)>.02){renderer.setPixelRatio(ratio);try{read('rs')()}catch(_){}}
  const grassMesh=read('gm');if(grassMesh)grassMesh.count=Math.min(grassMesh.instanceMatrix.count,Math.round(cfg.grass*(mode==='auto'?Math.max(.65,scale):1)));
  if(reset&&window.plGfx)window.plGfx.set({fps:cfg.fps,dist:mode==='auto'?1:cfg.dist});
- if(window.plVis)window.plVis.setHQ(cfg.hq&&(mode!=='auto'||scale>.78));qualityAt=performance.now();
+ if(window.plVis)window.plVis.setHQ(cfg.hq&&(mode!=='auto'||scale>.78));
+ setShadow(cfg.shadow);qualityAt=performance.now();
 }
 function setMode(next){if(!['auto',...Object.keys(profiles)].includes(next))return;mode=next;scale=1;slowWindows=fastWindows=0;try{localStorage.setItem(KEY,JSON.stringify({mode}))}catch(_){}applyQuality(true)}
-window.plQuality={set:setMode,state:()=>({mode,scale,pixelRatio:renderer.getPixelRatio(),averageMs,profile:profile().name,...window.plFrameStats})};
+window.plQuality={set:setMode,state:()=>({mode,scale,pixelRatio:renderer.getPixelRatio(),buffer:(()=>{const el=renderer.domElement||{};return [el.width||0,el.height||0]})(),target:profile().res||null,averageMs,profile:profile().name,...window.plFrameStats})};
 setTimeout(()=>applyQuality(true),0);
+try{let resizeT=0;addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(()=>applyQuality(false),180)})}catch(_){}
 
 /* Пакетуємо лише нерухомі меші з однаковим матеріалом. Спільні вихідні
    геометрії не звільняються; об'єднані буфери мають окремого власника. */
@@ -77,7 +84,7 @@ function monitor(now){requestAnimationFrame(monitor);const dt=now-last;last=now;
 }
 requestAnimationFrame(monitor);
 const oldTab=pfTab;pfTab=function(tab){oldTab.apply(this,arguments);if(tab!=='g'&&tab!=='o')return;const host=document.getElementById('gfxp');if(!host||document.getElementById('quality-presets'))return;
- const panel=document.createElement('div');panel.id='quality-presets';panel.innerHTML='<h4>Якість і плавність</h4><div class="gseg">'+[['auto','Авто'],...Object.entries(profiles).map(([k,v])=>[k,v.name])].map(([key,label])=>'<button data-quality="'+key+'" class="'+(mode===key?'on':'')+'">'+label+'</button>').join('')+'</div><small class="gnote">Авто адаптує роздільність та ефекти для плавної гри. Економія — 30 FPS; інші режими — до 60 FPS.</small>';
+ const panel=document.createElement('div');panel.id='quality-presets';panel.innerHTML='<h4>Якість і плавність</h4><div class="gseg">'+[['auto','Авто'],...Object.entries(profiles).map(([k,v])=>[k,v.name])].map(([key,label])=>'<button data-quality="'+key+'" class="'+(mode===key?'on':'')+'">'+label+'</button>').join('')+'</div><small class="gnote">Авто адаптує роздільність та ефекти для плавної гри. 2K/3K рендерять кадр у 2560/3200 px по довшій стороні (суперсемплінг) — найчіткіша картинка, найважче для GPU.</small>';
  host.prepend(panel);panel.querySelectorAll('button').forEach(button=>button.onclick=()=>{setMode(button.dataset.quality);panel.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===button))});
 };
 }catch(error){console.warn('perf',error)}})();

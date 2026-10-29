@@ -12,7 +12,7 @@ const OM=new THREE.MeshBasicMaterial({color:0x2b1830,side:THREE.BackSide});
 function outl(g,t=.05){return;
 // eslint-disable-next-line no-unreachable
 const a=[];g.traverse(m=>{if(m.isMesh)a.push(m)});a.forEach(m=>{const o=new THREE.Mesh(m.geometry,OM);o.scale.setScalar(1+t);m.add(o)})}
-function cv2(n,f){const c=document.createElement('canvas');c.width=c.height=n;f(c.getContext('2d'),n);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;return t}
+function cv2(n,f){const c=document.createElement('canvas');c.width=c.height=n;f(c.getContext('2d'),n);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;try{t.anisotropy=Math.min(16,R.capabilities.getMaxAnisotropy())}catch(e){}return t}
 const paint=cv2(256,(x,n)=>{x.fillStyle='#fff';x.fillRect(0,0,n,n);for(let i=0;i<260;i++){x.fillStyle=Math.random()<.5?'rgba(0,0,0,.07)':'rgba(255,255,200,.12)';x.beginPath();x.arc(Math.random()*n,Math.random()*n,6+Math.random()*18,0,7);x.fill()}});paint.repeat.set(36,36);
 const cobble=cv2(256,(x,n)=>{x.fillStyle='#8f8372';x.fillRect(0,0,n,n);for(let r=0;r<6;r++)for(let c=0;c<6;c++){const w=n/6,o=(r%2)*w/2,l=150+Math.random()*50|0;x.fillStyle='rgb('+l+','+(l-8)+','+(l-22)+')';x.fillRect(c*w+o+3,r*w+3,w-6,w-6)}});cobble.repeat.set(3,3);
 const mc={},M=c=>mc[c]||(mc[c]=new THREE.MeshStandardMaterial({color:c,roughness:.85,metalness:0}));
@@ -246,7 +246,7 @@ const pc=T.map((ty,i)=>{const n=pals.filter(p=>p.ty==i).length;return n?`<div cl
 c.innerHTML=`<div class='pcol'><div id='pv3'></div></div><div class='pcol'><div class='pnm'><input id='pni' maxlength='16'><button id='pns'>✎</button></div><div class='ppw'>Сила акаунта: <b>${(100+plv*125+pals.length*210).toLocaleString('uk-UA')}</b></div><div class='pst'>⭐ Рівень <b>${plv}</b> · XP ${xp}/${xpN(plv)}<br>❤️ Здоровʼя ${Math.ceil(P.hp)}/${HPM}<br>🐾 Попалів: ${pals.length} · у Попал-центрі: ${pals.length-palTeam().length}<br>🪵 ${st.w} · 🪨 ${st.s} · ⚔️ ${st.k} · 🔮 ${st.c}</div></div><div class='pcol'><h4>Досягнення</h4><div class='pbd'>${bd.map(([e,n,d,ok])=>`<div class='bd${ok?' ok':''}'><span>${e}</span><small>${n}<br>${d}</small></div>`).join('')}</div><h4>Мої істоти</h4><div class='ppl'>${pc}</div></div>`;
 $('pv3').appendChild(R2.domElement);$('pni').value=pname;$('pns').onclick=()=>{pname=$('pni').value.trim()||'Меглен';$('nm').textContent=pname;save();msg('✎ Імʼя змінено')};return}
 if(t=='o'){c.innerHTML=`<div class='pcol'><h4>Графіка</h4><button class='ob' id='gqb'>Якість: ${gq?'Висока':'Низька'}</button></div>`;
-$('gqb').onclick=()=>{gq=gq?0:1;R.setPixelRatio(gq?Math.min(devicePixelRatio,2):1);sun.castShadow=!!gq;gm.visible=!!gq;rs();pfTab('o')};
+$('gqb').onclick=()=>{gq=gq?0:1;sun.castShadow=!!gq;gm.visible=!!gq;pfTab('o')};
 return}
 c.innerHTML=`<div class='pcol'><h4>Як грати</h4><div class='pst'>🎮 Рухайтеся клавішами WASD або стрілками; на телефоні — джойстиком. Натискайте дію біля дерев і каменів.<br>🪵 Зберіть деревину, зробіть палиці, сокиру й кирку в меню крафту.<br>🔮 Послабте дику істоту ударом, потім киньте кулю, щоб її зловити.<br>🏠 Для Попал-центру потрібно 20 деревини й 15 каменю. Поставте скриню та додайте двох істот до бригади.<br>🍖 Кладіть їжу в годівницю біля центру, щоб працівники не голодували.<br>💾 Гра зберігається автоматично на цьому пристрої. Можна грати гостем; вхід в акаунт відкриває хмарне збереження.</div></div><div id='pfv'>Версія 0.5.0</div>`}
 document.addEventListener('gesturestart',e=>e.preventDefault());

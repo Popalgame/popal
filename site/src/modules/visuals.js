@@ -15,7 +15,7 @@ function vnoise(S,cell,seed){const n=S/cell,g=new Float32Array(n*n);let s=seed;f
 function noiseTex(S,seed){const c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d'),im=x.createImageData(S,S);
  const ch=[0,1,2].map(k=>[[S/4,.5],[S/8,.3],[S/16,.2]].map(([cl,w],i)=>[vnoise(S,cl,seed+k*101+i*7),w]));
  for(let y=0;y<S;y++)for(let X=0;X<S;X++){const i=(y*S+X)*4;for(let k=0;k<3;k++){let v=0;for(const[f,w]of ch[k])v+=f(X,y)*w;im.data[i+k]=Math.max(0,Math.min(255,(v-.5)*2.2*128+128))}im.data[i+3]=255}
- x.putImageData(im,0,0);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;try{t.anisotropy=Math.min(4,RR.capabilities.getMaxAnisotropy())}catch(_){}return t}
+ x.putImageData(im,0,0);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;try{t.anisotropy=Math.min(16,RR.capabilities.getMaxAnisotropy())}catch(_){}return t}
 const DET=noiseTex(128,7);
 
 /* ---------- земля: деталь у світових координатах + скелясті схили ---------- */

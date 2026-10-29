@@ -40,7 +40,7 @@ function makeTex(ore){
   ri.data[i]=ri.data[i+1]=ri.data[i+2]=ro;ri.data[i+3]=255}
  cx.putImageData(ci,0,0);bx.putImageData(bi,0,0);rx.putImageData(ri,0,0);
  cracks(cx,ore?7:10,ore?41:43);bx.globalAlpha=.9;cracks(bx,ore?7:10,ore?41:43);
- const T=c=>{const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,1);try{t.anisotropy=Math.min(4,R.capabilities.getMaxAnisotropy())}catch(_){}return t};
+ const T=c=>{const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,1);try{t.anisotropy=Math.min(16,R.capabilities.getMaxAnisotropy())}catch(_){}return t};
  const map=T(col);map.encoding=THREE.sRGBEncoding;
  return new THREE.MeshStandardMaterial({map,bumpMap:T(bmp),bumpScale:.035,roughnessMap:T(rgh),roughness:1,metalness:0,flatShading:true});
 }

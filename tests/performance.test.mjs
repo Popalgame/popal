@@ -18,8 +18,11 @@ function runtime(){
 test('quality presets respect resolution and vegetation budgets and persist the choice',()=>{
  const {env,saved,settings,effects}=runtime();env.plQuality.set('battery');
  assert.equal(env.R.ratio,1);assert.equal(env.gm.count,6500);assert.equal(settings.at(-1).fps,30);assert.equal(effects.at(-1),0);
- env.plQuality.set('high');assert.equal(env.R.ratio,1.75);assert.equal(env.gm.count,20000);assert.equal(settings.at(-1).fps,60);assert.equal(effects.at(-1),true);
- assert.equal(JSON.parse(saved.get('zi_quality')).mode,'high');env.plQuality.set('invalid');assert.equal(env.plQuality.state().mode,'high');
+ env.plQuality.set('high');assert.equal(env.R.ratio,2);assert.equal(env.gm.count,20000);assert.equal(settings.at(-1).fps,60);assert.equal(effects.at(-1),true);
+ /* 2K/3K ignore devicePixelRatio and target the long edge of the drawing buffer */
+ env.plQuality.set('k2');assert.equal(env.R.ratio,2);assert.equal(env.plQuality.state().target,2560);
+ env.plQuality.set('k3');assert.equal(env.R.ratio,2.5);assert.equal(env.plQuality.state().target,3200);assert.equal(env.gm.count,20000);
+ assert.equal(JSON.parse(saved.get('zi_quality')).mode,'k3');env.plQuality.set('invalid');assert.equal(env.plQuality.state().mode,'k3');
 });
 test('batching preserves geometry transforms and animated parts without disposing shared geometry',()=>{
  const {env}=runtime(),T=env.THREE,root=new T.Group(),mat=new T.MeshStandardMaterial(),geo=new T.BoxGeometry(1,1,1);

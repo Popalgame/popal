@@ -128,6 +128,9 @@ api.ready=new Promise(resolve=>{
    const wrapper=new T.Group(),scale=1.8/size.y;
    scene.scale.multiplyScalar(scale);scene.position.set(-(box.min.x+box.max.x)*.5*scale,-box.min.y*scale,-(box.min.z+box.max.z)*.5*scale);wrapper.add(scene);
    template=wrapper;animations=clips;api.clips=clips.map(c=>c.name);api.stats={meshes,skinnedMeshes:skinned,triangles,bounds:{width:size.x*scale,height:1.8,depth:size.z*scale},scale};api.status='ready';
+   /* 2K textures stay sharp at grazing angles only with anisotropic filtering */
+   let maxAn=1;try{maxAn=Math.min(16,get('R').capabilities.getMaxAnisotropy())}catch(_){}
+   scene.traverse(node=>{if(!node.isMesh)return;const list=Array.isArray(node.material)?node.material:[node.material];for(const material of list){if(!material)continue;for(const slot of ['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap']){const texture=material[slot];if(texture&&texture.anisotropy<maxAn){texture.anisotropy=maxAn;texture.needsUpdate=true}}}});
    for(const name of ['pl','hp2']){const g=get(name);if(g)install(g)}
    if(document.body)document.body.classList.add('imported-hero-ready');noteEditor();if(typeof window.drawAv==='function')window.drawAv();resolve(true);
   }catch(error){api.status='failed';api.error=String(error&&error.message||error);console.warn('imported hero',error);resolve(false)}

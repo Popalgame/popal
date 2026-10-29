@@ -355,7 +355,7 @@ try{
   for(let i=0;i<1500;i++){const px=Math.random()*512,py=Math.random()*512,a=-.35+Math.random()*.7,L=2+Math.random()*5;
    const l=205+Math.random()*50|0;x.strokeStyle=`rgba(${l-4},${l},${l-14},.5)`;
    x.beginPath();x.moveTo(px,py);x.lineTo(px+Math.sin(a)*L,py-L);x.stroke()}
-  const maxAn=Math.min(8,oR.capabilities.getMaxAnisotropy?oR.capabilities.getMaxAnisotropy():1);
+  const maxAn=Math.min(16,oR.capabilities.getMaxAnisotropy?oR.capabilities.getMaxAnisotropy():1);
   PT.image=c;PT.anisotropy=maxAn;PT.needsUpdate=true;
   for(const n of['cobble','tileT','pathT','woodT']){const t=G(n);if(t&&t.image){t.anisotropy=maxAn;t.needsUpdate=true}}
  }
