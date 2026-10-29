@@ -6,7 +6,7 @@
    Гравець сам злитки більше не крафтить, але може покласти руду/деревину в піч і забрати злитки. */
 (function(){try{
 if(!inv._fur||typeof inv._fur!='object')inv._fur={ore:0,w:0,ing:0,p:0};
-const F=inv._fur;for(const k of['ore','fuel','ing','p'])F[k]=+F[k]||0;
+const F=inv._fur;for(const k of['ore','fuel','ing','p','ord'])F[k]=+F[k]||0;
 /* 0.1.28: паливо в одиницях: деревина = 1, вугілля = 3 (стара деревина в печі переходить у паливо) */if(F.w){F.fuel+=+F.w||0;delete F.w}
 /* гравець більше не плавить сам */
 {const i=RC.findIndex(r=>r.id=='ing');if(i>=0)RC.splice(i,1)}
@@ -42,7 +42,10 @@ const furB=()=>(window.BPLACED||[]).find(b=>b.id=='B_fur');
 const isFire=p=>((T[p.ty]&&T[p.ty].e)||[]).includes('fi');
 const fireLv=p=>(((T[p.ty]||{}).wk||{}).cook)||1;
 const tIngot=p=>30/(1+.5*(fireLv(p)-1))*(cf>0?.75:1);
-window.FUR={get:()=>F,pos:()=>{const b=furB();return b?[b.x,b.z]:null},fire:isFire,time:tIngot};
+/* 0.1.28: замовлення — скільки злитків виплавити (F.ord); попал плавить і підносить руду лише під замовлення */
+const canMake=()=>{const cc=k=>window.chCount?chCount(k):0,ore=F.ore+cc('ore'),fuel=F.fuel+cc('w')+3*cc('coal');return Math.floor(Math.min(ore/2,fuel))};
+const done=()=>{if(F.ord>0&&--F.ord==0)msg('🔩 Замовлення плавильні виконано!')};
+window.FUR={get:()=>F,done,canMake,pos:()=>{const b=furB();return b?[b.x,b.z]:null},fire:isFire,time:tIngot};
 /* перемалювати вже поставлену плавильню новою моделлю */
 if(furB()&&window.respawnB)respawnB();
 
@@ -69,24 +72,29 @@ const css=document.createElement('style');css.id='fur-css';css.textContent=`
 #fur .st{padding:0 14px;font-size:13px;text-align:center}#fur .st.no{color:#ff9a8a}
 #fur .bt{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px 12px}
 #fur .bt button{background:linear-gradient(#f39a4a,#d9532e);border:2px solid #e2bf67;color:#fff;border-radius:10px;padding:4px 10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px}#fur .bt button.g{background:linear-gradient(#5fb04a,#2f8a3a)}#fur .bt button:disabled{opacity:.4;filter:grayscale(1)}
+#fur .od{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;padding:0 12px 8px}#fur .od span{font-size:14px;margin-right:4px}#fur .od b{color:#ffe7a8;font-size:17px}
+#fur .od button{background:rgba(255,255,255,.1);border:1px solid #e2bf67;color:#fff;border-radius:8px;padding:3px 9px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px}#fur .od button:disabled{opacity:.35}
 #fur .em{opacity:.65;font-size:12px;padding:0 14px 10px;text-align:center}`;document.head.appendChild(css);
 const box=document.createElement('div');box.id='fur';document.body.appendChild(box);
 const smelter=()=>pals.find(p=>p.wk&&p.cs!=null&&p.ai&&p.ai.s=='fsmelt');
 const fireCrew=()=>pals.filter(p=>p.wk&&p.cs!=null&&isFire(p));
 function render(){const s=smelter(),fc=fireCrew(),t=s?tIngot(s):fc.length?tIngot(fc[0]):30,pc=Math.min(100,F.p/t*100);
- const can=F.ore>=2&&F.fuel>=1;let st,no=0;
+ const can=F.ore>=2&&F.fuel>=1,mk=canMake();let st,no=0;
  if(s)st=`🔥 ${T[s.ty].n} плавить руду · злиток кожні ${Math.round(t)} с`;
+ else if(!F.ord)st='📋 Задайте замовлення — скільки злитків виплавити, і вогняний попал візьметься до роботи';
  else if(!fc.length){st='⚠️ Плавить лише вогняний попал у бригаді: Ігніс-Виверг або Сонцеклюв';no=1}
  else if(!can)st=`${T[fc[0].ty].n} чекає: потрібні 2 руди й паливо (деревина або вугілля) — у печі чи у скрині`;
  else st=`${T[fc[0].ty].n} іде до печі…`;
  box.innerHTML=`<header><b>🔥 Плавильня</b><button class='cx'>✕</button></header>
  <div class='fl'><div class='bx'><i>${IT.ore[0]}</i><b>${F.ore}</b><small>руда</small></div><div class='bx'><i>🔥</i><b>${F.fuel}</b><small>паливо</small></div>
  <div class='ar'>➜<div class='pb'><i style='width:${pc}%'></i></div></div><div class='bx'><i>🔩</i><b>${F.ing}</b><small>злитки</small></div></div>
+ <div class='od'><span>📋 Замовлення: <b>${F.ord}</b> 🔩</span><button data-o='-1' ${F.ord?'':'disabled'}>−1</button><button data-o='1'>+1</button><button data-o='5'>+5</button><button data-o='10'>+10</button><button data-o='max' ${mk>F.ord?'':'disabled'}>Усе можливе (${mk})</button><button data-o='0' ${F.ord?'':'disabled'}>✖</button></div>
  <div class='st ${no?'no':''}'>${st}</div>
  <div class='bt'><button data-a='ore2' ${cnt('ore')>=2?'':'disabled'}>${IT.ore[0]} Покласти 2 руди</button><button data-a='oreA' ${cnt('ore')>=1?'':'disabled'}>${IT.ore[0]} Усю руду (${cnt('ore')||0})</button>
  <button data-a='w1' ${cnt('w')>=1?'':'disabled'}>🪵 +1 деревина</button><button data-a='wA' ${cnt('w')>=1?'':'disabled'}>🪵 Усю (${cnt('w')||0})</button><button data-a='c1' ${cnt('coal')>=1?'':'disabled'}>${IT.coal?IT.coal[0]:'⚫'} +1 вугілля</button><button data-a='cA' ${cnt('coal')>=1?'':'disabled'}>${IT.coal?IT.coal[0]:'⚫'} Усе (${cnt('coal')||0})</button><button class='g' data-a='take' ${F.ing?'':'disabled'}>🔩 Забрати злитки</button></div>
- <div class='em'>2 руди + 1 паливо → 1 залізний злиток. Паливо: деревина = 1, вугілля = 3. Вогняний попал з бригади сам носить руду й паливо зі скринь (спершу вугілля), плавить і відносить злитки у скриню.</div>`;
+ <div class='em'>2 руди + 1 паливо → 1 залізний злиток. Паливо: деревина = 1, вугілля = 3. Задайте замовлення — і вогняний попал з бригади виплавить саме стільки злитків: сам носить руду й паливо зі скринь (спершу вугілля), плавить і відносить злитки у скриню.</div>`;
  box.querySelector('.cx').onclick=close;
+ box.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const o=b.dataset.o;F.ord=o=='0'?0:o=='max'?canMake():Math.max(0,Math.min(999,F.ord+ +o));save();render()});
  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;
   if(a=='ore2'||a=='oreA'){const n=a=='ore2'?2:cnt('ore');addI('ore',-n);F.ore+=n}
   else if(a=='w1'||a=='wA'){const n=a=='w1'?1:cnt('w');addI('w',-n);F.fuel+=n}
