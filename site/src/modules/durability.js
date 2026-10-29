@@ -32,5 +32,6 @@ const _r=ivR;ivR=function(){_r.apply(this,arguments);try{const c=document.getEle
   b.insertAdjacentHTML('beforeend',`<span class='durs'><i style='width:${p*100}%;background:${p>.5?'#7ee08a':p>.2?'#ffd34e':'#ff6b5a'}'></i></span>`)});
  const on=c.querySelector('.i2g .i2s.on'),id=on&&on.dataset.sl,tx=c.querySelector('.i2d .tx');
  if(id&&TT[id]&&inv[id]>0&&tx&&!tx.querySelector('.durb'))tx.insertAdjacentHTML('beforeend',bar(id))}catch(e){console.warn('durability ivR',e)}};
+window.DUR={left,mx,set:(id,v)=>{D()[id]=Math.min(mx(id),v)}};/* для repair-bench.js */
 try{eqUp()}catch(_){}
 }catch(e){console.warn('durability:',e)}})();
