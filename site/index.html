@@ -35,8 +35,15 @@ h2{font-size:clamp(28px,5vw,44px);color:var(--night);margin-bottom:12px}
 .meadow{background:var(--grass);color:#fff}
 .meadow h2{color:#fff}
 .crits{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+@media (max-width:520px){.crits{grid-template-columns:1fr 1fr;gap:10px}.crit{padding:12px 8px 14px;border-radius:18px}.crit img{width:104px!important;height:104px!important}.crit h3{font-size:16px}.crit p{font-size:13px}.crit .jobs li{font-size:11.5px;padding:2px 6px}}
 .crit{background:rgba(26,32,64,.18);border-radius:24px;padding:18px 18px 22px;text-align:center}
-.crit svg{width:120px;height:100px}
+.crit img{width:140px;height:140px;display:block;margin:0 auto;filter:drop-shadow(0 8px 6px rgba(0,0,0,.22));animation:bob 3.2s ease-in-out infinite;animation-delay:calc(var(--d,0s)*-1);transition:transform .25s}
+.crit:hover img{animation:hop .6s ease}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-5px) scale(1.015,.985)}}
+@keyframes hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-18px) rotate(-4deg)}60%{transform:translateY(0) scale(1.06,.94)}80%{transform:translateY(-4px)}}
+.crit .el{display:inline-block;font-size:13px;font-weight:700;background:rgba(255,255,255,.35);border-radius:20px;padding:2px 10px;margin-bottom:6px}
+.crit .jobs{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-wrap:wrap;gap:5px;justify-content:center}.crit .jobs li{font-size:13px;background:rgba(26,32,64,.22);border-radius:10px;padding:3px 8px}
+@media (prefers-reduced-motion:reduce){.crit img,.crit:hover img{animation:none}}
 .crit h3{font-size:19px;margin:8px 0 4px}
 .crit p{margin:0;font-size:15px;opacity:.95}
 .steps{list-style:none;padding:0;margin:0;display:grid;gap:14px;counter-reset:s}
@@ -87,7 +94,6 @@ section{scroll-margin-top:64px}
 .dnote{margin-top:22px;font-size:14px;opacity:.85;max-width:70ch}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute"><defs>
-<symbol id="crit" viewBox="0 0 120 100"><ellipse cx="58" cy="82" rx="38" ry="7" fill="rgba(0,0,0,.18)"/><ellipse cx="54" cy="58" rx="36" ry="26" fill="currentColor"/><ellipse cx="50" cy="64" rx="20" ry="14" fill="#fff" opacity=".45"/><circle cx="82" cy="40" r="22" fill="currentColor"/><path d="M70 22 76 2 84 20Z M88 20 98 4 98 26Z" fill="currentColor"/><circle cx="76" cy="40" r="6" fill="#fff"/><circle cx="90" cy="40" r="6" fill="#fff"/><circle cx="77" cy="41" r="3.2" fill="#1d2433"/><circle cx="91" cy="41" r="3.2" fill="#1d2433"/><circle cx="20" cy="50" r="10" fill="currentColor"/></symbol>
 </defs></svg>
 <nav class="nav" aria-label="Головне меню"><a class="brand" href="#top">Popal</a><div class="links"><a href="#about">Про гру</a><a href="#creatures">Істоти</a><a href="#download">Завантажити</a><a class="navplay" href="game.html">Грати</a></div></nav>
 <header class="hero" id="top">
@@ -101,9 +107,9 @@ section{scroll-margin-top:64px}
 <path d="M0 320 Q300 270 640 310 T1200 300 V400 H0Z" fill="#6ea443"/>
 <g fill="#4f9a4a"><path d="M150 210 175 120 200 210Z"/><path d="M1010 190 1040 90 1070 190Z"/><path d="M1060 200 1082 130 1104 200Z"/></g>
 <g fill="#e8803a"><path d="M220 225 240 160 260 225Z"/></g>
-<g class="bob"><use href="#crit" x="300" y="230" width="150" height="125" style="color:#2f9e6e"/></g>
-<g class="bob"><use href="#crit" x="560" y="250" width="170" height="140" style="color:#e8803a"/></g>
-<g class="bob"><use href="#crit" x="830" y="235" width="140" height="117" style="color:#8089c8"/></g>
+<g class="bob"><image href="img/pals/0.webp" x="290" y="205" width="150" height="150"/></g>
+<g class="bob"><image href="img/pals/5.webp" x="90" y="70" width="120" height="120"/></g>
+<g class="bob"><image href="img/pals/4.webp" x="830" y="215" width="145" height="145"/></g>
 </svg></div>
 </header>
 <section class="about" id="about"><div class="wrap">
@@ -133,18 +139,18 @@ section{scroll-margin-top:64px}
 </div></section>
 <section class="meadow" id="creatures"><div class="wrap">
 <h2>Кого можна зловити</h2>
-<p class="lead">У світі живуть десять видів істот. Покладіть спійману істоту в Попал-центр — і вона сама добуватиме ресурси.</p>
+<p class="lead">У світі живуть десять видів істот. Додайте спійману істоту до бригади Попал-центру — і вона сама добуватиме ресурси, плавитиме руду чи готуватиме їжу.</p>
 <div class="crits">
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#5fb04a"/></svg><h3>Бамбузл</h3><p>Трав’яний. Добродушна панда з бамбуком, на базі збирає деревину.</p></div>
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#8a6a4a"/></svg><h3>Грумрок</h3><p>Земля й кристал. Броньований копач зі свердлами, видобуває камінь.</p></div>
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#3a3440"/></svg><h3>Ігніс-Виверг</h3><p>Вогняний павук. Нападає першим, тож бережіть здоровʼя.</p></div>
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#8a6ad6"/></svg><h3>Міражбр</h3><p>Темрява й привид. Напівпрозорий хамелеон, ловиться легше за інших.</p></div>
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#e4e8f0"/></svg><h3>Пухоклуб</h3><p>Хмаринка з золотими ріжками. Спокійний збирач урожаю.</p></div>
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#e8903a"/></svg><h3>Крилоша</h3><p>Метелик-фея з чотирма крилами. Розсипає пилок.</p></div>
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#a9d8ee"/></svg><h3>Мороріг</h3><p>Крижаний олень з кришталевими рогами. Добуває камінь.</p></div>
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#1e1e2a"/></svg><h3>Грозовик</h3><p>Чорний вовк з неоновими блискавками. Нападає першим.</p></div>
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#4a78a8"/></svg><h3>Хвилезуб</h3><p>Сухопутна акула на лапках. Любить воду й деревину.</p></div>
-<div class="crit"><svg aria-hidden="true"><use href="#crit" style="color:#c8382a"/></svg><h3>Сонцеклюв</h3><p>Високий птах із сонячним вінцем за головою.</p></div>
+<div class="crit" style="--d:0.00s"><img src="img/pals/0.webp" width="140" height="140" loading="lazy" alt="Бамбузл"><h3>Бамбузл</h3><span class="el">🌿 Трава</span><p>Добродушна панда з бамбуковим списом.</p><ul class="jobs"><li>🪓 Рубає дерева</li><li>🫐 Збирає ягоди й гриби</li></ul></div>
+<div class="crit" style="--d:0.37s"><img src="img/pals/1.webp" width="140" height="140" loading="lazy" alt="Грумрок"><h3>Грумрок</h3><span class="el">💎 Земля</span><p>Броньований копач із кристалами на спині.</p><ul class="jobs"><li>⛏️ Добуває камінь</li><li>📦 Носить вантажі</li></ul></div>
+<div class="crit" style="--d:0.74s"><img src="img/pals/2.webp" width="140" height="140" loading="lazy" alt="Ігніс-Виверг"><h3>Ігніс-Виверг</h3><span class="el">🔥 Вогонь</span><p>Вогняний павук. Нападає першим, тож бережіть здоровʼя.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує на кухні-багатті</li></ul></div>
+<div class="crit" style="--d:1.11s"><img src="img/pals/3.webp" width="140" height="140" loading="lazy" alt="Міражбр"><h3>Міражбр</h3><span class="el">👻 Темрява</span><p>Напівпрозорий хамелеон, ловиться легше за інших.</p><ul class="jobs"><li>📦 Найкращий носій: годує бригаду</li></ul></div>
+<div class="crit" style="--d:1.48s"><img src="img/pals/4.webp" width="140" height="140" loading="lazy" alt="Пухоклуб"><h3>Пухоклуб</h3><span class="el">⚪ Нейтральний</span><p>Хмаринка-овечка з золотими ріжками.</p><ul class="jobs"><li>🫐 Збирає ягоди й гриби</li><li>📦 Носить вантажі</li></ul></div>
+<div class="crit" style="--d:1.85s"><img src="img/pals/5.webp" width="140" height="140" loading="lazy" alt="Крилоша"><h3>Крилоша</h3><span class="el">🌪️ Повітря</span><p>Метелик-фея з чотирма крилами.</p><ul class="jobs"><li>🫐 Найкращий збирач урожаю</li></ul></div>
+<div class="crit" style="--d:2.22s"><img src="img/pals/6.webp" width="140" height="140" loading="lazy" alt="Мороріг"><h3>Мороріг</h3><span class="el">❄️ Вода й лід</span><p>Крижаний олень з кришталевими рогами.</p><ul class="jobs"><li>⛏️ Добуває камінь</li></ul></div>
+<div class="crit" style="--d:2.59s"><img src="img/pals/7.webp" width="140" height="140" loading="lazy" alt="Грозовик"><h3>Грозовик</h3><span class="el">⚡ Темрява й повітря</span><p>Чорний вовк з неоновими блискавками. Нападає першим.</p><ul class="jobs"><li>📦 Носить вантажі</li><li>🪓 Рубає дерева</li></ul></div>
+<div class="crit" style="--d:2.96s"><img src="img/pals/8.webp" width="140" height="140" loading="lazy" alt="Хвилезуб"><h3>Хвилезуб</h3><span class="el">💧 Вода</span><p>Сухопутна акула на лапках.</p><ul class="jobs"><li>🪓 Рубає дерева</li></ul></div>
+<div class="crit" style="--d:3.33s"><img src="img/pals/9.webp" width="140" height="140" loading="lazy" alt="Сонцеклюв"><h3>Сонцеклюв</h3><span class="el">☀️ Вогонь і повітря</span><p>Високий птах із сонячним вінцем за головою.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує</li><li>📦 Носить</li></ul></div>
 </div></div></section>
 <section><div class="wrap">
 <h2>Як грати</h2>
