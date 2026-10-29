@@ -10,7 +10,7 @@ const crew=()=>pals.filter(p=>p.cs!=null&&p.wk);
 /* перехід із 0.1.17–0.1.20, де працювали всі попали в центрі: на роботі лишаються перші двоє */
 if(!inv._wkM){inv._wkM=1;if(!crew().length)pals.filter(p=>p.cs!=null).sort((a,b)=>a.cs-b.cs).slice(0,LVW[1]).forEach(p=>p.wk=1)}
 IT.B_cen=['🏠','Попал-центр'];if(inv.B_cen==null)inv.B_cen=0;
-RC.unshift({id:'B_cen',n:'🏠 Попал-центр',c:{w:20,s:15},d:'Серце вашої бази: ставиться один раз. Навколо нього будуєте базу, а попали в ньому працюють',one:1});
+RC.unshift({id:'B_cen',n:'Попал-центр',c:{w:20,s:15},d:'Серце вашої бази: ставиться один раз. Навколо нього будуєте базу, а попали в ньому працюють',one:1});
 
 /* гравцям зі старим табором — центр у подарунок, щоб перенести базу */
 if(hasSave&&!inv._cen&&!inv._cenG&&!(inv.B_cen>0)&&(pals.length||(inv._b||[]).length)){inv.B_cen=1;inv._cenG=1;setTimeout(()=>msg('🏠 Табір зник! У рюкзаку — Попал-центр у подарунок: поставте його, де хочете жити'),4000)}
@@ -61,7 +61,7 @@ const _r=ivR;ivR=function(){_r.apply(this,arguments);const c=$('ivc');if(!c)retu
 /* ---------- взаємодія: «Дія» біля центру відкриває його ---------- */
 const nearCen=()=>inv._cen&&Math.hypot(P.x-inv._cen[0],P.z-inv._cen[1])<NEAR;window.nearCen=nearCen;
 const hb=$('hit'),h0=hb.onclick;hb.onclick=function(){if(nearCen()&&!nearest(wild,2.6)){openCen();return}return h0.apply(this,arguments)};
-let wasNear=null,hit0=null;ANI.push(()=>{const n=!!nearCen();if(n===wasNear)return;wasNear=n;if(n){hit0=hb.innerHTML;hb.innerHTML='🏠<small>Центр</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}});
+let wasNear=null,hit0=null;ANI.push(()=>{const n=!!nearCen();if(n===wasNear)return;wasNear=n;if(n){hit0=hb.innerHTML;hb.innerHTML=(window.plIcon?plIcon('B_cen'):'🏠')+'<small>Центр</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}});
 
 /* ---------- вікно центру ---------- */
 const css=document.createElement('style');css.id='cen-css';css.textContent=`

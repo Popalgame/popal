@@ -11,7 +11,7 @@ const BUI=[
 {id:'B_fen',n:'Паркан',i:'🚧',c:{w:4},d:'Прикрашає базу',p:1}];
 const BI={};BUI.forEach(b=>{BI[b.id]=b;IT[b.id]=[b.i,b.n];if(inv[b.id]==null)inv[b.id]=0});
 if(!Array.isArray(inv._b))inv._b=[];
-RC.push(...BUI.map(b=>({id:b.id,n:'🏗️ '+b.n,c:b.c,d:b.d+' · +'+b.p+' до бази',bld:1})));
+RC.push(...BUI.map(b=>({id:b.id,n:b.n,c:b.c,d:b.d+' · +'+b.p+' до бази',bld:1})));
 const REQ={axm:'B_wb',pkm:'B_wb',bp3:'B_wb',ing:'B_fur'};
 const built=id=>inv._b.some(x=>x[0]==id);window.isBuilt=built;
 const LV=[0,2,5,9,14];

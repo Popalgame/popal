@@ -4,7 +4,7 @@
 (function(){try{
 const NEAR=1.9,BASE=30,SLOTS=30;
 IT.B_ch=['📦','Скриня'];if(inv.B_ch==null)inv.B_ch=0;
-{const i=RC.findIndex(r=>r.id=='B_cen');RC.splice(i+1,0,{id:'B_ch',n:'📦 Скриня',c:{w:10,sti:4},d:'Ставиться на базі. Попали складають сюди все, що добули. Без обмеження ваги'})}
+{const i=RC.findIndex(r=>r.id=='B_cen');RC.splice(i+1,0,{id:'B_ch',n:'Скриня',c:{w:10,sti:4},d:'Ставиться на базі. Попали складають сюди все, що добули. Без обмеження ваги'})}
 if(!Array.isArray(inv._ch))inv._ch=[];
 const CH=inv._ch;
 
@@ -54,7 +54,7 @@ const _r=ivR;ivR=function(){_r.apply(this,arguments);const c=$('ivc');if(!c||ivT
 /* ---------- взаємодія ---------- */
 const nearCh=()=>{const c=near(P.x,P.z);return c&&Math.hypot(c.x-P.x,c.z-P.z)<NEAR?c:null};
 const hb=$('hit'),h0=hb.onclick;hb.onclick=function(){const c=nearCh();if(c&&!nearest(wild,2.6)){openCh(c);return}return h0.apply(this,arguments)};
-let was=null,hit0=null;ANI.push(()=>{const n=!!nearCh();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML='📦<small>Скриня</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}});
+let was=null,hit0=null;ANI.push(()=>{const n=!!nearCh();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML=(window.plIcon?plIcon('B_ch'):'📦')+'<small>Скриня</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}});
 
 /* ---------- вікно скрині ---------- */
 const css=document.createElement('style');css.id='ch-css';css.textContent=`

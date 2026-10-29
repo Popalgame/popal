@@ -21,7 +21,7 @@ function render(){
  if(sel==null||!vis.some(x=>x.i===sel)){const f=vis.find(x=>x.ok)||vis[0];sel=f?f.i:null}
  const cnts={};R.forEach(x=>{cnts[x.cat]=(cnts[x.cat]||0)+(x.ok?1:0)});cnts.all=R.filter(x=>x.ok).length;
  const s=R.find(x=>x.i===sel)||vis[0]||R[0];
- const tabs=CAT.filter(([k])=>k=='all'||R.some(x=>x.cat==k)).map(([k,n,e])=>`<button class='cxc ${k==cat?'on':''}' data-cxc='${k}'><span>${e}</span>${n}${cnts[k]?`<em>${cnts[k]}</em>`:''}</button>`).join('');
+ const tabs=CAT.filter(([k])=>k=='all'||R.some(x=>x.cat==k)).map(([k,n,e])=>`<button class='cxc ${k==cat?'on':''}' data-cxc='${k}'><span>${(window.plIcon&&{tool:'pick',ball:'b',food:'pie',bag:'bp2',build:'B_wb',mat:'w'}[k]&&plIcon({tool:'pick',ball:'b',food:'pie',bag:'bp2',build:'B_wb',mat:'w'}[k]))||e}</span>${n}${cnts[k]?`<em>${cnts[k]}</em>`:''}</button>`).join('');
  const cards=vis.map(x=>`<button class='cxk ${x.ok?'ok':x.own?'own':x.lock?'lock':'no'} ${s&&x.i===s.i?'sel':''}' data-cxk='${x.i}'><span class='cxi'>${x.icon}</span><span class='cxn'>${esc(x.name)}</span>${x.ok?"<i class='cxb'>✓</i>":x.own?"<i class='cxb own'>Є</i>":x.lock?"<i class='cxb lk'>🔒</i>":''}</button>`).join('')||`<div class='cxe'>${onlyOk?'Поки нічого не можна створити — зберіть більше матеріалів':'Тут порожньо'}</div>`;
  let det='';
  if(s){const need=s.cost.map(q=>{const p=Math.min(1,q.have/q.n);return `<div class='cxr ${q.have>=q.n?'y':'n'}'><span class='cxri'>${q.icon}</span><span class='cxrn'>${esc(q.name)}</span><span class='cxrq'>${Math.min(q.have,999)} / ${q.n}</span><span class='cxbar'><span style='width:${p*100}%'></span></span></div>`}).join('');
