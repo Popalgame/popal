@@ -2,13 +2,15 @@
 (function(){
 'use strict';
 const T=window.THREE,previous=window.buildHero,previousAct=window.heroAct,previousShow=window.ccShow,previousDraw=window.drawAv;
-const api=window.importedHero={status:'loading',ready:null,error:null,clips:[],stats:null,url:'assets/models/hero-rigged.glb'};
+const fullUrl='assets/models/hero-rigged.glb',mobileUrl='assets/models/hero-mobile.glb',walkUrl='assets/models/hero-walk-clip.glb';
+let coarse=false;try{coarse=!!(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches)}catch(_){}
+const api=window.importedHero={status:'loading',ready:null,error:null,clips:[],stats:null,url:coarse?mobileUrl:fullUrl,walkSource:'built-in'};
 if(!T||!T.GLTFLoader||!T.SkeletonUtils||typeof previous!=='function'){
  api.status='unavailable';api.error='Three GLTFLoader, SkeletonUtils, or buildHero is unavailable';api.ready=Promise.resolve(false);return;
 }
 const get=name=>{try{return eval(name)}catch(_){return undefined}};
 const instances=new Set(),normName=name=>name.toLowerCase().replace(/[^a-z0-9]/g,'').replace(/^(mixamorig|hero)/,'');
-let template=null,animations=null,last=performance.now();
+let template=null,animations=null,walkClip=null,last=performance.now();
 function disposeInstance(g){
  const old=g.userData.importedHero;if(!old)return;
  const r=g.userData.rig;if(r&&r.mixer){r.mixer.stopAllAction();r.mixer.uncacheRoot(old.model)}
@@ -57,7 +59,7 @@ function install(g){
  const source={};for(const clip of animations)source[clip.name.toLowerCase()]=clip;
  const idle=source.idle;
  for(const key of ['idle','walk','run','swim','hit','throw']){
-  const overlay=key==='hit'||key==='throw',clip=source[key]||idle;
+  const overlay=key==='hit'||key==='throw',clip=key==='walk'&&walkClip||source[key]||idle;
   const action=mixer.clipAction(overlay?upperClip(clip):clip);
   action.setLoop(overlay?T.LoopOnce:T.LoopRepeat,Infinity);action.clampWhenFinished=overlay;
   if(overlay&&action.getClip()!==clip&&T.AdditiveAnimationBlendMode!==undefined)action.blendMode=T.AdditiveAnimationBlendMode;
@@ -107,19 +109,64 @@ window.heroAct=function(kind){previousAct(kind);const pl=get('pl'),r=pl&&pl.user
 const gait=k=>k==='walk'||k==='run',clipDur=a=>a.getClip().duration;
 function choose(r,next,fade){if(next===r.locomotion)return;const from=r.actions[r.locomotion],to=r.actions[next];to.reset();if(gait(next)&&gait(r.locomotion)){const d=clipDur(from);to.time=(from.time%d)/d*clipDur(to)}to.play();to.crossFadeFrom(from,fade,false);r.locomotion=next}
 const damp=(a,b,k,dt)=>a+(b-a)*(1-Math.exp(-k*dt));
-(function loop(){requestAnimationFrame(loop);const now=performance.now(),dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
+(function loop(){requestAnimationFrame(loop);const now=performance.now(),elapsed=Math.max(0,(now-last)/1000),dt=Math.min(.05,elapsed);last=now;
  const pl=get('pl'),P=get('P'),H=window.H;
  for(const g of instances){const r=g.userData.rig;if(!r||!r.imported){instances.delete(g);continue}if(!g.parent)continue;
-  let state='idle';if(g===pl&&P){const velocity=r.lastX==null?0:Math.hypot(P.x-r.lastX,P.z-r.lastZ)/Math.max(dt,.001);r.lastX=P.x;r.lastZ=P.z;r.speed=damp(r.speed,get('menuO')?0:Math.min(15,velocity),8,dt);r.run=damp(r.run,r.speed>3.3?1:0,7,dt);state=H&&H(P.x,P.z)<-1.15?'swim':r.speed>3.3?'run':r.speed>.24?'walk':'idle'}
+  let state='idle';if(g===pl&&P){
+   const blocked=get('menuO')||get('ivO')||get('pfO')||get('ccO');
+   const velocity=r.lastX==null||elapsed<=0||elapsed>.25?0:Math.hypot(P.x-r.lastX,P.z-r.lastZ)/elapsed;
+   r.lastX=P.x;r.lastZ=P.z;
+   if(blocked||elapsed>.25){r.speed=0;r.run=0}
+   else{r.speed=damp(r.speed,Math.min(15,velocity),8,dt);r.run=r.speed>(r.locomotion==='run'?3.3:3.8)?1:0}
+   state=blocked?'idle':H&&H(P.x,P.z)<-1.15?'swim':r.run?'run':r.speed>.24?'walk':'idle';
+  }
   syncAction(r,now/1000);
   if(r.action&&now/1000>=r.actionUntil){r.actions[r.action].fadeOut(.1);r.action=null}
   choose(r,state,state==='swim'?.26:.17);r.state=r.action||r.locomotion;
-  /* stride-matched playback: walk_v2 covers 1.04 m/s, run_v2 covers 4.0 m/s at timeScale 1 */
-  r.actions.walk.timeScale=Math.max(.8,Math.min(2.2,r.speed/1.04));r.actions.run.timeScale=Math.max(.85,Math.min(1.5,r.speed/4));r.mixer.update(dt);
+  /* The separate walk clip's planted foot matches 2.5 units/s near 1.97x.
+     Preserve the original gait when the optional clip is unavailable. */
+  r.actions.walk.timeScale=walkClip?Math.max(.7,Math.min(2.5,r.speed/2.5*1.97)):Math.max(.7,Math.min(2,r.speed/2.5*.85));
+  r.actions.run.timeScale=Math.max(.85,Math.min(1.6,r.speed/8*1.35));r.mixer.update(dt);
  }
 })();
+function validWalk(clip){
+ const original=animations.find(item=>item.name.toLowerCase()==='walk');
+ if(!clip||clip.name.toLowerCase()!=='walk'||!Number.isFinite(clip.duration)||clip.duration<=0||!original)return false;
+ const expected=new Map(original.tracks.map(track=>[track.name,track.ValueTypeName]));
+ if(clip.tracks.length!==expected.size)return false;
+ const bones=new Set();template.traverse(node=>{if(node.isBone)bones.add(normName(node.name))});
+ return clip.tracks.every(track=>{
+  const dot=track.name.lastIndexOf('.'),name=track.name.slice(0,dot);
+  if(dot<=0||!expected.has(track.name)||!bones.has(normName(name))||track.ValueTypeName!==expected.get(track.name)||!track.validate())return false;
+  expected.delete(track.name);return true;
+ })&&expected.size===0;
+}
+function loadWalk(){
+ try{new T.GLTFLoader().load(walkUrl,gltf=>{
+  try{
+   const clips=gltf.animations||[],clip=clips.length===1?clips[0]:null;
+   if(!validWalk(clip))throw Error('Walk clip does not match hero rig');
+   walkClip=clip;api.walkSource=walkUrl;
+   for(const g of instances){const r=g.userData.rig;if(!r||!r.imported)continue;
+    const old=r.actions.walk,action=r.mixer.clipAction(clip);action.setLoop(T.LoopRepeat,Infinity);
+    action.timeScale=old.timeScale;r.actions.walk=action;
+    if(r.locomotion==='walk'){
+     action.time=(old.time%old.getClip().duration)/old.getClip().duration*clip.duration;
+     action.play();action.crossFadeFrom(old,.17,false);
+    }else old.stop();
+   }
+  }catch(error){console.warn('imported hero walk',error)}
+ },undefined,error=>console.warn('imported hero walk',error))}catch(error){console.warn('imported hero walk',error)}
+}
 api.ready=new Promise(resolve=>{
- new T.GLTFLoader().load(api.url,gltf=>{
+ const urls=coarse?[mobileUrl,fullUrl]:[fullUrl],loader=new T.GLTFLoader();
+ function fail(error,index){
+  if(index+1<urls.length){load(index+1);return}
+  api.status='failed';api.error=String(error&&error.message||error);console.warn('imported hero',error);resolve(false);
+ }
+ function load(index){
+  const url=urls[index];api.url=url;
+  try{loader.load(url,gltf=>{
   try{
    const scene=gltf.scene||gltf.scenes&&gltf.scenes[0],clips=gltf.animations||[];
    if(!scene||['idle','walk','run','swim','hit','throw'].some(name=>!clips.some(c=>c.name.toLowerCase()===name)))throw Error('Rig requires idle, walk, run, swim, hit, and throw clips');
@@ -132,8 +179,10 @@ api.ready=new Promise(resolve=>{
    let maxAn=1;try{maxAn=Math.min(16,get('R').capabilities.getMaxAnisotropy())}catch(_){}
    scene.traverse(node=>{if(!node.isMesh)return;const list=Array.isArray(node.material)?node.material:[node.material];for(const material of list){if(!material)continue;for(const slot of ['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap']){const texture=material[slot];if(texture&&texture.anisotropy<maxAn){texture.anisotropy=maxAn;texture.needsUpdate=true}}}});
    for(const name of ['pl','hp2']){const g=get(name);if(g)install(g)}
-   if(document.body)document.body.classList.add('imported-hero-ready');noteEditor();if(typeof window.drawAv==='function')window.drawAv();resolve(true);
-  }catch(error){api.status='failed';api.error=String(error&&error.message||error);console.warn('imported hero',error);resolve(false)}
- },undefined,error=>{api.status='failed';api.error=String(error&&error.message||error);console.warn('imported hero',error);resolve(false)});
+   if(document.body)document.body.classList.add('imported-hero-ready');noteEditor();if(typeof window.drawAv==='function')window.drawAv();resolve(true);loadWalk();
+  }catch(error){fail(error,index)}
+  },undefined,error=>fail(error,index))}catch(error){fail(error,index)}
+ }
+ load(0);
 });
 })();

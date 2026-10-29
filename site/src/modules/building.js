@@ -32,12 +32,18 @@ function pay(c,sgn){const res=G('res'),inv=G('inv');for(const[k,n]of Object.entr
 function tex(draw){const c=document.createElement('canvas');c.width=c.height=128;draw(c.getContext('2d'));const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;return t}
 const woodT=tex(x=>{x.fillStyle='#b98252';x.fillRect(0,0,128,128);for(let i=0;i<8;i++){x.fillStyle=i%2?'#a8743f':'#c08a58';x.fillRect(0,i*16,128,15);x.fillStyle='rgba(60,30,10,.35)';x.fillRect(0,i*16+15,128,1);for(let j=0;j<6;j++){x.fillStyle='rgba(90,50,20,.18)';x.fillRect(Math.random()*128,i*16+3+Math.random()*9,20+Math.random()*30,1)}x.fillStyle='rgba(50,25,10,.5)';x.fillRect((i*37)%128,i*16,1,15)}});
 const stoneT=tex(x=>{x.fillStyle='#8f8b84';x.fillRect(0,0,128,128);for(let r=0;r<8;r++)for(let c=0;c<4;c++){const o=r%2?16:0,g=150+Math.random()*30|0;x.fillStyle=`rgb(${g},${g-4},${g-10})`;x.fillRect(c*32+o-31+32,r*16+1,30,14);x.fillRect(c*32+o-31,r*16+1,30,14)}});
-const MAT=[[new THREE.MeshStandardMaterial({color:0xffffff,map:woodT,roughness:.9}),new THREE.MeshStandardMaterial({color:0x8a5a34,roughness:.9})],
- [new THREE.MeshStandardMaterial({color:0xffffff,map:stoneT,roughness:.95}),new THREE.MeshStandardMaterial({color:0x6d6a66,roughness:.95})]];
+function loadBuildingTexture(texture,path){const image=new Image();image.onload=()=>{texture.image=image;texture.needsUpdate=true};image.src=path}
+loadBuildingTexture(woodT,'assets/building/wood-planks.png');
+loadBuildingTexture(stoneT,'assets/building/stone-blocks.png');
+const MAT=[[new THREE.MeshStandardMaterial({color:0xffffff,map:woodT,roughness:.9}),new THREE.MeshStandardMaterial({color:0xc49a74,map:woodT,roughness:.9})],
+ [new THREE.MeshStandardMaterial({color:0xffffff,map:stoneT,roughness:.95}),new THREE.MeshStandardMaterial({color:0xa2a09a,map:stoneT,roughness:.95})]];
 const GOOD=new THREE.MeshBasicMaterial({color:0x5cff7a,transparent:true,opacity:.42,depthWrite:false}),BAD=new THREE.MeshBasicMaterial({color:0xff4a4a,transparent:true,opacity:.42,depthWrite:false}),DEL=new THREE.MeshBasicMaterial({color:0xff3030,transparent:true,opacity:.35,depthWrite:false});
 /* ---------- геометрія ---------- */
 const DIRS=[[0,1],[1,0],[0,-1],[-1,0]];
 const cxz=(cx,cz)=>[cx*C+C/2,cz*C+C/2];
+let roofModel=null;
+const roofGeometries=new Set();
+function disposeGroup(g){g.traverse(o=>{if(o.isMesh&&o.geometry&&!roofGeometries.has(o.geometry))o.geometry.dispose()})}
 function box(g,m,w,h,d,x,y,z){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);b.castShadow=b.receiveShadow=true;g.add(b);return b}
 function groundMin(cx,cz){let m=99;for(const[a,b]of[[0,0],[C,0],[0,C],[C,C],[C/2,C/2]])m=Math.min(m,H(cx*C+a,cz*C+b));return m}
 function groundMax(cx,cz){let m=-99;for(const[a,b]of[[0,0],[C,0],[0,C],[C,C],[C/2,C/2]])m=Math.max(m,H(cx*C+a,cz*C+b));return m}
@@ -62,7 +68,8 @@ function mkPiece(p,ghost){const g=new THREE.Group(),[m0,m1]=ghost?[ghost,ghost]:
   else if(p.v==2)box(w,ghost||new THREE.MeshStandardMaterial({color:0x9fd8ff,transparent:true,opacity:.35,roughness:.05,metalness:.2}),1.12,1.17,.04,0,1.625,0);
   else if(p.v==3){for(let i=0;i<6;i++)box(w,B,.05,1.17,.05,-.48+i*.19,1.625,0);box(w,B,1.12,.05,.05,0,1.3,0);box(w,B,1.12,.05,.05,0,1.95,0)}
   else{for(const sx of[-1,1]){const sg=new THREE.Group();sg.position.set(sx*.56,1.625,.14);w.add(sg);sg.rotation.y=sx*.35;for(let i=0;i<5;i++)box(sg,A,.56,.17,.05,-sx*.28,-.46+i*.23,0)}}}
- else if(p.t==4){const cone=new THREE.Mesh(new THREE.ConeGeometry(C/Math.SQRT2*1.08,1.7,4,1),m0);cone.rotation.y=Math.PI/4;cone.position.y=p.y+.85;cone.castShadow=true;g.add(cone)}
+ else if(p.t==4){if(roofModel){const roof=roofModel.clone(true);roof.traverse(o=>{if(!o.isMesh)return;o.material=ghost||(/Roof_Trim/.test(o.name)?m1:m0);o.castShadow=o.receiveShadow=!ghost});roof.position.y=p.y;g.add(roof)}
+  else{const cone=new THREE.Mesh(new THREE.ConeGeometry(C/Math.SQRT2*1.08,1.7,4,1),m0);cone.rotation.y=Math.PI/4;cone.position.y=p.y+.85;cone.castShadow=true;g.add(cone)}}
  if(ghost)g.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;o.renderOrder=5}});
  return g}
 /* ---------- дані ---------- */
@@ -73,10 +80,21 @@ const at=(t,cx,cz,y)=>pieces.find(p=>p.t==t&&p.cx==cx&&p.cz==cz&&(y==null||near(
 function edgeAt(t,cx,cz,s,y){const[a,b,ss]=ekey(cx,cz,s);return pieces.find(p=>p.t==t&&near(p.y,y)&&(()=>{const[c,d,e]=ekey(p.cx,p.cz,p.s);return c==a&&d==b&&e==ss})())}
 const wallAt=(cx,cz,s,y)=>edgeAt(1,cx,cz,s,y),insAt=(cx,cz,s,y)=>edgeAt(5,cx,cz,s,y),fullAt=(cx,cz,s,y)=>{const w=wallAt(cx,cz,s,y);return w&&w.v<=3?w:null};
 function tops(cx,cz){return pieces.filter(p=>p.cx==cx&&p.cz==cz&&(p.t==0||p.t==2)).map(p=>p.y)}
-function saveB(){const inv=G('inv');if(!inv)return;inv._bs=pieces.map(p=>[p.t,p.cx,p.cz,Math.round(p.y*100),p.s,p.m,p.v]);try{G('save')()}catch(e){}}
-function add(p,noSave){p.g=mkPiece(p);SCN.add(p.g);{const d=p.g.userData.door;if(d)d.traverse(x=>x.userData.noFreeze=1);p.g.updateMatrixWorld(true);p.g.traverse(x=>{if(!x.userData.noFreeze)x.matrixAutoUpdate=false})}pieces.push(p);if(!noSave)saveB()}
-function remove(p){SCN.remove(p.g);p.g.traverse(o=>{if(o.isMesh)o.geometry.dispose()});pieces=pieces.filter(x=>x!==p);saveB()}
+function saveB(){const inv=G('inv');if(!inv)return;inv._bs=pieces.map(p=>[p.t,p.cx,p.cz,Math.round(p.y*100),p.s,p.m,p.v]);if(window.plRefreshVegetation)window.plRefreshVegetation();try{G('save')()}catch(e){}}
+function freezePiece(g){const d=g.userData.door;if(d)d.traverse(x=>x.userData.noFreeze=1);g.updateMatrixWorld(true);g.traverse(x=>{if(!x.userData.noFreeze)x.matrixAutoUpdate=false})}
+function add(p,noSave){p.g=mkPiece(p);SCN.add(p.g);freezePiece(p.g);pieces.push(p);if(!noSave)saveB()}
+function remove(p){SCN.remove(p.g);disposeGroup(p.g);pieces=pieces.filter(x=>x!==p);saveB()}
 {const inv=G('inv');(inv&&inv._bs||[]).forEach(a=>{try{add({t:a[0],cx:a[1],cz:a[2],y:a[3]/100,s:a[4],m:a[5],v:a[6]},true)}catch(e){}})}
+/* Dachy odtworzone z zapisu startują jako prosta bryła, a po wczytaniu GLB
+   dostają detal bez zmiany pozycji, danych zapisu ani reguł kolizji. */
+if(THREE.GLTFLoader)new THREE.GLTFLoader().load('assets/models/building-roof.glb',gltf=>{
+ const meshes=[];gltf.scene.traverse(o=>{if(o.isMesh)meshes.push(o)});
+ const bounds=new THREE.Box3().setFromObject(gltf.scene),size=bounds.getSize(new THREE.Vector3());
+ if(meshes.length!==2||!meshes.some(o=>o.name==='Roof_Surface')||!meshes.some(o=>o.name==='Roof_Trim')||meshes.some(o=>!o.geometry.attributes.uv)||size.x>3.7||size.z>3.7||size.y>2.2||size.y<1){console.warn('building roof: invalid model');return}
+ roofModel=gltf.scene;meshes.forEach(o=>roofGeometries.add(o.geometry));
+ for(const p of pieces){if(p.t!==4)continue;SCN.remove(p.g);disposeGroup(p.g);p.g=mkPiece(p);SCN.add(p.g);freezePiece(p.g)}
+ ghostKey='';
+},undefined,e=>console.warn('building roof: procedural fallback',e));
 /* ---------- поверхні й зіткнення ---------- */
 let py=null;
 function surf(x,z,cur){const cx=Math.floor(x/C),cz=Math.floor(z/C);let best=-99;
@@ -144,7 +162,8 @@ function costTxt(c){return Object.entries(c).filter(([,n])=>n).map(([k,n])=>`<sp
 function drawBar(){bar.innerHTML=`<div class='bmat'>${CATS.map((c,i)=>`<button data-bc='${i}' class='btab ${i==tab?'on':''}'>${c}</button>`).join('')}<span class='bsep'></span><button data-bm='0' class='bmt ${mat?'':'on'}' title='Дерево'>🪵</button><button data-bm='1' class='bmt ${mat?'on':''}' title='Камінь'>🪨</button></div><div class='bitems'>`+
  ITEMS.map((it,i)=>it.cat!=tab?'':`<button data-bi='${i}' class='${i==cur&&!del?'on':''} ${it.fix?'fix':mat?'stone':'wood'}'><b>${it.e}</b><i>${it.n}${it.fix?'':`<u>${mat?'камінь':'дерево'}</u>`}</i><em>${costTxt(cost(it,mat))}</em></button>`).join('')+'</div>';
  document.getElementById('bdel').classList.toggle('on',!!del);document.getElementById('bok').innerHTML=del?'🔨<small>Розібрати</small>':'✔<small>Поставити</small>'}
-function setOn(v){on=v;document.body.classList.toggle('bmode',!!on);if(!on){if(ghost){SCN.remove(ghost);ghost=null;ghostKey=''}tip.textContent='';del=0}else{drawBar()}}
+function dropGhost(){if(ghost){SCN.remove(ghost);disposeGroup(ghost);ghost=null}}
+function setOn(v){on=v;document.body.classList.toggle('bmode',!!on);if(!on){dropGhost();ghostKey='';tip.textContent='';del=0}else{drawBar()}}
 bt.onclick=()=>{if(G('menuO'))return;setOn(on?0:1)};
 document.getElementById('bx').onclick=()=>setOn(0);
 document.getElementById('brot').onclick=()=>{rot=(rot+1)%4;ghostKey=''};
@@ -161,9 +180,9 @@ let lt=performance.now();
  /* двері відчиняються, коли гравець поруч */
  for(const p of pieces){const d=p.g&&p.g.userData.door;if(!d)continue;const[cx,cz]=cxz(p.cx,p.cz),[a,b]=DIRS[p.s],x=cx+a*C/2,z=cz+b*C/2;const o=Math.hypot(P.x-x,P.z-z)<2&&Math.abs((py||0)-p.y)<2;d.rotation.y+=((o?-1.45:0)-d.rotation.y)*Math.min(1,dt*8)}
  if(!on||G('menuO')||G('ivO')){if(ghost){ghost.visible=false}return}
- if(del){const p=delTarget();const k='del'+(p?pieces.indexOf(p):'-');if(k!==ghostKey){ghostKey=k;if(ghost)SCN.remove(ghost);ghost=p?mkPiece(p,DEL):null;if(ghost){ghost.scale.setScalar(1.02);SCN.add(ghost)}}
+ if(del){const p=delTarget();const k='del'+(p?pieces.indexOf(p):'-');if(k!==ghostKey){ghostKey=k;dropGhost();ghost=p?mkPiece(p,DEL):null;if(ghost){ghost.scale.setScalar(1.02);SCN.add(ghost)}}
   tip.textContent=p?'Торкніться 🔨, щоб розібрати (повернеться половина ресурсів)':'Підійдіть до деталі, яку хочете розібрати';return}
- plan=planFor();const k=JSON.stringify([plan.p,plan.ok]);if(k!==ghostKey){ghostKey=k;if(ghost)SCN.remove(ghost);ghost=mkPiece(plan.p,plan.ok?GOOD:BAD);SCN.add(ghost)}ghost.visible=true;
+ plan=planFor();const k=JSON.stringify([plan.p,plan.ok]);if(k!==ghostKey){ghostKey=k;dropGhost();ghost=mkPiece(plan.p,plan.ok?GOOD:BAD);SCN.add(ghost)}ghost.visible=true;
  tip.innerHTML=plan.ok?`${ITEMS[cur].e} ${ITEMS[cur].n}: ${costTxt(plan.c)} — натисніть ✔`:'⚠️ '+plan.why;
 })();
 window.BUILD={get pieces(){return pieces},setOn,ITEMS};

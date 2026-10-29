@@ -3,3 +3,6 @@ node_modules/
 .DS_Store
 backups/popal.zip
 .firebase/
+output/
+.playwright-cli/
+*.bak-*

@@ -57,7 +57,10 @@ function BIO(x,z){const i=Math.max(0,Math.min(WG_N-1,Math.round((x+WG_R)/WG_S)))
 window.BIO=BIO;window.BCOL=BCOL;
 {const v=WGEN.VC;MT.push([v.x*WG_R,v.z*WG_R,24,0])}
 const tg=new THREE.PlaneGeometry(2*WG_R,2*WG_R,WG_N-1,WG_N-1);tg.rotateX(-Math.PI/2);const tp=tg.attributes.position,tcol=[],c1=new THREE.Color();
-for(let i=0;i<tp.count;i++){const x=tp.getX(i),z=tp.getZ(i),h=H(x,z);tp.setY(i,h);const n=(Math.sin(x*.9)*Math.cos(z*.8)+Math.sin(x*2.3+z*1.7)*.5+1.5)*.06;const bi=BIO(x,z);c1.set(BCOL[bi]);c1.offsetHSL(0,0,n-.09);if(h>-.3&&h<5.5){const trail=Math.max(0,Math.min(1,(2.1-pathD(x,z))/.95));c1.lerp(PC,trail*.88)}tcol.push(c1.r,c1.g,c1.b)}
+function colorHash(i,j){let h=Math.imul(i,374761393)^Math.imul(j,668265263)^WG.seed;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967295}
+function colorNoise(x,z){const ix=Math.floor(x),iz=Math.floor(z),a=x-ix,b=z-iz,u=a*a*(3-2*a),v=b*b*(3-2*b);
+const lo=colorHash(ix,iz)*(1-u)+colorHash(ix+1,iz)*u,hi=colorHash(ix,iz+1)*(1-u)+colorHash(ix+1,iz+1)*u;return lo*(1-v)+hi*v}
+for(let i=0;i<tp.count;i++){const x=tp.getX(i),z=tp.getZ(i),h=H(x,z);tp.setY(i,h);const n=(colorNoise(x*.018,z*.018)*.5+colorNoise(x*.065+19.7,z*.065-8.3)*.32+colorNoise(x*.16-31.1,z*.16+42.5)*.18-.5)*.12;const bi=BIO(x,z);c1.set(BCOL[bi]);c1.offsetHSL(0,0,n);if(h>-.3&&h<5.5){const trail=Math.max(0,Math.min(1,(2.1-pathD(x,z))/.95));c1.lerp(PC,trail*.88)}tcol.push(c1.r,c1.g,c1.b)}
 tg.setAttribute('color',new THREE.Float32BufferAttribute(tcol,3));tg.computeVertexNormals();
 const gr=new THREE.Mesh(tg,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,map:paint}));gr.receiveShadow=true;sc.add(gr);
 const water=new THREE.Mesh(new THREE.PlaneGeometry(2400,2400),new THREE.MeshStandardMaterial({color:0x22b4f2,transparent:true,opacity:.78,roughness:.15}));water.rotation.x=-Math.PI/2;water.position.y=-.5;sc.add(water);

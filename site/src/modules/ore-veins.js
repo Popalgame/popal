@@ -55,6 +55,8 @@ function rockGeo(seed){const g=new THREE.DodecahedronGeometry(.7,1),p=g.attribut
  for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const k=.84+.28*h(Math.round(v.x*100),Math.round(v.y*100),Math.round(v.z*100));v.multiplyScalar(k);p.setXYZ(i,v.x,v.y,v.z)}
  g.computeVertexNormals();return g}
 const GEO=[1,2,3,4,5,6].map(rockGeo),pick=a=>a[Math.random()*a.length|0];
+let importedGEO=null;
+const stoneGeo=()=>pick(importedGEO||GEO);
 
 function dressStone(m){const old=m.geometry;m.geometry=pick(GEO);if(old&&GEO.indexOf(old)<0)old.dispose();m.material=STONE;m.castShadow=m.receiveShadow=true}
 function makeOre(g){const m=g.children[0];if(!m)return;g.userData.ore=1;m.material=ORE;
@@ -63,7 +65,7 @@ function makeOre(g){const m=g.children[0];if(!m)return;g.userData.ore=1;m.materi
 
 /* нові камені (зокрема відновлені після розбиття) — у новому вигляді; після розбитої жили наступний камінь стає жилою */
 let pend=0;
-mkRock=function(){const g=new THREE.Group(),m=new THREE.Mesh(pick(GEO),STONE);m.position.y=.45;m.scale.y=.8;m.rotation.y=Math.random()*6;m.castShadow=m.receiveShadow=true;g.add(m);if(pend>0){pend--;makeOre(g)}return g};
+mkRock=function(){const ore=pend>0,g=new THREE.Group(),m=new THREE.Mesh(ore?pick(GEO):stoneGeo(),STONE);m.position.y=.45;m.scale.y=.8;m.rotation.y=Math.random()*6;m.castShadow=m.receiveShadow=true;g.add(m);if(ore){pend--;makeOre(g)}return g};
 
 /* ---------- перетворюємо наявні скелі: ~16% стають жилами, у горах і тундрі частіше; біля табору — щонайменше 3 ---------- */
 const RICH={rock:1,snow:1,ash:1,tundra:1};
@@ -71,6 +73,16 @@ for(const o of RK){const m=o.m&&o.m.children[0];if(!m)continue;dressStone(m);let
  if(Math.random()<(RICH[b]?.32:.12))makeOre(o.m)}
 const near=RK.filter(o=>Math.hypot(o.x,o.z)<45).sort((a,b)=>Math.hypot(a.x,a.z)-Math.hypot(b.x,b.z));
 let have=near.filter(o=>o.m.userData.ore).length;for(const o of near){if(have>=3)break;if(!o.m.userData.ore&&Math.hypot(o.x,o.z)>12){makeOre(o.m);have++}}
+
+/* Model arrives after the world is built. Only ordinary stones change shape; resource markers and groups stay intact. */
+if(THREE.GLTFLoader)new THREE.GLTFLoader().load('assets/models/terrain-rocks.glb',gltf=>{
+ const variants=[];gltf.scene.traverse(node=>{if(node.isMesh&&/^Rock_\d+$/.test(node.name)&&node.geometry)variants.push(node.geometry)});
+ if(variants.length!==3||variants.some(geo=>!geo.attributes.position||!geo.attributes.uv||geo.attributes.position.count>1000)){
+  console.warn('terrain rocks: invalid mesh asset');return;
+ }
+ importedGEO=variants;
+ for(const o of RK){if(o.m.userData.ore||o.m.userData.coal)continue;const m=o.m.children[0];if(m)m.geometry=stoneGeo()}
+},undefined,error=>console.warn('terrain rocks: procedural fallback',error));
 
 /* ---------- добування ---------- */
 let sh=0;const tell=t=>{if(Date.now()-sh>2500){sh=Date.now();msg(t)}};

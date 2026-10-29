@@ -29,6 +29,7 @@ function moveTo(p,x,z,dt,stop){const dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);if(d<
  if(window.colPalStep)colPalStep(p,nx,nz,x,z,stop,dt);else{p.x=nx;p.z=nz}return false}/* 0.1.23: обходить будівлі (collide.js) */
 function place(p,tm,moving){p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(moving?Math.abs(Math.sin(tm*9+p.x))*.06:0),p.z);p.m.rotation.y=p.a||0}
 const bagW=A=>Object.entries(A.bag).reduce((a,[k,n])=>a+W(k)*n,0);
+const workRate=()=>1+.15*pals.reduce((level,q)=>q.wk&&q.cs!=null?Math.max(level,(T[q.ty].wk||{}).water||0):level,0);
 const say=(t,o,c)=>{if(o&&Math.hypot(P.x-o.position.x,P.z-o.position.z)<18)dmg(t,o,c||'#bdf5c9')};
 const XP=p=>{try{if(window.palXp)palXp(p,1)}catch(_){}};
 
@@ -57,7 +58,7 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
  case'go':{const o=A.tg;if(!o||!A.L.includes(o)||!inBase(o,C)){if(o&&o._cl===p)o._cl=null;A.s='pick';break}
   p.st='🚶 іде '+(A.job=='chop'?'до дерева':A.job=='mine'?'до скелі':'по ягоди');moving=!moveTo(p,o.x,o.z,dt,1.25);if(!moving){A.s='work';A.t=per}break}
  case'work':{const o=A.tg;if(!o||!A.L.includes(o)){A.s='pick';break}p.st=WHAT[A.job][0]+' '+WHAT[A.job][1];p.job=A.job;p.a=Math.atan2(o.x-p.x,o.z-p.z);
-  A.t-=dt;if(A.t>0)break;A.t=per;
+  A.t-=dt*workRate();if(A.t>0)break;A.t=per;
   const L=wk[A.job]||1,n=(A.k=='w'||A.k=='s')?(L>=3?2:1):(A.k=='be'?2:1);
   if(bagW(A)+W(A.k)*n>cap+1e-6){o._cl=null;A.s='deliver';break}
   A.bag[A.k]=(A.bag[A.k]||0)+n;let tx='+'+n+' '+(A.k=='w'?'🪵':A.k=='s'?'🪨':A.k=='be'?'🫐':'🍄');
@@ -79,7 +80,7 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
    const got={};for(const k in c){if(chTake(k,c[k]*n))got[k]=c[k]*n;else{for(const q in got)chStore(q,got[q],p.x,p.z);A.s='pick';break}}if(A.s!='cook')break;
    for(const k in got)A.bag[k]=(A.bag[k]||0)+got[k];A.n=n;A.ph=1}
   if(A.ph==1){p.st='🍳 несе продукти до кухні-багаття';moving=!moveTo(p,kp[0],kp[1],dt,1.6);if(moving)break;A.ph=2;A.t=0}
-  if(A.ph==2){const d=A.dish,c=KIT.rc(d);p.st='🍳 готує на багатті: '+IT[d][1].toLowerCase();p.job='cook';p.a=Math.atan2(kp[0]-p.x,kp[1]-p.z);window.KIT_ACT=Date.now();A.t+=dt;if(A.t<per*2)break;A.t=0;
+  if(A.ph==2){const d=A.dish,c=KIT.rc(d);p.st='🍳 готує на багатті: '+IT[d][1].toLowerCase();p.job='cook';p.a=Math.atan2(kp[0]-p.x,kp[1]-p.z);window.KIT_ACT=Date.now();A.t+=dt*workRate();if(A.t<per*2)break;A.t=0;
    if(A.n>0){for(const k in c){A.bag[k]-=c[k];if(A.bag[k]<=0)delete A.bag[k]}A.n--;A.bag[d]=(A.bag[d]||0)+1;KIT.done(d);say('+1 '+IT[d][0],p.m);XP(p)}
    if(!(A.n>0)){A.ph=0;A.s='deliver'}}break}
  case'fetch':{if(!A.food){const k=['be','mu','gm','pie'].find(k=>chCount(k)>0),ch=window.chNearest?chNearest(p.x,p.z):null;if(!k||!ch||cf>=20){A.s='pick';break}

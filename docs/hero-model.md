@@ -2,14 +2,22 @@
 
 ## Zasób runtime
 
-Gra używa `site/assets/models/hero-rigged.glb` jako modelu głównego bohatera.
-Plik ma około 4,1 MB, 49 999 trójkątów, 22 kości w stylu nazewnictwa Mixamo,
-trzy osadzone mapy 2048 px oraz siedem klipów: `idle`, `walk`, `run`, `swim`,
-`hit`, `throw` i `jump`. Klip `jump` jest obecny w pliku, ale nie oznacza
-dodania nowego sterowania skokiem w grze. Moduł
-`site/src/modules/imported-hero.js` ładuje model przez lokalne
-`site/vendor/GLTFLoader.js` i `site/vendor/SkeletonUtils.js` zgodne z używanym
-three.js r128.
+Moduł `site/src/modules/imported-hero.js` wybiera zasób według zapytania
+`(pointer: coarse)`: wskaźnik zgrubny ładuje
+`site/assets/models/hero-mobile.glb` (około 38 tys. trójkątów), a pozostałe
+urządzenia — `site/assets/models/hero-rigged.glb` (49 999 trójkątów). Wariant
+mobilny ma około 24% mniej trójkątów. Oba modele zachowują 22 kości w stylu
+nazewnictwa Mixamo i siedem klipów: `idle`, `walk`, `run`, `swim`, `hit`,
+`throw` i `jump`. Klip `jump` jest obecny w pliku, ale nie oznacza dodania
+nowego sterowania skokiem w grze. Przy błędzie lub nieprawidłowym modelu
+mobilnym moduł próbuje załadować pełny model, a po niepowodzeniu pozostaje
+proceduralny bohater. Modele ładuje lokalny `site/vendor/GLTFLoader.js` z
+`site/vendor/SkeletonUtils.js`, zgodnymi z używanym three.js r128.
+
+Pełny model ma 4 330 168 bajtów, a mobilny — 3 914 984 bajty. Service worker
+umieszcza oba w pre-cache offline: dodaje to 3 914 984 bajty (około 3,73 MiB)
+cache na wariant mobilny, łącznie 8 245 152 bajty (około 7,86 MiB) na oba modele.
+Redukcja liczby trójkątów nie jest potwierdzeniem wzrostu FPS.
 
 Podczas ładowania oraz w razie błędu pozostaje aktywny proceduralny bohater.
 Model zachowuje stałą tożsamość wizualną postaci, edytowalne imię i obsługę
@@ -17,6 +25,12 @@ wyposażenia. Narzędzia są mocowane do dłoni, a plecak jest częścią
 zaimportowanego modelu. Pliki robocze można otworzyć w Blenderze:
 [`hero-rigged.blend`](assets/hero-rigged.blend) lub
 zaimportować jako FBX: [`hero-rigged.fbx`](assets/hero-rigged.fbx).
+
+Chód i bieg przełączają się według prędkości ruchu. Tempo odtwarzania klipów
+skorygowano po pomiarze poślizgu stóp; poślizg został ograniczony, ale nadal
+występuje. Pliki [`hero-walk-candidate.blend`](assets/hero-walk-candidate.blend)
+i [`hero-walk-candidate.glb`](assets/hero-walk-candidate.glb) są eksperymentalne
+i nie są używane przez grę.
 
 ## Kontrola działania
 
@@ -26,10 +40,11 @@ powtarzanego uderzenia, pływanie przy `H(x, z) < -1.15` oraz portret i podgląd
 bohatera w HUD. Na ekranie 844 × 390, DPR 2 sprawdzono dotykowy joystick,
 stan ruchu i bieg; konsola nie zgłosiła błędów strony.
 
-Sprawdzono też pełne odświeżenie offline z cache service workera: model GLB
-(4 260 852 bajtów) i wymagane pliki vendor były w cache, a
-`importedHero.ready` zwrócił prawdę z siedmioma klipami. `npm run check`
-zakończył 40 testów bez błędów, ESLint przeszedł, a 51 klasycznych skryptów
+Manifest service workera umieszcza oba modele w pre-cache offline: pełny GLB
+(4 330 168 bajtów), mobilny GLB (3 914 984 bajty) i wymagane pliki vendor.
+Wcześniejsza kontrola pełnego odświeżenia offline potwierdziła dostępność modelu
+pełnego i vendorów, a `importedHero.ready` zwrócił prawdę z siedmioma klipami.
+`npm run check` zakończył 40 testów bez błędów, ESLint przeszedł, a 51 klasycznych skryptów
 przeszło parsowanie. Zrzuty i nagranie: [desktop](screenshots/imported-hero-desktop.jpg),
 [mobile](screenshots/imported-hero-mobile.jpg), [wideo](videos/imported-hero.mp4).
 

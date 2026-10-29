@@ -23,9 +23,74 @@ rozwija etap 3 o importowaną, rigowaną postać bohatera.
 - Model został wygenerowany w Tripo AI na podstawie referencyjnej pozy T
   dostarczonej przez użytkownika, a lokalny skrypt Blendera przygotował rig,
   wagi i klipy. Nie jest to animacja wygenerowana przez Mixamo.
+- Runtime dobiera model według `(pointer: coarse)`: wskaźniki zgrubne otrzymują
+  wariant mobilny o około 38 tys. trójkątów, a pozostałe — pełny model około
+  50 tys. trójkątów. Oba zachowują 22 kości i siedem klipów; przy błędzie
+  wariantu mobilnego następuje próba załadowania pełnego modelu, a następnie
+  pozostaje proceduralny bohater. Wariant 38k zmniejsza geometrię o około 24%,
+  bez potwierdzonego wzrostu FPS. Oba pliki są w pre-cache offline; mobilny GLB
+  dodaje około 3,9 MB do cache. `hero-walk-candidate` pozostaje eksperymentalny
+  i nie jest używany przez runtime.
 - Przegląd modelu w przeglądarce potwierdził jego renderowanie i działający
   bieg. Pełne QA nadal trwa; nie ma końcowego wyniku FPS ani zakończonych
   testów na fizycznych telefonach.
+
+**Kontynuacja etapu modeli środowiska:**
+
+- `scripts/prepare-rocks.py` przygotowuje trzy niskopoligonowe warianty skał
+  zapisane jako `docs/assets/terrain-rocks.blend` i
+  `site/assets/models/terrain-rocks.glb`. Gra ładuje GLB przez `GLTFLoader`;
+  do czasu załadowania oraz przy błędzie działa dotychczasowa geometria
+  proceduralna. Zmiana kształtu dotyczy zwykłych skał, bez znaczników rud.
+- `scripts/create-building-textures.py` tworzy kafelkowane tekstury drewna i
+  kamienia w `site/assets/building/` oraz plik źródłowy
+  `docs/assets/building-materials.blend`. Materiały budynków pobierają obrazy
+  asynchronicznie, zachowując proceduralną teksturę canvas jako fallback.
+- `scripts/prepare-meadow-flowers.py` przygotowuje pojedynczy kwiat w Blenderze,
+  zapisuje źródło `docs/assets/meadow-flowers.blend` i eksportuje
+  `site/assets/models/meadow-flowers.glb`. Po wczytaniu model zastępuje
+  proceduralne kwiaty w istniejącym `InstancedMesh`; zachowuje instancjonowanie,
+  warianty kolorów płatków i ugięcie na wietrze. Przy błędzie lub nieprawidłowym
+  modelu pozostają dotychczasowe kwiaty.
+- `scripts/prepare-berry-bush.py` tworzy krzew jagodowy w Blenderze i eksportuje
+  `docs/assets/berry-bush.blend` oraz `site/assets/models/berry-bush.glb`.
+  Moduł używa jednego współdzielonego szablonu wyglądu dla istniejących i nowych
+  krzewów, pozostawiając ich stan zasobu i logikę gry bez zmian; do czasu
+  poprawnego wczytania działa proceduralny wygląd zastępczy.
+- `scripts/prepare-mushroom.py` przygotowuje w Blenderze niskopoligonową grupę
+  grzybów z kolorami wierzchołków i eksportuje
+  `docs/assets/mushroom.blend` oraz `site/assets/models/mushroom.glb`.
+  Współdzielony model zastępuje wygląd grzybów w grze po poprawnym wczytaniu;
+  podczas ładowania lub przy błędzie pozostaje proceduralny wygląd zastępczy.
+- `scripts/prepare-building-roof.py` tworzy dwuspadowy dach w Blenderze,
+  zapisany w `docs/assets/building-roof.blend` i
+  `site/assets/models/building-roof.glb`. Model ma oddzielne powierzchnie
+  `Roof_Surface` i `Roof_Trim`; do czasu wczytania lub przy błędzie używany jest
+  dotychczasowy proceduralny stożek. Dach w zapisie nadal przechowuje te same
+  dane elementu budowlanego, a model nie zmienia jego położenia ani reguł
+  kolizji.
+- Po ustawieniu lub usunięciu fundamentu roślinność jest ponownie rozmieszczana
+  tak, by instancje trawy i kwiatów nie pojawiały się pod zajętymi komórkami.
+  Odświeżenie uwzględnia również elementy odtworzone z zapisu.
+- Modele skał, dachu, kwiatów, krzewu i grzybów, tekstury budowlane oraz nowe
+  moduły są dodane do cache service workera. To kontynuacja etapu modeli
+  środowiska; etap pozostaje niedokończony, nie oznacza ukończonej jakości ani
+  równoważności wizualnej z Palworld. Nie ma końcowego wyniku FPS ani
+  zakończonych testów na fizycznych urządzeniach.
+- Kolor terenu używa teraz płynnego, wieloskalowego szumu do subtelnych zmian
+  jasności, zachowując kolory biomów i ścieżek.
+- Przełączanie importowanego bohatera między chodem a biegiem uwzględnia
+  prędkość ruchu, a tempo klipów zostało skorygowane po pomiarze poślizgu stóp.
+  Poślizg jest ograniczony, ale nie został całkowicie usunięty. Pliki
+  `hero-walk-candidate.blend` i `.glb` w `docs/assets/` pozostają eksperymentalne
+  i nie są używane przez runtime.
+- Ekran umiejętności w ekwipunku pokazuje opis premii `water`, a pracownik przy
+  piecu wyświetla status `smelt`.
+- Service worker wstępnie zapisuje w cache 76 plików muzyki, efektów dźwiękowych
+  i głosów stworów, aby były dostępne offline po pobraniu cache.
+- Przywrócono bonus pracy typu `water` dla aktywnego, przypisanego do pracy Pala;
+  jego poziom przyspiesza postęp zbierania zasobów i gotowania. Bonus nie działa,
+  gdy specjalista nie jest aktywny lub przypisany.
 
 **Zmiany w v0.4.0:**
 
@@ -154,19 +219,30 @@ nieba, wody, prawdziwych materiałów, rigowanych postaci z animacjami i wiatru 
 2. [x] **Wiatr i ugięcie trawy przy graczu** dodane w istniejącym systemie
    proceduralnym. Pełny pierwotny system BotW-style shaderowego zginania
    pozostaje osobnym kierunkiem rozwoju.
-3. **Teren**: wdrożono paletę biomów i spokojniejsze tonowanie; pełne splatting
-   kilku tekstur nadal otwarte.
-4. [x] **Drzewa**: proceduralne karty liści i igieł z alpha-testem,
-   wiatrem oraz dopasowanym materiałem głębi. Modele GLTF drzew i skał
-   (Quaternius Nature / KayKit) z kompresją DRACO nadal są otwarte.
-5. GLB modeli środowiska ładowane `GLTFLoader` (r128 examples/js) — dodać do
-   runtime-cache SW; importowany bohater jest już w cache od v0.5.0.
+3. **Teren**: wdrożono paletę biomów, spokojniejsze tonowanie i płynny,
+   wieloskalowy szum jasności; pełne splatting kilku tekstur nadal otwarte.
+4. [x] **Roślinność i skały**: proceduralne drzewa zachowują karty liści i igieł
+   z alpha-testem, wiatr i dopasowany materiał głębi; skały mają trzy
+   importowane warianty GLB. Kwiaty, krzew jagodowy i grzyby otrzymały modele
+   z Blendera; kwiaty nadal korzystają z `InstancedMesh`, a krzewy ze
+   współdzielonego szablonu. Dach budynków otrzymał importowany model GLB.
+   Dalsze modele środowiska, w tym zasoby Quaternius Nature / KayKit i
+   kompresja DRACO, pozostają otwarte.
+5. Tekstury drewna i kamienia dla budynków są pierwszym krokiem teksturowania
+   zasobów środowiska; pełne teksturowanie terenu nadal pozostaje otwarte.
+   Modele skał, dachu, kwiatów, krzewu i grzybów oraz obie tekstury są dodane do
+   runtime-cache SW. Trawa i kwiaty są usuwane spod komórek zajętych przez
+   fundamenty, także po odtworzeniu zapisanych budowli.
 
 **Efekt docelowy:** świat przestaje być „plastikowy"; wiatr + woda = życie sceny.
 W v0.4.0 dodano kolorowanie ścieżki w terenie i trawie oraz polanę z otwartą
-kamienną bramą. Teren, roślinność i większość postaci nadal opierają się na
-zasobach generowanych w JavaScript; GLTF środowiska, pełne teksturowanie terenu
-i pomiary wydajności pozostają otwarte. Bohater jest wyjątkiem od v0.5.0.
+kamienną bramą. Teren, większość roślinności i postaci nadal opierają się na
+zasobach generowanych w JavaScript. Importowane skały, dach, kwiaty, krzew
+jagodowy i grzyby oraz tekstury budynków są kontynuacją etapu modeli, a nie jego
+ukończeniem. Dalsze GLTF środowiska, pełne teksturowanie terenu i pomiary
+wydajności pozostają otwarte. Bohater jest wyjątkiem od v0.5.0. Zmiany nie
+oznaczają ukończonej jakości Palworld ani końcowego wyniku FPS lub zakończonych
+testów na fizycznych urządzeniach.
 
 ### ETAP 3 — Postacie i stwory (bohater GLB; pozostałe zasoby otwarte)
 
