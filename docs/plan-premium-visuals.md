@@ -31,9 +31,10 @@ rozwija etap 3 o importowaną, rigowaną postać bohatera.
   bez potwierdzonego wzrostu FPS. Oba pliki są w pre-cache offline; mobilny GLB
   dodaje około 3,9 MB do cache. `hero-walk-candidate` pozostaje eksperymentalny
   i nie jest używany przez runtime.
-- Przegląd modelu w przeglądarce potwierdził jego renderowanie i działający
-  bieg. Pełne QA nadal trwa; nie ma końcowego wyniku FPS ani zakończonych
-  testów na fizycznych telefonach.
+- Przegląd wcześniejszej wersji modelu w przeglądarce potwierdził renderowanie
+  i bieg. Pełne QA nadal trwa; wykonano pojedyncze, 30-sekundowe pomiary na
+  fizycznym Androidzie, ale nie są one kontrolowanym porównaniem ani końcowym
+  wynikiem FPS. Nie weryfikują nowego pakietu lokomocji.
 
 **Kontynuacja etapu modeli środowiska:**
 
@@ -75,15 +76,33 @@ rozwija etap 3 o importowaną, rigowaną postać bohatera.
 - Modele skał, dachu, kwiatów, krzewu i grzybów, tekstury budowlane oraz nowe
   moduły są dodane do cache service workera. To kontynuacja etapu modeli
   środowiska; etap pozostaje niedokończony, nie oznacza ukończonej jakości ani
-  równoważności wizualnej z Palworld. Nie ma końcowego wyniku FPS ani
-  zakończonych testów na fizycznych urządzeniach.
+  równoważności wizualnej z Palworld. Nie ma końcowego wyniku FPS ani pełnej
+  serii testów na urządzeniach fizycznych.
 - Kolor terenu używa teraz płynnego, wieloskalowego szumu do subtelnych zmian
   jasności, zachowując kolory biomów i ścieżek.
-- Przełączanie importowanego bohatera między chodem a biegiem uwzględnia
-  prędkość ruchu, a tempo klipów zostało skorygowane po pomiarze poślizgu stóp.
-  Poślizg jest ograniczony, ale nie został całkowicie usunięty. Pliki
-  `hero-walk-candidate.blend` i `.glb` w `docs/assets/` pozostają eksperymentalne
-  i nie są używane przez runtime.
+- Importowany bohater otrzymał nowy pakiet lokomocji przygotowany w Blenderze:
+  klipy `walk`, `jog` i `run` są wypiekane osobno z zachowaniem długości kości,
+  a faza wspólnych cykli jest napędzana przebytym dystansem. Pakiet GLB ma około
+  82,5 KB; runtime używa prędkości nominalnych 0,923, 4,992 i 8 jednostek/s.
+  Prędkości sterowania PC pozostają 5 jednostek/s dla ruchu bez Shift i 8 z
+  Shift; niższa długość kroku powoduje przejście w trucht przy prędkości 5.
+  Szczegóły metody, dane z próbkowania surowego GLB i ograniczenia opisuje
+  [`character-locomotion.md`](character-locomotion.md). Te pomiary nie są
+  testami runtime.
+- Wcześniejszy eksperyment z alternatywnym `hero-walk-clip.glb` odrzucono po
+  ocenie animacji (nogi były wygięte); plik nie jest ładowany przez runtime.
+  Historyczny pomiar odrzuconego wariantu na płaskim terenie przy centralnym
+  podparciu wykazał medianę dryfu kostki 0,12 jednostki/s wobec 1,62 w wariancie
+  porównawczym oraz kąty kolan około 26–37°. Wynik dotyczy wyłącznie tego
+  odrzuconego eksperymentu. Pliki `hero-walk-candidate.blend` i `.glb` w
+  `docs/assets/` również pozostają eksperymentalne i nie są używane przez
+  runtime; nie są nowym pakietem lokomocji.
+- Historyczne, pojedyncze 30-sekundowe próby na tym samym fizycznym Androidzie
+  przed integracją eksperymentalnego klipu dały 59,70 FPS dla modelu mobilnego
+  i 59,58 FPS dla pełnego modelu, przy p95 16,70 ms. Osobny pomiar wysokiej
+  jakości dał 51,55 FPS i p95 33,2 ms. Test chodu w trybie Auto po integracji
+  odrzuconego klipu dał 59,66 FPS i p95 16,70 ms. To pomiary RAF jednego
+  urządzenia i historycznego wariantu; nie potwierdzają wzrostu FPS.
 - Ekran umiejętności w ekwipunku pokazuje opis premii `water`, a pracownik przy
   piecu wyświetla status `smelt`.
 - Service worker wstępnie zapisuje w cache 76 plików muzyki, efektów dźwiękowych
@@ -115,10 +134,11 @@ rozwija etap 3 o importowaną, rigowaną postać bohatera.
   `customDepthMaterial`. Presety jakości są wspólne dla gry w przeglądarce na
   komputerze i urządzeniu mobilnym.
 
-Przegląd gry w przeglądarce trwa; model bohatera został wyrenderowany, a bieg
-sprawdzony. Nie ma jeszcze końcowego wyniku FPS ani zakończonych testów na
-fizycznych telefonach. Synchronizacja postępu przez chmurę również pozostaje
-niezweryfikowana.
+Przegląd wcześniejszej wersji gry w przeglądarce potwierdził renderowanie
+modelu bohatera i bieg. Nowy pakiet lokomocji nie został objęty tym przeglądem.
+Wykonano ograniczone pomiary na fizycznym Androidzie, ale nie ma kontrolowanego
+porównania ani końcowego wyniku FPS. Synchronizacja postępu przez chmurę również
+pozostaje niezweryfikowana.
 
 **Co pozostaje w planie:** własne zasoby dla pozostałych postaci i środowiska,
 dalsze dopracowanie animacji i tekstur, migracja z three.js r128 oraz pomiary
@@ -241,8 +261,8 @@ zasobach generowanych w JavaScript. Importowane skały, dach, kwiaty, krzew
 jagodowy i grzyby oraz tekstury budynków są kontynuacją etapu modeli, a nie jego
 ukończeniem. Dalsze GLTF środowiska, pełne teksturowanie terenu i pomiary
 wydajności pozostają otwarte. Bohater jest wyjątkiem od v0.5.0. Zmiany nie
-oznaczają ukończonej jakości Palworld ani końcowego wyniku FPS lub zakończonych
-testów na fizycznych urządzeniach.
+oznaczają ukończonej jakości Palworld, końcowego wyniku FPS ani pełnych testów
+na fizycznych urządzeniach.
 
 ### ETAP 3 — Postacie i stwory (bohater GLB; pozostałe zasoby otwarte)
 

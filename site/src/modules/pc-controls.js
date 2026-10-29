@@ -62,7 +62,7 @@ let T0=performance.now();
  const k=c=>down.has(c)?1:0,on=!busy()&&!(typeof ivO!=='undefined'&&ivO)&&!(typeof pfO!=='undefined'&&pfO);
  const x=on?(k('KeyD')||k('ArrowRight'))-(k('KeyA')||k('ArrowLeft')):0,y=on?(k('KeyS')||k('ArrowDown'))-(k('KeyW')||k('ArrowUp')):0;
  run=on&&(k('ShiftLeft')||k('ShiftRight'));
- if(jid===null){if(x||y){const l=Math.hypot(x,y),strength=run?1:.5;jx=x/l*strength;jy=y/l*strength;kbd=1}else if(kbd){jx=jy=0;kbd=0}}
+ if(jid===null){if(x||y){const l=Math.hypot(x,y);jx=x/l;jy=y/l;kbd=1}else if(kbd){jx=jy=0;kbd=0}}
  if(on){const r=k('KeyE')-k('KeyQ');if(r)ang-=r*dt*2.2}
  tick()})})();
 /* перша особа: перед кожним рендером ставимо камеру в очі героя і ховаємо його модель */

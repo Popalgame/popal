@@ -7,8 +7,8 @@ const skin=readFileSync(new URL('../site/src/modules/hero-skeleton.js',import.me
 const animation=readFileSync(new URL('../site/src/modules/hero-anim.js',import.meta.url),'utf8');
 const editor=readFileSync(new URL('../site/src/modules/character-customization.js',import.meta.url),'utf8');
 function runtime(){
- let now=0;const frames=[];
- const env={console,performance:{now:()=>now},requestAnimationFrame:cb=>frames.push(cb),setTimeout(){},document:{addEventListener(){}},H:()=>0,menuO:0};
+ let now=0;const frames=[],clickListeners=[];
+ const env={console,performance:{now:()=>now},requestAnimationFrame:cb=>frames.push(cb),setTimeout(){},document:{addEventListener(name,callback){if(name==='click')clickListeners.push(callback)}},H:()=>0,menuO:0};
  env.window=env;env.self=env;vm.createContext(env);vm.runInContext(three,env);
  const T=env.THREE;env.pl=new T.Group();new T.Scene().add(env.pl);env.hp2=new T.Group();new T.Scene().add(env.hp2);env.DLOOK={};env.look=null;
  env.buildHero=g=>{if(g.userData.heroGeometries)for(const geo of g.userData.heroGeometries)geo.dispose();g.userData.heroGeometries=new Set();while(g.children.length)g.remove(g.children[0]);
@@ -16,7 +16,7 @@ function runtime(){
    const geo=new T.BoxGeometry(.2,.25,.2),m=new T.Mesh(geo,new T.MeshStandardMaterial({color:0xabcdef}));m.position.set(x,y,0);m.userData.heroPart=part;g.add(m);g.userData.heroGeometries.add(geo)}
  };
  vm.runInContext(skin,env);vm.runInContext(animation,env);
- return {env,frames,tick:ms=>{now+=ms;frames.shift()?.()}};
+ return {env,frames,clickListeners,tick:ms=>{now+=ms;frames.shift()?.()}};
 }
 test('editable hero becomes a true bound skin with playable clips',()=>{
  const {env,tick}=runtime(),T=env.THREE,g=env.pl,mesh=g.userData.heroSkin.mesh;
@@ -65,4 +65,12 @@ test('real editor geometry builds every hairstyle and outfit into the skin',()=>
   assert.doesNotThrow(()=>sourceBuild(probe,{g:hr%2,hr,top,sk:0,hc:0,tc:0,br:0,ey:0}));
   assert.ok(probe.userData.heroSkin.mesh instanceof T.SkinnedMesh);
  }
+});
+
+test('both button click and public action dispatch delegate imported heroes to their weapon hand selector',()=>{
+ const {env,clickListeners}=runtime(),r=env.pl.userData.rig,received=[];
+ r.imported=true;env.importedHeroAct=kind=>{received.push(kind);return true};
+ for(const click of clickListeners)click({target:{closest:selector=>selector==='#hit'?{}:null}});
+ env.heroAct('throw');assert.deepEqual(received,['hit','throw']);
+ assert.equal(r.actions.hit.isRunning(),false,'legacy right-arm action must not run alongside delegated left slash');
 });

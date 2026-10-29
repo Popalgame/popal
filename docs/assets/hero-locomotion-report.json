@@ -1,0 +1,57 @@
+{
+  "source": "site/assets/models/hero-rigged.glb",
+  "fps": 96,
+  "profiles": {
+    "walk": {
+      "cycleSeconds": 0.75,
+      "strideMeters": 0.6923076923076923,
+      "footExcursionMeters": 0.36,
+      "speed": 0.923076923076923,
+      "nominalSpeed": 0.923076923076923,
+      "gameTargetSpeed": 1.8,
+      "stance": 0.52,
+      "minForwardKnee": -0.05131337745115161,
+      "maxLaneCross": 0,
+      "maxBoneLengthError": 4.123487625717903e-05,
+      "minFootJointZ": 0.03036663681268692,
+      "kneeFlexDegrees": [
+        19.459613747760187,
+        62.275214635497065
+      ]
+    },
+    "jog": {
+      "cycleSeconds": 0.5208333333333334,
+      "strideMeters": 2.5999999999999996,
+      "footExcursionMeters": 0.52,
+      "speed": 4.991999999999999,
+      "nominalSpeed": 4.991999999999999,
+      "gameTargetSpeed": 5.0,
+      "stance": 0.2,
+      "minForwardKnee": -0.08567485678941011,
+      "maxLaneCross": 0,
+      "maxBoneLengthError": 5.3698951294312014e-05,
+      "minFootJointZ": 0.025984182953834534,
+      "kneeFlexDegrees": [
+        26.57601516475316,
+        108.76891337242083
+      ]
+    },
+    "run": {
+      "cycleSeconds": 0.4166666666666667,
+      "strideMeters": 3.3333333333333335,
+      "footExcursionMeters": 0.55,
+      "speed": 8.0,
+      "nominalSpeed": 8.0,
+      "gameTargetSpeed": 8.0,
+      "stance": 0.165,
+      "minForwardKnee": -0.060010363813489676,
+      "maxLaneCross": 0,
+      "maxBoneLengthError": 7.665486458302562e-05,
+      "minFootJointZ": 0.0268387570977211,
+      "kneeFlexDegrees": [
+        44.69249088156502,
+        129.61976311589348
+      ]
+    }
+  }
+}

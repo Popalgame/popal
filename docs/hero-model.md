@@ -26,15 +26,68 @@ zaimportowanego modelu. Pliki robocze można otworzyć w Blenderze:
 [`hero-rigged.blend`](assets/hero-rigged.blend) lub
 zaimportować jako FBX: [`hero-rigged.fbx`](assets/hero-rigged.fbx).
 
-Chód i bieg przełączają się według prędkości ruchu. Tempo odtwarzania klipów
-skorygowano po pomiarze poślizgu stóp; poślizg został ograniczony, ale nadal
-występuje. Pliki [`hero-walk-candidate.blend`](assets/hero-walk-candidate.blend)
-i [`hero-walk-candidate.glb`](assets/hero-walk-candidate.glb) są eksperymentalne
-i nie są używane przez grę.
+Chód, trucht i bieg korzystają z opcjonalnego pakietu lokomocji przygotowanego
+w Blenderze: [`hero-locomotion.blend`](assets/hero-locomotion.blend) i
+[`hero-locomotion.glb`](../site/assets/models/hero-locomotion.glb) (około
+82,5 KB). Źródło, metoda i ograniczenia są opisane w
+[`character-locomotion.md`](character-locomotion.md). Ruch postaci na PC nadal
+ma prędkość 5 jednostek/s, a bieg z Shift — 8 jednostek/s; profile animacji
+mają prędkości nominalne około 0,923, 4,992 i 8 jednostek/s. Przy 5 jednostkach/s
+postać przechodzi w trucht, a przy 8 — w bieg. Moduł może pozostać przy
+wbudowanych klipach, jeśli pakietu brakuje lub nie przejdzie walidacji.
+
+Ataki korzystają z opcjonalnego pakietu walki przygotowanego w Blenderze:
+[`hero-combat.blend`](assets/hero-combat.blend) i
+[`hero-combat.glb`](../site/assets/models/hero-combat.glb). Źródłem jest
+[`build-hero-combat.py`](../scripts/build-hero-combat.py). Pakiet zawiera
+klipy `sword_hit` i `throw_right`, po 0,75 s i 96 klatek/s; początek i koniec
+każdego klipu odpowiadają pozie spoczynkowej. Nakładki obejmują górną część
+ciała, więc nie zmieniają animacji lokomocji. Lewy miecz atakuje stworzenie w
+zasięgu 2,6 jednostki, z priorytetem przed zbieraniem; bez celu postać wykonuje
+cios w powietrze lewą ręką. Zbieranie nadal używa oryginalnej animacji
+wyposażonego narzędzia prawą ręką, a rzut — prawej ręki. Kliknięcie i wywołanie
+`heroAct` korzystają z tego samego wyboru ręki; zmiana nie modyfikuje obrażeń.
+Przy braku lub błędnej walidacji pakietu pozostaje wbudowana animacja.
+
+Eksperyment z alternatywnym klipem chodu `hero-walk-clip.glb` został odrzucony
+po ocenie animacji (nogi były wygięte); plik nie jest ładowany przez grę. W
+historycznym pomiarze tego wariantu, na płaskim terenie i przy centralnym
+podparciu, mediana prędkości dryfu kostki wyniosła 0,12 jednostki/s wobec 1,62
+w wariancie porównawczym, a próbkowane kąty kolan wynosiły około 26–37°.
+Wynik ten dotyczy odrzuconego eksperymentu i nie opisuje aktualnej poprawy
+animacji.
+
+Nowe pomiary surowego GLB dotyczą klipów i są opisane w
+[`character-locomotion.md`](character-locomotion.md); nie są testem runtime.
+Pojedyncze, historyczne 30-sekundowe próby na tym samym fizycznym Androidzie
+dały 59,70 FPS dla modelu mobilnego i 59,58 FPS dla pełnego modelu, z p95
+16,70 ms; wykonano je przed integracją eksperymentalnego klipu. Osobny pomiar
+wysokiej jakości dał 51,55 FPS i p95 33,2 ms. Test chodu w trybie Auto po
+integracji tego klipu dał 59,66 FPS i p95 16,70 ms. Są to pomiary RAF jednego
+urządzenia i historycznego wariantu; nie potwierdzają wzrostu FPS.
+
+Pliki [`hero-walk-candidate.blend`](assets/hero-walk-candidate.blend) i
+[`hero-walk-candidate.glb`](assets/hero-walk-candidate.glb) pozostają
+eksperymentalne i nie są używane przez grę.
 
 ## Kontrola działania
 
-Model wyrenderował się w przeglądarce na ekranie 1440 × 900; sprawdzono bieg,
+Poprawkę lewego miecza sprawdzono spacją na PC: klip `sword_hit`,
+lewą dłonią wykonano łuk około 0,39 jednostki, a trafienie zadało obrażenia.
+W emulacji mobilnej w przeglądarce sprawdzono także rzeczywiste dotknięcie
+przycisku ataku na `hero-mobile.glb`: lewa dłoń wykonała łuk około 0,39,
+prawa około 0,075 jednostki; obrażenia naliczyły się, klip wrócił do idle
+i nie zgłoszono błędów strony.
+Pełne kontrole po poprawce: ESLint i 63 testy zaliczone. Nowe cięcie i rzut
+kończą się według odtworzonego czasu klipu, aby pauza podczas zmiany pełnego
+ekranu nie wygaszała animacji przed widocznym zamachem.
+
+Aktualny pakiet lokomocji sprawdzono w grze na PC oraz fizycznym Androidzie.
+Pełne kontrole: 59 testów i ESLint zaliczone. Pomiar Auto na Androidzie:
+59,80 FPS, p95 16,70 ms; warunki i ograniczenia opisano w
+[`character-locomotion.md`](character-locomotion.md#sprawdzenie-w-grze).
+
+Wcześniejszą wersję modelu wyrenderowano w przeglądarce na ekranie 1440 × 900; sprawdzono bieg,
 atak z drewnianym toporem stworzonym w interfejsie gry, wygaszanie
 powtarzanego uderzenia, pływanie przy `H(x, z) < -1.15` oraz portret i podgląd
 bohatera w HUD. Na ekranie 844 × 390, DPR 2 sprawdzono dotykowy joystick,
@@ -45,10 +98,11 @@ Manifest service workera umieszcza oba modele w pre-cache offline: pełny GLB
 Wcześniejsza kontrola pełnego odświeżenia offline potwierdziła dostępność modelu
 pełnego i vendorów, a `importedHero.ready` zwrócił prawdę z siedmioma klipami.
 `npm run check` zakończył 40 testów bez błędów, ESLint przeszedł, a 51 klasycznych skryptów
-przeszło parsowanie. Zrzuty i nagranie: [desktop](screenshots/imported-hero-desktop.jpg),
+przeszło parsowanie. Kontrole te poprzedzają integrację nowego pakietu lokomocji.
+Zrzuty i nagranie: [desktop](screenshots/imported-hero-desktop.jpg),
 [mobile](screenshots/imported-hero-mobile.jpg), [wideo](videos/imported-hero.mp4).
 
-Nie sprawdzono fizycznego telefonu ani synchronizacji chmurowej.
+Synchronizacja chmurowa nie została sprawdzona.
 
 ## Pochodzenie i przygotowanie
 

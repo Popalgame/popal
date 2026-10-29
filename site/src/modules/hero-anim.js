@@ -45,6 +45,7 @@ window.buildHero=function(g,lk){const result=prior.call(this,g,lk);install(g);re
 try{const pl=get('pl'),hp2=get('hp2'),lk=get('look')||get('DLOOK');if(pl)window.buildHero(pl,lk);if(hp2)window.buildHero(hp2,lk)}catch(e){console.warn('hero-anim init',e)}
 function choose(r,next,fade){if(next===r.locomotion)return;const from=r.actions[r.locomotion],to=r.actions[next];to.reset();to.enabled=true;to.play();to.crossFadeFrom(from,fade,false);r.locomotion=next}
 function act(kind){const pl=get('pl'),r=pl&&pl.userData.rig;if(!r||(kind!=='hit'&&kind!=='throw'))return;
+ if(r.imported&&window.importedHeroAct&&window.importedHeroAct(kind))return;
  if(r.action&&r.action!==kind)r.actions[r.action].fadeOut(.08);
  const a=r.actions[kind];a.reset().setEffectiveWeight(1).fadeIn(.08).play();r.action=kind;r.actionUntil=performance.now()/1000+clips[kind].duration;r.state=kind}
 window.heroAct=act;
