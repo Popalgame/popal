@@ -1,0 +1,20 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.8",
+  "Category": "Games",
+  "Description": "Polpal: locally prepared third-person creature and base prototype",
+  "Modules": [
+    {"Name": "PolpalUE", "Type": "Runtime", "LoadingPhase": "Default"},
+    {"Name": "PolpalUEEditor", "Type": "Editor", "LoadingPhase": "PostEngineInit"},
+    {"Name": "PolpalUEFXEditor", "Type": "Editor", "LoadingPhase": "PostEngineInit"}
+  ],
+  "Plugins": [
+    {"Name": "EnhancedInput", "Enabled": true},
+    {"Name": "Niagara", "Enabled": true},
+    {"Name": "ControlRig", "Enabled": true},
+    {"Name": "IKRig", "Enabled": true},
+    {"Name": "AnimationSharing", "Enabled": true},
+    {"Name": "PythonScriptPlugin", "Enabled": true, "TargetAllowList": ["Editor"]},
+    {"Name": "EditorScriptingUtilities", "Enabled": true, "TargetAllowList": ["Editor"]}
+  ]
+}

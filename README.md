@@ -152,6 +152,14 @@ git commit && git push   # CI задеплоїть; перед деплоєм д
 CI перед деплоєм виконує `node scripts/sw-version.mjs --sha $GITHUB_SHA`,
 тож кожне вбудовування має свіжий кеш — клієнти не сидітимуть на старих файлах.
 
+## Локальний міст AI → Blender
+
+Інструкція з локального MCP/CLI-модуля для Blender: [`tools/blender-mcp/README.md`](tools/blender-mcp/README.md).
+
+## Локальна підготовка Unreal Engine
+
+Статус проєкту UE 5.8 та локальні команди: [`unreal/PolpalUE/README.md`](unreal/PolpalUE/README.md).
+
 ## Деплой
 
 - Пуш у `main` → `deploy.yml`: перевірки → деплой папки `site/` на Firebase

@@ -322,15 +322,19 @@ oAni.push(()=>{
    }
   }
   if(!camS||Math.hypot(camS.x-tx,camS.z-tz)>24)camS={x:oCam.position.x,y:oCam.position.y,z:oCam.position.z};
-  const damping=1-Math.exp(-frameDelta*18);camS.x+=(tx-camS.x)*damping;camS.y+=(ty-camS.y)*damping;camS.z+=(tz-camS.z)*damping;
+  /* мʼякша пружина замість 18: по вертикалі повільніше — сходи й пагорби не трусять кадр */
+  const dampXZ=1-Math.exp(-frameDelta*12),dampY=1-Math.exp(-frameDelta*9);
+  camS.x+=(tx-camS.x)*dampXZ;camS.y+=(ty-camS.y)*dampY;camS.z+=(tz-camS.z)*dampXZ;
   camBlockedRatio=Lo>0?Math.hypot(camS.x-pl.x,camS.z-pl.z)/Lo:1;
   const mis=Math.abs(camS.x-oCam.position.x)+Math.abs(camS.y-oCam.position.y)+Math.abs(camS.z-oCam.position.z);
   if(mis>.04){
    let yv=camS.y;
    if(oHt){const fl=oHt(camS.x,camS.z)+.9;if(yv<fl)yv=fl}
    oCam.position.set(camS.x,yv,camS.z);
-   const gA=G('ang')||0,gLA=G('LA')||0;
-   oCam.lookAt(pl.x-Math.sin(gA)*gLA,hy0+.2,pl.z-Math.cos(gA)*gLA);
+   /* ціль прицілювання задає core-world (веде за рухом героя); fallback — стара формула */
+   const lt=G('camLookT');
+   if(lt)oCam.lookAt(lt[0],lt[1],lt[2]);
+   else{const gA=G('ang')||0,gLA=G('LA')||0;oCam.lookAt(pl.x-Math.sin(gA)*gLA,hy0+.2,pl.z-Math.cos(gA)*gLA)}
   }
  }
 });

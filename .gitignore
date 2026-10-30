@@ -6,3 +6,5 @@ backups/popal.zip
 output/
 .playwright-cli/
 *.bak-*
+__pycache__/
+*.pyc

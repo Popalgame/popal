@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "target_engine": "5.8",
+  "accepted_scope": "Full plan execution requested. All independent local work continued; engine-dependent implementation and acceptance require an available UE5.8 environment.",
+  "overall_plan_complete": false,
+  "source_plan_sha256": "7afb3f6ef6c105f51780484db7f3055621232364ed020f2149da86df65ed6a57",
+  "verified_in_blender": {
+    "version": "5.2.2 LTS",
+    "archetypes": 5,
+    "source_blend_files": 5,
+    "base_animation_fbx": 85,
+    "aim_pose_fbx": 18,
+    "mesh_lod_outline_fbx": 30,
+    "environment_fbx": 5,
+    "heightmap_samples": 255025,
+    "total_generated_files": 144,
+    "art_quality": "original procedural prototypes, not final production art",
+    "report": "output/ue5-pipeline/validation.json"
+  },
+  "prepared_unreal_sources": [
+    "project_and_input_config",
+    "species_and_instance_data",
+    "party_capacity_five",
+    "server_capture_and_damage",
+    "central_work_queue",
+    "needs_priority",
+    "distance_based_production_cadence",
+    "owner_only_party_snapshots",
+    "fbx_lod_ik_importer",
+    "toon_material_and_species_generators",
+    "biped_retargeter_generator",
+    "feed_bed_hot_spring_services",
+    "needs_and_reservation_logic",
+    "physical_skill_projectiles",
+    "player_server_attack",
+    "bt_and_eqs_execution",
+    "camp_record_virtualization_and_save_v2",
+    "persistent_actor_identity",
+    "native_player_appearance_for_all_clients",
+    "anim_blueprint_asset_builder",
+    "aim_offset_and_layered_cached_pose_graph",
+    "jump_fall_land_phase_selection",
+    "native_biped_quadruped_foot_ik_and_pelvis_offset",
+    "native_grip_hand_ik",
+    "animation_montages_and_notifies",
+    "landscape_and_map_asset_builder",
+    "outline_follower_meshes",
+    "niagara_cpu_sprite_asset_builder",
+    "unreal_automation_runner_and_freshness_gates"
+  ],
+  "unreal_not_executed": [
+    "UnrealHeaderTool",
+    "module_compile",
+    "FBX_import_and_axis_unit_validation",
+    "material_compilation",
+    "IK_Rig_and_Retargeter_generation",
+    "PIE_gameplay",
+    "multiplayer_replication",
+    "performance_profiling",
+    "native_runtime_and_editor_modules_compile",
+    "landscape_collision_and_navmesh_generation",
+    "native_animation_graph_and_niagara_compilation",
+    "save_load_and_virtualization_gameplay_acceptance"
+  ],
+  "implementation_pending": [
+    "ControlRig_asset_and_graph",
+    "production_art_and_visual_polish_after_engine_review"
+  ],
+  "resume_commands": [
+    "python3 tools/ue5-pipeline/run.py status",
+    "python3 tools/ue5-pipeline/run.py editor-build --engine-root /path/to/UE_5.8",
+    "python3 tools/ue5-pipeline/run.py bootstrap --engine-root /path/to/UE_5.8",
+    "python3 tools/ue5-pipeline/run.py verify-engine --engine-root /path/to/UE_5.8"
+  ],
+  "next_acceptance_gate": "Compile all runtime/editor/FX modules in UE5.8; execute bootstrap, inspect generated graphs/landscape/FX, implement the requested Control Rig, then run gameplay, two-client replication and profiling acceptance.",
+  "local_checks": {
+    "status": "pass",
+    "python_unit_tests": 15,
+    "portable_cpp": "C++20 -Wall -Wextra -Werror -pedantic compile/run passed; AddressSanitizer and UndefinedBehaviorSanitizer passed",
+    "manifest_sha256_checked": true,
+    "unreal_missing_gate": "verify-engine correctly fails without an installed engine",
+    "unreal_runtime_checks": "not executed"
+  },
+  "execution_state": "awaiting_unreal_environment",
+  "architecture_notes": [
+    "Foot and hand IK are currently native AnimGraph solvers; they do not constitute a Control Rig asset.",
+    "Nonowned camp workers are destroyed/restored from records; party-owned actors are hidden with movement, mesh and AI work disabled to preserve party references.",
+    "Niagara effects are CPU sprite prototypes; final lightning/ribbon and visual polish remain acceptance work."
+  ],
+  "environment": {
+    "checked_at_utc": "2026-10-29T22:01:10Z",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "free_disk_gib": 6.78,
+    "blender": "/opt/homebrew/bin/blender",
+    "cpp_compiler": "/usr/bin/clang++",
+    "unreal_engine": null,
+    "unreal_build_verified": false,
+    "developer_directory": "/Library/Developer/CommandLineTools",
+    "full_xcode": false
+  }
+}

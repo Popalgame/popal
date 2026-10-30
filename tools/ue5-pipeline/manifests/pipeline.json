@@ -1,0 +1,2109 @@
+{
+  "schema_version": 1,
+  "prototype": true,
+  "unit_system": "METRIC",
+  "unit_scale": 1.0,
+  "source_forward_axis": "+Y",
+  "unreal_expected_forward_axis": "+X",
+  "axis_validation": "Blender FBX roundtrip only; Unreal orientation has not been tested",
+  "blender_version": "5.2.2 LTS",
+  "export_settings": {
+    "axis_forward": "-Y",
+    "axis_up": "Z",
+    "apply_scale_options": "FBX_SCALE_UNITS",
+    "global_scale": 1.0,
+    "apply_unit_scale": true,
+    "add_leaf_bones": false,
+    "use_armature_deform_only": false,
+    "animation_bake_step": 1.0,
+    "unreal_import_uniform_scale": 1.0,
+    "unreal_convert_scene_unit": true
+  },
+  "vertex_mask": {
+    "R": "multiply toon shade, default 1.0 with localized 0.58-0.82 shadows",
+    "G": "outline/specularity control, authored values 0.45-0.90"
+  },
+  "notes": [
+    "Prototype meshes with rigid one-bone skinning. Not production-ready art.",
+    "HeroRig Mixamo in the existing site needs an adapted skeleton/retarget; this is a separate prototype.",
+    "Similar retarget chain names do not imply UE Mannequin skeleton compatibility.",
+    "Aim FBX has Idle reference at frame 1 and absolute target at frame 2; configure Unreal additive settings at import."
+  ],
+  "archetypes": [
+    {
+      "id": "biped_standard",
+      "asset_name": "Rig_Biped_Standard",
+      "rig": "Rig_Biped_Standard",
+      "element": "Fire",
+      "prototype": true,
+      "blend": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard.blend",
+      "blend_sha256": "ee398dfeb655800e80e19c6f9a347530a7ae570d1f27bec911009eef45c2f394",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_SK.fbx",
+      "mesh_sha256": "c25f3050cee0ee22f2d16fdaa80364916330758226d64ae1b4d992d6456f4b4c",
+      "outline_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Outline.fbx",
+      "outline_sha256": "85c690c36b56ed3b4dbf50519585a62be1944f3488046091599e58243a1a786f",
+      "body_dimensions_m": [
+        1.28,
+        0.63,
+        1.8
+      ],
+      "bounds": {
+        "min_m": [
+          -0.64,
+          -0.22,
+          0.0
+        ],
+        "max_m": [
+          0.64,
+          0.41,
+          1.8
+        ]
+      },
+      "bones": [
+        "pelvis",
+        "spine_01",
+        "head",
+        "upperarm_l",
+        "upperarm_r",
+        "lowerarm_l",
+        "lowerarm_r",
+        "hand_l",
+        "hand_r",
+        "thigh_l",
+        "thigh_r",
+        "calf_l",
+        "calf_r",
+        "foot_l",
+        "foot_r",
+        "root",
+        "weapon_l",
+        "weapon_r",
+        "mount_socket"
+      ],
+      "bone_parents": {
+        "root": null,
+        "pelvis": "root",
+        "spine_01": "pelvis",
+        "head": "spine_01",
+        "upperarm_l": "spine_01",
+        "lowerarm_l": "upperarm_l",
+        "hand_l": "lowerarm_l",
+        "weapon_l": "hand_l",
+        "upperarm_r": "spine_01",
+        "lowerarm_r": "upperarm_r",
+        "hand_r": "lowerarm_r",
+        "weapon_r": "hand_r",
+        "mount_socket": "spine_01",
+        "thigh_l": "pelvis",
+        "calf_l": "thigh_l",
+        "foot_l": "calf_l",
+        "thigh_r": "pelvis",
+        "calf_r": "thigh_r",
+        "foot_r": "calf_r"
+      },
+      "retarget_chains": {
+        "spine": [
+          "pelvis",
+          "head"
+        ],
+        "head": [
+          "head",
+          "head"
+        ],
+        "left_arm": [
+          "upperarm_l",
+          "hand_l"
+        ],
+        "right_arm": [
+          "upperarm_r",
+          "hand_r"
+        ],
+        "left_leg": [
+          "thigh_l",
+          "foot_l"
+        ],
+        "right_leg": [
+          "thigh_r",
+          "foot_r"
+        ]
+      },
+      "animations": [
+        {
+          "name": "Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Idle.fbx",
+          "sha256": "edd954f47af790ce43a96ab93add4d96c4796056658f23a43cd3027781dbe217",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Walk_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Walk_Fwd.fbx",
+          "sha256": "f74781992c42e687abe37de9a4cc2ad5fd448e38c730b75558f0ecb98d921a83",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Run_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Run_Fwd.fbx",
+          "sha256": "89017326073f502a659caa0afbc0f8c1c5b00b041459ae3d45280312ce6cbed4",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": true
+        },
+        {
+          "name": "Jump_Start",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Jump_Start.fbx",
+          "sha256": "c1488661801e6a56e3b06655ae807af8bf7222c84e2bd608fb2d648cf5749780",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Fall_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Fall_Loop.fbx",
+          "sha256": "956d9335ef0861667f8c780dc44eb356626045a328526fe73ee2301c852e0016",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Land",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Land.fbx",
+          "sha256": "bf72757eefbae25560894b16f999601ac279134eda4b536f12e367845f352b23",
+          "fps": 30,
+          "frames": [
+            1,
+            13
+          ],
+          "loop": false
+        },
+        {
+          "name": "Work_Hammering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Work_Hammering.fbx",
+          "sha256": "cc1ea9a3e642a992e8af6d3a3000daa65002ab21c41f9249f84ad379db25026c",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Mining",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Work_Mining.fbx",
+          "sha256": "c2948d4db6269302d9b80de734f9d3162c5c436554645f3d4917be11a790dde4",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Watering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Work_Watering.fbx",
+          "sha256": "04f857b13ad1defd9eecbd15c781e7b3bd46c6d8e5c333fde3c11a20c836616a",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Work_Carrying_Idle.fbx",
+          "sha256": "f03040fa93ac0504503f77339f4eb67677ec5b881094b98e5ee79f1cbc6527c3",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Walk",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Work_Carrying_Walk.fbx",
+          "sha256": "92dfce3b8e0fdca6959b55adc4dd4c7db4e8474c91196f2c4a517adfe24bf28e",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Attack_Melee",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Attack_Melee.fbx",
+          "sha256": "28134e4bfe7301a8f1ed7487dab4e1eef2d94e247cb46d7312ac5667dcd1654a",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": false
+        },
+        {
+          "name": "Attack_Cast_Skill",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Attack_Cast_Skill.fbx",
+          "sha256": "ffe8204383e6345a72776aaf62b406983d23aa3e6ea5875f92af99bb01bcc2a1",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": false
+        },
+        {
+          "name": "Hit_React",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Hit_React.fbx",
+          "sha256": "fea41ce138d81853818932782fd6902abd77b95c15e4fd633746611171679b56",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Stunned_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Stunned_Loop.fbx",
+          "sha256": "5def40c8055eaf195beb4a08735a5e81905313455a30bb40fe739b6a53471777",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Captured_Struggle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Captured_Struggle.fbx",
+          "sha256": "e05b89bf31ed1099b91aea524752af2f8113bdd4a0be936bcb22e1158abc4a23",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Sleep",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Sleep.fbx",
+          "sha256": "4e2aaa77925f136dd8b44494fc5540f0683e3388bc8ba598ee297fc2abd847f4",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        }
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_LOD0.fbx",
+          "sha256": "3bc89540038382d7b738db631b3e383c267e23e6e960d6fb70bd855a675eb4a4",
+          "triangles": 5760,
+          "vertices": 2916
+        },
+        {
+          "level": 1,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_LOD1.fbx",
+          "sha256": "d11de01b0daa5f61a95e0592ac5f74ba25801dcf465d0645d6891263a126fa91",
+          "triangles": 1440,
+          "vertices": 756
+        },
+        {
+          "level": 2,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_LOD2.fbx",
+          "sha256": "2867329474afe5994363d8a42d962b99ace8a1411833ac9f43dca8cd084fcf10",
+          "triangles": 360,
+          "vertices": 216
+        },
+        {
+          "level": 3,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_LOD3.fbx",
+          "sha256": "c182f576fae1b3eba0ff81152f870db10c5d1562d411127ad5c64c703123b086",
+          "triangles": 144,
+          "vertices": 108
+        }
+      ],
+      "aim_offset": {
+        "additive_ref": {
+          "animation": "Idle",
+          "frame": 1
+        },
+        "pose_encoding": "reference_frame_1_then_absolute_target_frame_2",
+        "unreal_additive_setup_required": true,
+        "poses": [
+          {
+            "name": "Aim_Center",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Aim_Center.fbx",
+            "sha256": "912d4827392601be94f7a97c2dd306ea972b4ea00926a18a49be09d870389638",
+            "yaw": 0,
+            "pitch": 0,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_Up",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Aim_Up.fbx",
+            "sha256": "f7b10075f412395112861247b3f4e2a3c18623d80f69d73a29f9085706ec90e7",
+            "yaw": 0,
+            "pitch": 45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_Down",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Aim_Down.fbx",
+            "sha256": "e761cf0946de8c5b626ca959982c6ea748757c48c37ad4814533951b0cad0335",
+            "yaw": 0,
+            "pitch": -45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_Left",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Aim_Left.fbx",
+            "sha256": "cd25ee4b9a80cbf83fbfee531693efd3aa94b83190f0730518c36f1337212325",
+            "yaw": -60,
+            "pitch": 0,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_Right",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Aim_Right.fbx",
+            "sha256": "3f635414c21b3d113965b8a735608c40d3174bc2dd1f420a6b1b493417e148f7",
+            "yaw": 60,
+            "pitch": 0,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_UpLeft",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Aim_UpLeft.fbx",
+            "sha256": "bcefb8a7d93660fe38acf6bfff0dca603b05e3e2be71578768b9444675b6cbd3",
+            "yaw": -60,
+            "pitch": 45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_UpRight",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Aim_UpRight.fbx",
+            "sha256": "952713b6a30e10a28994f9eec092b664dab3ace6457bbab19766945bd4208b83",
+            "yaw": 60,
+            "pitch": 45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_DownLeft",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Aim_DownLeft.fbx",
+            "sha256": "c9fe50b3dec95d96ce11c6e699f916e7aa28aa8f5bfb7dc9de7806231d6aa0ed",
+            "yaw": -60,
+            "pitch": -45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_DownRight",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Standard_Aim_DownRight.fbx",
+            "sha256": "5dedc53d6d4c8af015a4fe298df54c96119adf0a39d62e93ad7333f8549e1231",
+            "yaw": 60,
+            "pitch": -45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          }
+        ]
+      },
+      "max_bone_influences": 1,
+      "skin_weights": "rigid normalized"
+    },
+    {
+      "id": "biped_chibi",
+      "asset_name": "Rig_Biped_Chibi",
+      "rig": "Rig_Biped_Chibi",
+      "element": "Electric",
+      "prototype": true,
+      "blend": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi.blend",
+      "blend_sha256": "3eb5c66fbc8404621ab2a0fd3e329276e2c16b3852369a818ff9a1e6f535ec93",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_SK.fbx",
+      "mesh_sha256": "d3afd280c9efd9e972d5b1e2ec6ba9f2b7d87cbcb9f13689e04b8756dc1d8fad",
+      "outline_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Outline.fbx",
+      "outline_sha256": "1a1dc9865ef1a14b8bf1668d81a991b557f9f41ea870f9f71593255fff71f2c7",
+      "body_dimensions_m": [
+        1.24,
+        0.695,
+        1.27
+      ],
+      "bounds": {
+        "min_m": [
+          -0.62,
+          -0.32,
+          0.01
+        ],
+        "max_m": [
+          0.62,
+          0.375,
+          1.28
+        ]
+      },
+      "bones": [
+        "pelvis",
+        "spine_01",
+        "head",
+        "upperarm_l",
+        "upperarm_r",
+        "lowerarm_l",
+        "lowerarm_r",
+        "hand_l",
+        "hand_r",
+        "thigh_l",
+        "thigh_r",
+        "calf_l",
+        "calf_r",
+        "foot_l",
+        "foot_r",
+        "root",
+        "weapon_l",
+        "weapon_r",
+        "mount_socket"
+      ],
+      "bone_parents": {
+        "root": null,
+        "pelvis": "root",
+        "spine_01": "pelvis",
+        "head": "spine_01",
+        "upperarm_l": "spine_01",
+        "lowerarm_l": "upperarm_l",
+        "hand_l": "lowerarm_l",
+        "weapon_l": "hand_l",
+        "upperarm_r": "spine_01",
+        "lowerarm_r": "upperarm_r",
+        "hand_r": "lowerarm_r",
+        "weapon_r": "hand_r",
+        "mount_socket": "spine_01",
+        "thigh_l": "pelvis",
+        "calf_l": "thigh_l",
+        "foot_l": "calf_l",
+        "thigh_r": "pelvis",
+        "calf_r": "thigh_r",
+        "foot_r": "calf_r"
+      },
+      "retarget_chains": {
+        "spine": [
+          "pelvis",
+          "head"
+        ],
+        "head": [
+          "head",
+          "head"
+        ],
+        "left_arm": [
+          "upperarm_l",
+          "hand_l"
+        ],
+        "right_arm": [
+          "upperarm_r",
+          "hand_r"
+        ],
+        "left_leg": [
+          "thigh_l",
+          "foot_l"
+        ],
+        "right_leg": [
+          "thigh_r",
+          "foot_r"
+        ]
+      },
+      "animations": [
+        {
+          "name": "Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Idle.fbx",
+          "sha256": "934ebe500eba8c13f457e488935925130c7d3a9ecce00654225fdfbf8af06fd7",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Walk_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Walk_Fwd.fbx",
+          "sha256": "2da19944f7ed2f841ba1614d49ad1ad85322c055d3411470041d16bf936fbc6c",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Run_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Run_Fwd.fbx",
+          "sha256": "e6e5f4cde9b8ef04121d1d7eeebe25631ce0798e3ed03100fc8d9ccce1d030c5",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": true
+        },
+        {
+          "name": "Jump_Start",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Jump_Start.fbx",
+          "sha256": "f23883f0d453eaca84e7f2b4374515839afe591c71654ff50b1a307cfdba6c17",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Fall_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Fall_Loop.fbx",
+          "sha256": "18dade934ca5b9b95381946472ea3add02bdc7a8b4f6a01c61e290c378ae879e",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Land",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Land.fbx",
+          "sha256": "5924caa7006c6723f6d571a2145394bda1c9bec5d7f8d870bfa189334f34f6e1",
+          "fps": 30,
+          "frames": [
+            1,
+            13
+          ],
+          "loop": false
+        },
+        {
+          "name": "Work_Hammering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Work_Hammering.fbx",
+          "sha256": "9d928d69a81df9fb646353ab4d54de235b4ae0e4a867648d67da6d470092189e",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Mining",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Work_Mining.fbx",
+          "sha256": "1848eec59612dafc15c12e5f7fc91cac3286c24236cd6a6583feedb5bb205627",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Watering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Work_Watering.fbx",
+          "sha256": "c0cd2321e17b619bd74ff816572385219cbaf2b5b4f442b31c117641c5e0e229",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Work_Carrying_Idle.fbx",
+          "sha256": "e5f1cb71c073852a95acd4a8ff4ffd7a0602bcaf774d5324975c190dd12623d1",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Walk",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Work_Carrying_Walk.fbx",
+          "sha256": "59a9bdc98bd87250b776570715d80bb147701980d8bc1d97bda508428d702007",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Attack_Melee",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Attack_Melee.fbx",
+          "sha256": "2eced6f966ce2b2c846661f7a35980e5241bbf5d05cbb5633ad798a5881b9cdb",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": false
+        },
+        {
+          "name": "Attack_Cast_Skill",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Attack_Cast_Skill.fbx",
+          "sha256": "59a09490df807707568031a1b0e12cad38b53c14e4210863aee6cea89ae2cdc6",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": false
+        },
+        {
+          "name": "Hit_React",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Hit_React.fbx",
+          "sha256": "094dc1a0571032a7b8eef47e572e5c7ed6551ee31538447fbe6348e62c4fdaed",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Stunned_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Stunned_Loop.fbx",
+          "sha256": "09b1f33f50a61c809cc3e9c4f78e4d36d3c139a2d660e4a4dc54b88c25bde799",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Captured_Struggle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Captured_Struggle.fbx",
+          "sha256": "e1544e678b4c138b2c6ecec135e35c6bf5ea1294744e243af90a1e50f3945d97",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Sleep",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Sleep.fbx",
+          "sha256": "9e929aca6fb38286d315b9b357890887e1b9bb4ecdfae6f425182e03920eca08",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        }
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_LOD0.fbx",
+          "sha256": "cda27a625ba7c3d46ebe3f0eab22c040f887ba26341f97fe32ab3a590300e67a",
+          "triangles": 5760,
+          "vertices": 2916
+        },
+        {
+          "level": 1,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_LOD1.fbx",
+          "sha256": "e607f5b0b35a4d50a51e89998c4f9269df1024f1f6415e746ac994ac0c3dfe15",
+          "triangles": 1440,
+          "vertices": 756
+        },
+        {
+          "level": 2,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_LOD2.fbx",
+          "sha256": "7e8be6588aeed49291e36e2e276cc9ad080d2cffe28b08cbf6321b0a59aa1f77",
+          "triangles": 360,
+          "vertices": 216
+        },
+        {
+          "level": 3,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_LOD3.fbx",
+          "sha256": "3520909398bf9586da51fb7b005e0d1483821206e2581f09c2c0727cd63823f6",
+          "triangles": 144,
+          "vertices": 108
+        }
+      ],
+      "aim_offset": {
+        "additive_ref": {
+          "animation": "Idle",
+          "frame": 1
+        },
+        "pose_encoding": "reference_frame_1_then_absolute_target_frame_2",
+        "unreal_additive_setup_required": true,
+        "poses": [
+          {
+            "name": "Aim_Center",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Aim_Center.fbx",
+            "sha256": "904fba768e5509c2818b9a4a5bc0d4719b0ecceac7f933e7c43075a6f76aaa15",
+            "yaw": 0,
+            "pitch": 0,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_Up",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Aim_Up.fbx",
+            "sha256": "10a18c4c725530dbb77416d5df6a4f0cc24a0d57ca32686f159880b1ed9c8366",
+            "yaw": 0,
+            "pitch": 45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_Down",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Aim_Down.fbx",
+            "sha256": "43010fcc7d65f0cdd87a444d8d089a1375b71932d6f4aeb05a381ecc85764d2f",
+            "yaw": 0,
+            "pitch": -45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_Left",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Aim_Left.fbx",
+            "sha256": "4c4697d8534bce6c502ec6ebe90a426a56c8ed9da2f28ea94d144e3f76f254d4",
+            "yaw": -60,
+            "pitch": 0,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_Right",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Aim_Right.fbx",
+            "sha256": "e0b97b1dc3bad7266ed900ec670c859c8e2fb03ce7fe97a3074b9b982dd35b98",
+            "yaw": 60,
+            "pitch": 0,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_UpLeft",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Aim_UpLeft.fbx",
+            "sha256": "447c9ae5a405cb8fe750c4eecc56c792075891236a8654cf45edd2a02f2cc59a",
+            "yaw": -60,
+            "pitch": 45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_UpRight",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Aim_UpRight.fbx",
+            "sha256": "122d439bb0dd5513f7a007d38757239df69ad4c00d8535336a62a5b1c473f6e1",
+            "yaw": 60,
+            "pitch": 45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_DownLeft",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Aim_DownLeft.fbx",
+            "sha256": "32aee55c562731438b961e552faf98f39a3f83e2401f5c983f792a1e27314d4e",
+            "yaw": -60,
+            "pitch": -45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          },
+          {
+            "name": "Aim_DownRight",
+            "pose_fbx": "unreal/PolpalUE/Art/Generated/Rig_Biped_Chibi_Aim_DownRight.fbx",
+            "sha256": "8de98dafe493a571b4584055d9272b18bd3b452718b34a53eaae28e72ee338db",
+            "yaw": 60,
+            "pitch": -45,
+            "frames": [
+              1,
+              2
+            ],
+            "fps": 30
+          }
+        ]
+      },
+      "max_bone_influences": 1,
+      "skin_weights": "rigid normalized"
+    },
+    {
+      "id": "quadruped",
+      "asset_name": "Rig_Quadruped",
+      "rig": "Rig_Quadruped",
+      "element": "Earth",
+      "prototype": true,
+      "blend": "unreal/PolpalUE/Art/Generated/Rig_Quadruped.blend",
+      "blend_sha256": "b61454b33d46f0ed91ff124601c22307b442e6e6dd483d14a9a7ed80bbbacec4",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_SK.fbx",
+      "mesh_sha256": "8b61122b8efef4ba5d18d67a1fe5b06c9a667f6ecb59e9cc442776b4800aa641",
+      "outline_fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Outline.fbx",
+      "outline_sha256": "275038120f75ba067e468dcc885d856882b343050dcbddfe1c47415643687f2b",
+      "body_dimensions_m": [
+        0.9,
+        2.534,
+        1.14
+      ],
+      "bounds": {
+        "min_m": [
+          -0.45,
+          -1.27,
+          0.06
+        ],
+        "max_m": [
+          0.45,
+          1.264,
+          1.2
+        ]
+      },
+      "bones": [
+        "pelvis",
+        "spine_01",
+        "head",
+        "muzzle",
+        "foreleg_upper_l",
+        "foreleg_upper_r",
+        "foreleg_lower_l",
+        "foreleg_lower_r",
+        "hand_l",
+        "hand_r",
+        "hindleg_upper_l",
+        "hindleg_upper_r",
+        "hindleg_lower_l",
+        "hindleg_lower_r",
+        "foot_l",
+        "foot_r",
+        "tail",
+        "ear_l",
+        "ear_r",
+        "root",
+        "weapon_l",
+        "weapon_r",
+        "mount_socket"
+      ],
+      "bone_parents": {
+        "root": null,
+        "pelvis": "root",
+        "spine_01": "pelvis",
+        "head": "spine_01",
+        "muzzle": "head",
+        "ear_l": "head",
+        "ear_r": "head",
+        "foreleg_upper_l": "spine_01",
+        "foreleg_lower_l": "foreleg_upper_l",
+        "hand_l": "foreleg_lower_l",
+        "weapon_l": "hand_l",
+        "foreleg_upper_r": "spine_01",
+        "foreleg_lower_r": "foreleg_upper_r",
+        "hand_r": "foreleg_lower_r",
+        "weapon_r": "hand_r",
+        "mount_socket": "spine_01",
+        "hindleg_upper_l": "pelvis",
+        "hindleg_lower_l": "hindleg_upper_l",
+        "foot_l": "hindleg_lower_l",
+        "hindleg_upper_r": "pelvis",
+        "hindleg_lower_r": "hindleg_upper_r",
+        "foot_r": "hindleg_lower_r",
+        "tail": "pelvis"
+      },
+      "retarget_chains": {
+        "spine": [
+          "pelvis",
+          "head"
+        ],
+        "head": [
+          "head",
+          "head"
+        ],
+        "left_arm": [
+          "foreleg_upper_l",
+          "hand_l"
+        ],
+        "right_arm": [
+          "foreleg_upper_r",
+          "hand_r"
+        ],
+        "left_leg": [
+          "hindleg_upper_l",
+          "foot_l"
+        ],
+        "right_leg": [
+          "hindleg_upper_r",
+          "foot_r"
+        ],
+        "front_left": [
+          "foreleg_upper_l",
+          "hand_l"
+        ],
+        "front_right": [
+          "foreleg_upper_r",
+          "hand_r"
+        ],
+        "hind_left": [
+          "hindleg_upper_l",
+          "foot_l"
+        ],
+        "hind_right": [
+          "hindleg_upper_r",
+          "foot_r"
+        ]
+      },
+      "animations": [
+        {
+          "name": "Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Idle.fbx",
+          "sha256": "283646bfdd186a0d2b2b59e4b0263bdc3a9b4f433b2016b9fae4f1bce936a6a0",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Walk_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Walk_Fwd.fbx",
+          "sha256": "0825247163f27890a5de3030b19927c4d3ff26481eae91b946f29b0b29238f71",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Run_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Run_Fwd.fbx",
+          "sha256": "ab86b441e5cf428d2e629422edca37829d2daca246fbb69a5a78a9140065c066",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": true
+        },
+        {
+          "name": "Jump_Start",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Jump_Start.fbx",
+          "sha256": "638d002ff75f958667a62a192fd322d1055e1cd6845b83397f6f7ab8a36616ad",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Fall_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Fall_Loop.fbx",
+          "sha256": "efc949bc5f9a77e446d97eac1f7e3e6dbb2de4d72a24bb4c85e2c51ddcfcea25",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Land",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Land.fbx",
+          "sha256": "6d29346c01e10dccc58b6849cb816b23408b5410726401a1a71a92b411219b75",
+          "fps": 30,
+          "frames": [
+            1,
+            13
+          ],
+          "loop": false
+        },
+        {
+          "name": "Work_Hammering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Work_Hammering.fbx",
+          "sha256": "203eb55a976fe40a63ffb81982fb15952d0f0c10268481e9157ca0ea5a26fcbb",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Mining",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Work_Mining.fbx",
+          "sha256": "d494eebe54527259ed0d155c80e8b62ed04f2728c0810dca3a017e8f6ac9d94e",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Watering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Work_Watering.fbx",
+          "sha256": "7c25bae2bde7996ba63e749a2bcfd16d215524f09b63768ccbab7aa4eb926e4c",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Work_Carrying_Idle.fbx",
+          "sha256": "1a117b68b7bc7f6e61b706802498c65491a58e49f72abd2d6cc42259be1e6b22",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Walk",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Work_Carrying_Walk.fbx",
+          "sha256": "650b31071cce9896972e3be34bc2d30c5ff25059092773e15d05e0216ac4f7b9",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Attack_Melee",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Attack_Melee.fbx",
+          "sha256": "891eed2c8a4b5461050c76d0552638baf17e86f7b2f6073a2f39040026cef8ac",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": false
+        },
+        {
+          "name": "Attack_Cast_Skill",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Attack_Cast_Skill.fbx",
+          "sha256": "79a5cf42eb21e87cba498f0c7985631dd5d18e28b35d435242d97d4d4a1162e7",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": false
+        },
+        {
+          "name": "Hit_React",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Hit_React.fbx",
+          "sha256": "fa8b0943af2f83f1eb8a04f85481e3238d91e3dda63b9651d792372d2b293a2a",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Stunned_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Stunned_Loop.fbx",
+          "sha256": "471ecd8497ae2f91368c93fb9d89ea7f34ff2e50a31a496f219c077a8818debf",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Captured_Struggle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Captured_Struggle.fbx",
+          "sha256": "7e0830656c8c3184e9913a34261227b44a28a8055cdeab2751fa3d587d697b9a",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Sleep",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_Sleep.fbx",
+          "sha256": "2dafb5c81599c6d1a60cff3604d6deca8cd47616f67ad24da91736c033e7d472",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        }
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_LOD0.fbx",
+          "sha256": "2d9e8dfc5a4d50d8f982c3a82da56f6701571f8a0959c90b23485559e92556f4",
+          "triangles": 7040,
+          "vertices": 3564
+        },
+        {
+          "level": 1,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_LOD1.fbx",
+          "sha256": "833f0938d7daed1e7852df1f7eff997eb53d5a0cecba6e35574a4da5bc1c49a7",
+          "triangles": 1760,
+          "vertices": 924
+        },
+        {
+          "level": 2,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_LOD2.fbx",
+          "sha256": "fef03d7707c7ef44de4e645aecc3bee39c1d66a1ea15d17ad4e232b9415d62b8",
+          "triangles": 440,
+          "vertices": 264
+        },
+        {
+          "level": 3,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Quadruped_LOD3.fbx",
+          "sha256": "2738cfb9818e5bbb9caa2b0485428263f9c76eed923a468bf0ea65a0f0857eef",
+          "triangles": 176,
+          "vertices": 132
+        }
+      ],
+      "aim_offset": null,
+      "max_bone_influences": 1,
+      "skin_weights": "rigid normalized"
+    },
+    {
+      "id": "avian",
+      "asset_name": "Rig_Avian",
+      "rig": "Rig_Avian",
+      "element": "Air",
+      "prototype": true,
+      "blend": "unreal/PolpalUE/Art/Generated/Rig_Avian.blend",
+      "blend_sha256": "5e8c4f4ace92005e134f3f3b311a537903f9eaa87f59b871084bc7c472bab7da",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_SK.fbx",
+      "mesh_sha256": "7b42f8e6fe499b5fc82494206adeabb9e541f856b4a9c1d0dc2817ad4b6bb672",
+      "outline_fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Outline.fbx",
+      "outline_sha256": "837f9cbd64d13197a05666ace6a2261b08a4421e5881a278431c9f96ffdea197",
+      "body_dimensions_m": [
+        2.26,
+        1.29,
+        1.29
+      ],
+      "bounds": {
+        "min_m": [
+          -1.13,
+          -0.66,
+          0.02
+        ],
+        "max_m": [
+          1.13,
+          0.63,
+          1.31
+        ]
+      },
+      "bones": [
+        "pelvis",
+        "spine_01",
+        "head",
+        "beak",
+        "hand_l",
+        "hand_r",
+        "wing_tip_l",
+        "wing_tip_r",
+        "foot_l",
+        "foot_r",
+        "tail",
+        "root",
+        "weapon_l",
+        "weapon_r",
+        "mount_socket"
+      ],
+      "bone_parents": {
+        "root": null,
+        "pelvis": "root",
+        "spine_01": "pelvis",
+        "head": "spine_01",
+        "beak": "head",
+        "hand_l": "spine_01",
+        "wing_tip_l": "hand_l",
+        "weapon_l": "hand_l",
+        "hand_r": "spine_01",
+        "wing_tip_r": "hand_r",
+        "weapon_r": "hand_r",
+        "mount_socket": "spine_01",
+        "foot_l": "pelvis",
+        "foot_r": "pelvis",
+        "tail": "pelvis"
+      },
+      "retarget_chains": {
+        "spine": [
+          "pelvis",
+          "head"
+        ],
+        "head": [
+          "head",
+          "head"
+        ],
+        "left_arm": [
+          "hand_l",
+          "hand_l"
+        ],
+        "right_arm": [
+          "hand_r",
+          "hand_r"
+        ],
+        "left_leg": [
+          "foot_l",
+          "foot_l"
+        ],
+        "right_leg": [
+          "foot_r",
+          "foot_r"
+        ],
+        "left_wing": [
+          "hand_l",
+          "wing_tip_l"
+        ],
+        "right_wing": [
+          "hand_r",
+          "wing_tip_r"
+        ]
+      },
+      "animations": [
+        {
+          "name": "Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Idle.fbx",
+          "sha256": "499cd385d57c50af55aa476e57e299042d4fd1c6a13a2b093b51e18856f84ee4",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Walk_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Walk_Fwd.fbx",
+          "sha256": "ec7c11531ba14ca6089018518e88b6aa39d7db1111b58c38c58e618db1706daf",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Run_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Run_Fwd.fbx",
+          "sha256": "c2ca05961365b8067a7b6b336127b345a0ee24e327a030b0edb0b317d20e44ac",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": true
+        },
+        {
+          "name": "Jump_Start",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Jump_Start.fbx",
+          "sha256": "ee0168ab92dca9c0c92956aa4ee4c6b8af20c46a8a050588898904a6464d4ee0",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Fall_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Fall_Loop.fbx",
+          "sha256": "919d934489b47ba341bd61e229e9420832faf5f675d50ea7f21a02ff697ba148",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Land",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Land.fbx",
+          "sha256": "d3ec436dddb486ff3d315e1012e4dddab38c82e5051ad7b18a3828a54fdd1519",
+          "fps": 30,
+          "frames": [
+            1,
+            13
+          ],
+          "loop": false
+        },
+        {
+          "name": "Work_Hammering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Work_Hammering.fbx",
+          "sha256": "68d32e920f4b8966cdac188b20bda3ae0bbd6977714d6ac59d8dd55c19e35633",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Mining",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Work_Mining.fbx",
+          "sha256": "13d999845a59b2177c41c6d41f2ae3c73569c598ff45fd68bf49552643cfdc53",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Watering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Work_Watering.fbx",
+          "sha256": "33213ea3df77b9140e2fd7cdfc8659ed2f91b4504c8d0f304b123de4da61cb4b",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Work_Carrying_Idle.fbx",
+          "sha256": "20e2323cf44287caf99395e07b8c4f4aaebd10279ed4a536c4df5f41572072ae",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Walk",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Work_Carrying_Walk.fbx",
+          "sha256": "f80ef0c526cde2d2c80972b6d80ea692d0cda26df7656a8236f77432c2bbb39b",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Attack_Melee",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Attack_Melee.fbx",
+          "sha256": "a3c0a4aa7d9e0d3b304bcc2c51cd2608db244827732b4ebbabebe1d2c79d1fea",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": false
+        },
+        {
+          "name": "Attack_Cast_Skill",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Attack_Cast_Skill.fbx",
+          "sha256": "7808f4e59d7ed7cff5793252bff8a64b66293e9d8ddb0665622f5f027fbe40aa",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": false
+        },
+        {
+          "name": "Hit_React",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Hit_React.fbx",
+          "sha256": "0213a7928ec06974f30ce89acace31cef6dc820c9134146a49fff8351e130537",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Stunned_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Stunned_Loop.fbx",
+          "sha256": "307cb0e98cfd1f79fc57bf6ddc3ec20d2e87a5c9479d436208c31d701a069690",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Captured_Struggle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Captured_Struggle.fbx",
+          "sha256": "956451fe8a331e8ddc983143711d502b8e541829ff0e1ccfff801a137f44e807",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Sleep",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_Sleep.fbx",
+          "sha256": "67a548a6bd2dbe76ea4d9069572072cad0211f80263a3cbeec4b3181b2b5f3d9",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        }
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_LOD0.fbx",
+          "sha256": "471bda13fcb7c8c3917d7ce4847ec5d751da6b5dc26e39c5108c0d98f99cebe5",
+          "triangles": 4480,
+          "vertices": 2268
+        },
+        {
+          "level": 1,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_LOD1.fbx",
+          "sha256": "1836318948d2a2e19c5e1ea2b89e17ef87d2c40764b5dd276fc7a2c2a2d3b021",
+          "triangles": 1120,
+          "vertices": 588
+        },
+        {
+          "level": 2,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_LOD2.fbx",
+          "sha256": "4c9fa05a8d77cfe46a954b291eca5a5188e282ae689ab62428fac74854f9d0b3",
+          "triangles": 280,
+          "vertices": 168
+        },
+        {
+          "level": 3,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Avian_LOD3.fbx",
+          "sha256": "69b9e423936d35f0c953db7dfa654e836f6eb4e4920d2a04a84a4dac36c49384",
+          "triangles": 112,
+          "vertices": 84
+        }
+      ],
+      "aim_offset": null,
+      "max_bone_influences": 1,
+      "skin_weights": "rigid normalized"
+    },
+    {
+      "id": "blob",
+      "asset_name": "Rig_Blob",
+      "rig": "Rig_Blob",
+      "element": "Water",
+      "prototype": true,
+      "blend": "unreal/PolpalUE/Art/Generated/Rig_Blob.blend",
+      "blend_sha256": "10cecc5dd2e323c804320db5756abc85fdcc7bda3e2757b964706376edfb6e41",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_SK.fbx",
+      "mesh_sha256": "d21744488080cb1b8ab79f4b1635cb619b1f213e1b0b8cfc8c1661e2d5af123c",
+      "outline_fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Outline.fbx",
+      "outline_sha256": "067f2d0c831d5dbc6530613ba63cf888d9a68d2d18c8f20ba0251549c48431d8",
+      "body_dimensions_m": [
+        1.32,
+        0.88,
+        1.07
+      ],
+      "bounds": {
+        "min_m": [
+          -0.66,
+          -0.44,
+          0.02
+        ],
+        "max_m": [
+          0.66,
+          0.44,
+          1.09
+        ]
+      },
+      "bones": [
+        "pelvis",
+        "spine_01",
+        "head",
+        "hand_l",
+        "hand_r",
+        "foot_l",
+        "foot_r",
+        "crest",
+        "root",
+        "weapon_l",
+        "weapon_r",
+        "mount_socket"
+      ],
+      "bone_parents": {
+        "root": null,
+        "pelvis": "root",
+        "spine_01": "pelvis",
+        "head": "spine_01",
+        "crest": "head",
+        "hand_l": "spine_01",
+        "weapon_l": "hand_l",
+        "hand_r": "spine_01",
+        "weapon_r": "hand_r",
+        "mount_socket": "spine_01",
+        "foot_l": "pelvis",
+        "foot_r": "pelvis"
+      },
+      "retarget_chains": {
+        "spine": [
+          "pelvis",
+          "head"
+        ],
+        "head": [
+          "head",
+          "head"
+        ],
+        "left_arm": [
+          "hand_l",
+          "hand_l"
+        ],
+        "right_arm": [
+          "hand_r",
+          "hand_r"
+        ],
+        "left_leg": [
+          "foot_l",
+          "foot_l"
+        ],
+        "right_leg": [
+          "foot_r",
+          "foot_r"
+        ],
+        "squash": [
+          "pelvis",
+          "head"
+        ]
+      },
+      "animations": [
+        {
+          "name": "Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Idle.fbx",
+          "sha256": "f174610c39be6873ece5f9b3705c20d930ce91ddd640bb14d6b35967a88a390a",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Walk_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Walk_Fwd.fbx",
+          "sha256": "974c5ce935f7bed6468e83d9fe4d3ca598f4d720b4a3e08beef6d52cf5c0e70c",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Run_Fwd",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Run_Fwd.fbx",
+          "sha256": "3a76c7281d24fbdb9a9a4b236c05e42a9159280216234c7b88ca5e4c71cf657d",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": true
+        },
+        {
+          "name": "Jump_Start",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Jump_Start.fbx",
+          "sha256": "aa28b2d0fa0f94c21a2a9a7d81131e25b058b6f3b9b2efbd194ad64bd4140645",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Fall_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Fall_Loop.fbx",
+          "sha256": "acffd43897ffe90ca9701a423be8867ca08623b15c9c77af3e26d42b768fd208",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Land",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Land.fbx",
+          "sha256": "2fa400362e10db462251d64522cba1a2a86448f020cfe86522ab299f437083cf",
+          "fps": 30,
+          "frames": [
+            1,
+            13
+          ],
+          "loop": false
+        },
+        {
+          "name": "Work_Hammering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Work_Hammering.fbx",
+          "sha256": "4c7208a8473cd880b11178c4f00f5066821554687b68f18c297d7d3ea6cf12b6",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Mining",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Work_Mining.fbx",
+          "sha256": "70f22755f62f01a28ee7ea74b779d326e754de3a398a1c2c28065c6c65a1542f",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Watering",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Work_Watering.fbx",
+          "sha256": "2e15cf84574db1e536e7ffab979532962d19704fef4810d07faef2cca0534b06",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Idle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Work_Carrying_Idle.fbx",
+          "sha256": "f08b8abf943bb295ad835857999b12ecfb5b742c8e9511db24a6fa0a3c999969",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        },
+        {
+          "name": "Work_Carrying_Walk",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Work_Carrying_Walk.fbx",
+          "sha256": "ae27065ce72ba326ecdaa9675328a74ada9dc5915e5e8cfb421e57cd87f07082",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Attack_Melee",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Attack_Melee.fbx",
+          "sha256": "70bc1da8a00a8c0d211474e247322326f0408db765271978c7962013bc74644e",
+          "fps": 30,
+          "frames": [
+            1,
+            19
+          ],
+          "loop": false
+        },
+        {
+          "name": "Attack_Cast_Skill",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Attack_Cast_Skill.fbx",
+          "sha256": "ba899436b1ecf85d30192ccc2d095c074aabeb1c29006f7972e167733032af17",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": false
+        },
+        {
+          "name": "Hit_React",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Hit_React.fbx",
+          "sha256": "5e8aac8919102070fe401d5e9874e86fdc452708fc839654484abc62bd1c1d42",
+          "fps": 30,
+          "frames": [
+            1,
+            16
+          ],
+          "loop": false
+        },
+        {
+          "name": "Stunned_Loop",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Stunned_Loop.fbx",
+          "sha256": "e9800116eee2f68e99673466b26dac1b89f8c4ac7c34855b293af0fb8687f709",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Captured_Struggle",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Captured_Struggle.fbx",
+          "sha256": "98d69072de65c8119d586f858c3f09e06fbe44ab8a4ac6d04afa13e4187aaf48",
+          "fps": 30,
+          "frames": [
+            1,
+            25
+          ],
+          "loop": true
+        },
+        {
+          "name": "Sleep",
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_Sleep.fbx",
+          "sha256": "4bdb0a22e81dab575f3ab23e5824348d06318b12c46970c552822849372718de",
+          "fps": 30,
+          "frames": [
+            1,
+            31
+          ],
+          "loop": true
+        }
+      ],
+      "lods": [
+        {
+          "level": 0,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_LOD0.fbx",
+          "sha256": "dcc786074737305963174357ad1e503122e3e11f29f8beaf77903087861752bf",
+          "triangles": 3520,
+          "vertices": 1782
+        },
+        {
+          "level": 1,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_LOD1.fbx",
+          "sha256": "21826600d8684ba5d1ee094fdd5b9042a93193163211a677868c4b91d0c29341",
+          "triangles": 880,
+          "vertices": 462
+        },
+        {
+          "level": 2,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_LOD2.fbx",
+          "sha256": "1056c827c6a2496856819e767abf6813c8e1f27bd34748b7f833f4fbf97d30b8",
+          "triangles": 220,
+          "vertices": 132
+        },
+        {
+          "level": 3,
+          "fbx": "unreal/PolpalUE/Art/Generated/Rig_Blob_LOD3.fbx",
+          "sha256": "e711d196ef7aa9cb5fabc1530dde5d5530f481d186a4039a916725eb43c614f0",
+          "triangles": 88,
+          "vertices": 66
+        }
+      ],
+      "aim_offset": null,
+      "max_bone_influences": 1,
+      "skin_weights": "rigid normalized"
+    }
+  ],
+  "environment": [
+    {
+      "name": "SM_Workshop",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/SM_Workshop.fbx",
+      "sha256": "5142a8b7bb3d8946db553df32820ce9a90dad73e5fe5a450c979bc0a6c4aae3a",
+      "palette": {
+        "dark": [
+          0.035,
+          0.055,
+          0.07,
+          1
+        ],
+        "roof": [
+          0.18,
+          0.34,
+          0.46,
+          1
+        ],
+        "signal": [
+          0.96,
+          0.66,
+          0.13,
+          1
+        ],
+        "stone": [
+          0.43,
+          0.46,
+          0.48,
+          1
+        ],
+        "wood": [
+          0.43,
+          0.25,
+          0.1,
+          1
+        ]
+      },
+      "bounds": {
+        "min_m": [
+          -1.65,
+          -1.45,
+          0.0
+        ],
+        "max_m": [
+          1.65,
+          1.45,
+          2.42
+        ]
+      },
+      "triangles": 72,
+      "prototype": true,
+      "style": "stylized low poly"
+    },
+    {
+      "name": "SM_ServiceMarker",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/SM_ServiceMarker.fbx",
+      "sha256": "ab4615f422fc8385c6c4ee5c75ae3017fed07c93aab8ec8aac9f9fbc0a61dcda",
+      "palette": {
+        "roof": [
+          0.18,
+          0.34,
+          0.46,
+          1
+        ],
+        "signal": [
+          0.96,
+          0.66,
+          0.13,
+          1
+        ],
+        "stone": [
+          0.43,
+          0.46,
+          0.48,
+          1
+        ],
+        "wood": [
+          0.43,
+          0.25,
+          0.1,
+          1
+        ]
+      },
+      "bounds": {
+        "min_m": [
+          -0.55,
+          -0.55,
+          0.0
+        ],
+        "max_m": [
+          0.55,
+          0.55,
+          1.97
+        ]
+      },
+      "triangles": 56,
+      "prototype": true,
+      "style": "stylized low poly"
+    },
+    {
+      "name": "SM_RockCluster",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/SM_RockCluster.fbx",
+      "sha256": "ccd364a316b3d65610b8e158c6163bf93bbf9ee2f9a662737c29f0ea26d611f0",
+      "palette": {
+        "stone": [
+          0.43,
+          0.46,
+          0.48,
+          1
+        ]
+      },
+      "bounds": {
+        "min_m": [
+          -1.0345,
+          -0.5517,
+          0.0
+        ],
+        "max_m": [
+          0.8193,
+          0.7062,
+          0.84
+        ]
+      },
+      "triangles": 60,
+      "prototype": true,
+      "style": "stylized low poly"
+    },
+    {
+      "name": "SM_Tree",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/SM_Tree.fbx",
+      "sha256": "f278a441816bdb00bd7cf22fe96440f368986f5c5716f9112273483c5f82ee07",
+      "palette": {
+        "grass": [
+          0.19,
+          0.48,
+          0.19,
+          1
+        ],
+        "leaf": [
+          0.12,
+          0.4,
+          0.27,
+          1
+        ],
+        "wood": [
+          0.43,
+          0.25,
+          0.1,
+          1
+        ]
+      },
+      "bounds": {
+        "min_m": [
+          -0.7334,
+          -0.6465,
+          0.0
+        ],
+        "max_m": [
+          0.7334,
+          0.6465,
+          2.58
+        ]
+      },
+      "triangles": 52,
+      "prototype": true,
+      "style": "stylized low poly"
+    },
+    {
+      "name": "SM_GroundTile",
+      "mesh_fbx": "unreal/PolpalUE/Art/Generated/SM_GroundTile.fbx",
+      "sha256": "d2e43b68e6a41937d3a4ad23e24cc7b8f0c1e57b2378be79c93adb93747fc2b0",
+      "palette": {
+        "grass": [
+          0.19,
+          0.48,
+          0.19,
+          1
+        ],
+        "leaf": [
+          0.12,
+          0.4,
+          0.27,
+          1
+        ],
+        "soil": [
+          0.28,
+          0.2,
+          0.11,
+          1
+        ]
+      },
+      "bounds": {
+        "min_m": [
+          -1.0,
+          -1.0,
+          -0.28
+        ],
+        "max_m": [
+          1.0,
+          1.0,
+          0.15
+        ]
+      },
+      "triangles": 64,
+      "prototype": true,
+      "style": "stylized low poly"
+    }
+  ],
+  "landscape": {
+    "heightmap_png": "unreal/PolpalUE/Art/Generated/Landscape_505_G16.png",
+    "sha256": "279b04d8148bff706fe4205eef2b5bce02f5483ed39abdb0e956545105f57baf",
+    "resolution": [
+      505,
+      505
+    ],
+    "format": "PNG_G16",
+    "xy_spacing_cm": 200,
+    "unreal_z_scale_percent": 100,
+    "height_value_midpoint": 32768,
+    "height_cm_per_sample": 0.78125,
+    "height_range_m": [
+      -3.5859,
+      3.5859
+    ],
+    "prototype": true,
+    "style": "procedural stylized terrain"
+  }
+}

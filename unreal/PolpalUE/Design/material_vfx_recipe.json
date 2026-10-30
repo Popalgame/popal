@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "status": "toon_outline_source_authored_fx_editor_source_owned_by_parent_engine_verification_pending",
+  "materials": {
+    "M_PalToon": {
+      "editor_script": "Content/Python/bootstrap_project.py prepares the graph, element instances and generated mesh assignment; UE5 execution and shader compilation remain unverified.",
+      "shading_model": "Unlit",
+      "expression": "EmissiveColor = ElementBaseColor * ThreeTone(Clamp(Dot(PixelNormalWS, normalize(LightDirection)),0,1)) * VertexColor.R",
+      "parameters": {
+        "LightDirection": "world-space vector set by gameplay/editor",
+        "ElementBaseColor": "vector per element",
+        "ShadowTone": 0.38,
+        "MidTone": 0.7,
+        "LightTone": 1.0,
+        "Threshold1": 0.35,
+        "Threshold2": 0.7
+      },
+      "vertex_mask": "R multiplies shade; default 1. Imported prototype mesh color layer is ElementMask."
+    },
+    "M_PalOutline": {
+      "shading_model": "Unlit",
+      "rendering": "Unlit one-sided outline material applied to imported reversed-face skeletal hull; APalCharacter follows main mesh using leader pose. UE visual verification pending.",
+      "expression": "WorldPositionOffset = VertexNormalWS * VertexColor.G * -0.5 cm; black emissive.",
+      "parameters": {
+        "OutlineColor": [
+          0.025,
+          0.025,
+          0.04
+        ],
+        "extrusion_cm": -0.5
+      },
+      "vertex_mask": "G scales outline width; prototype default 0.5."
+    },
+    "limitation": "A parameter-lit Unlit toon material does not receive scene directional shadows or Lumen reflections as a Default Lit surface. It requires an explicit LightDirection update and separate shadow strategy."
+  },
+  "element_palette": {
+    "Fire": [
+      0.95,
+      0.23,
+      0.08
+    ],
+    "Water": [
+      0.09,
+      0.62,
+      0.9
+    ],
+    "Electric": [
+      0.98,
+      0.73,
+      0.1
+    ],
+    "Grass": [
+      0.24,
+      0.72,
+      0.25
+    ],
+    "Ice": [
+      0.65,
+      0.89,
+      0.96
+    ],
+    "Ground": [
+      0.42,
+      0.28,
+      0.12
+    ],
+    "Neutral": [
+      0.65,
+      0.65,
+      0.65
+    ],
+    "Dark": [
+      0.22,
+      0.17,
+      0.35
+    ],
+    "Dragon": [
+      0.64,
+      0.28,
+      0.62
+    ]
+  },
+  "manifest_element_mapping": {
+    "Earth": "Ground",
+    "Air": "Air"
+  },
+  "niagara": [
+    {
+      "name": "NS_FireBurst",
+      "element": "Fire",
+      "trigger": "AN_SpawnProjectile impact",
+      "emitters": [
+        "embers",
+        "heat_distortion"
+      ]
+    },
+    {
+      "name": "NS_WaterSplash",
+      "element": "Water",
+      "trigger": "projectile impact or Work_Watering",
+      "emitters": [
+        "droplets",
+        "mist"
+      ]
+    },
+    {
+      "name": "NS_ElectricArc",
+      "element": "Electric",
+      "trigger": "skill impact",
+      "emitters": [
+        "arcs",
+        "sparks"
+      ]
+    },
+    {
+      "name": "NS_HammerSparks",
+      "element": "work",
+      "trigger": "AN_PlayWorkVFX",
+      "emitters": [
+        "sparks",
+        "dust"
+      ]
+    },
+    {
+      "name": "NS_BuildSmoke",
+      "element": "work",
+      "trigger": "construction work",
+      "emitters": [
+        "smoke"
+      ]
+    },
+    {
+      "name": "NS_FatigueSweat",
+      "element": "status",
+      "trigger": "low SAN/stamina visual",
+      "emitters": [
+        "droplets"
+      ]
+    }
+  ]
+}

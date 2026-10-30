@@ -1,6 +1,6 @@
-/* 0.1.11: гра на ПК — рух WASD/стрілками, дії клавішами, камера Q/E і колесом миші, опція «Джойстик» у налаштуваннях (Авто / Показувати / Сховати), камера від першої особи (V) */
+/* 0.1.11: гра на ПК — рух WASD/стрілками, дії клавішами, камера мишею (pointer lock) і Q/E, зум колесом, камера від першої особи (V) */
 (function(){try{
-const KEY='zi_pc';let C={joy:0,fp:0};
+const KEY='zi_pc';let C={joy:0,fp:0,zoom:0};
 try{Object.assign(C,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 const sv=()=>{try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}};
 /* vis() дивиться лише inline-стиль (вікна показуються через style.display), щоб не викликати перерахунок верстки щокадру */
@@ -44,11 +44,11 @@ function esc(){
 const ACT={Space:()=>click('hit'),KeyF:()=>click('hit'),KeyR:()=>bmode()?click('brot'):click('throw'),KeyC:()=>click('craft'),KeyI:()=>(typeof ivO!=='undefined'&&ivO)?click('ivx'):click('bag'),Tab:()=>(typeof ivO!=='undefined'&&ivO)?click('ivx'):click('bag'),
  KeyB:()=>bmode()?click('bx'):click('bld'),Enter:()=>bmode()&&click('bok'),KeyX:()=>bmode()&&click('bdel'),Delete:()=>bmode()&&click('bdel'),
  Digit1:()=>typeof pwSw=='function'&&pwSw(-1),Digit2:()=>typeof pwSw=='function'&&pwSw(1),Escape:esc,KeyT:()=>window.palToggle&&palToggle(),
- KeyV:()=>{C.fp=C.fp?0:1;sv();apply();syncSeg();if(C.fp)lock();else unlock();msg(C.fp?'👁️ Від першої особи: миша — огляд, ЛКМ — дія, ПКМ — кинути, Esc — курсор':'🎥 Камера від третьої особи')}};
+ KeyV:()=>{C.fp=C.fp?0:1;sv();apply();syncSeg();lock();msg(C.fp?'👁️ Від першої особи: миша — огляд, ЛКМ — дія, ПКМ — кинути, Esc — курсор':'🎥 Третя особа: миша — камера, ЛКМ — удар, ПКМ — кинути, колесо — зум, Esc — курсор')}};
 const MOVE=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyQ','KeyE','ShiftLeft','ShiftRight']);
 addEventListener('keydown',e=>{if(typing(e)||e.ctrlKey||e.metaKey||e.altKey)return;const c=e.code;
  if(MOVE.has(c)){down.add(c);if(c.startsWith('Arrow'))e.preventDefault()}
- if(!tipd&&!busy()&&(MOVE.has(c)||ACT[c])){tipd=1;msg('⌨️ WASD — рух, Shift — біг, Пробіл — дія, R — кинути, C — крафт, I — інвентар, B — будова, T — призвати попала, Q/E — камера, V — вид від першої особи, Esc — меню')}
+ if(!tipd&&!busy()&&(MOVE.has(c)||ACT[c])){tipd=1;msg('⌨️ WASD — рух, Shift — біг, Пробіл — дія, R — кинути, C — крафт, I — інвентар, B — будова, T — призвати попала, Q/E або миша — камера, колесо — зум, V — вид, Esc — меню')}
  const a=ACT[c];if(!a)return;if(c=='Escape'||c=='Tab'||c=='Space')e.preventDefault();if(e.repeat||(busy()&&c!='Escape'))return;a()});
 addEventListener('keyup',e=>down.delete(e.code));
 addEventListener('blur',()=>down.clear());
@@ -57,7 +57,7 @@ const sp0=window.spdF;window.spdF=()=>(sp0?sp0():1)*(run?1.6:1);
 /* щокадру переводимо натиснуті клавіші у «джойстик» jx/jy з core-world.js; якщо відкрили вікно — віддаємо курсор */
 let T0=performance.now();
 (function tick(){requestAnimationFrame(t=>{const dt=Math.min(.05,(t-T0)/1000);T0=t;
- if(locked()&&(!C.fp||needUI()))unlock();
+ if(locked()&&needUI())unlock();
  if(!down.size&&!kbd){run=0;tick();return}
  const k=c=>down.has(c)?1:0,on=!busy()&&!(typeof ivO!=='undefined'&&ivO)&&!(typeof pfO!=='undefined'&&pfO);
  const x=on?(k('KeyD')||k('ArrowRight'))-(k('KeyA')||k('ArrowLeft')):0,y=on?(k('KeyS')||k('ArrowDown'))-(k('KeyW')||k('ArrowUp')):0;
@@ -75,18 +75,22 @@ R.render=function(s,c){if(!C.fp||c!==cam||busy())return r0(s,c);
 /* перша особа на ПК: миша захоплюється (pointer lock) — рух миші крутить камеру, ЛКМ — дія, ПКМ — кинути кулю */
 const cv=R.domElement,locked=()=>document.pointerLockElement===cv;
 const needUI=()=>busy()||(typeof ivO!=='undefined'&&ivO)||(typeof pfO!=='undefined'&&pfO)||vis('dlg')||vis('em')||bmode();
-function lock(){if(C.fp&&isPC()&&!locked()&&!needUI()&&cv.requestPointerLock){try{const p=cv.requestPointerLock();p&&p.catch&&p.catch(()=>{})}catch(e){}}}
+function lock(){if(isPC()&&!locked()&&!needUI()&&cv.requestPointerLock){try{const p=cv.requestPointerLock();p&&p.catch&&p.catch(()=>{})}catch(e){}}}
 function unlock(){if(locked())document.exitPointerLock()}
 /* якщо браузер не дає захопити мишу — запасний режим: камера крутиться просто рухом миші над грою */
-let noLock=0;const free=()=>noLock&&C.fp&&isPC()&&!needUI();
+let noLock=0,mouseTip=0;const free=()=>noLock&&isPC()&&!needUI();
+const tipMouse=()=>{if(mouseTip)return;mouseTip=1;if(!C.fp)msg('🖱️ Миша — камера, ЛКМ — удар, ПКМ — кинути, колесо — зум, Esc — вільний курсор')};
 document.addEventListener('pointerlockchange',()=>document.body.classList.toggle('plk',locked()||!!noLock));
 document.addEventListener('pointerlockerror',()=>{if(!noLock){noLock=1;document.body.classList.add('plk');msg('🖱️ Браузер не дав захопити мишу: камера крутиться рухом миші над грою')}});
-cv.addEventListener('mousedown',e=>{if(!C.fp||!isPC()||needUI())return;if(!locked()&&!noLock){lock();return}
+/* клік по грі захоплює мишу в обох видах — преміальна схема: миша=камера, ЛКМ=удар, ПКМ=кидок */
+cv.addEventListener('mousedown',e=>{if(!isPC()||needUI())return;if(!locked()&&!noLock){lock();tipMouse();return}
  e.preventDefault();e.stopImmediatePropagation();if(e.button==0)click('hit');else if(e.button==2)click('throw')},true);
-cv.addEventListener('contextmenu',e=>{if(C.fp)e.preventDefault()});
-document.addEventListener('mousemove',e=>{if(!C.fp||(!locked()&&!(e.target===cv&&free())))return;ang-=e.movementX*.0026;pit=Math.max(.18,Math.min(1.4,pit+e.movementY*.0022))});
-/* колесо миші над грою — нахил камери */
-R.domElement.addEventListener('wheel',e=>{if(busy())return;e.preventDefault();pit=Math.max(.18,Math.min(1.4,pit+Math.sign(e.deltaY)*.06))},{passive:false});
+cv.addEventListener('contextmenu',e=>{if(C.fp||locked())e.preventDefault()});
+document.addEventListener('mousemove',e=>{if(!locked()&&(e.buttons||!(e.target===cv&&free())))return;ang-=e.movementX*.0026;pit=Math.max(.18,Math.min(1.4,pit+e.movementY*.0022))});
+/* колесо миші: зум камери (pitch лишається за мишею — як у преміальних TPP) */
+const setZoom=v=>{C.zoom=Math.max(5,Math.min(16,Math.round(v*10)/10));sv()};
+R.domElement.addEventListener('wheel',e=>{if(busy())return;e.preventDefault();setZoom((C.zoom||9.5)+Math.sign(e.deltaY)*.8)},{passive:false});
+window.plZoom=()=>C.zoom||9.5;window.plRun=()=>run;
 /* --- налаштування: замість «Опцій» окремі вкладки Керування / Графіка / Звук --- */
 function syncSeg(){document.querySelectorAll('#pcv button').forEach(x=>x.classList.toggle('on',+x.dataset.i==C.fp))}
 {const pfs=$('pfs');if(pfs){const mk=(t,s)=>{const b=document.createElement('button');b.dataset.t=t;b.textContent=s;b.onclick=()=>pfTab(t);return b};
@@ -104,11 +108,11 @@ function ctl(c){
  c.innerHTML=`<div class='pcol' id='pcp'></div>`+(isPC()?`<div class='pcol'><h4>Клавіші</h4><div id='pckl'></div></div>`:'');
  const d=$('pcp'),kl=$('pckl');
  d.innerHTML=`<h4>Камера</h4><div class='gseg' id='pcv'>`+['3-тя особа','1-ша особа'].map((n,i)=>`<button data-i='${i}' class='${i==C.fp?'on':''}'>${n}</button>`).join('')+`</div>
- <small class='gnote'>`+(isPC()?'Клавіша V перемикає вид. Від першої особи клацніть по грі — камерою керує миша, Esc звільняє курсор':'Від першої особи огляд — пальцем по екрану, рух — джойстиком')+`</small>
+ <small class='gnote'>`+(isPC()?'Клавіша V перемикає вид. Клацніть по грі, щоб захопити мишу: миша — камера, ЛКМ — удар, ПКМ — кинути, колесо — зум, Esc — вільний курсор':'Огляд — пальцем по екрану, рух — джойстиком')+`</small>
  <h4>Джойстик на екрані</h4><div class='gseg' id='pcj'>`+['Авто','Показувати','Сховати'].map((n,i)=>`<button data-i='${i}' class='${i==C.joy?'on':''}'>${n}</button>`).join('')+`</div>
  <small class='gnote' id='pcjn'></small>`;
  const jn=()=>{$('pcjn').textContent=!isPC()&&C.joy==2?'⚠️ Без джойстика на телефоні рухатися не вийде':isPC()?'«Авто» ховає джойстик на компʼютері з мишею. Рух — WASD або стрілками':'«Авто» показує джойстик на телефоні й планшеті'};jn();
- if(kl)kl.innerHTML=`<b>W A S D / ←↑↓→</b><span>рух</span><b>Shift</b><span>біг</span><b>Пробіл / F</b><span>дія, розмова</span><b>R</b><span>кинути кулю</span><b>C</b><span>крафт</span><b>I / Tab</b><span>інвентар</span><b>B</b><span>будова (R — поворот, Enter — поставити, X — розібрати)</span><b>1 / 2</b><span>попередня / наступна істота</span><b>T</b><span>призвати / відкликати попала</span><b>Q / E, колесо, миша</b><span>камера</span><b>V</b><span>перша / третя особа</span><b>Миша (перша особа)</b><span>огляд, ЛКМ — дія, ПКМ — кинути кулю, Esc — звільнити курсор</span><b>Esc</b><span>закрити вікно / меню</span>`;
+ if(kl)kl.innerHTML=`<b>W A S D / ←↑↓→</b><span>рух</span><b>Shift</b><span>біг</span><b>Пробіл / F</b><span>дія, розмова</span><b>R</b><span>кинути кулю</span><b>C</b><span>крафт</span><b>I / Tab</b><span>інвентар</span><b>B</b><span>будова (R — поворот, Enter — поставити, X — розібрати)</span><b>1 / 2</b><span>попередня / наступна істота</span><b>T</b><span>призвати / відкликати попала</span><b>Q / E, миша</b><span>камера (миша — після клацання по грі)</span><b>Колесо</b><span>зум камери</span><b>V</b><span>перша / третя особа</span><b>Миша</b><span>огляд у 1-й і 3-й особі, ЛКМ — дія, ПКМ — кинути кулю, Esc — звільнити курсор</span><b>Esc</b><span>закрити вікно / меню</span>`;
  d.querySelectorAll('#pcv button').forEach(b=>b.onclick=()=>{C.fp=+b.dataset.i;sv();apply();syncSeg()});
  d.querySelectorAll('#pcj button').forEach(b=>b.onclick=()=>{C.joy=+b.dataset.i;sv();apply();jn();d.querySelectorAll('#pcj button').forEach(x=>x.classList.toggle('on',x===b))})};
 }catch(e){console.warn('pc-controls',e)}})();

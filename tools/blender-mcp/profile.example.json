@@ -1,0 +1,7 @@
+{
+  "name": "Polpal",
+  "working_collection": "AI_Work",
+  "notes": "Objects created by the AI Bridge belong in AI_Work. Add names to the protected lists before starting a session if they must not be edited.",
+  "protected_objects": [],
+  "protected_collections": []
+}

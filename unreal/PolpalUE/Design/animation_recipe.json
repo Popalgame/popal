@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "status": "partially_implemented_engine_verification_pending",
+  "scope": "Editor C++ builds BlendSpace1D, additive Aim Offset for two bipeds, layered AnimBP and montages; first UE5.8 build and visual validation remain pending.",
+  "variables": {
+    "Speed": "float, horizontal velocity magnitude in cm/s",
+    "Direction": "float, signed movement angle in degrees relative to actor forward",
+    "AimYaw": "float, local camera/target yaw in degrees",
+    "AimPitch": "float, local camera/target pitch in degrees",
+    "WorkState": "enum driven by replicated gameplay state",
+    "FootIKEnabled": "bool, false for distant LODs or non-footed rigs"
+  },
+  "locomotion": {
+    "blend_space_1d": {
+      "axis": "BlendSpeed (0..100)",
+      "samples": [
+        "Idle",
+        "Walk_Fwd",
+        "Run_Fwd"
+      ]
+    },
+    "phase_selector": {
+      "state": "LocomotionPhase (0 ground, 1 jump start, 2 fall loop, 3 land)",
+      "clips": [
+        "BlendSpace1D",
+        "Jump_Start",
+        "Fall_Loop",
+        "Land"
+      ],
+      "status": "authored_in_editor_cpp_engine_verification_pending"
+    },
+    "pending": [
+      "directional strafe/back clips",
+      "sequence restart behaviour in UE PIE"
+    ]
+  },
+  "upper_body": {
+    "layered_blend_per_bone": "spine_01",
+    "slots": [
+      "UpperBodyAttack",
+      "UpperBodyWork",
+      "Carry"
+    ],
+    "aim_offset": {
+      "inputs": [
+        "AimYaw",
+        "AimPitch"
+      ],
+      "sample_count_per_biped": 9,
+      "status": "authored_in_editor_cpp_engine_verification_pending"
+    }
+  },
+  "control_rig": {
+    "status": "pending_editor_implementation",
+    "foot_ik": "Native AnimBP ModifyBone pelvis offset and TwoBoneIK from traces for biped and four-foot quadruped authored; avian/blob need separate visual policy. True Control Rig asset/graph remains pending.",
+    "hand_ik": "Native AnimBP TwoBoneIK left hand targets weapon_grip socket when available; actual weapon socket placement and visual result require UE verification."
+  },
+  "montages": [
+    {
+      "clip": "Attack_Melee",
+      "slot": "UpperBodyAttack",
+      "notifies": [
+        {
+          "type": "AN_ToggleHitbox",
+          "fraction": 0.3,
+          "enabled": true
+        },
+        {
+          "type": "AN_ToggleHitbox",
+          "fraction": 0.65,
+          "enabled": false
+        }
+      ]
+    },
+    {
+      "clip": "Attack_Cast_Skill",
+      "slot": "UpperBodyAttack",
+      "notifies": [
+        {
+          "type": "AN_SpawnProjectile",
+          "fraction": 0.55
+        }
+      ]
+    },
+    {
+      "clip": "Work_Hammering",
+      "slot": "UpperBodyWork",
+      "notifies": [
+        {
+          "type": "AN_PlayWorkVFX",
+          "fraction": 0.5,
+          "effect": "hammer_sparks"
+        }
+      ]
+    },
+    {
+      "clip": "Work_Mining",
+      "slot": "UpperBodyWork",
+      "notifies": [
+        {
+          "type": "AN_PlayWorkVFX",
+          "fraction": 0.58,
+          "effect": "mining_sparks"
+        }
+      ]
+    }
+  ],
+  "notify_timing": "Fractions multiply imported sequence duration; confirm impact frames after in-editor preview. Server owns damage/projectile spawn."
+}

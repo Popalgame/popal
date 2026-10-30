@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "status": "authored_in_editor_cpp_engine_verification_pending",
+  "assets": [
+    "BB_Pal",
+    "BT_Pal",
+    "EQS_ShootingPositions"
+  ],
+  "blackboard": {
+    "Activity": "EPalActivity enum",
+    "EnemyActor": "Actor",
+    "WorkLocation": "Vector",
+    "ServiceLocation": "Vector",
+    "Hunger": "float",
+    "SAN": "float",
+    "IsNight": "bool",
+    "HasWork": "bool"
+  },
+  "selector_priority": [
+    "UBTTask_PalNeeds",
+    "UBTTask_PalAttack",
+    "UBTTask_PalWork",
+    "UBTTask_PalWander"
+  ],
+  "navigation": "Prototype project uses Dynamic RuntimeGeneration; switch to DynamicModifiersOnly only after a verified baked base NavMesh. No pathfinding is verified until UE editor run.",
+  "authority": "Assignments, progress, damage and capture outcomes run on the server; clients receive state.",
+  "eqs": {
+    "path": "/Game/Core/AI/EQS_ShootingPositions",
+    "generator": "Donut around UEnvQueryContext_PalEnemy",
+    "tests": [
+      "distance score",
+      "visibility trace filter"
+    ],
+    "runtime": "APalAIController executes SingleResult vector; UE PIE verification pending"
+  }
+}
