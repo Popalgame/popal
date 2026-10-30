@@ -110,6 +110,10 @@
 #btns{right:calc(env(safe-area-inset-right,0px) + 2px)!important}
 #mbt{right:calc(env(safe-area-inset-right,0px) + 2px)!important}
 #bag{right:calc(env(safe-area-inset-right,0px) + 50px)!important}
+/* 0.5.x: кнопка меню — ліворуч під профілем гравця; рюкзак займає її місце в правому куті, підказки новачка — нижче за кнопку */
+html body #mbt{left:calc(env(safe-area-inset-left,0px) + 20px)!important;right:auto!important;top:calc(env(safe-area-inset-top,0px) + 84px)!important}
+html body #bag{right:calc(env(safe-area-inset-right,0px) + 2px)!important}
+html body #guide{top:calc(env(safe-area-inset-top,0px) + 136px)!important}
 #hud{right:calc(env(safe-area-inset-right,0px) + 100px)!important}
 #pdb{position:absolute;left:122px;top:46px;width:20px;height:20px;border-radius:50%;background:rgba(10,20,40,.75);font-size:12px;line-height:20px;text-align:center;pointer-events:none}
 </style>
