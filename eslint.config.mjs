@@ -37,7 +37,7 @@ const PROJECT_GLOBALS = {
   chCount: 'writable', chNearFor: 'writable', chNearest: 'writable', chStore: 'writable',
   chTake: 'writable', cnt: 'writable', colBlocked: 'writable', colList: 'writable',
   colPal: 'writable', colPalStep: 'writable', colR: 'writable', colStep: 'writable',
-  coolF: 'writable', dlgX: 'writable', dmg: 'writable', drawAv: 'writable',
+  coolF: 'writable', dlgX: 'writable', dmg: 'writable', drawAv: 'writable', ec: 'writable',
   drawCrit: 'writable', dropGrave: 'writable', dropLoot: 'writable', elM: 'writable',
   elTip: 'writable', eq: 'writable', eqUp: 'writable', fbDb: 'writable',
   fbU: 'writable', fellB: 'writable', firebase: 'writable', fl: 'writable',
