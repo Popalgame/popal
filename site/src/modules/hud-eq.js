@@ -1,11 +1,15 @@
-/* 0.5.x: панель «куля + у руках» у стилі сучасних ігор-ловилок: дві напівпрозорі плашки з бірюзовою смугою й точками по кутах,
+/* 0.5.x: панель «куля + у руках» у стилі сучасних ігор-ловилок: одна напівпрозора плашка з двох половин (дотик до половини — вибір кулі чи інструмента) з бірюзовою смугою й точками по кутах,
    лічильник куль «003» (зайві нулі тьмяні, порожньо — червоний 0), у правій — інструмент і його міцність.
    ПК: над панеллю підказка «Кинути сферу [R]», під плашками клавіші 3 (наступна куля) і 4 (наступний інструмент); дотик, як і раніше, відкриває вибір. */
 (function(){try{
 const eqp=document.getElementById('eqp'),eb=document.getElementById('eqb'),et=document.getElementById('eqt');if(!eqp||!eb||!et||typeof eqUp!='function')return;
 let fine=false;try{fine=matchMedia('(pointer: fine)').matches}catch(_){}
 const st=document.createElement('style');st.textContent=`
-html body #eqp.pq{gap:10px!important;align-items:flex-end}
+html body #eqp.pq{gap:0!important;align-items:flex-end}
+/* одна панель з двох половин: внутрішні кутові точки прибрано, між половинами — тонка риска */
+#eqp.pq #eqb .pqh::after,#eqp.pq #eqb .pqb::after,#eqp.pq #eqt .pqh::before,#eqp.pq #eqt .pqb::before{display:none}
+#eqp.pq #eqt .pqh,#eqp.pq #eqt .pqb{border-left:1px solid rgba(255,255,255,.22)}
+html body #eqp.pq .eqs:active{transform:none!important}#eqp.pq .eqs:active .pqb{filter:brightness(1.25)}
 html body #eqp.pq .eqs{position:relative!important;display:block!important;width:132px!important;height:auto!important;padding:0!important;margin:0!important;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;font-family:inherit;color:#fff;text-align:left}
 html body #eqp.pq .eqs>small,html body #eqp.pq .eqs>b,html body #eqp.pq .eqs>u{display:none!important}
 #eqp.pq .pqh{display:block;height:13px;background:linear-gradient(#24575c,#1a4146);border-bottom:1px solid rgba(255,255,255,.18);color:#bfe7e2;font-size:9px;font-weight:800;line-height:13px;padding:0 6px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
