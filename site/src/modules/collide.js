@@ -5,7 +5,7 @@
    • попал, який кілька секунд не може дійти до цілі (стіна без проходу), перескакує до неї зі спалахом;
    • попал-супутник, що відстав за стіною, з’являється поруч із гравцем. */
 (function(){try{
-const BR={B_bed:1.0,B_kit:.75,B_wb:.85,B_fur:1.15,B_farm:1.0,B_lamp:.25,B_fen:.9};
+const BR={B_bed:1.0,B_kit:.75,B_wb:.85,B_rep:.8,B_fur:1.15,B_farm:1.0,B_lamp:.25,B_fen:.9};
 /* круглі перешкоди: центр, скрині, будівлі бази */
 function cols(){const L=[...(window.plSceneryObstacles||[])],C=inv._cen;if(C)L.push({x:C[0],z:C[1],r:2.2});
  for(const c of inv._ch||[])L.push({x:c.x,z:c.z,r:.7});

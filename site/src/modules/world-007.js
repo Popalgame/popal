@@ -5,6 +5,7 @@ const BUI=[
 {id:'B_bed',n:'Ліжко',i:'🛏️',c:{w:5,sti:2},d:'Уночі біля ліжка натисніть «Дія», щоб проспати до ранку',p:2,u:1},
 {id:'B_kit',n:'Кухня-багаття',i:'🍲',c:{s:4,w:3},d:'Котелок над багаттям. Без неї їжу не приготувати: тут готуєте ви й попали-кухарі',p:2,u:1},
 {id:'B_wb',n:'Верстак',i:'🪚',c:{w:8,s:4,sti:2},d:'Відкриває металеві інструменти й рюкзак слідопита',p:3,u:1},
+{id:'B_rep',n:'Ремонтний верстак',i:'🔧',c:{w:6,s:5,sti:3},d:'Лагодить сокири й кирки: підійдіть і натисніть «Дія»',p:2,u:1},/* 0.1.29: repair-bench.js */
 {id:'B_fur',n:'Плавильня',i:'🏭',c:{s:10,w:4},d:'Відкриває залізні злитки',p:3,u:1},
 {id:'B_farm',n:'Ягідна грядка',i:'🌱',c:{w:6,be:3},d:'Попали-збирачі приносять більше ягід',p:2,u:1},
 {id:'B_lamp',n:'Ліхтар',i:'🏮',c:{w:2,s:1},d:'Світить уночі',p:1},
@@ -26,6 +27,7 @@ function mkB(id){const g=new THREE.Group(),W=0x8e5a3a,D=0x5a3418,ST=0x8b8f9a;
 if(id=='B_bed'){add(g,B(1,.25,1.8),W,0,.18,0);add(g,B(.9,.15,1.7),0xf4ede0,0,.37,0);add(g,B(.7,.12,.35),0xffffff,0,.48,-.62);add(g,B(.92,.1,1.05),0x5b6bd6,0,.47,.3);add(g,B(1,.6,.1),W,0,.4,-.9)}
 else if(id=='B_kit'){for(let i=0;i<8;i++){const a=i/8*6.28;add(g,S(.14),ST,Math.cos(a)*.5,.1,Math.sin(a)*.5)}add(g,Cy(.28,.22,.3,10),0x3a3a44,0,.62,0);for(const a of[0,2.1,4.2])add(g,Cy(.03,.03,1.2,5),D,Math.cos(a)*.38,.55,Math.sin(a)*.38).rotation.set(Math.sin(a)*.35,0,-Math.cos(a)*.35);const f=new THREE.Mesh(Co(.18,.42,6),FIRE);f.position.y=.24;g.add(f);g.userData.fire=f}
 else if(id=='B_wb'){add(g,B(1.4,.12,.7),W,0,.8,0);for(const x of[-.6,.6])for(const z of[-.28,.28])add(g,B(.1,.8,.1),D,x,.4,z);add(g,B(.5,.04,.2),0xc8cdd8,-.3,.88,.1);add(g,Cy(.03,.03,.4,6),D,.35,.9,0).rotation.z=Math.PI/2;add(g,B(.12,.08,.06),0x8a8f9e,.55,.9,0)}
+else if(id=='B_rep'){add(g,B(1.3,.12,.7),W,0,.78,0);for(const x of[-.55,.55])for(const z of[-.26,.26])add(g,B(.1,.78,.1),D,x,.39,z);add(g,B(.34,.12,.2),0x4a4e58,-.3,.9,0);add(g,B(.5,.08,.14),0x5a5f6a,-.3,1,0);const wh=add(g,Cy(.26,.26,.08,14),ST,.36,1.06,0);wh.rotation.x=Math.PI/2;add(g,Cy(.03,.03,.3,6),D,.36,1.06,0).rotation.x=Math.PI/2;add(g,B(.9,.05,.4),D,0,.25,0)}
 else if(id=='B_fur'&&window.mkFurnace){return mkFurnace()}/* 0.1.27: нова реалістична плавильня — furnace.js */
 else if(id=='B_fur'){add(g,S(.7),ST,0,.55,0).scale.set(1,.85,1);add(g,Cy(.15,.18,.8,8),0x6a6f7a,.32,1.3,-.2);const m=new THREE.Mesh(S(.25),FIRE);m.position.set(0,.42,.56);m.scale.set(1,.8,.4);g.add(m);g.userData.fire=m}
 else if(id=='B_farm'){add(g,B(1.8,.15,1.1),0x6a4a2a,0,.07,0);for(let i=0;i<6;i++){const x=(i%3-1)*.55,z=i<3?-.25:.25;add(g,S(.17),0x3f8a3a,x,.28,z);add(g,S(.05),0x4a5fd6,x+.08,.36,z+.08);add(g,S(.05),0xd93b3b,x-.07,.33,z-.05)}}
