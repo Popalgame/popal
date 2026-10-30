@@ -104,6 +104,6 @@ wild.forEach(w=>{if(Math.hypot(w.x-P.x,w.z-P.z)>26)return;const[a,c]=tp(w.x,w.z)
 const[a,c]=tp(P.x,P.z),fx=Math.sin(P.face||0),fz=Math.cos(P.face||0);x.fillStyle='#fff';x.strokeStyle='#1a2040';x.lineWidth=2;x.beginPath();x.moveTo(a+fx*9,c+fz*9);x.lineTo(a-fx*5+fz*5,c-fz*5-fx*5);x.lineTo(a-fx*5-fz*5,c-fz*5+fx*5);x.closePath();x.stroke();x.fill();
 x.restore();x.fillStyle='#fff';x.font='bold 16px sans-serif';x.textAlign='center';x.fillText('Пн',120,20)}
 /* ---------- цикл ---------- */
-let last=performance.now(),mmT=1;(function loop(){const n=performance.now(),dt=Math.min(.05,(n-last)/1000);last=n;try{dn(dt);if(!menuO&&!ivO){palAttack(dt);shotUp(dt)}placed.forEach(b=>{const f=b.g.userData.fire;if(f)f.scale.y=1+Math.sin(n/120)*.15});mmT+=dt;if(mmT>.3){mmT=0;mm.style.display=menuO?'none':'';if(clk)clk.style.display=mm.style.display;posClk();drawMM()}}catch(e){}requestAnimationFrame(loop)})();
+let last=performance.now(),mmT=1;(function loop(){const n=performance.now(),dt=Math.min(.05,(n-last)/1000);last=n;try{dn(dt);if(!menuO&&!ivO){palAttack(dt);shotUp(dt)}placed.forEach(b=>{const f=b.g.userData.fire;if(f)f.scale.y=1+Math.sin(n/120)*.15});mmT+=dt;if(mmT>.3){mmT=0;mm.style.display=menuO&&!document.body.classList.contains('hedit')?'none':'';/* у редакторі розташування (hud-layout.js) карту видно, щоб її можна було перетягнути */if(clk)clk.style.display=mm.style.display;posClk();drawMM()}}catch(e){}requestAnimationFrame(loop)})();
 try{hud()}catch(_){}
 }catch(e){console.warn('world-007',e)}})();

@@ -1,6 +1,6 @@
 /* 0.1.11: власне розташування інтерфейсу — гравець перетягує джойстик, кнопки, попалів, екіпірування, міні-карту й «Будову», змінює їх розмір і чутливість джойстика; плаваючий джойстик. Позиції — у частках екрана, окремо на кожному пристрої */
 (function(){try{
-const KEY='zi_hud',EL=[['joy','🕹️ Джойстик'],['btns','⚔️ Кнопки дій'],['pw2','🐾 Попали'],['eqp','🎒 Екіпірування'],['mmap','🗺️ Міні-карта'],['bld','🏗️ Будова']];
+const KEY='zi_hud',EL=[['joy','🕹️ Джойстик'],['btns','⚔️ Кнопки дій'],['pw2','🐾 Попали'],['eqp','🎒 Екіпірування'],['mmap','🗺️ Міні-карта'],['bag','🎒 Рюкзак'],['bld','🏗️ Будова']];
 let L={el:{},sens:1,float:0};
 try{Object.assign(L,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 const sv=()=>{try{localStorage.setItem(KEY,JSON.stringify(L))}catch(e){}};
@@ -100,7 +100,9 @@ addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;e.prev
  const x=Math.round((e.clientX-drag.ox)/GRID)*GRID,y=Math.round((e.clientY-drag.oy)/GRID)*GRID;
  drag.el.style.setProperty('left',x+'px','important');drag.el.style.setProperty('top',y+'px','important');clamp(drag.el);
  Object.assign(drag.p,pos(drag.el))},true);
-const end=e=>{if(drag&&e.pointerId===drag.id){drag=null;overlap()}};addEventListener('pointerup',end,true);addEventListener('pointercancel',end,true);
+const end=e=>{if(drag&&e.pointerId===drag.id){drag=null;overlap()}};
+/* у режимі редагування дотик лише вибирає елемент: не відкриваємо рюкзак, не розгортаємо карту тощо */
+addEventListener('click',e=>{if(editing()&&e.target.closest&&e.target.closest('.hmov')){e.stopImmediatePropagation();e.preventDefault()}},true);addEventListener('pointerup',end,true);addEventListener('pointercancel',end,true);
 $('hsz').oninput=()=>{if(!sel)return;const p=ensure(sel),r0=sel.getBoundingClientRect(),cx=r0.left+r0.width/2,cy=r0.top+r0.height/2,s=+$('hsz').value/100;
  p.s=s;sel.style.setProperty('transform','scale('+s+')','important');const r=sel.getBoundingClientRect();
  sel.style.setProperty('left',cx-r.width/2+'px','important');sel.style.setProperty('top',cy-r.height/2+'px','important');clamp(sel);Object.assign(p,pos(sel));ui();overlap()};
@@ -112,7 +114,7 @@ $('hlc').onclick=()=>done(false);$('hlok').onclick=()=>done(true);
 const _pf=pfTab;pfTab=function(t){_pf(t);if(t!='k'&&t!='o')return;const host=$('pcp');if(!host||$('hudp'))return;
  const d=document.createElement('div');d.id='hudp';
  d.innerHTML=`<h4>Розташування на екрані</h4><button class='ob' id='hedb' style='width:100%'>✋ Налаштувати розташування</button>
- <small class='gnote'>Перетягніть джойстик, кнопки, попалів, екіпірування, міні-карту чи «Будову» і змініть їх розмір. Після «Готово» все зафіксовано</small>
+ <small class='gnote'>Перетягніть джойстик, кнопки, попалів, екіпірування, міні-карту, рюкзак чи «Будову» і змініть їх розмір. Після «Готово» все зафіксовано</small>
  <h4>Плаваючий джойстик</h4><div class='gseg' id='hflt'>`+['Вимкнено','Увімкнено'].map((n,i)=>`<button data-i='${i}' class='${i==(L.float?1:0)?'on':''}'>${n}</button>`).join('')+`</div>
  <small class='gnote'>Джойстик зʼявляється там, де торкнетеся лівої частини екрана</small>`;
  host.appendChild(d);$('hedb').onclick=edit;
