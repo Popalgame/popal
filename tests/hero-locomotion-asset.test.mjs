@@ -65,7 +65,9 @@ test('baked legs stay in their lanes, bend forward and keep fixed lengths throug
     assert.ok(Math.abs(k.distanceTo(f)-lengths[side][1])<.0003,a.name+' fixed shin');
     assert.ok(u.z*v.y-u.y*v.z>.0001,a.name+' knee bends forward');
     assert.ok(f.y>.08,a.name+' foot clears flat ground throughout cycle at phase '+i/240+' height '+f.y);
-    assert.ok(f.x*h.x>0,a.name+' own foot lane');assert.ok(Math.abs(f.x-h.x)<.015,a.name+' no sideways knee correction');
+    assert.ok(f.x*h.x>0,a.name+' own foot lane');assert.ok(Math.abs(f.x-h.x)<.05,a.name+' lateral weight shift bounded');
+    const axis=f.clone().sub(h),bend=k.clone().sub(h),plane=new T.Vector3().crossVectors(axis,new T.Vector3(0,0,1)).normalize();
+    assert.ok(Math.abs(bend.dot(plane))<.001,a.name+' knee bends in the hip-ankle plane');
    }
   }
  }

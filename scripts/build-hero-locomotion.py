@@ -23,9 +23,18 @@ PREVIEW = ROOT / "docs/assets/hero-locomotion-preview.png"
 REPORT = ROOT / "docs/assets/hero-locomotion-report.json"
 FPS = 96
 PROFILES = {
-    "walk": dict(frames=72, stride=.36, stance=.52, lift=.070, bob=.012, hip_drop=.025, arm=.10, pitch=.13, game_speed=1.8),
-    "jog": dict(frames=50, stride=.52, stance=.20, lift=.125, bob=.027, hip_drop=.100, arm=.23, pitch=.17, game_speed=5.0),
-    "run": dict(frames=40, stride=.55, stance=.165, lift=.160, bob=.041, hip_drop=.140, arm=.34, pitch=.22, game_speed=8.0),
+    "walk": dict(frames=72, stride=.36, stance=.52, lift=.070, bob=.012, hip_drop=.025, pitch=.13, game_speed=1.8,
+                 pelvis_yaw=4.0, pelvis_roll=2.5, sway=.018, chest_yaw=4.0, chest_roll=1.0, lean=1.0,
+                 arm_left=10.0, arm_right=22.0, elbow_left=17.0, elbow_right=0.0,
+                 elbow_var_left=4.0, elbow_var_right=6.0, shoulder=.8, head_bob=.4, hand=-60.0, hand_sway=4.0, pelvis_pitch=1.2),
+    "jog": dict(frames=50, stride=.52, stance=.20, lift=.125, bob=.027, hip_drop=.100, pitch=.17, game_speed=5.0,
+                pelvis_yaw=6.0, pelvis_roll=3.5, sway=.026, chest_yaw=6.5, chest_roll=1.5, lean=5.0,
+                arm_left=12.0, arm_right=35.0, elbow_left=30.0, elbow_right=40.0,
+                elbow_var_left=6.0, elbow_var_right=12.0, shoulder=1.2, head_bob=.7, hand=-60.0, hand_sway=6.0, pelvis_pitch=1.8),
+    "run": dict(frames=40, stride=.55, stance=.165, lift=.160, bob=.041, hip_drop=.140, pitch=.22, game_speed=8.0,
+                pelvis_yaw=8.0, pelvis_roll=4.5, sway=.032, chest_yaw=9.0, chest_roll=2.0, lean=9.0,
+                arm_left=15.0, arm_right=45.0, elbow_left=36.0, elbow_right=60.0,
+                elbow_var_left=8.0, elbow_var_right=15.0, shoulder=1.6, head_bob=1.0, hand=-60.0, hand_sway=8.0, pelvis_pitch=2.2),
 }
 
 
@@ -56,17 +65,20 @@ def target(phase, profile):
 
 
 def knee_point(hip, ankle, upper, lower):
-    """Exact two-bone sagittal solve, choosing the forward-bending knee."""
-    dy, dz = ankle.y - hip.y, ankle.z - hip.z
-    distance = math.hypot(dy, dz)
+    """Exact two-bone solve in the hip-ankle plane, choosing the forward-bending knee."""
+    axis = ankle - hip
+    distance = axis.length
     if distance > upper + lower - .0001:
         raise ValueError(f"Unreachable ankle: {distance:.3f} > {upper + lower:.3f}")
+    # The knee bends toward -Y (forward), perpendicular to the hip-ankle axis.
+    forward = Vector((0, -1, 0))
+    normal = forward - axis * (forward.dot(axis) / (distance * distance))
+    if normal.length < 1e-6:
+        normal = Vector((0, 0, 1))
+    normal.normalize()
     a = (upper * upper - lower * lower + distance * distance) / (2 * distance)
     height = math.sqrt(max(0.0, upper * upper - a * a))
-    # With a downward leg the negative-Y perpendicular is the anatomical bend.
-    ky = hip.y + a * dy / distance + height * dz / distance
-    kz = hip.z + a * dz / distance - height * dy / distance
-    return Vector((hip.x + (ankle.x - hip.x) * a / distance, ky, kz))
+    return hip + axis * (a / distance) + normal * height
 
 
 def orient_segment(pose_bone, head, tail):
@@ -90,15 +102,24 @@ def pose(arm, phase, profile, base):
         p.rotation_quaternion = base[p.name].copy()
         p.scale = (1, 1, 1)
     hips = bone(arm, "Hips")
-    # Both legs remain within reach at heel strike. Two vertical pulses per cycle.
-    vertical = -profile["hip_drop"] - profile["bob"] * math.cos(4 * math.pi * phase)
-    hips.location = hips.bone.matrix_local.to_3x3().inverted() @ Vector((0, 0, vertical))
+    cycle = 2 * math.pi * phase
+    # Pelvis: yaw follows the forward leg, the swing-side hip drops, and the
+    # body sways over the stance foot. Two vertical pulses per cycle.
+    pelvis_yaw = -math.radians(profile["pelvis_yaw"]) * math.cos(cycle)
+    pelvis_roll = -math.radians(profile["pelvis_roll"]) * math.sin(cycle)
+    world_rotation(hips, (0, 0, 1), pelvis_yaw)
+    world_rotation(hips, (0, 1, 0), pelvis_roll)
+    world_rotation(hips, (1, 0, 0), math.radians(profile["pelvis_pitch"]) * math.cos(2 * cycle))
+    vertical = -profile["hip_drop"] - profile["bob"] * math.cos(2 * cycle)
+    sway = profile["sway"] * math.sin(cycle)
+    hips.location = hips.bone.matrix_local.to_3x3().inverted() @ Vector((sway, 0, vertical))
     bpy.context.view_layer.update()
+    hips_pose = hips.matrix.copy()
+    hips_rest_inv = hips.bone.matrix_local.inverted()
     for side, offset in (("Left", 0), ("Right", .5)):
         up, shin = bone(arm, side + "UpLeg"), bone(arm, side + "Leg")
         foot, toe = bone(arm, side + "Foot"), bone(arm, side + "ToeBase")
-        rest_hip = up.bone.head_local
-        hip = Vector((rest_hip.x, 0, rest_hip.z + vertical))
+        hip = hips_pose @ (hips_rest_inv @ up.bone.head_local)
         y, z, pitch = target(phase + offset, profile)
         ankle = Vector((shin.bone.head_local.x, y, z))
         upper = (up.bone.tail_local - up.bone.head_local).length
@@ -115,15 +136,38 @@ def pose(arm, phase, profile, base):
             t = ((phase + offset) % 1) / profile["stance"]
             if t > .75:
                 world_rotation(toe, (1, 0, 0), -.14 * smooth((t - .75) / .25))
-    # Upper body uses the neutral source pose, with restrained counter motion.
+    # Torso: the shoulders counter-rotate against the pelvis, the spine leans
+    # into jogging and running, and the head stays level over the stance foot.
+    spine = (("Spine", .35), ("Spine1", .35), ("Spine2", .30))
+    chest_yaw = math.radians(profile["chest_yaw"]) * math.cos(cycle + .15)
+    chest_roll = math.radians(profile["chest_roll"]) * math.sin(cycle + .1)
+    lean = math.radians(profile["lean"])
+    for name, weight in spine:
+        world_rotation(bone(arm, name), (0, 0, 1), (chest_yaw - pelvis_yaw) * weight)
+        world_rotation(bone(arm, name), (0, 1, 0), (chest_roll - pelvis_roll) * weight)
+        world_rotation(bone(arm, name), (1, 0, 0), lean * weight)
+    nod = -0.8 * lean + math.radians(profile["head_bob"]) * math.cos(2 * cycle)
+    for name, weight in (("Neck", .35), ("Head", .65)):
+        world_rotation(bone(arm, name), (0, 0, 1), -chest_yaw * weight)
+        world_rotation(bone(arm, name), (0, 1, 0), -chest_roll * weight)
+        world_rotation(bone(arm, name), (1, 0, 0), nod * weight)
+    # Arms swing against the legs, peaking at heel strike; the elbows carry a
+    # base bend plus extra flex on the forward swing.
     for side, sign in (("Left", 1), ("Right", -1)):
         p = bone(arm, side + "Arm")
-        world_rotation(p, (1, 0, 0), sign * profile["arm"] * math.sin(2 * math.pi * phase))
-        world_rotation(p, (0, 0, 1), sign * .015 * math.sin(2 * math.pi * phase))
-    if profile["game_speed"] >= 5:
-        world_rotation(bone(arm, "Spine"), (1, 0, 0), .045 if profile["game_speed"] < 8 else .07)
-    world_rotation(bone(arm, "Spine"), (0, 0, 1), .025 * math.sin(2 * math.pi * phase))
-    world_rotation(bone(arm, "Spine2"), (0, 0, 1), -.035 * math.sin(2 * math.pi * phase))
+        p.rotation_quaternion = Quaternion((1, 0, 0), math.radians(-70 if sign > 0 else -68))
+        world_rotation(p, (1, 0, 0), sign * math.radians(profile["arm_left" if sign > 0 else "arm_right"]) * math.cos(cycle - .35))
+        world_rotation(p, (0, 0, 1), sign * .02 * math.sin(cycle - .35))
+        fore = bone(arm, side + "ForeArm")
+        swing = .5 - sign * .5 * math.cos(cycle - .35)
+        extra = profile["elbow_left" if sign > 0 else "elbow_right"] + profile["elbow_var_left" if sign > 0 else "elbow_var_right"] * swing
+        fore.rotation_quaternion = fore.rotation_quaternion @ Quaternion((0, 0, 1), math.radians(extra) * (-1 if sign > 0 else 1))
+        if sign > 0:
+            # The sword hand is carried blade-down, trailing the arm like a weight.
+            hand = bone(arm, side + "Hand")
+            trail = profile["hand"] + profile["hand_sway"] * math.sin(cycle - 1.0)
+            hand.rotation_quaternion = Quaternion((1, 0, 0), math.radians(trail)) @ hand.rotation_quaternion
+        world_rotation(bone(arm, side + "Shoulder"), (0, 0, 1), sign * math.radians(profile["shoulder"]) * math.cos(cycle))
     bpy.context.view_layer.update()
 
 
