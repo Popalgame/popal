@@ -53,6 +53,21 @@ Punkty pomiarowe:
 - `lower_leg_min` — najwęższy przekrój nóg,
 - `ground` — maksymalna szerokość w ostatnim 1% wysokości.
 
+Sekcja `face` (opcjonalna, gdy na obrazie widać parę tęczówek i skórę twarzy):
+
+- wykrywa dwa turkusowe/niebieskie plamy tęczówek w górnej części postaci
+  (podobny rozmiar, podobna wysokość, symetria względem osi),
+- mierzy widoczną skórę twarzy (HSV: ciepłe, mało nasycone plamy), jej
+  najszerszy przekrój, brodę i wysokość widocznej twarzy,
+- podaje linię oczu, rozstaw źrenic i rozmiar tęczówki w pikselach
+  i milimetrach,
+- **szerokość twarzy to skóra (zwykle z uszami), nie objętość włosów** —
+  `head_max` obejmuje włosy, `face.face_width_mm` nie,
+- brak pary oczu oznacza `face: null`; narzędzie nie zgaduje twarzy.
+
+Wymaga `scipy` (etykietowanie komponentów). Bez `scipy` sekcja `face`
+nie powstaje, reszta pomiaru działa jak dotąd.
+
 ## Porównanie z renderem
 
 ```bash
@@ -63,8 +78,12 @@ python3 tools/character-scan/scan.py compare \
 
 Wynik zawiera `compare.json` oraz `compare.png` (referencja na czerwono,
 kandydat na niebiesko, część wspólna na fioletowo). `silhouette_iou` to
-stosunek części wspólnej do sumy sylwetek po unormowaniu wysokości. Raport
-podaje też szerokości względne w dziewięciu punktach wysokości.
+stosunek części wspólnej do sumy sylwetek po unormowaniu wysokości.
+Sylwetki są **wyrównane po osi postaci** (nie po środku kadru), więc
+referencja z rekwizytami po jednej stronie nie przesuwa kandydata.
+Raport podaje też szerokości względne w dziewięciu punktach wysokości —
+liczone jako suma przebiegów w oknie ±6% wysokości wokół osi, dzięki czemu
+młot trzymany w dłoni nie zawyża pomiaru torsu.
 
 Warunki sensownego porównania:
 

@@ -122,6 +122,186 @@ def detect_axis(mask: np.ndarray, y0: int, height: int) -> int:
     return int(round(float(np.median(centers))))
 
 
+def detect_face(
+    rgb: np.ndarray, axis: int, y0: int, height: int
+) -> dict | None:
+    """Zmierz widoczną twarz: szerokość skóry, linię oczu i brodę.
+
+    Działa tylko dla ilustracji, na której widać dwa tęczówkowe plamy
+    (np. niebieskie/zielone oczy) oraz skórę twarzy. Brak pary oczu oznacza
+    brak pomiaru — nie zgadujemy twarzy z dowolnej plamy koloru.
+
+    Zwraca piksele i milimetry; to nadal pomiar 2D, nie model 3D.
+    """
+    try:
+        from scipy import ndimage
+    except ImportError:
+        return None
+
+    hsv = np.asarray(Image.fromarray(rgb).convert("HSV")).astype(np.int16)
+    hue, saturation, value = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    head_top = y0 + int(0.18 * height)
+    head_bottom = y0 + int(0.58 * height)
+    half_band = int(0.22 * height)
+    x0 = max(0, axis - half_band)
+    x1 = min(rgb.shape[1], axis + half_band + 1)
+
+    # Tęczówki: turkusowe/niebieskie plamy w górnej części postaci.
+    teal = (
+        (hue >= 100)
+        & (hue <= 155)
+        & (saturation >= 65)
+        & (value >= 40)
+    )
+    teal_region = np.zeros_like(teal)
+    teal_region[head_top:head_bottom, x0:x1] = teal[head_top:head_bottom, x0:x1]
+    teal_region = ndimage.binary_closing(teal_region, structure=np.ones((3, 3)))
+    labels, count = ndimage.label(teal_region)
+    candidates = []
+    for index in range(1, count + 1):
+        ys, xs = np.nonzero(labels == index)
+        area = int(len(xs))
+        if area < max(80, int(0.00008 * height * height)):
+            continue
+        width = int(xs.max() - xs.min() + 1)
+        box_height = int(ys.max() - ys.min() + 1)
+        if width < max(4, int(0.008 * height)) or width > int(0.07 * height):
+            continue
+        if box_height <= 0 or not 0.55 <= box_height / width <= 1.9:
+            continue
+        candidates.append(
+            {
+                "area": area,
+                "cx": float(xs.mean()),
+                "cy": float(ys.mean()),
+                "width": width,
+                "height": box_height,
+            }
+        )
+
+    pair = None
+    best_score = -1.0
+    for first_index, first in enumerate(candidates):
+        for second in candidates[first_index + 1 :]:
+            if abs(first["cy"] - second["cy"]) > 0.035 * height:
+                continue
+            separation = abs(first["cx"] - second["cx"])
+            if not 0.03 * height <= separation <= 0.20 * height:
+                continue
+            middle = (first["cx"] + second["cx"]) / 2.0
+            if abs(middle - axis) > 0.08 * height:
+                continue
+            area_ratio = min(first["area"], second["area"]) / max(
+                first["area"], second["area"]
+            )
+            if area_ratio < 0.55:
+                continue
+            score = (first["area"] + second["area"]) * area_ratio
+            score -= abs(middle - axis) * 30.0
+            if score > best_score:
+                best_score = score
+                pair = (first, second)
+    if pair is None:
+        return None
+
+    left_eye, right_eye = sorted(pair, key=lambda item: item["cx"])
+    eye_y = (left_eye["cy"] + right_eye["cy"]) / 2.0
+
+    # Skóra twarzy: ciepłe, mało nasycone plamy (odcinają różowe włosy).
+    skin = (
+        (hue >= 5)
+        & (hue <= 28)
+        & (saturation >= 25)
+        & (saturation <= 140)
+        & (value >= 95)
+    )
+    skin_region = np.zeros_like(skin)
+    skin_region[head_top:head_bottom, x0:x1] = skin[
+        head_top:head_bottom, x0:x1
+    ]
+    skin_region = ndimage.binary_closing(skin_region, structure=np.ones((5, 5)))
+    skin_region = ndimage.binary_opening(skin_region, structure=np.ones((3, 3)))
+    labels, count = ndimage.label(skin_region)
+    if count == 0:
+        return None
+    eye_middle = int(round((left_eye["cx"] + right_eye["cx"]) / 2.0))
+    eye_row = int(round(eye_y))
+    chosen = int(labels[eye_row, eye_middle])
+    if chosen == 0:
+        sizes = ndimage.sum(skin_region, labels, range(1, count + 1))
+        chosen = int(np.argmax(sizes)) + 1
+    face = labels == chosen
+
+    def component_width(row: int) -> int:
+        xs = np.flatnonzero(face[row])
+        return int(xs.max() - xs.min() + 1) if xs.size else 0
+
+    band_top = max(head_top, eye_row - int(0.04 * height))
+    band_bottom = min(head_bottom - 1, eye_row + int(0.06 * height))
+    widths = [(row, component_width(row)) for row in range(band_top, band_bottom + 1)]
+    face_width_y, face_width = max(widths, key=lambda item: item[1])
+    if face_width <= 0:
+        return None
+
+    # Broda: poniżej najszerszego rzędu szerokość spada do szyi.
+    threshold = 0.5 * face_width
+    chin_y = None
+    below = 0
+    for row in range(face_width_y, min(head_bottom, rgb.shape[0])):
+        if component_width(row) < threshold:
+            below += 1
+            if below >= 5:
+                chin_y = row - 4
+                break
+        else:
+            below = 0
+    if chin_y is None:
+        chin_y = min(head_bottom - 1, face_width_y + int(0.16 * height))
+
+    skin_rows = np.flatnonzero(face.any(axis=1))
+    skin_top = int(skin_rows[0]) if skin_rows.size else face_width_y
+    face_height = max(1, chin_y - skin_top)
+
+    return {
+        "method": "hsv-skin+iris-pair",
+        "face_width_px": face_width,
+        "face_width_y": int(face_width_y),
+        "eye_line_y": int(round(eye_y)),
+        "eye_centers_px": [int(round(left_eye["cx"])), int(round(right_eye["cx"]))],
+        "iris_width_px": int(round((left_eye["width"] + right_eye["width"]) / 2.0)),
+        "iris_height_px": int(
+            round((left_eye["height"] + right_eye["height"]) / 2.0)
+        ),
+        "chin_y": int(chin_y),
+        "skin_top_y": int(skin_top),
+        "visible_face_height_px": int(face_height),
+        "skin_bbox_px": [
+            int(np.flatnonzero(face.any(axis=0))[0]),
+            int(skin_top),
+            int(np.flatnonzero(face.any(axis=0))[-1]),
+            int(np.flatnonzero(face.any(axis=1))[-1]),
+        ],
+        "confidence": round(
+            min(1.0, (left_eye["area"] + right_eye["area"]) / (0.002 * height * height)),
+            3,
+        ),
+    }
+
+
+def row_width_near_axis(row: np.ndarray, axis: int, window: int) -> int:
+    """Szerokość sylwetki przy osi: suma przebiegów w oknie wokół osi.
+
+    Rekwizyty trzymane w dłoni (młot, kule) leżą poza oknem i nie zawyżają
+    pomiaru; ręce w T-pozie, jeśli łączą się z torem, nadal liczą się w pełni.
+    """
+    total = 0
+    for start, end in row_runs(row):
+        if end < axis - window or start > axis + window:
+            continue
+        total += end - start + 1
+    return total
+
+
 def detect_crotch(
     mask: np.ndarray, y0: int, y1: int, axis: int, height: int, width: int
 ) -> int | None:
@@ -255,6 +435,20 @@ def measure(path: Path, height_mm: float) -> tuple[dict, np.ndarray, np.ndarray]
     }
 
     axis = detect_axis(mask, y0, height)
+
+    face = detect_face(rgb, axis, y0, height)
+    if face is not None:
+        face["face_width_mm"] = mm(face["face_width_px"])
+        face["face_width_y_ratio"] = ratio(face["face_width_y"])
+        face["eye_line_y_ratio"] = ratio(face["eye_line_y"])
+        face["eye_spacing_px"] = abs(face["eye_centers_px"][1] - face["eye_centers_px"][0])
+        face["eye_spacing_mm"] = mm(face["eye_spacing_px"])
+        face["iris_width_mm"] = mm(face["iris_width_px"])
+        face["iris_height_mm"] = mm(face["iris_height_px"])
+        face["chin_y_ratio"] = ratio(face["chin_y"])
+        face["skin_top_y_ratio"] = ratio(face["skin_top_y"])
+        face["visible_face_height_mm"] = mm(face["visible_face_height_px"])
+
     crotch_y = detect_crotch(mask, y0, y1, axis, height, width)
     if crotch_y is None:
         crotch_y = y0 + int(0.62 * height)
@@ -339,6 +533,7 @@ def measure(path: Path, height_mm: float) -> tuple[dict, np.ndarray, np.ndarray]
             "clipped": clipped,
         },
         "landmarks": [asdict(item) for item in landmarks],
+        "face": face,
         "ratios": {
             "legs": round((y1 - crotch_y) / height, 4),
             "arm_span_to_height": round(float(smooth[arm_y]) / height, 4),
@@ -422,6 +617,26 @@ def draw_overlay(data: dict, rgb: np.ndarray, mask: np.ndarray) -> Image.Image:
         )
         draw.text((tx, ty), text, font=small, fill=color + (255,))
 
+    face = data.get("face")
+    if face:
+        eye_line = face["eye_line_y"]
+        face_x0, _, face_x1, _ = face["skin_bbox_px"]
+        draw.line(
+            [(face_x0, eye_line), (face_x1, eye_line)],
+            fill=(0, 120, 200, 230),
+            width=2,
+        )
+        label = (
+            f"Twarz: {face['face_width_mm']:.1f} mm | "
+            f"oczy: {face['eye_spacing_mm']:.1f} mm"
+        )
+        draw.text(
+            (face_x0, max(4, eye_line - 22)),
+            label,
+            font=small,
+            fill=(0, 90, 170),
+        )
+
     footer = (
         f"{data['scale']['height_px']} px = {data['scale']['height_mm']:.0f} mm | "
         f"{data['scale']['mm_per_px']:.3f} mm/px | "
@@ -473,6 +688,26 @@ def write_report(data: dict, path: Path) -> None:
     lines += ["", "## Proporcje", ""]
     for key, value in data["ratios"].items():
         lines.append(f"- `{key}`: {value * 100:.1f}% wysokości")
+    face = data.get("face")
+    if face:
+        lines += [
+            "",
+            "## Twarz (widoczna skóra i tęczówki)",
+            "",
+            f"- Szerokość twarzy: {face['face_width_mm']:.1f} mm "
+            f"({face['face_width_px']} px, y={face['face_width_y']})",
+            f"- Linia oczu: y={face['eye_line_y']} "
+            f"({face['eye_line_y_ratio'] * 100:.1f}% wysokości), "
+            f"rozstaw {face['eye_spacing_mm']:.1f} mm",
+            f"- Tęczówka: {face['iris_width_mm']:.1f} × "
+            f"{face['iris_height_mm']:.1f} mm",
+            f"- Broda: y={face['chin_y']} "
+            f"({face['chin_y_ratio'] * 100:.1f}% wysokości)",
+            f"- Widoczna wysokość twarzy: {face['visible_face_height_mm']:.1f} mm",
+            "",
+            "Szerokość twarzy obejmuje widoczną skórę (zwykle także uszy), "
+            "a nie objętość włosów. To nadal pomiar z przodu.",
+        ]
     lines += ["", "## Paleta", "", "| Kolor | HEX | Udział | Zakres Y |", "| --- | --- | ---: | ---: |"]
     for item in data["palette"]:
         lines.append(
@@ -542,7 +777,11 @@ def command_scan(args: argparse.Namespace) -> int:
 
 
 def mask_to_canvas(
-    mask: np.ndarray, target_height: int, canvas_width: int, canvas_height: int
+    mask: np.ndarray,
+    target_height: int,
+    canvas_width: int,
+    canvas_height: int,
+    axis_x: float | None = None,
 ) -> np.ndarray:
     rows = np.flatnonzero(mask.any(axis=1))
     cols = np.flatnonzero(mask.any(axis=0))
@@ -554,9 +793,23 @@ def mask_to_canvas(
     )
     array = np.asarray(resized) > 127
     canvas = np.zeros((canvas_height, canvas_width), dtype=bool)
-    x = (canvas_width - new_width) // 2
+    # Wyrównaj po osi postaci, nie po środku kadru: referencje z rekwizytami
+    # po jednej stronie nie przesuwają wtedy kandydata względem ciała.
+    if axis_x is None:
+        axis_x = (cols[0] + cols[-1]) / 2.0
+    axis_in_crop = (axis_x - cols[0]) * scale
+    x = int(round(canvas_width / 2.0 - axis_in_crop))
     y = canvas_height - target_height
-    canvas[y : y + target_height, x : x + new_width] = array
+    source_x0, dest_x0 = 0, x
+    source_x1, dest_x1 = new_width, x + new_width
+    if dest_x0 < 0:
+        source_x0 = -dest_x0
+        dest_x0 = 0
+    if dest_x1 > canvas_width:
+        source_x1 -= dest_x1 - canvas_width
+        dest_x1 = canvas_width
+    if source_x1 > source_x0 and dest_x0 < dest_x1:
+        canvas[y : y + target_height, dest_x0:dest_x1] = array[:, source_x0:source_x1]
     return canvas
 
 
@@ -576,24 +829,30 @@ def command_compare(args: argparse.Namespace) -> int:
     canvas_width = max(
         ref_data["character"]["width_px"], cand_data["character"]["width_px"]
     ) + 40
-    ref_canvas = mask_to_canvas(ref_mask, ref_height, canvas_width, canvas_height)
-    cand_canvas = mask_to_canvas(cand_mask, ref_height, canvas_width, canvas_height)
+    ref_axis = ref_data["character"]["axis_x"]
+    cand_axis = cand_data["character"]["axis_x"]
+    ref_canvas = mask_to_canvas(
+        ref_mask, ref_height, canvas_width, canvas_height, axis_x=ref_axis
+    )
+    cand_canvas = mask_to_canvas(
+        cand_mask, ref_height, canvas_width, canvas_height, axis_x=cand_axis
+    )
 
     intersection = np.logical_and(ref_canvas, cand_canvas).sum()
     union = np.logical_or(ref_canvas, cand_canvas).sum()
     iou = float(intersection / union) if union else 0.0
 
-    ref_axis = ref_data["character"]["axis_x"]
     deltas = []
+    window = max(4, int(0.06 * ref_height))
     for fraction in (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9):
         ref_row = int(round(ref_data["character"]["bbox_px"][1] + fraction * ref_height))
         cand_row = int(round(cand_data["character"]["bbox_px"][1] + fraction * cand_height))
         ref_row = min(ref_row, ref_data["character"]["bbox_px"][3])
         cand_row = min(cand_row, cand_data["character"]["bbox_px"][3])
-        ref_runs = row_runs(ref_mask[ref_row])
-        cand_runs = row_runs(cand_mask[cand_row])
-        ref_width = (ref_runs[-1][1] - ref_runs[0][0] + 1) / ref_height if ref_runs else 0
-        cand_width = (cand_runs[-1][1] - cand_runs[0][0] + 1) / cand_height if cand_runs else 0
+        ref_width = row_width_near_axis(ref_mask[ref_row], ref_axis, window) / ref_height
+        cand_width = (
+            row_width_near_axis(cand_mask[cand_row], cand_axis, window) / cand_height
+        )
         deltas.append(
             {
                 "fraction": fraction,
@@ -614,9 +873,12 @@ def command_compare(args: argparse.Namespace) -> int:
         "silhouette_iou": round(iou, 4),
         "width_at_fraction": deltas,
         "reference_axis_x": ref_axis,
+        "candidate_axis_x": cand_axis,
         "warnings": [
             "IoU porównuje tylko widok z przodu; nie ocenia głębokości, tyłu, "
-            "topologii ani jakości ruchu.",
+            "topologii ani jakości ruchu. Sylwetki są wyrównane po osi postaci, "
+            "a szerokości liczone w oknie ±6% wysokości wokół osi (bez rekwizytów "
+            "trzymanych w dłoni).",
         ],
     }
     if ref_data["warnings"] or cand_data["warnings"]:
