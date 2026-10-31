@@ -15,8 +15,8 @@ window.pidClaim=claim;
 if(ok())firebase.auth().onAuthStateChanged(async u=>{if(!u){myPid=null;window.pidErr=null;show();return}window.pidErr=null;
 /* сейв на пристрої — іншого акаунта: його імʼя цьому акаунту не реєструємо (core-world.js завантажить власний прогрес) */
 let foreign=false;try{const o=localStorage.getItem('zi_uid');foreign=!!o&&o!==u.uid}catch(_){}
-try{const p=await ensureProfile(u,foreign?'Меглен':null);
-if(!p.key&&!foreign&&!window.zNoSave){try{await claim(u,pname)}catch(e){if(e.code=='name-taken')msg('⚠️ Імʼя «'+pname+'» вже зайняте іншим гравцем. Змініть його в профілі');else msg(err(e))}}
+try{const p=await ensureProfile(u,foreign?'Гість':null);
+if(!p.key&&!foreign&&!window.zNoSave&&pname!=='Гість'){try{await claim(u,pname)}catch(e){if(e.code=='name-taken')msg('⚠️ Імʼя «'+pname+'» вже зайняте іншим гравцем. Змініть його в профілі');else msg(err(e))}}
 else if(p.name&&p.name!==pname){pname=p.name;const nm=document.getElementById('nm');if(nm)nm.textContent=pname;save()}}catch(e){window.pidErr=err(e);show();msg(err(e))}});
 document.addEventListener('click',async e=>{const b=e.target.closest('#ccgo,#pns');if(!b||b.dataset.ok)return;e.stopImmediatePropagation();e.preventDefault();
 const inp=document.getElementById(b.id=='ccgo'?'ccn':'pni'),name=((inp&&inp.value)||'').trim().replace(/\s+/g,' ');
