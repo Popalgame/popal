@@ -1,13 +1,13 @@
 /* 0.5.x: насіння, грядки, лежанки й верстаки за рівнем.
    • З ягідних кущів інколи випадає насіння 🌰 (герою й попалам-збирачам).
-   • Грядка (B_garden, world-007.js) — 6 лунок: посадили насіння → паросток → кущик → ягоди (GROW_MS). По грядці можна ходити.
+   • Грядка (B_garden, world-007.js) — 9 лунок (3×3, з 0.2.7; сусідні грядки при встановленні примагнічуються): посадили насіння → паросток → кущик → ягоди (GROW_MS). По грядці можна ходити.
      Біля грядки «Дія» збирає стиглі кущики (2–3 ягоди, інколи насіння назад) і садить насіння в порожні лунки.
      Попали-збирачі з бригади роблять те саме (pal-ai.js, стан «farm»), насіння беруть зі скринь.
    • Лежанки (B_nest2 — 2 місця, B_nest5 — 5): попали без роботи лягають на вільне місце й сплять.
    • Кулі за рідкістю: зелену — біля Верстака I, синю — Верстака II, червону — Верстака III (старший верстак підходить і для молодших). */
 (function(){try{
 if(typeof inv=='undefined')return;
-const GROW_MS=4*60*1000,SLOTS=[[-1.1,-.55],[0,-.55],[1.1,-.55],[-1.1,.55],[0,.55],[1.1,.55]];
+const GROW_MS=4*60*1000,SLOTS=[[-.92,-.92],[0,-.92],[.92,-.92],[-.92,0],[0,0],[.92,0],[-.92,.92],[0,.92],[.92,.92]],NS=SLOTS.length;
 IT.sd=[(window.plIconSrc&&plIconSrc('sd')&&window.plIcon)?plIcon('sd'):'🌰','Насіння ягід'];if(inv.sd==null)inv.sd=0;
 if(!inv._gdn||typeof inv._gdn!='object')inv._gdn={};
 const placed=()=>window.BPLACED||[];
@@ -15,7 +15,7 @@ const gkey=b=>Math.round(b.x*10)+','+Math.round(b.z*10);
 const toW=(b,lx,lz)=>{const r=b.g.rotation.y,c=Math.cos(r),s=Math.sin(r);return[b.x+lx*c+lz*s,b.z-lx*s+lz*c]};
 const toL=(b,x,z)=>{const r=b.g.rotation.y,c=Math.cos(r),s=Math.sin(r),dx=x-b.x,dz=z-b.z;return[dx*c-dz*s,dx*s+dz*c]};
 const gardens=()=>placed().filter(b=>b.id=='B_garden');
-const plots=b=>{const k=gkey(b);let a=inv._gdn[k];if(!Array.isArray(a)||a.length!=6)a=inv._gdn[k]=SLOTS.map(()=>0);return a};/* 0 — порожньо, інакше час посадки */
+const plots=b=>{const k=gkey(b);let a=inv._gdn[k];if(!Array.isArray(a))a=inv._gdn[k]=SLOTS.map(()=>0);while(a.length<NS)a.push(0);/* старі грядки на 6 лунок: посаджене лишається, додаються 3 порожні */if(a.length>NS)a.length=NS;return a};/* 0 — порожньо, інакше час посадки */
 const stage=t=>!t?0:Math.min(3,1+Math.floor((Date.now()-t)/GROW_MS*2));/* 1 паросток, 2 кущик, 3 стиглі ягоди */
 const ripe=t=>stage(t)==3;
 
@@ -28,19 +28,19 @@ function plant(st){const g=new THREE.Group();
  else{const r=st==2?.17:.23;for(let i=0;i<5;i++){const a=i/5*6.28,l=new THREE.Mesh(SPH,i%2?LEAF:LEAF2);l.scale.setScalar(r*(.75+.1*(i%3)));l.position.set(Math.cos(a)*r*.6,.3+r*.7+(i%2)*.05,Math.sin(a)*r*.6);l.castShadow=true;g.add(l)}
   if(st==3)for(let i=0;i<9;i++){const a=i*2.4,b=new THREE.Mesh(SPH,i%3?BER:BER2);b.scale.setScalar(.045);b.position.set(Math.cos(a)*r*.9,.32+r*(.4+.5*((i*7)%5)/5),Math.sin(a)*r*.9);g.add(b)}}
  return g}
-function sync(){for(const b of gardens()){const a=plots(b);b.g.userData.pl=b.g.userData.pl||[];for(let i=0;i<6;i++){const st=stage(a[i]),cur=b.g.userData.pl[i];if(cur&&cur.userData.st===st)continue;
+function sync(){for(const b of gardens()){const a=plots(b);b.g.userData.pl=b.g.userData.pl||[];for(let i=0;i<NS;i++){const st=stage(a[i]),cur=b.g.userData.pl[i];if(cur&&cur.userData.st===st)continue;
   if(cur){b.g.remove(cur)}if(!st){b.g.userData.pl[i]=null;continue}const m=plant(st);m.userData.st=st;m.position.set(SLOTS[i][0],0,SLOTS[i][1]);b.g.add(m);b.g.userData.pl[i]=m}}}
 setInterval(sync,1500);setTimeout(sync,500);
 
 /* ---------- садіння й збирання ---------- */
 function harvest(b,i){const a=plots(b);if(!ripe(a[i]))return null;a[i]=0;const be=2+(Math.random()<.5?1:0),sd=Math.random()<.45?1:0;sync();return{be,sd}}
 function sow(b,i){const a=plots(b);if(a[i])return false;a[i]=Date.now();sync();return true}
-const gtNear=(x,z,b,m)=>{const[lx,lz]=toL(b,x,z);return Math.abs(lx)<1.8+m&&Math.abs(lz)<1.2+m};
-function playerGarden(){for(const b of gardens())if(gtNear(P.x,P.z,b,.9))return b;return null}
+const gtNear=(x,z,b,m)=>{const[lx,lz]=toL(b,x,z);return Math.abs(lx)<1.5+m&&Math.abs(lz)<1.5+m};
+function playerGarden(){let best=null,bd=1e9;for(const b of gardens())if(gtNear(P.x,P.z,b,.9)){const d=Math.hypot(b.x-P.x,b.z-P.z);if(d<bd){bd=d;best=b}}return best}/* грядки стоять впритул — беремо найближчу */
 const pl_=(n,f)=>{const m=n%10,h=n%100;return n+' '+(m==1&&h!=11?f[0]:m>=2&&m<=4&&(h<12||h>14)?f[1]:f[2])};/* 1 ягода, 2 ягоди, 5 ягід */
-function tendByHand(b){const a=plots(b);let got=0,gs=0,sown=0;for(let i=0;i<6;i++){const r=harvest(b,i);if(r){got+=r.be;gs+=r.sd}}
+function tendByHand(b){const a=plots(b);let got=0,gs=0,sown=0;for(let i=0;i<NS;i++){const r=harvest(b,i);if(r){got+=r.be;gs+=r.sd}}
  if(got){inv.be=(inv.be||0)+got;inv.sd=(inv.sd||0)+gs}
- for(let i=0;i<6;i++)if(!a[i]&&inv.sd>0){inv.sd--;sow(b,i);sown++}
+ for(let i=0;i<NS;i++)if(!a[i]&&inv.sd>0){inv.sd--;sow(b,i);sown++}
  const left=a.filter(t=>t&&!ripe(t)),mins=left.length?Math.ceil(Math.min(...left.map(t=>GROW_MS-(Date.now()-t)))/60000):0;
  msg(got||sown?(got?'🫐 Зібрано '+pl_(got,['ягоду','ягоди','ягід'])+(gs?' і '+pl_(gs,['насінину','насінини','насінин']):'')+'. ':'')+(sown?'🌱 Посаджено '+pl_(sown,['кущик','кущики','кущиків'])+'. ':'')+(left.length?'Дозріють за ~'+Math.max(1,mins)+' хв':''):
   a.every(t=>!t)?'🌰 Немає насіння. Воно випадає з ягідних кущів':left.length?'🌱 Ще ростуть — дозріють за ~'+Math.max(1,mins)+' хв':'🌱 Грядка засаджена');
@@ -58,7 +58,7 @@ const claimed=new Map();/* "сад:лунка" → попал */
 window.GARDEN={
  /* завдання для збирача: стиглий кущик або порожня лунка, якщо в скринях є насіння */
  task(p){let best=null,bd=1e9;const seeds=window.chCount?chCount('sd'):0;
-  for(const b of gardens()){const a=plots(b);for(let i=0;i<6;i++){const k=gkey(b)+':'+i,c=claimed.get(k);if(c&&c!==p&&c.ai&&c.ai.s=='farm')continue;
+  for(const b of gardens()){const a=plots(b);for(let i=0;i<NS;i++){const k=gkey(b)+':'+i,c=claimed.get(k);if(c&&c!==p&&c.ai&&c.ai.s=='farm')continue;
    const job=ripe(a[i])?'pick':(!a[i]&&seeds>0?'sow':null);if(!job)continue;const[x,z]=toW(b,SLOTS[i][0],SLOTS[i][1]),d=Math.hypot(x-p.x,z-p.z)+(job=='sow'?1000:0);/* спершу збирає стиглі, потім садить */if(d<bd){bd=d;best={b,i,x,z,job,k}}}}
   if(best)claimed.set(best.k,p);return best},
  done(t,p){claimed.delete(t.k);if(t.job=='pick')return harvest(t.b,t.i);if(window.chTake&&chTake('sd',1)){sow(t.b,t.i);return{sown:1}}return null},

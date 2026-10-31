@@ -39,15 +39,17 @@ function check(opt,x,z){let h=0;try{h=H(x,z)}catch(_){}if(h<-.3)return 'Тут �
  for(const c of(window.colList?colList():[])){if(Math.hypot(x-c.x,z-c.z)<c.r+opt.r+.15)return 'Заважає інша будівля'}
  if(Math.hypot(x-P.x,z-P.z)<opt.r+.3)return 'Відійдіть трохи — об’єкт стоїть на вас';
  return opt.valid?opt.valid(x,z)||'':''}
-/* opt: {name, mk()→Group, r — радіус, dist — відстань перед героєм, center — це Попал-центр, valid(x,z)→'' або причина, onOk(x,z,ry)} */
+/* opt: {name, mk()→Group, r — радіус, dist — відстань перед героєм, center — це Попал-центр, valid(x,z)→'' або причина,
+   snap(x,z)→{x,z,ry,why} або null — «магніт» до сусіда, onOk(x,z,ry)} */
 window.plPlace=function(opt){stop();try{if(typeof ivO!=='undefined'&&ivO){const x=$('ivx');if(x)x.click()}}catch(_){}
- const g=opt.mk(),ms=ghostify(g);sc.add(g);PM={opt,g,ms,ry:0,x:P.x,z:P.z,why:''};
+ const g=opt.mk(),ms=ghostify(g);sc.add(g);PM={opt,g,ms,ry:0,x:P.x,z:P.z,why:'',okT:''};
  ui.querySelector('b').textContent=opt.name;ui.style.display='block';document.body.classList.add('pmode')};
 window.plPlacing=()=>!!PM;
 /* привид стоїть перед героєм у напрямку погляду камери (його завжди видно на екрані) і повернутий лицем до гравця */
-ANI.push(t=>{if(PM){const o=PM.opt,A=typeof ang=='number'?ang:0,d=Math.max(o.dist||0,o.r+2.2,4),x=P.x-Math.sin(A)*d,z=P.z-Math.cos(A)*d;PM.x=+x.toFixed(2);PM.z=+z.toFixed(2);
-  PM.g.position.set(x,Math.max(-.3,H(x,z)),z);PM.g.rotation.y=A+PM.ry;const why=check(o,x,z);
-  if(why!==PM.why||!PM.init){PM.init=1;PM.why=why;PM.ms.forEach(m=>m.material=why?GNO:GOK);const s=ui.querySelector('small');s.textContent=why||'Можна ставити тут';s.className=why?'no':'ok';ui.querySelector('[data-a=ok]').disabled=!!why}
+ANI.push(t=>{if(PM){const o=PM.opt,A=typeof ang=='number'?ang:0,d=Math.max(o.dist||0,o.r+2.2,4);let x=P.x-Math.sin(A)*d,z=P.z-Math.cos(A)*d;PM.x=+x.toFixed(2);PM.z=+z.toFixed(2);
+  let ry=A+PM.ry,sn=null;if(o.snap){sn=o.snap(x,z);if(sn){x=sn.x;z=sn.z;ry=sn.ry;PM.x=+x.toFixed(2);PM.z=+z.toFixed(2)}}/* 0.2.7: «магніт» (грядки) */
+  PM.g.position.set(x,Math.max(-.3,H(x,z)),z);PM.g.rotation.y=ry;const why=check(o,x,z),okT=(sn&&sn.why)||'Можна ставити тут';
+  if(why!==PM.why||okT!==PM.okT||!PM.init){PM.init=1;PM.why=why;PM.okT=okT;PM.ms.forEach(m=>m.material=why?GNO:GOK);const s=ui.querySelector('small');s.textContent=why||okT;s.className=why?'no':'ok';ui.querySelector('[data-a=ok]').disabled=!!why}
   RM.opacity=.55+.3*Math.sin(t*4);
   if(o.center)showRing(x,z,why?0xff7a7a:0x7fe3f5);else if(inv._cen)showRing(inv._cen[0],inv._cen[1],0x7fe3f5);else hideRing();return}
  if(inv._cen&&document.body.classList.contains('bmode')){RM.opacity=.55+.3*Math.sin(t*4);showRing(inv._cen[0],inv._cen[1],0x7fe3f5)}else hideRing()});
