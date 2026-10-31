@@ -8,6 +8,7 @@ const T=['found','wall','floor','stairs','roof'];
 /* name, icon, type, variant, cost in wood (stone variant: same number of stone + 1/3 wood) */
 const ITEMS=[
  {k:'found',n:'Фундамент',e:'⬛',t:0,v:0,c:8,cat:0},
+ {k:'tri',n:'Трикутний фундамент',e:'🔺',t:6,v:0,c:5,cat:0},
  {k:'floor',n:'Підлога / стеля',e:'⬜',t:2,v:0,c:5,cat:0},
  {k:'stairs',n:'Сходи',e:'🪜',t:3,v:0,c:7,cat:0},
  {k:'wall',n:'Стіна',e:'🧱',t:1,v:0,c:6,cat:1},
@@ -72,6 +73,18 @@ function roofJoin(p,m0,m1,ghost){const S=roofCells(p.y,p),has=(i,j)=>S.has(i+','
    const fb=new THREE.Mesh(new THREE.BoxGeometry(along?C+.02:.14,.18,along?.14:C+.02),m1);fb.position.set(mx-cxw,p.y-.02,mz-czw);fb.castShadow=true;r.add(fb)}}
  return r}
 function rebuildRoofs(y){for(const q of pieces){if(q.t!==4||(y!=null&&Math.abs(q.y-y)>.05))continue;if(q.g){SCN.remove(q.g);disposeGroup(q.g)}q.g=mkPiece(q);SCN.add(q.g);freezePiece(q.g)}}
+/* 0.5.x: трикутний фундамент (t:6) — рівносторонній трикутник зі стороною C, основою на стороні s квадратного фундаменту (cx,cz), вершиною назовні */
+const SQ3=Math.sqrt(3);
+function triPts(p){const[ox,oz]=cxz(p.cx,p.cz),[dx,dz]=DIRS[p.s],mx=ox+dx*C/2,mz=oz+dz*C/2,qx=-dz,qz=dx;return[[mx+qx*C/2,mz+qz*C/2],[mx-qx*C/2,mz-qz*C/2],[mx+dx*C*SQ3/2,mz+dz*C*SQ3/2]]}
+function inTri(x,z,T){const s=(a,b,c)=>(a[0]-c[0])*(b[1]-c[1])-(b[0]-c[0])*(a[1]-c[1]),P_=[x,z],d1=s(P_,T[0],T[1]),d2=s(P_,T[1],T[2]),d3=s(P_,T[2],T[0]);return!((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0))}
+function prism(T,y0,y1,m){const pos=[],uv=[],tri=(a,b,c,ua,ub,uc)=>{pos.push(...a,...b,...c);uv.push(...ua,...ub,...uc)};
+ const top=T.map(([x,z])=>[x,y1,z]),bot=T.map(([x,z])=>[x,y0,z]),cw=((T[1][0]-T[0][0])*(T[2][1]-T[0][1])-(T[2][0]-T[0][0])*(T[1][1]-T[0][1]))<0;
+ const o=cw?[0,1,2]:[0,2,1],uvT=i=>[T[i][0]/1.5,T[i][1]/1.5];
+ tri(top[o[0]],top[o[1]],top[o[2]],uvT(o[0]),uvT(o[1]),uvT(o[2]));tri(bot[o[0]],bot[o[2]],bot[o[1]],uvT(o[0]),uvT(o[2]),uvT(o[1]));
+ for(let i=0;i<3;i++){let a=i,b=(i+1)%3;if(!cw)[a,b]=[b,a];const L=Math.hypot(T[b][0]-T[a][0],T[b][1]-T[a][1])/1.5,H_=(y1-y0)/1.5;
+  tri(bot[a],bot[b],top[b],[0,0],[L,0],[L,H_]);tri(bot[a],top[b],top[a],[0,0],[L,H_],[0,H_])}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.computeVertexNormals();
+ const me=new THREE.Mesh(g,m);me.castShadow=me.receiveShadow=true;return me}
 function mkPiece(p,ghost){const g=new THREE.Group(),[m0,m1]=ghost?[ghost,ghost]:MAT[p.m];const[x,z]=cxz(p.cx,p.cz);g.position.set(x,0,z);
  if(p.t==0){const yb=groundMin(p.cx,p.cz)-.5,h=p.y-yb;box(g,m1,C,h,C,0,yb+h/2,0);box(g,m0,C-.06,.12,C-.06,0,p.y-.06,0)}
  else if(p.t==1){const w=new THREE.Group();g.add(w);const[dx,dz]=DIRS[p.s];w.position.set(dx*C/2,p.y,dz*C/2);w.rotation.y=p.s%2?Math.PI/2:0;const T_=.24;
@@ -93,6 +106,9 @@ function mkPiece(p,ghost){const g=new THREE.Group(),[m0,m1]=ghost?[ghost,ghost]:
   else if(p.v==2)box(w,ghost||new THREE.MeshStandardMaterial({color:0x9fd8ff,transparent:true,opacity:.35,roughness:.05,metalness:.2}),1.12,1.17,.04,0,1.625,0);
   else if(p.v==3){for(let i=0;i<6;i++)box(w,B,.05,1.17,.05,-.48+i*.19,1.625,0);box(w,B,1.12,.05,.05,0,1.3,0);box(w,B,1.12,.05,.05,0,1.95,0)}
   else{for(const sx of[-1,1]){const sg=new THREE.Group();sg.position.set(sx*.56,1.625,.14);w.add(sg);sg.rotation.y=sx*.35;for(let i=0;i<5;i++)box(sg,A,.56,.17,.05,-sx*.28,-.46+i*.23,0)}}}
+ else if(p.t==6){const[ox,oz]=cxz(p.cx,p.cz),W=triPts(p).map(([x,z])=>[x-ox,z-oz]),cx_=(W[0][0]+W[1][0]+W[2][0])/3,cz_=(W[0][1]+W[1][1]+W[2][1])/3;
+  let yb=99;for(const[x,z]of W.concat([[cx_,cz_]]))yb=Math.min(yb,H(ox+x,oz+z));yb-=.5;
+  g.add(prism(W,yb,p.y,m1));g.add(prism(W.map(([x,z])=>[cx_+(x-cx_)*.97,cz_+(z-cz_)*.97]),p.y-.12,p.y+.001,m0))}
  else if(p.t==4){let jr=null;try{jr=roofJoin(p,m0,m1,ghost)}catch(e){console.warn('roof',e)}if(jr)g.add(jr);else if(roofModel){const roof=roofModel.clone(true);roof.traverse(o=>{if(!o.isMesh)return;o.material=ghost||(/Roof_Trim/.test(o.name)?m1:m0);o.castShadow=o.receiveShadow=!ghost});roof.position.y=p.y;g.add(roof)}
   else{const cone=new THREE.Mesh(new THREE.ConeGeometry(C/Math.SQRT2*1.08,1.7,4,1),m0);cone.rotation.y=Math.PI/4;cone.position.y=p.y+.85;cone.castShadow=true;g.add(cone)}}
  if(ghost)g.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;o.renderOrder=5}});
@@ -126,10 +142,11 @@ function surf(x,z,cur){const cx=Math.floor(x/C),cz=Math.floor(z/C);let best=-99;
  for(const p of pieces){if(p.cx!=cx||p.cz!=cz)continue;let h=-99;
   if(p.t==0||p.t==2)h=p.y;
   else if(p.t==3){const[dx,dz]=DIRS[p.s],[ox,oz]=cxz(cx,cz),f=((x-ox)*dx+(z-oz)*dz)/C+.5;h=p.y+Math.max(0,Math.min(1,f))*WH}
-  if(h<=cur+1.25&&h>best)best=h}return best}
+  if(h<=cur+1.25&&h>best)best=h}
+ for(const p of pieces)if(p.t==6&&p.y<=cur+1.25&&p.y>best&&inTri(x,z,triPts(p)))best=p.y;return best}
 window.BLDY=function(x,z,dt){const gh=H(x,z);if(py==null)py=gh;const s=surf(x,z,py);if(s<-90){py=gh;return gh}
  const tgt=Math.max(gh,s);if(tgt>=py)py=tgt;else py=Math.max(tgt,py-14*(dt||.016));return py};
-const blocks=(ax,az,bx,bz,y)=>{for(const p of pieces){if(p.t==0){if(p.y>y+1.25){const x0=p.cx*C-.3,z0=p.cz*C-.3,x1=x0+C+.6,z1=z0+C+.6;if(bx>x0&&bx<x1&&bz>z0&&bz<z1&&!(ax>x0&&ax<x1&&az>z0&&az<z1))return true}continue}
+const blocks=(ax,az,bx,bz,y)=>{for(const p of pieces){if(p.t==6){if(p.y>y+1.25){const T=triPts(p);if(inTri(bx,bz,T)&&!inTri(ax,az,T))return true}continue}if(p.t==0){if(p.y>y+1.25){const x0=p.cx*C-.3,z0=p.cz*C-.3,x1=x0+C+.6,z1=z0+C+.6;if(bx>x0&&bx<x1&&bz>z0&&bz<z1&&!(ax>x0&&ax<x1&&az>z0&&az<z1))return true}continue}
   if(p.t!=1||p.v==1||p.v==3)continue;if(y<p.y-.6||y>p.y+WH-.4)continue;
   const[cx,cz]=cxz(p.cx,p.cz),[dx,dz]=DIRS[p.s],ex=cx+dx*C/2,ez=cz+dz*C/2,R=.45;
   if(p.s%2){if((ax-ex)*(bx-ex)<=0||Math.abs(bx-ex)<R){if(Math.abs(bz-ez)<C/2+.1&&(Math.abs(bx-ex)<R||(ax-ex)*(bx-ex)<0))return true}}
@@ -147,6 +164,7 @@ function planFor(){const P=GC('P'),it=ITEMS[cur],y0=py==null?H(P.x,P.z):py,fd=(f
  if(it.t==0){const nb=[[1,0],[-1,0],[0,1],[0,-1]].map(([a,b])=>at(0,fcx+a,fcz+b)).find(Boolean);
   p.y=nb?nb.y:groundMax(fcx,fcz)+.35;
   if(at(0,fcx,fcz)){ok=false;why='Тут уже є фундамент'}
+  else if(pieces.some(q=>q.t==6&&q.cx+DIRS[q.s][0]==fcx&&q.cz+DIRS[q.s][1]==fcz)){ok=false;why='Тут уже є трикутний фундамент'}
   else if(groundMin(fcx,fcz)<-.9){ok=false;why='Тут вода'}
   else if(p.y-groundMin(fcx,fcz)>3.2){ok=false;why='Занадто нерівно'}
   else{const C=(G('inv')||{})._cen;const[x,z]=cxz(fcx,fcz);if(!C){ok=false;why='Спершу збудуйте Попал-центр'}else{const dc=Math.hypot(C[0]-x,C[1]-z);if(dc>30){ok=false;why='Будувати можна в радіусі 30 м від Попал-центру'}else if(dc<3.6){ok=false;why='Занадто близько до Попал-центру'}}
@@ -168,6 +186,12 @@ function planFor(){const P=GC('P'),it=ITEMS[cur],y0=py==null?H(P.x,P.z):py,fd=(f
   for(const[cx,cz,ss]of[[pcx,pcz,fd],[fcx,fcz,(fd+2)%4]]){const b=base(cx,cz);if(b==null)continue;const w=wallAt(cx,cz,ss,b);if(w&&w.v==need){f=w;break}}
   if(!f){ok=false;why=door?'Спочатку поставте рамку під двері':'Спочатку поставте рамку під вікно';p.y=y0;p.cx=fcx;p.cz=fcz;p.s=(fd+2)%4}
   else{p.cx=f.cx;p.cz=f.cz;p.s=f.s;p.y=f.y;if(insAt(f.cx,f.cz,f.s,f.y)){ok=false;why=door?'Тут уже є двері':'Тут уже є вікно'}}}
+ else if(it.t==6){let f=null;for(const[cx,cz,ss]of[[pcx,pcz,fd],[fcx,fcz,(fd+2)%4]]){const q=at(0,cx,cz);if(q){f=[cx,cz,ss,q.y];break}}
+  if(!f){ok=false;why='Трикутник ставиться до сторони квадратного фундаменту';p.cx=fcx;p.cz=fcz;p.s=fd;p.y=y0}
+  else{p.cx=f[0];p.cz=f[1];p.s=f[2];p.y=f[3];const[a,b]=DIRS[p.s];
+   if(at(0,p.cx+a,p.cz+b)){ok=false;why='З цього боку вже є фундамент'}
+   else if(pieces.some(q=>q.t==6&&q.cx==p.cx&&q.cz==p.cz&&q.s==p.s)){ok=false;why='Тут уже є трикутний фундамент'}
+   else if(Math.min(...triPts(p).map(([x,z])=>H(x,z)))<-.9){ok=false;why='Тут вода'}}}
  else if(it.t==4){let cx=pcx,cz=pcz,b=base(cx,cz);if(b==null||![0,1,2,3].some(s=>fullAt(cx,cz,s,b))){cx=fcx;cz=fcz;b=base(cx,cz)}
   p.cx=cx;p.cz=cz;p.y=(b==null?y0:b)+WH;
   if(b==null||![0,1,2,3].some(s=>fullAt(cx,cz,s,b))){ok=false;why='Дах ставиться на повні стіни'}else if(at(4,cx,cz,p.y)||tops(cx,cz).some(v=>near(v,p.y))){ok=false;why='Тут уже щось є'}}
@@ -175,7 +199,7 @@ function planFor(){const P=GC('P'),it=ITEMS[cur],y0=py==null?H(P.x,P.z):py,fd=(f
  const c=cost(it,mat);if(ok&&!canPay(c)){ok=false;why='Не вистачає: '+Object.entries(c).filter(([k,n])=>n&&have(k)<n).map(([k,n])=>NM[k]+(n-have(k))).join(' ')}
  return{p,ok,why,c}}
 function delTarget(){const P=GC('P'),[dx,dz]=DIRS[facing()],y0=py==null?H(P.x,P.z):py,tx=P.x+dx*1.6,tz=P.z+dz*1.6;let best=null,bd=2.8;
- for(const p of pieces){const[cx,cz]=cxz(p.cx,p.cz);let x=cx,z=cz,y=p.t==1||p.t==5?p.y+1.5:p.y;if(p.t==1||p.t==5){const[a,b]=DIRS[p.s];x+=a*C/2;z+=b*C/2}
+ for(const p of pieces){const[cx,cz]=cxz(p.cx,p.cz);let x=cx,z=cz,y=p.t==1||p.t==5?p.y+1.5:p.y;if(p.t==6){const T=triPts(p);x=(T[0][0]+T[1][0]+T[2][0])/3;z=(T[0][1]+T[1][1]+T[2][1])/3}if(p.t==1||p.t==5){const[a,b]=DIRS[p.s];x+=a*C/2;z+=b*C/2}
   if(y<y0-1.5||y>y0+3.6)continue;const d=Math.hypot(x-tx,z-tz)+Math.abs(y-(y0+1))*.3;if(d<bd){bd=d;best=p}}return best}
 /* ---------- інтерфейс ---------- */
 const bt=document.createElement('button');bt.id='bld';bt.innerHTML='🏗️<small>Будова</small>';
@@ -215,5 +239,5 @@ let lt=performance.now();
  plan=planFor();const k=JSON.stringify([plan.p,plan.ok]);if(k!==ghostKey){ghostKey=k;dropGhost();ghost=mkPiece(plan.p,plan.ok?GOOD:BAD);SCN.add(ghost)}ghost.visible=true;
  tip.innerHTML=plan.ok?`${ITEMS[cur].e} ${ITEMS[cur].n}: ${costTxt(plan.c)} — натисніть ✔`:'⚠️ '+plan.why;
 })();
-window.BUILD={get pieces(){return pieces},setOn,ITEMS};
+window.BUILD={get pieces(){return pieces},get plan(){return plan},setOn,ITEMS};
 }catch(e){console.warn('building',e)}})();

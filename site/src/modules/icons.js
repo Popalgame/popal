@@ -173,7 +173,18 @@ const bWin=kind=>flat(x=>{rr(x,16,16,64,64,7);fillOL(x,lg(x,0,16,0,80,kind=='shu
  else if(kind=='bars'){rr(x,24,24,48,48,3);fillOL(x,'#1d2a36',2);x.strokeStyle='#aeb6c2';x.lineWidth=4;for(const xx of[33,48,63]){x.beginPath();x.moveTo(xx,24);x.lineTo(xx,72);x.stroke()}x.beginPath();x.moveTo(24,48);x.lineTo(72,48);x.stroke();x.strokeStyle=OL;x.lineWidth=1}
  else{x.strokeStyle='rgba(70,36,12,.55)';x.lineWidth=2;x.beginPath();x.moveTo(48,18);x.lineTo(48,78);x.stroke();x.lineWidth=1.6;for(const yy of[30,42,54,66]){x.beginPath();x.moveTo(20,yy);x.lineTo(46,yy-4);x.moveTo(50,yy-4);x.lineTo(76,yy);x.stroke()}}
  shine(x,28,26,6,3)});
-const BICO={};for(const k in BSHAPE)for(const m of['w','s'])BICO['BP_'+k+'_'+m]=()=>isoIcon(BSHAPE[k],m);
+const triIcon=m=>mk(x=>{const M=BMAT[m],s=21,P=(X,Y,Z)=>[(X-Z)*.866*s,(X+Z)*.5*s-Y*s],h=.55,F=[[0,0],[2.1,0],[1.05,1.82]];
+ const pts=[];for(const[X,Z]of F)for(const Y of[0,h])pts.push(P(X,Y,Z));const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),ox=48-(Math.min(...xs)+Math.max(...xs))/2,oy=48-(Math.min(...ys)+Math.max(...ys))/2;
+ const Q=(X,Y,Z)=>{const p=P(X,Y,Z);return[p[0]+ox,p[1]+oy]};shade(x,48,48+(Math.max(...ys)-Math.min(...ys))/2+2,28,6);
+ const poly_=(pp,g,lines)=>{x.beginPath();pp.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.fillStyle=g;x.fill();if(lines){x.save();x.clip();x.strokeStyle=M.ln;x.lineWidth=1.3;for(const[u,v]of lines){x.beginPath();x.moveTo(u[0],u[1]);x.lineTo(v[0],v[1]);x.stroke()}x.restore()}
+  x.beginPath();pp.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.lineWidth=2.4;x.strokeStyle=OL;x.stroke()};
+ const cx=(F[0][0]+F[1][0]+F[2][0])/3,cz=(F[0][1]+F[1][1]+F[2][1])/3;
+ for(let i=0;i<3;i++){const a=F[i],b=F[(i+1)%3],nx=(b[1]-a[1]),nz=-(b[0]-a[0]),mx=(a[0]+b[0])/2-cx,mz=(a[1]+b[1])/2-cz,sg=(nx*mx+nz*mz)>0?1:-1;if((nx+nz)*sg<=0)continue;
+  const f=[Q(a[0],0,a[1]),Q(b[0],0,b[1]),Q(b[0],h,b[1]),Q(a[0],h,a[1])],ys2=f.map(p=>p[1]),c=nx*sg>nz*sg?M.r:M.l;poly_(f,lg(x,0,Math.min(...ys2),0,Math.max(...ys2),[[0,c[0]],[1,c[1]]]))}
+ const top=F.map(([X,Z])=>Q(X,h,Z)),ys3=top.map(p=>p[1]),L=[];
+ if(m=='w')for(let z=.3;z<1.82;z+=.3)L.push([Q(0,h,z),Q(2.1,h,z)]);else for(let z=.35;z<1.82;z+=.35)L.push([Q(0,h,z),Q(2.1,h,z)]);
+ poly_(top,lg(x,0,Math.min(...ys3),0,Math.max(...ys3),[[0,M.t[0]],[1,M.t[1]]]),L);const c=Q(cx*.85,h,cz*.8);shine(x,c[0],c[1],6,2.2)});
+const BICO={};for(const m of['w','s'])BICO['BP_tri_'+m]=()=>triIcon(m);for(const k in BSHAPE)for(const m of['w','s'])BICO['BP_'+k+'_'+m]=()=>isoIcon(BSHAPE[k],m);
 for(const m of['w','s'])BICO['BP_roof_'+m]=()=>isoIcon([],m,[0,2,2,1.2]);
 Object.assign(BICO,{BP_dwood:()=>bDoor(0),BP_dmetal:()=>bDoor(1),BP_wglass:()=>bWin('glass'),BP_wbars:()=>bWin('bars'),BP_wshut:()=>bWin('shut')});
 const D={wool,lth:leather,w:log,s:stone,sti:sticks,ing:ingot,ore:()=>lump('ore'),coal:()=>lump('coal'),be:berries,mu:mush,gm:skewer,pie,
