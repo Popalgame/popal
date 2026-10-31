@@ -77,17 +77,19 @@ const put=(m,x,z,ry)=>{m.position.set(x,H_(x,z),z);m.rotation.y=ry||0;m.traverse
   const b=(i+1)/14*Math.PI*2;if(i!=2){const r=P(g,BOX,0x9a6a40,Math.cos((a+b)/2)*2.55,.5,Math.sin((a+b)/2)*2.55,.08,.06,1.18);r.rotation.y=-(a+b)/2}}
  for(const[c,x,z]of[[0xff6a8a,.6,.4],[0x6ad0ff,-.7,.9],[0xffd24a,.2,-.9]])P(g,SPH,c,x,.12,z,.12);put(g,I.SP[3][0]-1,I.SP[3][1]+.5)}
 /* ---------- розстановка ---------- */
+/* реалістичні моделі на основі героя (npc-hero.js + isle-npc-looks.js); якщо їх немає — прості моделі вище */
+const LK=(k,fb)=>window.NPCHERO&&window.ISLE_LOOKS&&window.ISLE_LOOKS[k]?window.NPCHERO.make(window.ISLE_LOOKS[k]):fb();
 const fire=[I.SP[0][0]+1.5,I.SP[0][1]-1];
-N.add({id:'vit',name:'Дід Вітрило',role:'старий моряк',x:fire[0]-2.4,z:fire[1]+1.2,face:2.2,model:vitrylo(),color:'#2d4f7a',icon:'🧓',
+N.add({id:'vit',name:'Дід Вітрило',role:'старий моряк',x:fire[0]-2.4,z:fire[1]+1.2,face:2.2,model:LK('vit',vitrylo),height:2.05,color:'#2d4f7a',icon:'🧓',
  lines:['Ого, прокинувся! А я вже думав, море принесло мені ще одну колоду.','Мене звуть Вітрило. Колись мене теж викинуло на цей берег… років сорок тому. Чи п’ятдесят.','Ходи-но сюди, поговоримо, як звідси вибратися. Хоча я ось так і не вибрався, хе-хе.']});
-N.add({id:'shk',name:'Тесля Шкварка',role:'майстриня',x:I.SP[1][0]+.2,z:I.SP[1][1]+.8,face:2.6,model:shkvarka(),color:'#a8542a',icon:'🔨',
+N.add({id:'shk',name:'Тесля Шкварка',role:'майстриня',x:I.SP[1][0]+.2,z:I.SP[1][1]+.8,face:2.6,model:LK('shk',shkvarka),height:1.95,color:'#a8542a',icon:'🔨',
  lines:['О! Нові руки! Руки — це добре. Руками можна тримати молот.','Я Шкварка. Все, що на цьому острові стоїть, — я збудувала. Все, що впало, — теж я.','Принеси мені деревини — покажу, як із неї зробити щось корисне. Або вибухове. Жартую. Мабуть.']});
-N.add({id:'klu',name:'Пані Клубочок',role:'доглядачка попалів',x:I.SP[3][0]+2.4,z:I.SP[3][1]-1.6,face:-.6,model:klubochok(),color:'#6a3f7a',icon:'🐾',
+N.add({id:'klu',name:'Пані Клубочок',role:'доглядачка попалів',x:I.SP[3][0]+2.4,z:I.SP[3][1]-1.6,face:-.6,model:LK('klu',klubochok),height:1.95,color:'#6a3f7a',icon:'🐾',
  lines:['Тсс! Не налякай Пушинку. Вона сьогодні вже двічі ховалася в мій кошик.','Я — пані Клубочок. Попали — як клубки пряжі: якщо до них з любов’ю, вони не заплутуються.','Коли будеш готовий, навчу тебе, як подружитися з першим попалом.']});
 N.add({id:'brm',name:'Брам',role:'кам’яний страж',x:-2.6,z:I.G0+5.6,face:.25,model:bram(),color:'#4a5560',icon:'🗿',r:.9,height:2.8,
  lines:['…ГРРР-РУМ. Хто йде?','Я — Брам. Мене звуть Брам. Мене завжди звали Брам. Триста років — Брам.','Завал не прибрати, доки ти не готовий до великого світу. Іди до Вітрила. Він… балакучий.']});
 /* Пушинка — Пухоклуб пані Клубочок */
-try{if(window.PALMODEL){const r=PALMODEL.build(4),m=r.root;m.scale.multiplyScalar(.8);put(m,I.SP[3][0]+3.3,I.SP[3][1]-.6,-1);
+try{if(window.PALMODEL){const r=PALMODEL.build(4),m=r.root;m.scale.multiplyScalar(.8);put(m,I.SP[3][0]-1.4,I.SP[3][1]+.9,.6);
  let t=0;const A=G('ANI');if(A)A.push(()=>{t+=.016;m.position.y=H_(m.position.x,m.position.z)+Math.abs(Math.sin(t*3))*.12;if(r.mixer)r.mixer.update(.016)})}}catch(e){console.warn('isle-npc pal',e)}
 /* поки що — розмови-знайомства: «!» над Вітрилом, компас показує на нього */
 N.mark('vit','!');N.hint(N.get('vit').x,N.get('vit').z,'Вітрило');
