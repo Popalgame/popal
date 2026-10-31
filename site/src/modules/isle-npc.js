@@ -121,7 +121,7 @@ N.add({id:'brm',name:'Брам',role:'кам’яний страж',x:-2.6,z:I.G
   gate.children.forEach(o=>{if(o.userData.vine)o.visible=false});/* ліани розсипаються, щойно Брам рушає */
   const A=G('ANI');const step=()=>{const L=legs[i];if(!L){n.busy=0;return true}const now=performance.now();dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;
    if(L.to){B.mode=L.carry?'lift':'walk';if(L.carry)B.load=1;const dx=L.to[0]-n.x,dz=L.to[1]-n.z,d=Math.hypot(dx,dz);
-    const want=Math.atan2(dx,dz);let df=want-n.g.rotation.y;df=Math.atan2(Math.sin(df),Math.cos(df));n.g.rotation.y+=df*.15;
+    if(d>=.08){const want=Math.atan2(dx,dz);let df=want-n.g.rotation.y;df=Math.atan2(Math.sin(df),Math.cos(df));n.g.rotation.y+=df*.15}
     if(d<.08){n.x=L.to[0];n.z=L.to[1];if(L.face!=null){let f=L.face-n.g.rotation.y;f=Math.atan2(Math.sin(f),Math.cos(f));n.g.rotation.y+=f*.2;if(Math.abs(f)>.05)return false}i++;t=0}
     else{const sp=Math.min(d,1.3*dt);n.x+=dx/d*sp;n.z+=dz/d*sp;B.walk+=dt*6}
     n.g.position.set(n.x,H_(n.x,n.z),n.z);n.face0=n.g.rotation.y}
