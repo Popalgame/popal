@@ -1,6 +1,6 @@
 /* 0.1.11: власне розташування інтерфейсу — гравець перетягує джойстик, кнопки, попалів, екіпірування, міні-карту й «Будову», змінює їх розмір і чутливість джойстика; плаваючий джойстик. Позиції — у частках екрана, окремо на кожному пристрої */
 (function(){try{
-const KEY='zi_hud',EL=[['joy','🕹️ Джойстик'],['btns','⚔️ Кнопки дій'],['pw2','🐾 Попали'],['eqp','🎒 Екіпірування'],['mmap','🗺️ Міні-карта'],['bag','🎒 Рюкзак'],['mbt','☰ Меню'],['bld','🏗️ Будова']];
+const KEY='zi_hud',EL=[['joy','🕹️ Джойстик'],['btns','⚔️ Кнопки дій'],['pw2','🐾 Попали'],['eqp','🎒 Екіпірування'],['mmap','🗺️ Міні-карта'],['bag','🎒 Рюкзак'],['mbt','☰ Меню'],['cmp','🧭 Компас'],['bld','🏗️ Будова']];
 let L={el:{},sens:1,float:0};
 try{Object.assign(L,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 const sv=()=>{try{localStorage.setItem(KEY,JSON.stringify(L))}catch(e){}};
@@ -56,7 +56,7 @@ ${EL.map(([id])=>'body.hedit #'+id+'.hmov.hsel').join(',')}{outline:3px solid #f
 ${EL.map(([id])=>'body.hedit #'+id+'.hmov.hbad').join(',')}{outline:3px solid #ff5a5a!important}
 #hlo{display:none;position:fixed;inset:0;z-index:24;background-color:rgba(8,16,36,.45);background-image:repeating-linear-gradient(0deg,rgba(127,227,245,.07) 0 1px,transparent 1px ${GRID*4}px),repeating-linear-gradient(90deg,rgba(127,227,245,.07) 0 1px,transparent 1px ${GRID*4}px)}
 body.hedit #hlo{display:block}
-#hlt{display:none;position:fixed;z-index:30;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 6px);width:min(440px,calc(100vw - 24px));padding:6px 8px;border-radius:12px;background:rgba(13,42,58,.94);border:2px solid #c9a24a;color:#fff;font:600 12px system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+#hlt{display:none;position:fixed;z-index:30;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 34px);width:min(440px,calc(100vw - 24px));padding:6px 8px;border-radius:12px;background:rgba(13,42,58,.94);border:2px solid #c9a24a;color:#fff;font:600 12px system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.45)}
 #hlt.bot{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 6px)}
 body.hedit #hlt{display:block}
 #hlt .r{display:flex;align-items:center;gap:8px;margin:2px 0}
@@ -117,7 +117,7 @@ $('hlc').onclick=()=>done(false);$('hlok').onclick=()=>done(true);
 const _pf=pfTab;pfTab=function(t){_pf(t);if(t!='k'&&t!='o')return;const host=$('pcp');if(!host||$('hudp'))return;
  const d=document.createElement('div');d.id='hudp';
  d.innerHTML=`<h4>Розташування на екрані</h4><button class='ob' id='hedb' style='width:100%'>✋ Налаштувати розташування</button>
- <small class='gnote'>Перетягніть джойстик, кнопки, попалів, екіпірування, міні-карту, рюкзак, кнопку меню чи «Будову» і змініть їх розмір. Після «Готово» все зафіксовано</small>
+ <small class='gnote'>Перетягніть джойстик, кнопки, попалів, екіпірування, міні-карту, рюкзак, кнопку меню, компас чи «Будову» і змініть їх розмір. Після «Готово» все зафіксовано</small>
  <h4>Плаваючий джойстик</h4><div class='gseg' id='hflt'>`+['Вимкнено','Увімкнено'].map((n,i)=>`<button data-i='${i}' class='${i==(L.float?1:0)?'on':''}'>${n}</button>`).join('')+`</div>
  <small class='gnote'>Джойстик зʼявляється там, де торкнетеся лівої частини екрана</small>`;
  host.appendChild(d);$('hedb').onclick=edit;

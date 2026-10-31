@@ -47,6 +47,31 @@ function disposeGroup(g){g.traverse(o=>{if(o.isMesh&&o.geometry&&!roofGeometries
 function box(g,m,w,h,d,x,y,z){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);b.castShadow=b.receiveShadow=true;g.add(b);return b}
 function groundMin(cx,cz){let m=99;for(const[a,b]of[[0,0],[C,0],[0,C],[C,C],[C/2,C/2]])m=Math.min(m,H(cx*C+a,cz*C+b));return m}
 function groundMax(cx,cz){let m=-99;for(const[a,b]of[[0,0],[C,0],[0,C],[C,C],[C/2,C/2]])m=Math.max(m,H(cx*C+a,cz*C+b));return m}
+/* 0.5.x: суміжні дахи на одній висоті зливаються в одну покрівлю. Висота покрівлі в точці = відстань до краю всієї ділянки дахів ×ROOFK
+   (одна клітинка — піраміда, смуга — гребінь, 2×2 — велика чотирисхила). Краї сусідніх клітинок рахуються однаково, тож стикуються без щілин.
+   Окремий дах — акуратна піраміда (модель із GLB лишається запасною, якщо побудова не вдасться) */
+const ROOFK=.8,ROOFMAX=2.6,ROOFN=6;
+function roofCells(y,extra){const S=new Set();for(const q of pieces)if(q.t==4&&Math.abs(q.y-y)<.05)S.add(q.cx+','+q.cz);if(extra)S.add(extra.cx+','+extra.cz);return S}
+function roofJoin(p,m0,m1,ghost){const S=roofCells(p.y,p),has=(i,j)=>S.has(i+','+j);
+ /* краї ділянки: сторони клітинок, за якими немає даху */
+ const E=[];for(const k of S){const[i,j]=k.split(',').map(Number),x0=i*C,z0=j*C,x1=x0+C,z1=z0+C;
+  if(!has(i-1,j))E.push([x0,z0,x0,z1]);if(!has(i+1,j))E.push([x1,z0,x1,z1]);if(!has(i,j-1))E.push([x0,z0,x1,z0]);if(!has(i,j+1))E.push([x0,z1,x1,z1])}
+ const dseg=(x,z,[ax,az,bx,bz])=>{const vx=bx-ax,vz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz)));return Math.hypot(x-ax-vx*t,z-az-vz*t)};
+ const hAt=(x,z)=>{let d=1e9;for(const e of E)d=Math.min(d,dseg(x,z,e));return Math.min(ROOFMAX,d*ROOFK)};
+ const[cxw,czw]=cxz(p.cx,p.cz),N=ROOFN,pos=[],uv=[],idx=[];
+ for(let a=0;a<=N;a++)for(let b=0;b<=N;b++){const u=-C/2+C*a/N,v=-C/2+C*b/N,wx=cxw+u,wz=czw+v;pos.push(u,p.y+hAt(wx,wz),v);uv.push(wx/1.5,wz/1.5)}
+ const id=(a,b)=>a*(N+1)+b,Y=i=>pos[i*3+1];
+ for(let a=0;a<N;a++)for(let b=0;b<N;b++){const i00=id(a,b),i10=id(a+1,b),i01=id(a,b+1),i11=id(a+1,b+1);
+  /* діагональ, що зберігає ребра покрівлі: та, середина якої вища */
+  if(Y(i00)+Y(i11)>=Y(i10)+Y(i01))idx.push(i00,i01,i11,i00,i11,i10);else idx.push(i00,i01,i10,i10,i01,i11)}
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.setIndex(idx);geo.computeVertexNormals();
+ const r=new THREE.Group(),top=new THREE.Mesh(geo,m0);top.castShadow=top.receiveShadow=!ghost;r.add(top);
+ if(!ghost){const under=new THREE.Mesh(geo,m1.clone());under.material.side=THREE.BackSide;r.add(under);
+  /* лобова дошка вздовж країв цієї клітинки */
+  for(const[ax,az,bx,bz]of E){const mx=(ax+bx)/2,mz=(az+bz)/2;if(Math.abs(mx-cxw)>C/2+.01||Math.abs(mz-czw)>C/2+.01)continue;const along=Math.abs(bx-ax)>.01;
+   const fb=new THREE.Mesh(new THREE.BoxGeometry(along?C+.02:.14,.18,along?.14:C+.02),m1);fb.position.set(mx-cxw,p.y-.02,mz-czw);fb.castShadow=true;r.add(fb)}}
+ return r}
+function rebuildRoofs(y){for(const q of pieces){if(q.t!==4||(y!=null&&Math.abs(q.y-y)>.05))continue;if(q.g){SCN.remove(q.g);disposeGroup(q.g)}q.g=mkPiece(q);SCN.add(q.g);freezePiece(q.g)}}
 function mkPiece(p,ghost){const g=new THREE.Group(),[m0,m1]=ghost?[ghost,ghost]:MAT[p.m];const[x,z]=cxz(p.cx,p.cz);g.position.set(x,0,z);
  if(p.t==0){const yb=groundMin(p.cx,p.cz)-.5,h=p.y-yb;box(g,m1,C,h,C,0,yb+h/2,0);box(g,m0,C-.06,.12,C-.06,0,p.y-.06,0)}
  else if(p.t==1){const w=new THREE.Group();g.add(w);const[dx,dz]=DIRS[p.s];w.position.set(dx*C/2,p.y,dz*C/2);w.rotation.y=p.s%2?Math.PI/2:0;const T_=.24;
@@ -68,7 +93,7 @@ function mkPiece(p,ghost){const g=new THREE.Group(),[m0,m1]=ghost?[ghost,ghost]:
   else if(p.v==2)box(w,ghost||new THREE.MeshStandardMaterial({color:0x9fd8ff,transparent:true,opacity:.35,roughness:.05,metalness:.2}),1.12,1.17,.04,0,1.625,0);
   else if(p.v==3){for(let i=0;i<6;i++)box(w,B,.05,1.17,.05,-.48+i*.19,1.625,0);box(w,B,1.12,.05,.05,0,1.3,0);box(w,B,1.12,.05,.05,0,1.95,0)}
   else{for(const sx of[-1,1]){const sg=new THREE.Group();sg.position.set(sx*.56,1.625,.14);w.add(sg);sg.rotation.y=sx*.35;for(let i=0;i<5;i++)box(sg,A,.56,.17,.05,-sx*.28,-.46+i*.23,0)}}}
- else if(p.t==4){if(roofModel){const roof=roofModel.clone(true);roof.traverse(o=>{if(!o.isMesh)return;o.material=ghost||(/Roof_Trim/.test(o.name)?m1:m0);o.castShadow=o.receiveShadow=!ghost});roof.position.y=p.y;g.add(roof)}
+ else if(p.t==4){let jr=null;try{jr=roofJoin(p,m0,m1,ghost)}catch(e){console.warn('roof',e)}if(jr)g.add(jr);else if(roofModel){const roof=roofModel.clone(true);roof.traverse(o=>{if(!o.isMesh)return;o.material=ghost||(/Roof_Trim/.test(o.name)?m1:m0);o.castShadow=o.receiveShadow=!ghost});roof.position.y=p.y;g.add(roof)}
   else{const cone=new THREE.Mesh(new THREE.ConeGeometry(C/Math.SQRT2*1.08,1.7,4,1),m0);cone.rotation.y=Math.PI/4;cone.position.y=p.y+.85;cone.castShadow=true;g.add(cone)}}
  if(ghost)g.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;o.renderOrder=5}});
  return g}
@@ -82,8 +107,8 @@ const wallAt=(cx,cz,s,y)=>edgeAt(1,cx,cz,s,y),insAt=(cx,cz,s,y)=>edgeAt(5,cx,cz,
 function tops(cx,cz){return pieces.filter(p=>p.cx==cx&&p.cz==cz&&(p.t==0||p.t==2)).map(p=>p.y)}
 function saveB(){const inv=G('inv');if(!inv)return;inv._bs=pieces.map(p=>[p.t,p.cx,p.cz,Math.round(p.y*100),p.s,p.m,p.v]);if(window.plRefreshVegetation)window.plRefreshVegetation();try{G('save')()}catch(e){}}
 function freezePiece(g){const d=g.userData.door;if(d)d.traverse(x=>x.userData.noFreeze=1);g.updateMatrixWorld(true);g.traverse(x=>{if(!x.userData.noFreeze)x.matrixAutoUpdate=false})}
-function add(p,noSave){p.g=mkPiece(p);SCN.add(p.g);freezePiece(p.g);pieces.push(p);if(!noSave)saveB()}
-function remove(p){SCN.remove(p.g);disposeGroup(p.g);pieces=pieces.filter(x=>x!==p);saveB()}
+function add(p,noSave){pieces.push(p);if(p.t==4)rebuildRoofs(p.y);else{p.g=mkPiece(p);SCN.add(p.g);freezePiece(p.g)}if(!noSave)saveB()}
+function remove(p){SCN.remove(p.g);disposeGroup(p.g);pieces=pieces.filter(x=>x!==p);if(p.t==4)rebuildRoofs(p.y);saveB()}
 {const inv=G('inv');(inv&&inv._bs||[]).forEach(a=>{try{add({t:a[0],cx:a[1],cz:a[2],y:a[3]/100,s:a[4],m:a[5],v:a[6]},true)}catch(e){}})}
 /* Dachy odtworzone z zapisu startują jako prosta bryła, a po wczytaniu GLB
    dostają detal bez zmiany pozycji, danych zapisu ani reguł kolizji. */
