@@ -44,7 +44,9 @@ function build(root,spec){const model=T.SkeletonUtils.clone(gl.scene);model.upda
  const hold=(bn,obj,fn)=>{model.add(obj);obj.traverse(o=>{if(o.isMesh)o.castShadow=true});held.push({b:bones[bn],fa:bones[bn.replace('Hand','ForeArm')],obj,fn})};
  if(spec.acc)spec.acc(add,M,bones,hold);
  root.add(model);
- const mixer=new T.AnimationMixer(model),clip=gl.animations.find(a=>/idle/i.test(a.name));if(clip){const a=mixer.clipAction(clip);a.time=Math.random()*clip.duration;a.play()}
+ const mixer=new T.AnimationMixer(model),acts={};for(const c of gl.animations){const k=c.name.toLowerCase();if(/idle|walk|run/.test(k))acts[k.match(/idle|walk|run/)[0]]=mixer.clipAction(c)}
+ let cur=acts.idle;if(cur){cur.time=Math.random()*cur.getClip().duration;cur.play()}
+ /* idle ↔ walk: плавний перехід */root.userData.anim=n=>{const a=acts[n];if(!a||a===cur)return;a.reset().play();if(cur)cur.crossFadeTo(a,.25,false);cur=a};
  const ra=bones.RightArm,la=bones.LeftArm;let last=null,talk=false;
  root.userData.wave=t=>{talk=t!=null};
  root.userData.idle=t=>{const dt=last==null?0:Math.min(.1,Math.max(0,t-last));last=t;mixer.update(dt);

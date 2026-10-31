@@ -55,6 +55,13 @@ NPC.say=(id,pg,o)=>{const n=byId[id];if(!n)return;cur=n;pages=Array.isArray(pg)?
  try{if(window.sfx)window.sfx('open')}catch(_){}};
 NPC.close=()=>{D.style.display='none';cur=null};
 NPC.isOpen=()=>!!cur;
+/* NPC іде до точки (x,z) зі швидкістю sp м/с, з анімацією ходьби (якщо модель її має), потім — колбек */
+const walks=[];
+NPC.walkTo=(id,x,z,cb,sp)=>{const n=byId[id];if(!n)return;for(let i=walks.length-1;i>=0;i--)if(walks[i].n===n)walks.splice(i,1);n.busy=1;const a=n.model.userData.anim;if(a)a('walk');walks.push({n,x,z,cb,sp:sp||1.4,last:performance.now()})};
+NPC.place=(id,x,z,face)=>{const n=byId[id];if(!n)return;n.x=x;n.z=z;n.g.position.set(x,H_(x,z),z);if(face!=null){n.g.rotation.y=face;n.face0=face}};
+function walkTick(){for(let i=walks.length-1;i>=0;i--){const w=walks[i],n=w.n,now=performance.now(),dt=Math.min(.05,(now-w.last)/1000);w.last=now;
+ const dx=w.x-n.x,dz=w.z-n.z,d=Math.hypot(dx,dz);if(d<.06){walks.splice(i,1);n.busy=0;n.face0=n.g.rotation.y;const a=n.model.userData.anim;if(a)a('idle');if(w.cb)w.cb();continue}
+ const st=Math.min(d,w.sp*dt);n.x+=dx/d*st;n.z+=dz/d*st;n.g.position.set(n.x,H_(n.x,n.z),n.z);let df=Math.atan2(dx,dz)-n.g.rotation.y;df=Math.atan2(Math.sin(df),Math.cos(df));n.g.rotation.y+=df*.2}}
 NPC.onTalk=null;
 function talk(n){if(NPC.onTalk&&NPC.onTalk(n.id)!==false)return;NPC.say(n.id,n.lines||['…'])}
 
@@ -68,7 +75,7 @@ NPC.hint=(x,z,w)=>{hint=x==null?null:{x,z,w};for(const e of qEls)e.remove();qEls
  for(let k=0;k<3;k++){const e=document.createElement('span');e.className='cq';e.textContent='◆ '+(w||'');cs.appendChild(e);qEls.push(e)}};
 const angG=()=>{try{return eval('ang')}catch(_){return 0}};
 /* ---------- кадр ---------- */
-const tick=()=>{const dt=.016;
+const tick=()=>{const dt=.016;walkTick();
  if(typing){shown+=1.6;$x.textContent=full.slice(0,shown|0);if(shown>=full.length)done()}
  for(const n of L){n.t+=dt;const d=Math.hypot(n.x-P_.x,n.z-P_.z);
   /* дихання */const m=n.model;if(!m.userData.ownBreath)m.scale.y=1+Math.sin(n.t*2.2)*.012;
