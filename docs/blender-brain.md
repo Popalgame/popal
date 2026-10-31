@@ -159,14 +159,18 @@ kontekst jest niejednoznaczny. Automatyzacja nie zwalnia z walidacji.
 
 | Etap | Zakres | Stan |
 | --- | --- | --- |
-| P0 | Indeks API 5.2 + wyszukiwanie + testy | gotowe |
-| P1 | Manual 5.2 w tym samym indeksie; receptury i walidatory sceny | do zrobienia |
-| P2 | Generator parametrycznego humanoida z `measurements.json` | do zrobienia |
-| P3 | Automatyczne uzupełnienie tyłu/boków + render 4 widoków + compare | do zrobienia |
-| P4 | Materiały, rig, wagi, animacje, eksport i reimport | do zrobienia |
+| P0 | Indeks API 5.2 + wyszukiwanie + testy | gotowe (39 116 rekordów, 5.2.2) |
+| P1 | Manual 5.2 w tym samym indeksie; receptury i walidatory sceny | gotowe (14 stron manuala, 3 receptury zweryfikowane, `scene_check.py`) |
+| P2 | Generator parametryczny humanoida z `measurements.json` | gotowe (`tools/character-build`, commit d608030) |
+| P3 | Automatyczne uzupełnienie tyłu/boków + render 4 widoków + compare | gotowe w wariancie A: budowa parametryczna z jawnymi założeniami głębokości, 4 widoki, pętla `compare` (IoU 76,8% dla Aiko). Warianty B (depth) i C (generatywne) niezrealizowane |
+| P4 | Materiały, rig, wagi, animacje, eksport i reimport | blockout gotowy: 19 materiałów, rig 22 kości, 7 akcji, GLB + weryfikacja reimportu. Docelowa jakość assetu gry wymaga dalszej pracy |
 
 P1 jest tanie i natychmiast poprawia trafność. P2 daje pierwszy realny model
 3D. P3 zamyka pętlę wizualną. P4 dopiero czyni z tego asset gry.
+
+Stan integracji z żywym Blenderem: most `tools/blender-mcp` wymaga rejestracji
+serwera MCP w OpenCode i włączonego dodatku — w tej sesji nieużywane; praca
+szła batchowo przez `blender -b`.
 
 ## 6. Ryzyka
 

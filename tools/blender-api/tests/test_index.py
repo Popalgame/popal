@@ -141,5 +141,79 @@ class IndexTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, 1)
 
 
+class ManualIndexTests(unittest.TestCase):
+    PAGE = (
+        "# Weight Paint — Editing\n\n"
+        "URL: https://docs.blender.org/manual/en/5.2/sculpt_paint/weight_paint/editing.html\n"
+        "Source: Blender 5.2 Manual (CC-BY-SA; blender.org)\n\n"
+        "Normalize All\n\n"
+        "For each vertex, this tool makes sure that the sum of the weights "
+        "across all vertex groups is equal to 1.\n"
+    )
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.directory = Path(self.temporary.name)
+        self.manual = self.directory / "manual"
+        self.manual.mkdir()
+        (self.manual / "weight-paint-editing.md").write_text(
+            self.PAGE, encoding="utf-8"
+        )
+        self.db = self.directory / "api.sqlite"
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def test_parse_manual_file_reads_title_url_body(self):
+        page = blender_api.parse_manual_file(
+            self.manual / "weight-paint-editing.md"
+        )
+        self.assertEqual(page["title"], "Weight Paint — Editing")
+        self.assertIn("editing.html", page["url"])
+        self.assertIn("Normalize All", page["body"])
+
+    def test_index_and_search_manual(self):
+        result = blender_api.index_manual(self.manual, self.db)
+        self.assertEqual(result["pages"], 1)
+        self.assertEqual(blender_api.stats(self.db)["manual_pages"], 1)
+        results = blender_api.query_manual(self.db, "normalize weights sum")
+        self.assertTrue(results)
+        self.assertIn("editing.html", results[0]["url"])
+        self.assertIn("Normalize", results[0]["snippet"])
+
+    def test_search_without_index_fails(self):
+        with self.assertRaises(SystemExit) as raised:
+            blender_api.query_manual(self.db, "anything")
+        self.assertEqual(raised.exception.code, 1)
+
+    def test_index_missing_directory_fails(self):
+        with self.assertRaises(SystemExit) as raised:
+            blender_api.index_manual(self.directory / "missing", self.db)
+        self.assertEqual(raised.exception.code, 1)
+
+    def test_manual_index_survives_api_build(self):
+        records = self.directory / "api.jsonl"
+        records.write_text(
+            json.dumps(
+                {
+                    "path": "bpy.types.Mesh",
+                    "kind": "type",
+                    "name": "Mesh",
+                    "description": "Mesh datablock",
+                    "signature": "",
+                    "version": "5.2.2",
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        blender_api.index_manual(self.manual, self.db)
+        blender_api.build_index(records, self.db)
+        # build tworzy świeżą bazę, więc wymaga ponownego indeksu manuala
+        self.assertEqual(blender_api.stats(self.db)["records"], 1)
+        blender_api.index_manual(self.manual, self.db)
+        self.assertEqual(blender_api.stats(self.db)["manual_pages"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

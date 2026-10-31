@@ -902,7 +902,6 @@ def main() -> int:
         "hair": (0.85, 0.32, 0.42),
         "hair_tip": (0.30, 0.62, 0.68),
         "jacket": (0.015, 0.17, 0.19),
-        "jacket_dark": (0.01, 0.10, 0.11),
         "top": (0.80, 0.78, 0.74),
         "shorts": (0.22, 0.13, 0.06),
         "belt": (0.13, 0.08, 0.05),
@@ -968,6 +967,9 @@ def main() -> int:
         armature.data.pose_position = "REST"
         if ground is not None:
             bpy.data.objects.remove(ground, do_unlink=True)
+        ground_material = bpy.data.materials.get("GroundMat")
+        if ground_material is not None:
+            bpy.data.materials.remove(ground_material)
 
     # Zapis .blend
     blend_path = out_dir / f"{args.name.lower()}-generated.blend"
