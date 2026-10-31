@@ -45,12 +45,15 @@ const gate=new THREE.Group();gate.position.set(0,H_(0,I.G0+1),I.G0+1);sc_.add(ga
  for(let i=0;i<9;i++){const m=new THREE.Mesh(RG[i%3],SM);m.scale.set(rr(.6,1.1),rr(.6,1.2),rr(.6,1));m.position.set(rr(-1.6,1.6),rr(.2,1.4)+(i>5?1:0),rr(-.6,.6));m.rotation.y=rnd()*6;m.castShadow=true;gate.add(m)}
  const VM=new THREE.MeshStandardMaterial({color:0x58c46a,emissive:0x3cff9a,emissiveIntensity:.55,roughness:.6});
  for(let i=0;i<7;i++){const c=new THREE.CatmullRomCurve3([new THREE.Vector3(-1.9,rr(.3,2.6),.7),new THREE.Vector3(rr(-.8,0),rr(.5,3),.9),new THREE.Vector3(rr(0,.8),rr(.5,3),.9),new THREE.Vector3(1.9,rr(.3,2.6),.7)]);
-  gate.add(new THREE.Mesh(new THREE.TubeGeometry(c,24,.05,5,false),VM))}}
+  const v=new THREE.Mesh(new THREE.TubeGeometry(c,24,.05,5,false),VM);v.userData.vine=1;gate.add(v)}}
+/* відкритий прохід: ліани зникають, а каміння завалу лежить купою біля стіни ущелини (його туди відносить Брам, isle-npc.js) */
+I.PILE=[3.5,I.G0+3.3];I.gate=gate;
+const toPile=()=>{gate.children.forEach(o=>{if(o.userData.vine)o.visible=false});gate.position.set(I.PILE[0],H_(I.PILE[0],I.PILE[1])-.25,I.PILE[1]);gate.rotation.set(0,.7,0);gate.scale.set(.85,.6,.85);gate.visible=true};
 const INV=G('inv')||{};INV._rl='isle';
 let open=!!INV._isg;try{if(new URLSearchParams(location.search).get('gate')=='open')open=true}catch(_){}
-gate.visible=!open;
+if(open)toPile();
 I.isOpen=()=>open;
-I.open=()=>{open=true;gate.visible=false;INV._isg=1;try{save()}catch(_){}};
+I.open=()=>{open=true;toPile();INV._isg=1;try{save()}catch(_){}};
 
 /* ---------- арка-портал ---------- */
 const arch=new THREE.Group(),AX=0,AZ=I.PZ-1.5;arch.position.set(AX,H_(AX,AZ),AZ);sc_.add(arch);
@@ -107,7 +110,7 @@ window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(ok(P_.x,P_.z,0))re
 const cb0=window.colBlocked;
 window.colBlocked=function(x0,z0,x1,z1,r){if(!ok(x1,z1,.3))return true;return cb0?cb0.apply(this,arguments):false};
 /* повернення з великого світу через печеру — до арки; збережена позиція з іншого виміру — на пляж */
-try{if(localStorage.getItem('zi_isle_at')){localStorage.removeItem('zi_isle_at');open=true;gate.visible=false;INV._isg=1;P_.x=0;P_.z=I.PZ+3;P_.face=0;setTimeout(()=>{try{msg('🏝️ Ви повернулися на Острів пробудження')}catch(_){}},1500)}}catch(_){}
+try{if(localStorage.getItem('zi_isle_at')){localStorage.removeItem('zi_isle_at');open=true;toPile();INV._isg=1;P_.x=0;P_.z=I.PZ+3;P_.face=0;setTimeout(()=>{try{msg('🏝️ Ви повернулися на Острів пробудження')}catch(_){}},1500)}}catch(_){}
 if(!ok(P_.x,P_.z,0)){P_.x=I.START[0];P_.z=I.START[1];P_.face=Math.PI}
 
 /* ---------- перехід у звичайний світ ---------- */

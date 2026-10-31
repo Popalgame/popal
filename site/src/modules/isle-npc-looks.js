@@ -6,11 +6,9 @@ const S=new T.SphereGeometry(1,20,14),C=new T.CylinderGeometry(1,1,1,20),B=new T
 const mesh=(g,m,sx,sy,sz)=>{const o=new T.Mesh(g,m);o.scale.set(sx,sy==null?sx:sy,sz==null?sx:sz);return o};
 const grp=(...a)=>{const g=new T.Group();a.forEach(([o,x,y,z,rx,ry,rz])=>{o.position.set(x,y,z);o.rotation.set(rx||0,ry||0,rz||0);g.add(o)});return g};
 window.ISLE_LOOKS={
- /* 🧓 Дід Вітрило: синій бушлат, сиве волосся, борода й вуса, капітанський кашкет, палиця */
+ /* 🧓 Дід Вітрило: синій бушлат, сиве волосся, капітанський кашкет, палиця */
  vit:{jacket:'#2c4470',pants:'#3a3e4c',hair:'#eeeeea',scale:[1.03,1,1.05],acc(add,M,bones,hold){
   const W=M(0xf1f1ec,{roughness:.95});
-  add('Head',grp([mesh(S,W,.13,.09,.08),0,0,0],[mesh(S,W,.09,.08,.06),0,-.07,.0],[mesh(S,W,.05,.07,.05),-.11,.04,-.03],[mesh(S,W,.05,.07,.05),.11,.04,-.03]),[0,1.225,.16]);
-  add('Head',grp([mesh(S,W,.045,.02,.025),-.035,0,0,0,0,-.35],[mesh(S,W,.045,.02,.025),.035,0,0,0,0,.35]),[0,1.335,.245]);
   const hat=grp([mesh(C,M(0x1c2a48),.33,.15,.33),0,0,0],[mesh(C,W,.335,.04,.335),0,-.05,0],[mesh(C,M(0x111a30),.38,.018,.38),0,-.075,.06],[mesh(S,M(0xd9b24a,{metalness:.6,roughness:.3}),.04,.04,.015),0,.0,.33]);
   add('Head',hat,[0,1.71,-.01]);
   /* палиця: від землі до кулака, з набалдашником над кулаком */

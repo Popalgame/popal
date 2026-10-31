@@ -56,15 +56,38 @@ function klubochok(){const g=human({top:0x7a4a8a,pants:0x7a4a8a,sleeve:0x7a4a8a,
  for(const[c,x,z]of[[0xff6a8a,-.05,0],[0x6ad0ff,.05,.03],[0xffd24a,0,-.05]])P(b,SPH,c,x,.08,z,.06);g.userData.arms[1].rotation.z=.35;
  const w0=g.userData.wave;g.userData.wave=t=>{if(t==null){g.userData.arms[1].rotation.z+=(.35-g.userData.arms[1].rotation.z)*.1;return}w0(t)};
  return g}
-/* 🗿 Кам'яний Страж Брам */
+/* 🗿 Кам'яний Страж Брам: брили з'єднані суглобами (стегна, плечі, лікті, шия), тож він дихає, кліпає, жестикулює, ходить і носить каміння.
+   Стан: B.mode = 'idle' | 'walk' | 'lift' (руки вгору, тримає ношу над головою); B.walk — фаза кроку. */
 function bram(){const g=new THREE.Group(),C=window.plCliff,mat=C?C.mat():M(0x8b8277,{flatShading:true}),geo=k=>C?C.geo(k):new THREE.IcosahedronGeometry(1,1);
- const R=(k,x,y,z,sx,sy,sz)=>{const m=new THREE.Mesh(geo(k),mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;g.add(m);return m};
- R(0,0,1.3,0,.75,.8,.6);R(1,0,.55,0,.55,.45,.45);for(const s of[-1,1]){R(2,s*.32,.25,0,.28,.3,.28);R(1,s*.95,1.35,0,.32,.5,.32);R(0,s*1.05,.75,.08,.3,.32,.3)}
- const hd=R(2,0,2.25,.05,.42,.38,.38);
- const E=M(0x6fe6ff,{emissive:0x39c8ff,emissiveIntensity:2});for(const s of[-1,1]){const e=new THREE.Mesh(SPH,E);e.scale.set(.07,.05,.03);e.position.set(s*.15,2.3,.4);g.add(e)}
- const ru=new THREE.Mesh(new THREE.TorusGeometry(.18,.025,6,6),E);ru.position.set(0,1.45,.55);g.add(ru);
- for(let i=0;i<5;i++)P(g,SPH,0x4f8a3a,Math.cos(i*1.3)*.3,2.55+(i%2)*.04,Math.sin(i*1.3)*.25,.16,.06,.14);/* мох на голові */
- g.userData.idle=t=>{ru.rotation.z=t*.6;E.emissiveIntensity=1.6+Math.sin(t*2)*.5;hd.rotation.y=Math.sin(t*.4)*.12};
+ const R=(par,k,x,y,z,sx,sy,sz)=>{const m=new THREE.Mesh(geo(k),mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;par.add(m);return m};
+ const J=(par,x,y,z)=>{const j=new THREE.Group();j.position.set(x,y,z);par.add(j);return j};
+ const MOSS=M(0x4f8a3a,{roughness:.95}),E=M(0x6fe6ff,{emissive:0x39c8ff,emissiveIntensity:2});
+ /* таз і ноги */const hip=J(g,0,.78,0);R(hip,1,0,0,0,.52,.3,.4);
+ const legs=[-1,1].map(s=>{const l=J(hip,s*.3,-.05,0);R(l,2,0,-.28,0,.24,.3,.24);R(l,0,0,-.62,.07,.28,.16,.34);return l});
+ /* тулуб */const tor=J(hip,0,.12,0);R(tor,0,0,.5,0,.72,.62,.52);R(tor,1,0,.95,-.05,.6,.28,.42);
+ const ru=new THREE.Mesh(new THREE.TorusGeometry(.17,.03,6,6),E);ru.position.set(0,.55,.5);tor.add(ru);
+ for(let i=0;i<4;i++)P(tor,SPH,0x4f8a3a,Math.cos(i*1.7)*.45,1.12,Math.sin(i*1.7)*.25-.05,.15,.05,.13);
+ /* руки: плече → лікоть → кулак */
+ const arms=[-1,1].map(s=>{const sh=J(tor,s*.78,.88,0);R(sh,2,0,0,0,.3,.28,.3);R(sh,1,0,-.32,0,.24,.34,.24);
+  const el=J(sh,0,-.62,0);R(el,0,0,-.22,0,.25,.32,.25);R(el,2,0,-.55,.02,.3,.26,.3);sh.rotation.z=s*.12;return{sh,el,s}});
+ /* шия й голова */const nk=J(tor,0,1.12,0);R(nk,2,0,.24,.02,.36,.3,.32);
+ const eyes=[-1,1].map(s=>{const e=new THREE.Mesh(SPH,E);e.scale.set(.065,.045,.03);e.position.set(s*.13,.28,.3);nk.add(e);return e});
+ R(nk,1,0,.1,.2,.22,.08,.12);/* щелепа */for(let i=0;i<5;i++)P(nk,SPH,0x4f8a3a,Math.cos(i*1.3)*.22,.5+(i%2)*.03,Math.sin(i*1.3)*.18,.13,.05,.11);
+ const B={mode:'idle',walk:0,talk:false,load:0};let blinkT=3,blink=0;
+ g.userData={ownBreath:1,B,arms,hand:arms[1].el,
+  wave:t=>{B.talk=t!=null},
+  idle:t=>{const k=Math.sin(t*1.3);
+   /* дихання й світіння руни */tor.position.y=.12+k*.018;tor.rotation.x=k*.012;ru.rotation.z=t*.6;E.emissiveIntensity=1.6+Math.sin(t*2)*.5;
+   /* кліпання */blinkT-=.016;if(blinkT<0){blink=.18;blinkT=3+Math.random()*3}if(blink>0)blink-=.016;eyes.forEach(e=>e.scale.y=blink>0?.008:.045);
+   /* голова: легко хитається, у розмові — кивки */nk.rotation.y=Math.sin(t*.4)*.15;nk.rotation.x=B.talk?Math.sin(t*5)*.12:Math.sin(t*.7)*.03;
+   let lp=0;if(B.mode=='walk'){lp=Math.sin(B.walk);hip.position.y=.78+Math.abs(Math.cos(B.walk))*.05}else hip.position.y+=(.78-hip.position.y)*.1;
+   legs[0].rotation.x=lp*.45;legs[1].rotation.x=-lp*.45;
+   for(const a of arms){let x=0,z=a.s*.12,e=0;
+    if(B.mode=='walk')x=(a.s>0?lp:-lp)*.35;
+    if(B.mode=='lift'){x=-2.6*B.load;e=-.5*B.load;z=a.s*(.12+.25*B.load)}/* руки вгору — ноша над головою */
+    else if(B.talk&&a.s>0){x=-1.1+Math.sin(t*4)*.15;e=-.9}/* у розмові жестикулює правою */
+    else{x+=Math.sin(t*1.3+a.s)*.04}
+    a.sh.rotation.x+=(x-a.sh.rotation.x)*.12;a.sh.rotation.z+=(z-a.sh.rotation.z)*.12;a.el.rotation.x+=(e-a.el.rotation.x)*.12}}};
  return g}
 /* ---------- реквізит біля NPC ---------- */
 const put=(m,x,z,ry)=>{m.position.set(x,H_(x,z),z);m.rotation.y=ry||0;m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});sc_.add(m);return m};
@@ -88,6 +111,29 @@ N.add({id:'klu',name:'Пані Клубочок',role:'доглядачка по
  lines:['Тсс! Не налякай Пушинку. Вона сьогодні вже двічі ховалася в мій кошик.','Я — пані Клубочок. Попали — як клубки пряжі: якщо до них з любов’ю, вони не заплутуються.','Коли будеш готовий, навчу тебе, як подружитися з першим попалом.']});
 N.add({id:'brm',name:'Брам',role:'кам’яний страж',x:-2.6,z:I.G0+5.6,face:.25,model:bram(),color:'#4a5560',icon:'🗿',r:.9,height:2.8,
  lines:['…ГРРР-РУМ. Хто йде?','Я — Брам. Мене звуть Брам. Мене завжди звали Брам. Триста років — Брам.','Завал не прибрати, доки ти не готовий до великого світу. Іди до Вітрила. Він… балакучий.']});
+/* Брам відкриває ущелину: коли навчання пройдене (ISLE.open), він підходить до завалу, піднімає каміння над головою,
+   відносить його до стіни ущелини й кидає купою, ліани розсипаються, а сам повертається на пост — обличчям до острова. */
+{const n=N.get('brm'),B=n.model.userData.B,gate=I.gate,open0=I.open;
+ if(I.isOpen&&I.isOpen()){/* уже відкрито: стоїть збоку від проходу */}
+ I.open=()=>{if(n.busy||I.isOpen())return;n.busy=1;N.close();const home=[n.x,n.z],gz=I.G0+1,front=[0,I.G0+3.4],pile=I.PILE;
+  const legs=[{to:front,face:Math.PI},{act:'lift',d:1.4},{to:[1.4,I.G0+3.3],face:Math.PI/2,carry:1},{act:'throw',d:1},{to:home,face:.25},{act:'end'}];
+  let i=0,t=0,last=performance.now(),dt=.016;const g0=gate.position.clone(),v=new THREE.Vector3();
+  gate.children.forEach(o=>{if(o.userData.vine)o.visible=false});/* ліани розсипаються, щойно Брам рушає */
+  const A=G('ANI');const step=()=>{const L=legs[i];if(!L){n.busy=0;return true}const now=performance.now();dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;
+   if(L.to){B.mode=L.carry?'lift':'walk';if(L.carry)B.load=1;const dx=L.to[0]-n.x,dz=L.to[1]-n.z,d=Math.hypot(dx,dz);
+    const want=Math.atan2(dx,dz);let df=want-n.g.rotation.y;df=Math.atan2(Math.sin(df),Math.cos(df));n.g.rotation.y+=df*.15;
+    if(d<.08){n.x=L.to[0];n.z=L.to[1];if(L.face!=null){let f=L.face-n.g.rotation.y;f=Math.atan2(Math.sin(f),Math.cos(f));n.g.rotation.y+=f*.2;if(Math.abs(f)>.05)return false}i++;t=0}
+    else{const sp=Math.min(d,1.3*dt);n.x+=dx/d*sp;n.z+=dz/d*sp;B.walk+=dt*6}
+    n.g.position.set(n.x,H_(n.x,n.z),n.z);n.face0=n.g.rotation.y}
+   if(L.carry||L.act=='lift'){/* ноша над головою Брама */const fwd=new THREE.Vector3(Math.sin(n.g.rotation.y),0,Math.cos(n.g.rotation.y));
+    const k=L.act=='lift'?Math.min(1,t/L.d):1;B.mode='lift';B.load=k;v.set(n.x+fwd.x*.7,H_(n.x,n.z)+2.4*k+(g0.y-H_(n.x,n.z))*(1-k),n.z+fwd.z*.7);
+    if(L.act=='lift')gate.position.lerpVectors(g0,v,k);else gate.position.copy(v);gate.scale.setScalar(1-.25*k);if(L.act=='lift'&&t>=L.d){i++;t=0}}
+   if(L.act=='throw'){if(!L.p0)L.p0=gate.position.clone();const k=Math.min(1,t/L.d),p0=L.p0,py=H_(pile[0],pile[1])-.25;B.load=1-k;
+    gate.position.set(p0.x+(pile[0]-p0.x)*k,p0.y+(py-p0.y)*k*k+Math.sin(k*Math.PI)*.8,p0.z+(pile[1]-p0.z)*k);gate.rotation.y+=dt*3;gate.scale.setScalar(.75+.1*k);
+    if(k>=1){B.mode='walk';B.load=0;i++;t=0;open0();try{msg('🗿 Брам: «Прохід вільний. Іди… і назви себе порталу»')}catch(_){}}}
+   if(L.act=='end'){B.mode='idle';n.busy=0;n.face0=.25;i++;return true}
+   return false};
+  if(A){const f=()=>{if(step()){const k=A.indexOf(f);if(k>=0)A.splice(k,1)}};A.push(f)}else open0()}}
 /* Пушинка — Пухоклуб пані Клубочок */
 try{if(window.PALMODEL){const r=PALMODEL.build(4),m=r.root;m.scale.multiplyScalar(.8);put(m,I.SP[3][0]-1.4,I.SP[3][1]+.9,.6);
  let t=0;const A=G('ANI');if(A)A.push(()=>{t+=.016;m.position.y=H_(m.position.x,m.position.z)+Math.abs(Math.sin(t*3))*.12;if(r.mixer)r.mixer.update(.016)})}}catch(e){console.warn('isle-npc pal',e)}

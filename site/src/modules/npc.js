@@ -71,9 +71,9 @@ const angG=()=>{try{return eval('ang')}catch(_){return 0}};
 const tick=()=>{const dt=.016;
  if(typing){shown+=1.6;$x.textContent=full.slice(0,shown|0);if(shown>=full.length)done()}
  for(const n of L){n.t+=dt;const d=Math.hypot(n.x-P_.x,n.z-P_.z);
-  /* дихання */const m=n.model;m.scale.y=1+Math.sin(n.t*2.2)*.012;
+  /* дихання */const m=n.model;if(!m.userData.ownBreath)m.scale.y=1+Math.sin(n.t*2.2)*.012;
   /* повертається до героя, коли той поруч; інакше — до початкового напрямку */
-  const want=d<6?Math.atan2(P_.x-n.x,P_.z-n.z):n.face0;let df=want-n.g.rotation.y;df=Math.atan2(Math.sin(df),Math.cos(df));n.g.rotation.y+=df*.06;
+  if(!n.busy){const want=d<6?Math.atan2(P_.x-n.x,P_.z-n.z):n.face0;let df=want-n.g.rotation.y;df=Math.atan2(Math.sin(df),Math.cos(df));n.g.rotation.y+=df*.06}/* busy — NPC зайнятий власною дією (ходить, несе) */
   /* махає рукою, коли говорить */if(n.talkT>0)n.talkT-=dt;if(m.userData.wave)m.userData.wave(n.talkT>0?n.t:null);if(m.userData.idle)m.userData.idle(n.t);
   n.mk.position.y=n.ht+.55+Math.sin(n.t*3)*.07;
   const o=n.nm.material;o.opacity+=((d<9?1:0)-o.opacity)*.08;
