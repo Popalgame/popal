@@ -1,6 +1,6 @@
 /* 0.5.x: панель «куля + у руках» у стилі сучасних ігор-ловилок: одна напівпрозора плашка з двох половин (дотик до половини — вибір кулі чи інструмента) з бірюзовою смугою й точками по кутах,
    лічильник куль «003» (зайві нулі тьмяні, порожньо — червоний 0), у правій — інструмент і його міцність.
-   ПК: над панеллю підказка «Кинути сферу [R]», під плашками клавіші 3 (наступна куля) і 4 (наступний інструмент); дотик, як і раніше, відкриває вибір. */
+   ПК: над панеллю підказка «Кинути сферу [R]», під плашками клавіші 3 (наступна куля) і 4 (наступний інструмент); на телефоні цього рядка немає, дотик, як і раніше, відкриває вибір. */
 (function(){try{
 const eqp=document.getElementById('eqp'),eb=document.getElementById('eqb'),et=document.getElementById('eqt');if(!eqp||!eb||!et||typeof eqUp!='function')return;
 let fine=false;try{fine=matchMedia('(pointer: fine)').matches}catch(_){}
@@ -30,7 +30,7 @@ html body #eqp.pq .eqi img,html body #eqp.pq .eqi canvas,html body #eqp.pq .eqi 
 @media (pointer:coarse) and (max-width:960px){html body #eqp.pq .eqs{width:116px!important}#eqp.pq .pqn{font-size:22px}#eqp.pq .pqb{height:40px;padding:0 6px}html body #eqp.pq .eqi{flex-basis:30px;width:30px!important;height:30px!important;font-size:21px!important}}`;
 document.head.appendChild(st);
 eqp.classList.add('pq');
-const mk=(b,sw)=>{const h=document.createElement('span');h.className='pqh';const bd=document.createElement('span');bd.className='pqb';const k=document.createElement('span');k.className='pqk';k.innerHTML=(fine?`<kbd>${sw}</kbd>`:'')+'⟳';
+const mk=(b,sw)=>{const h=document.createElement('span');h.className='pqh';const bd=document.createElement('span');bd.className='pqb';const k=document.createElement('span');k.className='pqk';k.innerHTML=`<kbd>${sw}</kbd>⟳`;if(!fine)k.style.display='none';/* на телефоні клавіш немає — рядок підказок не показуємо */
  const ic=b.querySelector('.eqi');b.prepend(h);b.insertBefore(bd,ic);bd.appendChild(ic);const x=document.createElement('span');bd.appendChild(x);b.appendChild(k);return{h,bd,x}};
 const B=mk(eb,'3'),Tl=mk(et,'4');
 const tv=document.createElement('span');tv.className='pqv';Tl.bd.insertBefore(tv,Tl.x);B.x.className='pqn';Tl.x.className='pqd';
