@@ -9,8 +9,9 @@ window.ISLE_LOOKS={
  /* 🧓 Дід Вітрило: синій бушлат, сиве волосся, капітанський кашкет, палиця */
  vit:{jacket:'#2c4470',pants:'#3a3e4c',hair:'#eeeeea',scale:[1.03,1,1.05],acc(add,M,bones,hold){
   const W=M(0xf1f1ec,{roughness:.95});
-  const hat=grp([mesh(C,M(0x1c2a48),.33,.15,.33),0,0,0],[mesh(C,W,.335,.04,.335),0,-.05,0],[mesh(C,M(0x111a30),.38,.018,.38),0,-.075,.06],[mesh(S,M(0xd9b24a,{metalness:.6,roughness:.3}),.04,.04,.015),0,.0,.33]);
-  add('Head',hat,[0,1.71,-.01]);
+  const VIS=new T.CylinderGeometry(1,1,1,20,1,false,-Math.PI/2,Math.PI);/* козирок — лише спереду */
+  const hat=grp([mesh(C,M(0x1c2a48),.25,.11,.25),0,0,0],[mesh(C,W,.255,.03,.255),0,-.035,0],[mesh(VIS,M(0x111a30),.2,.014,.15),0,-.05,.2],[mesh(S,M(0xd9b24a,{metalness:.6,roughness:.3}),.03,.03,.012),0,.005,.25]);hat.rotation.x=-.12;
+  add('Head',hat,[0,1.73,-.02]);
   /* палиця: від землі до кулака, з набалдашником над кулаком */
   {const sh=mesh(C,M(0x7a5230),.024,1,.024),kn=mesh(S,M(0x6a4526),.045);const g=grp([sh,0,.5,0],[kn,0,1.04,0]);
    hold('RightHand',g,(o,p)=>{const h=Math.max(.3,p.y+.03);o.position.set(p.x,0,p.z);o.scale.set(1,h,1);kn.scale.set(.045,.045/h,.045)})}
