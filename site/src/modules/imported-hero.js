@@ -2,13 +2,24 @@
 (function(){
 'use strict';
 const T=window.THREE,previous=window.buildHero,previousAct=window.heroAct,previousShow=window.ccShow,previousDraw=window.drawAv;
-const fullUrl='assets/models/hero-rigged.glb',mobileUrl='assets/models/hero-mobile.glb',locomotionUrl='assets/models/hero-locomotion.glb',combatUrl='assets/models/hero-combat.glb';
+/* Hero model registry: each entry ships rig + locomotion + combat packs and the
+   melee clip/hand of its signature weapon (classic slashes left, Aiko chops right). */
+const MODELS={
+ classic:{full:'assets/models/hero-rigged.glb',mobile:'assets/models/hero-mobile.glb',locomotion:'assets/models/hero-locomotion.glb',combat:'assets/models/hero-combat.glb',hitClip:'sword_hit',hitHand:'left'},
+ aiko:{full:'assets/models/hero-aiko.glb',mobile:'assets/models/hero-aiko-mobile.glb',locomotion:'assets/models/hero-aiko-locomotion.glb',combat:'assets/models/hero-aiko-combat.glb',hitClip:'hammer_hit',hitHand:'right'}
+};
 let coarse=false;try{coarse=!!(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches)}catch(_){}
-const api=window.importedHero={status:'loading',ready:null,error:null,clips:[],stats:null,url:coarse?mobileUrl:fullUrl,walkSource:'built-in',locomotionSource:'built-in',locomotionReady:null,combatSource:'built-in',combatReady:null};
+const get=name=>{try{return eval(name)}catch(_){return undefined}};
+const MODEL_IDS=Object.keys(MODELS);
+/* look.model is stored as the UI index (0/1) but older saves/tests may hold the id string */
+function activeModel(){const lk=get('look'),m=lk&&lk.model;const id=MODELS[m]?m:(Number.isInteger(+m)&&MODEL_IDS[+m]?MODEL_IDS[+m]:'classic');return{id,def:MODELS[id]}}
+let active=activeModel();
+/* The loop below reads `active` lazily each frame, but a model switched after the
+   module loaded must also refresh the per-instance melee hand; install() re-reads it. */
+const api=window.importedHero={status:'loading',ready:null,error:null,clips:[],stats:null,model:active.id,url:coarse?active.def.mobile:active.def.full,walkSource:'built-in',locomotionSource:'built-in',locomotionReady:null,combatSource:'built-in',combatReady:null,models:Object.keys(MODELS)};
 if(!T||!T.GLTFLoader||!T.SkeletonUtils||typeof previous!=='function'){
  api.status='unavailable';api.error='Three GLTFLoader, SkeletonUtils, or buildHero is unavailable';api.ready=Promise.resolve(false);return;
 }
-const get=name=>{try{return eval(name)}catch(_){return undefined}};
 const instances=new Set(),normName=name=>name.toLowerCase().replace(/[^a-z0-9]/g,'').replace(/^(mixamorig|hero)/,'');
 let template=null,animations=null,locomotion=null,combat=null,last=performance.now();
 function disposeInstance(g){
@@ -32,6 +43,9 @@ function accessory(parent,geometry,material,x,y,z,rx,rz){
 function equipment(model,g){
  const equipped=get('eq')||{},tool=equipped.tool||'';
  const hand=bone(model,['righthand','handr']);
+ /* Aiko's hammer is baked into the model and rigid to the right hand; showing an
+    equipped axe/pick at the same time would stack two tools in one fist. */
+ if(active.id==='aiko'&&/^(ax|pk|pick)/.test(tool))return;
  if(hand&&/^(ax|pk|pick)/.test(tool)){
   const metal=/^(axm|pkm)$/.test(tool)?0xc7d3dc:/^(axe|pick)$/.test(tool)?0x858d96:0xa8753d;
   const grip=new T.Group();grip.name='equippedTool';hand.add(grip);
@@ -69,7 +83,7 @@ function install(g){
  if(g.userData.importedHero)disposeInstance(g);else disposeProcedural(g);
  equipment(model,g);g.add(model);
  g.userData.importedHero={model};
- g.userData.rig={skeletal:true,imported:true,mixer,actions,state:'idle',locomotion:'idle',action:null,actionUntil:0,speed:0,run:0,lastX:null,lastZ:null};
+ g.userData.rig={skeletal:true,imported:true,mixer,actions,state:'idle',locomotion:'idle',action:null,actionUntil:0,speed:0,run:0,lastX:null,lastZ:null,meleeHand:active.def.hitHand};
  if(locomotion)installLocomotion(g.userData.rig);
  if(combat)installCombat(g.userData.rig);
  instances.add(g);return true;
@@ -78,7 +92,7 @@ window.buildHero=function(g,lk){if(!template||!g||g!==get('pl')&&g!==get('hp2'))
 function noteEditor(){
  if(!document.getElementById)return;const panel=document.getElementById('ccp');
  if(!panel||!panel.querySelector('#ccn')||panel.querySelector('.imported-hero-note'))return;
- const note=document.createElement('p');note.className='imported-hero-note';note.textContent='Вигляд 3D-героя фіксований. Ім’я можна змінити.';
+ const note=document.createElement('p');note.className='imported-hero-note';note.textContent='Модель 3D-героя вибирається вище. Ім’я можна змінити.';
  panel.insertBefore(note,panel.querySelector('#cca'));
 }
 if(typeof previousShow==='function')window.ccShow=function(){const result=previousShow.apply(this,arguments);if(api.status==='ready')noteEditor();return result};
@@ -100,10 +114,11 @@ function captureAvatar(){
 }
 if(typeof previousDraw==='function')window.drawAv=function(){const result=previousDraw.apply(this,arguments);if(api.status==='ready')try{captureAvatar()}catch(error){console.warn('imported hero avatar',error)}return result};
 function installCombat(r){
+ const hitName=active.def.hitClip,hitClip=(combat&&combat[hitName])||combat.sword_hit;
  if(r.action&&!r.playingAction)r.playingAction=r.actions[r.action];
- r.toolHit=r.actions.hit;
+ r.toolHit=r.actions.hit;r.meleeHand=active.def.hitHand;
  function overlay(clip){const action=r.mixer.clipAction(upperClip(clip));action.setLoop(T.LoopOnce,1);action.clampWhenFinished=true;if(T.AdditiveAnimationBlendMode!==undefined)action.blendMode=T.AdditiveAnimationBlendMode;return action}
- r.swordHit=overlay(combat.sword_hit);r.throwRight=overlay(combat.throw_right);
+ r.swordHit=overlay(hitClip);r.throwRight=overlay(combat.throw_right);
  r.actions.hit=r.swordHit;r.actions.throw=r.throwRight;
 }
 function swordTarget(){
@@ -120,7 +135,7 @@ function importedAct(kind){
  const old=r.playingAction||r.action&&r.actions[r.action];if(old&&old!==action)old.fadeOut(.08);
  r.actions[kind]=action;action.reset().setEffectiveWeight(1).fadeIn(.06).play();
  r.action=kind;r.playingAction=action;r.actionUntil=performance.now()/1000+action.getClip().duration;r.actionObservedUntil=r.actionUntil;
- r.attackHand=kind==='hit'&&action===r.swordHit?'left':((kind==='throw'&&r.throwRight)||action===r.toolHit)?'right':null;r.state=kind;return true;
+ r.attackHand=kind==='hit'&&action===r.swordHit?r.meleeHand:((kind==='throw'&&r.throwRight)||action===r.toolHit)?'right':null;r.state=kind;return true;
 }
 /* The click listener in hero-anim owns a lexical act(). Route that path as well
    as keyboard/global callers through the imported character's action selector. */
@@ -193,7 +208,7 @@ const damp=(a,b,k,dt)=>a+(b-a)*(1-Math.exp(-k*dt));
 })();
 function loadLocomotion(){
  api.locomotionReady=new Promise(resolve=>{
-  try{new T.GLTFLoader().load(locomotionUrl,gltf=>{
+  try{new T.GLTFLoader().load(active.def.locomotion,gltf=>{
    try{
     const metadata=gltf.scene&&gltf.scene.userData&&gltf.scene.userData.locomotion;
     if(!metadata||metadata.version!==1||!metadata.profiles)throw Error('Missing locomotion stride metadata');
@@ -208,7 +223,7 @@ function loadLocomotion(){
      if(tracks.size)throw Error('Missing locomotion bone');clips[key]=clip;
     }
     if(!(metadata.profiles.walk.speed<metadata.profiles.jog.speed&&metadata.profiles.jog.speed<metadata.profiles.run.speed))throw Error('Locomotion speeds must increase');
-    locomotion={clips,profiles:metadata.profiles};api.walkSource=locomotionUrl;api.locomotionSource=locomotionUrl;
+    locomotion={clips,profiles:metadata.profiles};api.walkSource=active.def.locomotion;api.locomotionSource=active.def.locomotion;
     for(const g of instances)installLocomotion(g.userData.rig);resolve(true);
    }catch(error){console.warn('hero locomotion',error);resolve(false)}
   },undefined,error=>{console.warn('hero locomotion',error);resolve(false)})}catch(error){console.warn('hero locomotion',error);resolve(false)}
@@ -216,23 +231,24 @@ function loadLocomotion(){
 }
 function loadCombat(){
  api.combatReady=new Promise(resolve=>{
-  try{new T.GLTFLoader().load(combatUrl,gltf=>{
+  try{new T.GLTFLoader().load(active.def.combat,gltf=>{
    try{
     const clips={},expected=animations.find(c=>c.name.toLowerCase()==='idle');
-    if(!expected||!gltf.animations||gltf.animations.length!==2)throw Error('Combat requires sword_hit and throw_right');
-    for(const key of ['sword_hit','throw_right']){
+    const names=[active.def.hitClip,'throw_right'];
+    if(!expected||!gltf.animations||gltf.animations.length!==2)throw Error('Combat requires '+names.join(' and '));
+    for(const key of names){
      const clip=gltf.animations.find(c=>c.name===key),tracks=new Map(expected.tracks.map(t=>[t.name,t.ValueTypeName]));
      if(!clip||!Number.isFinite(clip.duration)||clip.duration<=0||clip.tracks.length!==tracks.size)throw Error('Invalid combat clip');
      for(const track of clip.tracks){if(tracks.get(track.name)!==track.ValueTypeName||!track.validate())throw Error('Combat track does not match hero rig');tracks.delete(track.name)}
      if(tracks.size)throw Error('Missing combat bone');clips[key]=clip;
     }
-    combat=clips;api.combatSource=combatUrl;for(const g of instances)installCombat(g.userData.rig);resolve(true);
+    combat=clips;api.combatSource=active.def.combat;for(const g of instances)installCombat(g.userData.rig);resolve(true);
    }catch(error){console.warn('hero combat',error);resolve(false)}
   },undefined,error=>{console.warn('hero combat',error);resolve(false)})}catch(error){console.warn('hero combat',error);resolve(false)}
  });
 }
 api.ready=new Promise(resolve=>{
- const urls=coarse?[mobileUrl,fullUrl]:[fullUrl],loader=new T.GLTFLoader();
+ const urls=coarse?[active.def.mobile,active.def.full]:[active.def.full],loader=new T.GLTFLoader();
  function fail(error,index){
   if(index+1<urls.length){load(index+1);return}
   api.status='failed';api.error=String(error&&error.message||error);console.warn('imported hero',error);resolve(false);
@@ -258,4 +274,40 @@ api.ready=new Promise(resolve=>{
  }
  load(0);
 });
+/* Switch the 3D hero model (e.g. from the customization panel). Loads the chosen
+   packs, then rebuilds every live instance; falls back to classic on any failure. */
+api.setModel=function(id){
+ if(!MODELS[id]||id===active.id)return Promise.resolve(api.status==='ready');
+ const model={id,def:MODELS[id]};
+ const urls=coarse?[model.def.mobile,model.def.full]:[model.def.full];
+ return new Promise(resolve=>{
+  const loader=new T.GLTFLoader();
+  function fail(error,index){
+   if(index+1<urls.length){load(index+1);return}
+   console.warn('hero model',id,error);resolve(false);
+  }
+  function load(index){
+   const url=urls[index];
+   try{loader.load(url,gltf=>{
+    try{
+     const scene=gltf.scene||gltf.scenes&&gltf.scenes[0],clips=gltf.animations||[];
+     if(!scene||['idle','walk','run','swim','hit','throw'].some(name=>!clips.some(c=>c.name.toLowerCase()===name)))throw Error('Rig requires idle, walk, run, swim, hit, and throw clips');
+     let skinned=0;scene.traverse(node=>{if(node.isSkinnedMesh)skinned++});if(!skinned)throw Error('Rig requires a SkinnedMesh');
+     const box=new T.Box3().setFromObject(scene),size=box.getSize(new T.Vector3());if(!Number.isFinite(size.y)||size.y<.01)throw Error('Rig has invalid bounds');
+     const wrapper=new T.Group(),scale=1.8/size.y;
+     scene.scale.multiplyScalar(scale);scene.position.set(-(box.min.x+box.max.x)*.5*scale,-box.min.y*scale,-(box.min.z+box.max.z)*.5*scale);wrapper.add(scene);
+     active=model;template=wrapper;animations=clips;locomotion=null;combat=null;
+     api.model=id;api.url=url;api.status='loading';api.clips=clips.map(c=>c.name);
+     /* install() deletes and re-adds each g in `instances`; iterating the live set
+        directly would re-visit every re-added member forever, so walk a snapshot */
+     for(const g of [...instances])install(g);
+     document.body.classList.add('imported-hero-ready');
+     loadLocomotion();loadCombat();
+     api.status='ready';resolve(true);
+    }catch(error){fail(error,index)}
+   },undefined,error=>fail(error,index))}catch(error){fail(error,index)}
+  }
+  load(0);
+ });
+};
 })();

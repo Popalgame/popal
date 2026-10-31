@@ -1,0 +1,47 @@
+{
+  "source": "site/assets/models/hero-aiko.glb",
+  "fps": 96,
+  "clips": {
+    "hammer_hit": {
+      "frames": 72,
+      "durationSeconds": 0.75,
+      "keyPoses": [
+        0,
+        9,
+        20,
+        28,
+        37,
+        49,
+        72
+      ],
+      "bones": 22,
+      "tracks": 66,
+      "motion": {
+        "rightHandPathMeters": 0.7768,
+        "rightHandExcursionMeters": 0.2141,
+        "leftHandExcursionMeters": 0.0822,
+        "minimumRightHandToHeadMeters": 0.3042
+      }
+    },
+    "throw_right": {
+      "frames": 72,
+      "durationSeconds": 0.75,
+      "keyPoses": [
+        0,
+        12,
+        23,
+        31,
+        44,
+        72
+      ],
+      "bones": 22,
+      "tracks": 66,
+      "motion": {
+        "rightHandPathMeters": 0.814,
+        "rightHandExcursionMeters": 0.2837,
+        "leftHandExcursionMeters": 0.0709,
+        "minimumRightHandToHeadMeters": 0.3328
+      }
+    }
+  }
+}

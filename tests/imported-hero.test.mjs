@@ -5,11 +5,11 @@ import vm from 'node:vm';
 const three=readFileSync(new URL('../site/three.min.js',import.meta.url),'utf8');
 const skeletonUtils=readFileSync(new URL('../site/vendor/SkeletonUtils.js',import.meta.url),'utf8');
 const imported=readFileSync(new URL('../site/src/modules/imported-hero.js',import.meta.url),'utf8');
-function setup({coarse=false,matchMedia=true}={}){
+function setup({coarse=false,matchMedia=true,look=null}={}){
  let now=0,editorOpen=false,avatarCanvas=null,oldAvatarDraws=0;const frames=[],notes=[],bodyClasses=new Set(),requests=[];
  const panel={querySelector:selector=>selector==='#ccn'?editorOpen?{}:null:selector==='.imported-hero-note'?notes[0]||null:selector==='#cca'?{}:null,insertBefore:note=>notes.push(note)};
  const document={addEventListener(){},getElementById:id=>id==='ccp'?panel:id==='avc'?avatarCanvas:null,createElement:()=>({}),body:{classList:{add:name=>bodyClasses.add(name)}}};
- const env={console:{...console,warn(){}},performance:{now:()=>now},requestAnimationFrame:callback=>frames.push(callback),setTimeout,document,H:()=>0,menuO:0,P:{x:0,z:0},eq:{tool:null,bag:null},inv:{}};
+ const env={console:{...console,warn(){}},performance:{now:()=>now},requestAnimationFrame:callback=>frames.push(callback),setTimeout,document,H:()=>0,menuO:0,P:{x:0,z:0},eq:{tool:null,bag:null},inv:{},look};
  if(matchMedia)env.matchMedia=query=>{assert.equal(query,'(pointer: coarse)');return {matches:coarse}};
  env.ccShow=()=>{editorOpen=true;notes.length=0};env.drawAv=()=>oldAvatarDraws++;
  env.window=env;env.self=env;vm.createContext(env);vm.runInContext(three,env);vm.runInContext(skeletonUtils,env);
@@ -181,6 +181,50 @@ test('distance phase is independent of frame rate and stops on menu, pause, coll
  a.env.menuO=0;a.env.P.x+=.25;a.rt.tick(1000);assert.equal(a.r.gaitPhase,phase);
  a.env.P.x+=100;a.rt.tick(50);assert.equal(a.r.gaitPhase,phase,'teleport cannot spin the cycle');
  a.env.H=()=>-2;a.env.P.x+=.25;a.rt.tick(50);assert.equal(a.r.locomotion,'swim');assert.equal(a.r.gaitPhase,phase);
+});
+
+function aikoCombatAsset(rt){return rt.asset(['hammer_hit','throw_right'])}
+test('selecting Aiko in the saved look loads her packs and routes melee to the right-hand hammer',async()=>{
+ const rt=setup({look:{model:'aiko'}}),{env}=rt,T=env.THREE;
+ assert.equal(env.importedHero.model,'aiko');
+ assert.deepEqual(rt.requests.map(r=>r.url),['assets/models/hero-aiko.glb']);
+ rt.resolve(rt.asset());assert.equal(await env.importedHero.ready,true);
+ assert.equal(env.importedHero.url,'assets/models/hero-aiko.glb');
+ const packA=rt.asset(['walk','jog','run']);
+ packA.scene.userData.locomotion={version:1,profiles:{walk:{speed:1.8},jog:{speed:5},run:{speed:8}}};
+ rt.resolve(packA,'assets/models/hero-aiko-locomotion.glb');
+ assert.ok(rt.requests.some(r=>r.url==='assets/models/hero-aiko-locomotion.glb'),'aiko locomotion requested');
+ assert.equal(await env.importedHero.locomotionReady,true);
+ assert.equal(env.importedHero.locomotionSource,'assets/models/hero-aiko-locomotion.glb');
+ const combat=rt.asset(['hammer_hit','throw_right']);rt.resolve(combat,'assets/models/hero-aiko-combat.glb');
+ assert.equal(await env.importedHero.combatReady,true);
+ const r=env.pl.userData.rig;env.wild=[{x:1,z:0}];
+ env.heroAct('hit');
+ assert.equal(r.attackHand,'right','hammer chop uses the right hand');
+ assert.equal(r.actions.hit.getClip().name,'hammer_hit');
+ env.heroAct('throw');assert.equal(r.attackHand,'right');assert.equal(r.actions.throw.getClip().name,'throw_right');
+ rt.tick(1000);assert.equal(r.action,'throw','a frame pause must not skip the visible throw');
+ for(let i=0;i<22;i++)rt.tick(50);assert.equal(r.action,null);
+ env.eq.tool='axe';env.buildHero(env.pl,{});
+ const names=[];env.pl.userData.importedHero.model.traverse(n=>{if(n.name==='equippedTool')names.push(n.name)});
+ assert.deepEqual(names,[],'Aiko keeps her baked hammer instead of stacking an equipped tool');
+});
+test('Aiko mobile variant loads on coarse pointers and setModel switches back to classic',async()=>{
+ const rt=setup({coarse:true,look:{model:'aiko'}}),{env}=rt;
+ assert.deepEqual(rt.requests.map(r=>r.url),['assets/models/hero-aiko-mobile.glb']);
+ rt.resolve(rt.asset());assert.equal(await env.importedHero.ready,true);
+ assert.equal(env.importedHero.url,'assets/models/hero-aiko-mobile.glb');
+ assert.equal(await env.importedHero.setModel('aiko'),true,'setModel no-ops for the active model');
+ assert.equal(rt.loads(),3,'no extra fetch for the already active model');
+ const before=rt.loads();
+ const p=env.importedHero.setModel('classic');
+ assert.equal(typeof env.importedHero.setModel('aiko').then,'function','setModel returns a thenable');
+ assert.equal(rt.loads(),before+1,'one new fetch for the classic model');
+ assert.equal(rt.requests.at(-1).url,'assets/models/hero-mobile.glb','coarse pointer prefers the mobile pack');
+ rt.resolve(rt.asset(),'assets/models/hero-mobile.glb');
+ assert.equal(await p,true,'setModel resolves after the classic pack loads');
+ assert.equal(env.importedHero.model,'classic');
+ assert.equal(env.pl.userData.rig.meleeHand,'left');
 });
 
 function combatAsset(rt){return rt.asset(['sword_hit','throw_right'])}

@@ -53,7 +53,8 @@ body .dmg{font-size:24px;text-shadow:0 2px 3px #071d25,0 0 4px #071d25}
 @media(pointer:coarse) and (max-width:740px){html body #pw2{left:145px;width:108px}html body #pwa,html body #pwb{display:none}html body #pwm{left:22px}html body #pwl{left:0}html body #pwr{left:88px}html body #pwn{width:108px;font-size:9px}html body #pwh{width:96px;left:6px}html body #eqp{left:calc(100% - 276px)!important}html body #eqp .eqs{width:100px!important}}
 body.pmode #eqp{display:none!important}
 @media(prefers-reduced-motion:reduce){body button{transition:none}}
-/* Imported reference hero has a fixed authored outfit; name remains editable. */
-body.imported-hero-ready #ccp .ccr:not(:has(#ccn)){display:none}
+/* Imported hero models ship their own authored look; only the 3D model choice and
+   the name stay editable once an imported rig is active. */
+body.imported-hero-ready #ccp .ccr:not(:has(#ccn)):not(:has([data-k='model'])){display:none}
 .imported-hero-note{max-width:46ch;margin:12px 0 20px;color:#c9dedb;font-size:14px;line-height:1.55}
 body.imported-hero-ready #ccp{align-self:center}

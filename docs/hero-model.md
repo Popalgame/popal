@@ -70,6 +70,45 @@ Pliki [`hero-walk-candidate.blend`](assets/hero-walk-candidate.blend) i
 [`hero-walk-candidate.glb`](assets/hero-walk-candidate.glb) pozostają
 eksperymentalne i nie są używane przez grę.
 
+Osobny wariant wizualny bohatera, przygotowany jako kandydat do three.js r128,
+opisuje [`hero-anime-remaster.md`](hero-anime-remaster.md). Nie jest ładowany
+przez grę.
+
+## Wybieralny wariant bohatera: Ajko (Aiko)
+
+Panel dostosowywania postaci (`character-customization.js`, wiersz
+„Model 3D”) pozwala przełączać między klasycznym bohaterem a wariantem Ajko
+(zestaw `PALWORLD_HEROES_MEGA_PACK`, postać Aiko). Wybór zapisuje się w
+`look.model` (0 = klasyczny, 1 = Ajko) i utrzymuje się między sesjami.
+
+Moduł `imported-hero.js` trzyma oba zestawy w rejestrze `MODELS` i wybiera
+aktywny przez `activeModel()`; `api.setModel(id)` ładuje pakiet wybranego
+wariantu, przebudowuje wszystkie żywe instancje i podmienia pakiety
+lokomocji/walki. Przy wskaźniku zgrubnym ładowany jest wariant mobilny
+Ajko. Zestawy Ajko:
+
+- [`hero-aiko.glb`](../site/assets/models/hero-aiko.glb) — pełny model
+  (około 533 KB; Blender: [`hero-aiko.blend`](assets/hero-aiko.blend)),
+- [`hero-aiko-mobile.glb`](../site/assets/models/hero-aiko-mobile.glb) —
+  wariant mobilny (około 269 KB),
+- [`hero-aiko-locomotion.glb`](../site/assets/models/hero-aiko-locomotion.glb)
+  — klipy `walk`/`jog`/`run` z profilami prędkości
+  ([`hero-aiko-locomotion-report.json`](assets/hero-aiko-locomotion-report.json)),
+- [`hero-aiko-combat.glb`](../site/assets/models/hero-aiko-combat.glb) — klipy
+  `hammer_hit` i `throw_right`
+  ([`hero-aiko-combat-report.json`](assets/hero-aiko-combat-report.json)).
+
+Ajko dzierży swój młotek w **prawej** dłoni (młotek jest wypalony w modelu i
+sztywno przypięty do kości `mixamorig:RightHand`), dlatego atak wręcz
+(`hit`) wykonuje prawą ręką — `meleeHand: 'right'`, klip `hammer_hit`.
+Zbieranie i rzut pozostają przy prawej ręce, a wyposażone siekiera/kilof są
+dla Ajko ukrywane (młotek już zajmuje dłoń). Skrypty budujące:
+[`build-aiko.py`](../scripts/build-aiko.py),
+[`build-aiko-locomotion.py`](../scripts/build-aiko-locomotion.py),
+[`build-aiko-combat.py`](../scripts/build-aiko-combat.py). Podgląd:
+[`hero-aiko-preview.png`](assets/hero-aiko-preview.png). Wszystkie cztery
+pliki GLB Ajko są w pre-cache service workera.
+
 ## Kontrola działania
 
 Poprawkę lewego miecza sprawdzono spacją na PC: klip `sword_hit`,
