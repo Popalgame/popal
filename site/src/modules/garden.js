@@ -59,7 +59,7 @@ window.GARDEN={
  /* завдання для збирача: стиглий кущик або порожня лунка, якщо в скринях є насіння */
  task(p){let best=null,bd=1e9;const seeds=window.chCount?chCount('sd'):0;
   for(const b of gardens()){const a=plots(b);for(let i=0;i<6;i++){const k=gkey(b)+':'+i,c=claimed.get(k);if(c&&c!==p&&c.ai&&c.ai.s=='farm')continue;
-   const job=ripe(a[i])?'pick':(!a[i]&&seeds>0?'sow':null);if(!job)continue;const[x,z]=toW(b,SLOTS[i][0],SLOTS[i][1]),d=Math.hypot(x-p.x,z-p.z);if(d<bd){bd=d;best={b,i,x,z,job,k}}}}
+   const job=ripe(a[i])?'pick':(!a[i]&&seeds>0?'sow':null);if(!job)continue;const[x,z]=toW(b,SLOTS[i][0],SLOTS[i][1]),d=Math.hypot(x-p.x,z-p.z)+(job=='sow'?1000:0);/* спершу збирає стиглі, потім садить */if(d<bd){bd=d;best={b,i,x,z,job,k}}}}
   if(best)claimed.set(best.k,p);return best},
  done(t,p){claimed.delete(t.k);if(t.job=='pick')return harvest(t.b,t.i);if(window.chTake&&chTake('sd',1)){sow(t.b,t.i);return{sown:1}}return null},
  release(t){if(t)claimed.delete(t.k)}};
