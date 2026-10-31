@@ -67,6 +67,56 @@ python3 tools/blender-api/blender_api.py show bpy.types.BevelModifier
 `show` przyjmuje pełną ścieżkę albo końcówkę, np. `BevelModifier.width`.
 Bez `--summary` wypisuje cały JSON rekordu.
 
+## Manual 5.2 w tym samym indeksie
+
+`fetch_manual.py` pobiera dobraną listę rozdziałów oficjalnego manuala
+(topologia, normalne, retopologia, decimate, modyfikator armature, właściwości
+armatury, akcje, wagi, eksport glTF, zarządzanie kolorem, przypisywanie
+materiałów, origin obiektu, zapis plików) i zapisuje je jako tekst:
+
+```bash
+python3 tools/blender-api/fetch_manual.py --version 5.2
+python3 tools/blender-api/blender_api.py index-manual
+```
+
+Strony lądują w `output/blender-api/manual/` (gitignorowane, źródło oznaczone
+jako CC-BY-SA blender.org), a `index-manual` dokłada je do tej samej bazy
+SQLite jako osobną tabelę FTS. Wyszukiwanie:
+
+```bash
+python3 tools/blender-api/blender_api.py manual "normalize all weights"
+python3 tools/blender-api/blender_api.py manual "rest position" --json
+```
+
+Manual uzupełnia indeks o **pojęcia i przepływy** (kiedy Rest, kiedy Pose,
+co robi Normalize All), których nie ma w opisach parametrów API.
+`stats` pokazuje liczbę zaindeksowanych stron.
+
+Uwaga: `build` tworzy bazę od zera, więc kasuje tabelę manuala — po każdej
+przebudowie indeksu API uruchom `index-manual` ponownie.
+
+## Receptury i walidator sceny
+
+[`recipes/`](recipes/README.md) zawiera **wykonane** przepisy: każdy skrypt
+buduje własną scenę testową, renderuje/eksportuje i sam sprawdza wynik,
+wypisując JSON oraz kod wyjścia. Zweryfikowane na Blenderze 5.2.2:
+
+- `render_orthographic_views.py` — cztery widoki ortofitowane do bounds,
+  z kontrolą „sylwetka nie dotyka krawędzi”,
+- `export_glb_contract.py` — eksport GLB wg kontraktu (zaznaczenie,
+  NLA_TRACKS) + reimport i kontrole wag/animacji,
+- `measure_evaluated_bounds.py` — wzorzec depsgraph: świat vs lokal,
+  `to_mesh()` + `to_mesh_clear()`.
+
+[`scene_check.py`](scene_check.py) to szybki raport dowolnego pliku `.blend`:
+kontekst sceny (silnik, jednostki, kamera), obiekty z bounds, rigi, akcje
+i NLA, problemy wag (limit wpływów, sumy), sieroty w danych:
+
+```bash
+blender -b plik.blend --python-exit-code 1 --python \
+  tools/blender-api/scene_check.py -- --json output/raport.json
+```
+
 ## Jak agent ma tego używać
 
 Przed każdą operacją Blenderową:

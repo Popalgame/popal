@@ -159,14 +159,45 @@ kontekst jest niejednoznaczny. Automatyzacja nie zwalnia z walidacji.
 
 | Etap | Zakres | Stan |
 | --- | --- | --- |
-| P0 | Indeks API 5.2 + wyszukiwanie + testy | gotowe |
-| P1 | Manual 5.2 w tym samym indeksie; receptury i walidatory sceny | do zrobienia |
-| P2 | Generator parametrycznego humanoida z `measurements.json` | do zrobienia |
-| P3 | Automatyczne uzupełnienie tyłu/boków + render 4 widoków + compare | do zrobienia |
-| P4 | Materiały, rig, wagi, animacje, eksport i reimport | do zrobienia |
+| P0 | Indeks API 5.2 + wyszukiwanie + testy | gotowe (39 116 rekordów, 5.2.2) |
+| P1 | Manual 5.2 w tym samym indeksie; receptury i walidatory sceny | gotowe (14 stron manuala, 3 receptury zweryfikowane, `scene_check.py`) |
+| P2 | Generator parametryczny humanoida z `measurements.json` | gotowe (`tools/character-build`, commit d608030) |
+| P3 | Automatyczne uzupełnienie tyłu/boków + render 4 widoków + compare | wariant A działa; B sprawdzony eksperymentalnie (mapa + jawna heurystyka reliefu); C ma tor pomiarowy, lecz generacja zablokowana brakiem kredytów |
+| P4 | Materiały, rig, wagi, animacje, eksport i reimport | blockout gotowy: 19 materiałów, rig 22 kości, 7 akcji, GLB + weryfikacja reimportu. Docelowa jakość assetu gry wymaga dalszej pracy |
 
 P1 jest tanie i natychmiast poprawia trafność. P2 daje pierwszy realny model
 3D. P3 zamyka pętlę wizualną. P4 dopiero czyni z tego asset gry.
+
+Stan integracji z żywym Blenderem: **pętla na żywo działa** (2026-10-31).
+Serwer `polpal-blender` jest zarejestrowany w OpenCode (`opencode mcp add`,
+konfiguracja globalna), dodatek zainstalowany w preferencjach Blendera 5.2.2,
+a most uruchomiony jest w otwartym GUI Blendera. Zweryfikowano na żywo:
+`blender_status`, `blender_scene` i `blender_preview` (render podglądu otwartej
+sceny bez jej zmiany). Zapis do cudzej sesji pozostaje świadomą decyzją:
+każdy batch tworzy checkpoint, ale nie jest transakcyjny.
+
+Warianty głębokości:
+- **B (depth monokularny)** — `tools/character-build/depth_estimation.py`,
+  Depth Anything V2 Small ONNX na CPU. Korekta: wcześniejsza mapa pasków
+  pochodziła z błędu odczytu tensora, nie z ograniczenia modelu na Aiko.
+  Wersja 2 zachowuje mapę float32 i właściwy aspekt obrazu. Inverse depth
+  nie określa grubości. Domyślnie nie zmienia geometrii; `--derive-hints`
+  jawnie uruchamia eksperymentalną heurystykę reliefu, stosowaną przez
+  `build_character.py --depth-hints`. Dla Aiko zmiany torsu wynoszą 1,94–3,67%.
+- **C (widok generatywny)** — tor pomiarowy gotowy (`depth_from_side.py` +
+  `--depth-profile` w build), przetestowany syntetycznie. Generacja widoków
+  użytym backendem zakończyła się odmową (brak kredytów); nie ma wygenerowanych
+  widoków do weryfikacji. Nie zastępuj wyniku C lustrem frontu.
+
+Korekta walidacji P4: wcześniejszy GLB miał stałe kanały animacji wskutek
+eksportu w Rest. Eksporter pracuje teraz w Pose. Walidator v2 sprawdza
+binarną zmienność kanałów oraz izoluje klipy NLA do próbkowania i renderu;
+same nazwy siedmiu animacji nie są dowodem ruchu. Zapisuje SHA-256 eksportu.
+Kandydat `output/character-build/aiko-depth-v2-animated` ma potwierdzony ruch
+w każdym klipie, ale pozostaje blockoutem, nie zatwierdzonym assetem gry.
+
+**Integracja z grą zawsze wymaga osobnej decyzji użytkownika.** Praca nad
+kandydatami ani polecenie „kontynuuj” nie upoważniają do podmiany modeli runtime.
 
 ## 6. Ryzyka
 

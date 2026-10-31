@@ -18,6 +18,7 @@ nie produkcją animation-ready.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import sys
@@ -870,6 +871,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--name", default="Aiko")
     parser.add_argument("--height", type=float, default=None)
+    parser.add_argument("--depth-profile", type=Path, default=None,
+                        help="depth-profile.json z depth_from_side.py (wariant C)")
+    parser.add_argument("--depth-hints", type=Path, default=None,
+                        help="depth-hints.json z depth_estimation.py (wariant B)")
     parser.add_argument("--samples", type=int, default=24)
     parser.add_argument("--no-render", action="store_true")
     return parser.parse_args(argv)
@@ -878,7 +883,15 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     data = humanoid.load_measurements(args.measurements)
-    plan = humanoid.build_plan(data, args.height)
+    depth_profile = None
+    if args.depth_profile is not None:
+        depth_profile = json.loads(
+            args.depth_profile.expanduser().read_text(encoding="utf-8")
+        )
+    depth_hints = None
+    if args.depth_hints is not None:
+        depth_hints = json.loads(args.depth_hints.expanduser().read_text(encoding="utf-8"))
+    plan = humanoid.build_plan(data, args.height, depth_profile, depth_hints)
     out_dir = args.out.expanduser().resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -902,7 +915,6 @@ def main() -> int:
         "hair": (0.85, 0.32, 0.42),
         "hair_tip": (0.30, 0.62, 0.68),
         "jacket": (0.015, 0.17, 0.19),
-        "jacket_dark": (0.01, 0.10, 0.11),
         "top": (0.80, 0.78, 0.74),
         "shorts": (0.22, 0.13, 0.06),
         "belt": (0.13, 0.08, 0.05),
@@ -968,6 +980,9 @@ def main() -> int:
         armature.data.pose_position = "REST"
         if ground is not None:
             bpy.data.objects.remove(ground, do_unlink=True)
+        ground_material = bpy.data.materials.get("GroundMat")
+        if ground_material is not None:
+            bpy.data.materials.remove(ground_material)
 
     # Zapis .blend
     blend_path = out_dir / f"{args.name.lower()}-generated.blend"
@@ -978,32 +993,43 @@ def main() -> int:
     body.select_set(True)
     armature.select_set(True)
     bpy.context.view_layer.objects.active = armature
-    for track in armature.animation_data.nla_tracks:
-        track.mute = False
-    armature.data.pose_position = "REST"
     glb_path = out_dir / f"{args.name.lower()}-generated.glb"
-    bpy.ops.export_scene.gltf(
-        filepath=str(glb_path),
-        export_format="GLB",
-        use_selection=True,
-        use_active_scene=True,
-        export_apply=False,
-        export_animations=True,
-        export_animation_mode="NLA_TRACKS",
-        export_nla_strips=True,
-        export_force_sampling=True,
-        export_frame_step=1,
-        export_skins=True,
-        export_influence_nb=4,
-        export_all_influences=False,
-        export_rest_position_armature=True,
-        export_yup=True,
-        export_cameras=False,
-        export_lights=False,
-        export_materials="EXPORT",
-        export_normals=True,
-        export_texcoords=False,
-    )
+    saved_tracks = [(track, track.mute) for track in armature.animation_data.nla_tracks]
+    saved_pose, saved_frame = armature.data.pose_position, scene.frame_current
+    try:
+        for track, _ in saved_tracks:
+            track.mute = False
+        # Rest Position wyłącza ocenę animacji — wtedy glTF zapisuje siedem
+        # nazw klipów, lecz wszystkie kanały pozostają stałe.
+        armature.data.pose_position = "POSE"
+        bpy.ops.export_scene.gltf(
+            filepath=str(glb_path),
+            export_format="GLB",
+            use_selection=True,
+            use_active_scene=True,
+            export_apply=False,
+            export_animations=True,
+            export_animation_mode="NLA_TRACKS",
+            export_nla_strips=True,
+            export_force_sampling=True,
+            export_frame_step=1,
+            export_skins=True,
+            export_influence_nb=4,
+            export_all_influences=False,
+            export_rest_position_armature=True,
+            export_yup=True,
+            export_cameras=False,
+            export_lights=False,
+            export_materials="EXPORT",
+            export_normals=True,
+            export_texcoords=False,
+        )
+    finally:
+        for track, mute in saved_tracks:
+            track.mute = mute
+        armature.data.pose_position = saved_pose
+        scene.frame_set(saved_frame)
+        bpy.context.view_layer.update()
 
     bounds = [body.matrix_world @ Vector(corner) for corner in body.bound_box]
     zs = [point.z for point in bounds]
@@ -1012,6 +1038,23 @@ def main() -> int:
         "version": VERSION,
         "name": args.name,
         "source_measurements": str(args.measurements),
+        "depth_hints": ({
+            "file": str(args.depth_hints),
+            "sha256": hashlib.sha256(args.depth_hints.expanduser().read_bytes()).hexdigest(),
+            "hint_policy": depth_hints["hint_policy"],
+            "multipliers": depth_hints["depth_hints"],
+            "warning": "Eksperymentalne założenie modelarskie, nie pomiar grubości.",
+        } if depth_hints is not None else None),
+        "depth_profile": (
+            {
+                "file": str(args.depth_profile),
+                "sha256": hashlib.sha256(args.depth_profile.expanduser().read_bytes()).hexdigest(),
+                "source_label": depth_profile.get("source_label"),
+                "provenance": depth_profile.get("provenance"),
+            }
+            if depth_profile
+            else None
+        ),
         "plan": plan.as_dict(),
         "mesh": {
             "vertices": len(body.data.vertices),
@@ -1032,6 +1075,7 @@ def main() -> int:
         "blend": str(blend_path),
         "glb": str(glb_path),
         "glb_bytes": glb_path.stat().st_size if glb_path.exists() else 0,
+        "glb_sha256": hashlib.sha256(glb_path.read_bytes()).hexdigest(),
         "warnings": warnings,
     }
     (out_dir / "build.json").write_text(
