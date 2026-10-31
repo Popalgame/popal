@@ -86,13 +86,16 @@ function ui(){if(!D)return;const p=sel&&D.el[sel.id];$('hln').textContent=sel?nm
 function overlap(){const es=[...document.querySelectorAll('.hmov')],rs=es.map(e=>e.getBoundingClientRect());es.forEach(e=>e.classList.remove('hbad'));
  for(let i=0;i<es.length;i++)for(let j=i+1;j<es.length;j++){const a=rs[i],b=rs[j];if(a.left<b.right-2&&b.left<a.right-2&&a.top<b.bottom-2&&b.top<a.bottom-2){es[i].classList.add('hbad');es[j].classList.add('hbad')}}}
 function select(e){if(sel)sel.classList.remove('hsel');sel=e;if(e)e.classList.add('hsel');ui()}
-function edit(){if(editing())return;if(typeof pfO!=='undefined'&&pfO)$('pfx').click();
+/* відкрито з налаштувань у головному меню: на час редагування ховаємо меню й налаштування, після — повертаємо гравця туди ж */
+let back=null;
+function edit(){if(editing())return;const mm=$('mm');back={pf:typeof pfO!=='undefined'&&!!pfO,mm:!!mm&&mm.style.display=='flex'};if(back.pf)$('pfx').click();if(back.mm)mm.style.display='none';{const mp=$('mmap');if(mp)mp.style.display=''}/* карту гра ховає при відкритому меню — показуємо одразу, щоб її теж можна було перетягнути */
  D=JSON.parse(JSON.stringify(L));pm=typeof menuO!=='undefined'?menuO:0;menuO=1;
  document.body.classList.add('hedit');if(document.pointerLockElement)document.exitPointerLock();
  joy.classList.remove('hon');apply(D);for(const[id]of EL){const e=$(id);if(shown(e))e.classList.add('hmov')}select(null);overlap()}
 function done(save){select(null);if(save){L.el=D.el;L.sens=D.sens;sv()}D=null;
  document.querySelectorAll('.hmov').forEach(e=>e.classList.remove('hmov','hbad'));document.body.classList.remove('hedit');menuO=pm;apply();
- if(save&&window.msg)msg('📌 Розташування збережено й зафіксовано')}
+ if(save&&window.msg)msg('📌 Розташування збережено й зафіксовано');
+ if(back){if(back.mm)$('mm').style.display='flex';if(back.pf){pfO=1;$('pf').style.display='grid';pfTab('k')}back=null}}
 window.hudEdit=edit;
 addEventListener('pointerdown',e=>{if(!editing())return;const t=e.target.closest&&e.target.closest('.hmov');if(!t)return;
  e.stopPropagation();e.preventDefault();select(t);const p=ensure(t),r=t.getBoundingClientRect();drag={id:e.pointerId,el:t,p,ox:e.clientX-r.left,oy:e.clientY-r.top};ui()},true);
