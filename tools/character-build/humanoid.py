@@ -99,8 +99,16 @@ def _get(landmarks: dict[str, Landmark], name: str, fallback: Landmark) -> Landm
     return landmarks.get(name, fallback)
 
 
-def build_plan(data: dict, height: float | None = None) -> Plan:
-    """Zbuduj plan w metrach. Domyślna wysokość pochodzi z measurements.json."""
+def build_plan(
+    data: dict,
+    height: float | None = None,
+    depth_profile: dict | None = None,
+) -> Plan:
+    """Zbuduj plan w metrach. Domyślna wysokość pochodzi z measurements.json.
+
+    depth_profile (z depth_from_side.py) nadpisuje jawnie przyjęte głębokości
+    torsu i głowy. Nadal to nie jest pomiar z referencji frontu.
+    """
     height = float(height if height is not None else data["scale"]["height_mm"] / 1000.0)
     if height <= 0:
         raise ValueError("wysokość musi być dodatnia")
@@ -186,36 +194,58 @@ def build_plan(data: dict, height: float | None = None) -> Plan:
     hair_width = max(head.width_m, head_width * 1.5)
     hair_half = hair_width / 2.0
 
+    # Głębokości: założenia antropometryczne, chyba że profil boczny je
+    # nadpisze. Zawsze ograniczone proporcjonalnie do szerokości.
+    head_depth = min(max(head_depth, head_width * 0.9), head_width * 1.35)
+    hip_depth = max(0.18, hip_width * 0.58)
+    waist_depth = max(0.14, waist_width * 0.55)
+    if depth_profile:
+        landmarks_depth = depth_profile.get("landmarks", {})
+
+        def measured(name: str) -> float | None:
+            value = (landmarks_depth.get(name) or {}).get("depth_m")
+            return float(value) if value else None
+
+        head_measured = measured("eye_line") or measured("head_max")
+        if head_measured:
+            head_depth = min(max(head_measured, head_width * 0.9), head_width * 1.35)
+        hip_measured = measured("hip")
+        if hip_measured:
+            hip_depth = min(max(hip_measured, hip_width * 0.40), hip_width * 1.10)
+        waist_measured = measured("waist")
+        if waist_measured:
+            waist_depth = min(max(waist_measured, waist_width * 0.40), waist_width * 1.10)
+
     torso_rings = [
         {
             "name": "crotch",
             "z": max(0.05, crotch.z),
             "width": max(0.28, hip_width * 0.86),
-            "depth": max(0.16, hip_width * 0.50),
+            "depth": max(0.16, hip_depth * 0.85),
         },
         {
             "name": "hip",
             "z": max(0.1, hip.z),
             "width": hip_width,
-            "depth": max(0.18, hip_width * 0.58),
+            "depth": hip_depth,
         },
         {
             "name": "waist",
             "z": max(0.15, waist.z),
             "width": waist_width,
-            "depth": max(0.14, waist_width * 0.55),
+            "depth": waist_depth,
         },
         {
             "name": "chest",
             "z": max(0.2, shoulder_z - 0.05),
             "width": max(waist_width * 1.08, shoulder_width * 1.02),
-            "depth": max(0.18, shoulder_width * 0.55),
+            "depth": max(0.18, max(waist_depth * 1.05, hip_depth * 0.95)),
         },
         {
             "name": "shoulder",
             "z": max(0.25, shoulder_z),
             "width": shoulder_width,
-            "depth": max(0.16, shoulder_width * 0.53),
+            "depth": max(0.16, max(waist_depth * 1.05, hip_depth * 0.95)),
         },
     ]
     torso_rings.sort(key=lambda ring: ring["z"])

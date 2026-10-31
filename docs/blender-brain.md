@@ -168,9 +168,23 @@ kontekst jest niejednoznaczny. Automatyzacja nie zwalnia z walidacji.
 P1 jest tanie i natychmiast poprawia trafność. P2 daje pierwszy realny model
 3D. P3 zamyka pętlę wizualną. P4 dopiero czyni z tego asset gry.
 
-Stan integracji z żywym Blenderem: most `tools/blender-mcp` wymaga rejestracji
-serwera MCP w OpenCode i włączonego dodatku — w tej sesji nieużywane; praca
-szła batchowo przez `blender -b`.
+Stan integracji z żywym Blenderem: **pętla na żywo działa** (2026-10-31).
+Serwer `polpal-blender` jest zarejestrowany w OpenCode (`opencode mcp add`,
+konfiguracja globalna), dodatek zainstalowany w preferencjach Blendera 5.2.2,
+a most uruchomiony jest w otwartym GUI Blendera. Zweryfikowano na żywo:
+`blender_status`, `blender_scene` i `blender_preview` (render podglądu otwartej
+sceny bez jej zmiany). Zapis do cudzej sesji pozostaje świadomą decyzją:
+każdy batch tworzy checkpoint, ale nie jest transakcyjny.
+
+Warianty głębokości:
+- **B (depth monokularny)** — gotowy narzędziowo (`tools/character-build/depth_estimation.py`,
+  Depth Anything V2 Small ONNX na CPU), z kontrolami jakości mapy (gradient
+  kadru, plauzybilność anatomiczna). Dla referencji Aiko wskazówki zostały
+  odrzucone: mapa śledziła pozycję w kadrze, nie formę. Przyda się na
+  fotografiach i renderach, nie na płaskiej ilustracji.
+- **C (widok generatywny)** — tor pomiarowy gotowy (`depth_from_side.py` +
+  `--depth-profile` w build), przetestowany syntetycznie. Generacja widoków
+  wymaga kredytów OpenRouter (stan: brak); bez nich wracamy do wariantu A.
 
 ## 6. Ryzyka
 

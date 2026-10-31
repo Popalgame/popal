@@ -870,6 +870,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--name", default="Aiko")
     parser.add_argument("--height", type=float, default=None)
+    parser.add_argument("--depth-profile", type=Path, default=None,
+                        help="depth-profile.json z depth_from_side.py (wariant C)")
+    parser.add_argument("--depth-hints", type=Path, default=None,
+                        help="depth-hints.json z depth_estimation.py (wariant B)")
     parser.add_argument("--samples", type=int, default=24)
     parser.add_argument("--no-render", action="store_true")
     return parser.parse_args(argv)
@@ -878,7 +882,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     data = humanoid.load_measurements(args.measurements)
-    plan = humanoid.build_plan(data, args.height)
+    depth_profile = None
+    if args.depth_profile is not None:
+        depth_profile = json.loads(
+            args.depth_profile.expanduser().read_text(encoding="utf-8")
+        )
+    plan = humanoid.build_plan(data, args.height, depth_profile)
     out_dir = args.out.expanduser().resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1014,6 +1023,15 @@ def main() -> int:
         "version": VERSION,
         "name": args.name,
         "source_measurements": str(args.measurements),
+        "depth_profile": (
+            {
+                "file": str(args.depth_profile),
+                "source_label": depth_profile.get("source_label"),
+                "provenance": depth_profile.get("provenance"),
+            }
+            if depth_profile
+            else None
+        ),
         "plan": plan.as_dict(),
         "mesh": {
             "vertices": len(body.data.vertices),

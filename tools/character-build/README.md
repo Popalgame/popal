@@ -70,6 +70,47 @@ pomocniczy kształt kości (`Icosphere` w ukrytej kolekcji
 - Akcje `idle, walk, run, swim, hit, throw, jump` jako ścieżki NLA;
   na eksport ścieżki są odmutowane, w `.blend` wyciszone (czysty rest).
 
+## Warianty głębokości: B i C
+
+Referencja pokazuje tylko przód. Dwa opcjonalne tory uzupełniają braki,
+oba jawnie oznaczone jako interpretacja, nie pomiar:
+
+**Wariant B — monokularna głębia (ONNX, CPU):**
+
+```bash
+python3 tools/character-build/depth_estimation.py \
+  --image output/character-scan/reference.png \
+  --out output/character-build/aiko/depth
+```
+
+Depth Anything V2 Small pobiera się raz (ok. 25 MB, Hugging Face) i liczy
+względny inverse depth. Skrypt zapisuje mapę i `depth-hints.json`
+(mnożniki głębokości pierścieni, zakres 0,85–1,20; budowniczy przyjmuje je
+tylko z flagą `--depth-hints`). Kontrole odrzucają mapy bez treści:
+pionowy gradient kadru oraz nieanatomiczne pasma. **Dla referencji Aiko
+wskazówki zostały odrzucone** — mapa śledziła pozycję w kadrze, nie formę.
+
+**Wariant C — profil z widoku bocznego:**
+
+```bash
+python3 tools/character-build/depth_from_side.py \
+  --image WIDOK_BOCZNY.png \
+  --measurements output/character-scan/aiko/measurements.json \
+  --source-label generated --out output/character-build/aiko
+
+blender -b --factory-startup --python-exit-code 1 \
+  --python tools/character-build/build_character.py -- \
+  --measurements output/character-scan/aiko/measurements.json \
+  --depth-profile output/character-build/aiko/depth-profile.json \
+  --out output/character-build/aiko --name Aiko
+```
+
+`--source-label generated` zapisuje w profilu, że widok jest interpretacją
+AI. Głębokości z profilu nadpisują założenia torsu i głowy, w granicach
+clampów proporcjonalnych do szerokości. **Generacja widoku bocznego wymaga
+kredytów OpenRouter (stan: brak)** — tor pomiarowy jest gotowy i przetestowany
+na syntetycznych sylwetkach.
+
 ## Znane ograniczenia
 
 - Geometria jest zgrubna ( loft + elipsoidy + stożki ); to podstawa pod
