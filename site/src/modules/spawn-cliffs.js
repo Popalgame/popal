@@ -61,6 +61,8 @@ window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(!blocked(P_.x,P_.z
 const cb0=window.colBlocked;
 window.colBlocked=function(x0,z0,x1,z1,r){if(blocked(x1,z1,.4))return true;return cb0?cb0.apply(this,arguments):false};
 window.SPAWN_CAVE={MO,RU,RV,blocked};
+/* гравцям, які ще не проходили навчання, — підказка про острів (раз за запуск гри) */
+{const INV=G('inv');if(INV&&!(INV._q&&INV._q.v2))setTimeout(()=>{try{msg('🏝️ Нове: Острів пробудження з 10 завданнями. Портал — у печері біля точки спавну')}catch(_){}},9000)}
 /* у глибині печери — портал назад на Острів пробудження */
 {const fade=document.createElement('div');fade.style.cssText='position:fixed;inset:0;background:radial-gradient(circle,#bff6ff 0%,#2a6fd8 55%,#06122e 100%);opacity:0;pointer-events:none;transition:opacity 1.2s;z-index:9999';document.body.appendChild(fade);
  let going=false,hint=0;const A=G('ANI'),INV=G('inv');if(INV&&!INV._rl)INV._rl='main';

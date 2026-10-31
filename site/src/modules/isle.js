@@ -185,7 +185,7 @@ reg.querySelector('#ise').onclick=()=>{reg.style.display='none';const e=document
 reg.querySelector('#isx').onclick=()=>{reg.style.display='none';regT=Date.now()};
 I.travel=()=>{if(going)return;if(!G('fbU')){if(reg.style.display!='flex'&&Date.now()-regT>6000)reg.style.display='flex';return}
  going=true;fade.style.opacity='1';try{if(window.msg)msg('✨ Портал підхоплює вас…')}catch(_){}
- setTimeout(()=>{try{INV._rl='main';localStorage.setItem('zi_arrive','1');if(window.save)save();const cp=G('cloudPush');if(cp)cp(true)}catch(_){}
+ setTimeout(()=>{try{INV._rl='main';INV._arr=1;localStorage.setItem('zi_arrive','1');if(window.save)save();const cp=G('cloudPush');if(cp)cp(true)}catch(_){}
   const u=new URL(location.href);u.searchParams.delete('realm');u.searchParams.delete('gate');location.replace(u.toString())},1400)};
 
 /* ---------- камера в ущелині й біля арки — ближче, щоб не застрягала в скелях ---------- */

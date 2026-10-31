@@ -101,7 +101,14 @@ svT+=dt;if(svT>10){svT=0;try{localStorage.setItem('zi_tod',tod.toFixed(4))}catch
 document.addEventListener('click',e=>{if(!e.target.closest('#hit'))return;if(!isNight())return;const b=placed.find(b=>b.id=='B_bed'&&Math.hypot(b.x-P.x,b.z-P.z)<2.8);if(!b)return;e.stopImmediatePropagation();e.preventDefault();tod=.27;P.hp=HPM;msg('😴 Ви виспались. Добрий ранок!');try{hud()}catch(_){}},true);
 /* ---------- міні-карта ---------- */
 const mm=document.createElement('canvas');mm.id='mmap';mm.width=mm.height=240;document.body.appendChild(mm);const posClk=()=>{if(!clk)return;const r=mm.getBoundingClientRect();clk.style.left=(r.left+r.width/2)+'px';clk.style.top=r.bottom+'px'};
-const togMM=()=>{mm.classList.toggle('big');setTimeout(posClk,230)};
+/* збільшена карта — по центру екрана й завжди вміщається (на телефоні горизонтально екран низький); мала — там, де її поставив гравець */
+const MMP=['left','top','right','bottom','transform','transform-origin','width','height'];
+const togMM=()=>{const big=mm.classList.toggle('big');
+ if(big){const sz=Math.round(Math.min(420,innerHeight*.86,innerWidth*.86));const st=(k,v)=>mm.style.setProperty(k,v,'important');
+  st('left','50%');st('top','50%');st('right','auto');st('bottom','auto');st('transform-origin','50% 50%');st('transform','translate(-50%,-50%)');st('width',sz+'px');st('height',sz+'px')}
+ else{MMP.forEach(k=>mm.style.removeProperty(k));const ap=()=>{try{if(window.hudApply)window.hudApply()}catch(_){}};ap();mm.addEventListener('transitionend',ap,{once:true});setTimeout(ap,700)/* ще раз — коли анімація зменшення закінчилась */}
+ setTimeout(posClk,230)};
+addEventListener('resize',()=>{if(mm.classList.contains('big')){mm.classList.remove('big');togMM()}});
 if(clk){clk.className='inmap';mm.after(clk);clk.onclick=togMM}mm.onclick=togMM;posClk();
 /* острів на міні-карті: кільце скель (не до краю карти), ущелина й майданчик порталу — стежкою, далі — море */
 function isleMM(x,z){const I=window.ISLE;if(I.inGorge(x,z)||I.inPlaza(x,z))return Math.hypot(x,z-I.PZ)<2.2?'#7fe3f5':'#cdb68a';
@@ -119,6 +126,7 @@ placed.forEach(b=>{const[a,c]=tp(b.x,b.z);x.fillStyle='#8e5a3a';x.fillRect(a-3,c
 if(inv._cen){const[a,c]=tp(inv._cen[0],inv._cen[1]);x.fillStyle='#7fe3f5';x.strokeStyle='#1a2040';x.lineWidth=1.5;x.beginPath();x.arc(a,c,5,0,7);x.fill();x.stroke()}
 pals.forEach((p,i)=>{if(i===selP||p.cs==null||!p.wk)return;const[a,c]=tp(p.x,p.z);x.fillStyle='#5fe08a';x.beginPath();x.arc(a,c,2.5,0,7);x.fill()});
 wild.forEach(w=>{if(Math.hypot(w.x-P.x,w.z-P.z)>26)return;const[a,c]=tp(w.x,w.z);x.fillStyle=w.ag?'#ff4d4d':'#ffb0b0';x.beginPath();x.arc(a,c,2.2,0,7);x.fill()});
+if(window.REALM!=='isle'&&window.SPAWN_CAVE){const m=window.SPAWN_CAVE.MO,[a,c]=tp(m[0],m[1]);x.fillStyle='#7fe3f5';x.strokeStyle='#1a2040';x.lineWidth=1.5;x.beginPath();x.arc(a,c,4.5,0,7);x.fill();x.stroke()}/* печера з порталом на острів */
 if(window.REALM==='isle'&&window.ISLE){const I=window.ISLE,[a,c]=tp(0,I.PZ);x.fillStyle='#7fe3f5';x.strokeStyle='#1a2040';x.lineWidth=1.5;x.beginPath();x.arc(a,c,5,0,7);x.fill();x.stroke();x.fillStyle='#1a2040';x.font='bold 8px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🌀',a,c+.5);
  if(I.isOpen&&!I.isOpen()){const[g1,g2]=tp(0,I.G0+1);x.fillStyle='#5a544c';x.fillRect(g1-5,g2-2,10,4)}}/* портал і завал */
 (window.NPC&&window.NPC.list||[]).forEach(n=>{const[a,c]=tp(n.x,n.z);x.fillStyle=n.mark?'#ffd34e':'#f2ead8';x.strokeStyle='#1a2040';x.lineWidth=1;x.beginPath();x.arc(a,c,n.mark?4.5:3,0,7);x.fill();x.stroke();if(n.mark){x.fillStyle='#1a1a1a';x.font='bold 8px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(n.mark,a,c+.5)}});/* мешканці: «!» — завдання, «?» — здати */

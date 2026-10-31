@@ -26,7 +26,7 @@ try{const TR=eval('trees');for(let i=TR.length-1;i>=0;i--){const t=TR[i];if(dSp(
 /* новий гравець (без збереження) починає в бухті, обличчям до суші */
 {let hs=1;try{hs=eval('hasSave')}catch(_){}if(!hs){P.x=SPAWN[0];P.z=SPAWN[1];P.face=SPAWN[2]}}
 /* прибуття з острова пробудження через портал — на точку спавну */
-try{if(!ISL&&localStorage.getItem('zi_arrive')){localStorage.removeItem('zi_arrive');P.x=SPAWN[0];P.z=SPAWN[1];P.face=SPAWN[2];setTimeout(()=>{try{msg('🌊 Ви прибули у великий світ Popal!')}catch(_){}},1500)}}catch(_){}
+try{const INV_=(()=>{try{return eval('inv')}catch(_){return null}})();if(!ISL&&(localStorage.getItem('zi_arrive')||(INV_&&INV_._arr))){localStorage.removeItem('zi_arrive');if(INV_)delete INV_._arr;P.x=SPAWN[0];P.z=SPAWN[1];P.face=SPAWN[2];setTimeout(()=>{try{msg('🌊 Ви прибули у великий світ Popal!')}catch(_){}},1500)}}catch(_){}
 /* рівень визначає здоровʼя, шкоду по герою й агресію */
 function setup(w){const L=lvAt(w.x,w.z),b=T[w.ty].hp;w.lv=L;
  if(window.PW){const s=PW.stats(w.ty,L);w.mh=s.hp;w.atk=s.atk;w.def=s.def;w.hp=Math.round(w.mh*Math.max(0,Math.min(1,w.hp/b)));w.dm=PW.wildHit(w,true)}/* 0.5.x: показники Palworld, combat.js */

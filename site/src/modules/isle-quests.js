@@ -93,7 +93,7 @@ function track(){const q=cur();if(!q||S.s!=1){snap();return}let ch=false;
  if(ch)sv()}
 /* ---------- розмови ---------- */
 function next(){S.i++;S.s=0;S.g={};snap();sv();marks();draw();const q=cur();if(q&&!q.npc){S.s=1;marks();draw()}}
-function finish(q){if(q.xp)xp(q.xp);if(q.give)for(const k in q.give){try{ADD(k,q.give[k])}catch(_){INV[k]=(INV[k]||0)+q.give[k]}}try{hud();ivR()}catch(_){}
+function finish(q){if(q.id=='gate')S.v2=1;if(q.xp)xp(q.xp);if(q.give)for(const k in q.give){try{ADD(k,q.give[k])}catch(_){INV[k]=(INV[k]||0)+q.give[k]}}try{hud();ivR()}catch(_){}
  sfx('levelup');next()}
 N.onTalk=id=>{const q=cur(),n=N.get(id);
  if(!q||q.npc!==id){N.say(id,[(n.lines&&n.lines[(Math.random()*n.lines.length)|0])||'…']);return true}
@@ -106,7 +106,9 @@ N.onTalk=id=>{const q=cur(),n=N.get(id);
  if(S.s==2){N.say(id,q.done||['Добре!'],{buttons:[{t:'Дякую!',go:1}]});finish(q);return true}
  return false};
 /* старі збереження без кроку «портал»: якщо прохід уже відкритий — одразу до порталу */
-if(I.isOpen&&I.isOpen()&&S.i<9){S.i=9;S.s=1;S.g={}}
+/* старі гравці (прийшли через печеру) і ті, кому раніше завдання пропустило автоматично, проходять цепочку з початку;
+   S.v2=1 — цепочку справді пройдено (Брам відкрив прохід) */
+if(S.i>=9&&!S.v2){S.i=0;S.s=0;S.g={}}
 if(cur()&&!cur().npc&&S.s==0)S.s=1;
 marks();draw();
 setInterval(()=>{track();draw();const q=cur();if(q&&q.id=='portal')marks()},500);
