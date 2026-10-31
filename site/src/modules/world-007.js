@@ -50,9 +50,9 @@ return g}
 const placed=[];window.BPLACED=placed;
 /* 0.1.27: будівлю ставлять вільно (x,z,ry у сейві); старі записи без координат — на місці слота в кільці */
 function spawnB(id,si,X,Z,RY){const[x,z]=X!=null?[X,Z]:spos(si),g=mkB(id);const C=inv._cen||[0,0];g.position.set(x,H(x,z),z);g.rotation.y=RY!=null?RY:Math.atan2(C[0]-x,C[1]-z);sc.add(g);placed.push({id,g,x,z});for(let i=trees.length-1;i>=0;i--){const t=trees[i];if(Math.hypot(t.x-x,t.z-z)<2.2){sc.remove(t.m);trees.splice(i,1)}}}
-if(inv._cen)inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)});
-window.respawnB=()=>{placed.forEach(b=>sc.remove(b.g));placed.length=0;if(inv._cen)inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)})};
-function placeB(id){if(!inv._cen){msg('🏠 Спершу збудуйте й поставте Попал-центр');return}if(!(inv[id]>0))return;if(BI[id].u&&built(id)){msg('Це вже збудовано');return}
+if(inv._cen||window.REALM==='isle')inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)});
+window.respawnB=()=>{placed.forEach(b=>sc.remove(b.g));placed.length=0;if(inv._cen||window.REALM==='isle')inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)})};
+function placeB(id){if(!inv._cen&&window.REALM!=='isle'){msg('🏠 Спершу збудуйте й поставте Попал-центр');return}/* на острові база без центру */if(!(inv[id]>0))return;if(BI[id].u&&built(id)){msg('Це вже збудовано');return}
  const r=(window.colR&&colR[id])||.8;
  if(window.plPlace){plPlace({name:'🏗️ '+BI[id].n,r,dist:r+1.6,ry:(P.face||0)+Math.PI,mk:()=>mkB(id),onOk:(x,z,ry)=>doPlaceB(id,x,z,ry)});return}
  doPlaceB(id,P.x+Math.sin(P.face||0)*(r+1.6),P.z+Math.cos(P.face||0)*(r+1.6),(P.face||0)+Math.PI)}

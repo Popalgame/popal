@@ -20,15 +20,15 @@ const nearPlaza=(x,z)=>Math.hypot(x,z-I.PZ)<I.PR+.8;
 for(let a=0;a<Math.PI*2;a+=.085){const R0=I.RAD(a),c=Math.cos(a),s=Math.sin(a);
  for(const[dd,w,h]of[[1.2,3.2,7],[5.5,4.5,13],[11,6,19],[18,8,24]]){const x=c*(R0+dd+rr(-.8,.8)),z=s*(R0+dd+rr(-.8,.8));
   if(z>I.CLZ+dd*.5)continue;/* південь — відкрите море */
-  if(nearGorge(x,z)||nearPlaza(x,z))continue;
+  if((z<I.G0+6&&z>I.G1-6&&Math.abs(x)<I.GW+w*1.3+1)||Math.hypot(x,z-I.PZ)<I.PR+w*1.3)continue;/* брила разом із розміром не заходить в ущелину й на майданчик */
   const fade=Math.max(.25,Math.min(1,(I.CLZ+dd*.5-z)/9));/* скелі сходять у море біля пляжу */
   addRock(x,z,w*rr(.8,1.2),h*fade*rr(.75,1.25))}}
 /* стіни ущелини: стрімкі брили обабіч вузького проходу */
 for(let z=I.G0+3;z>I.G1-2;z-=1.6)for(const sd of[-1,1]){const xc=-Math.sin(z*.35)*.6;
- addRock(xc+sd*(I.GW+1.7+rr(0,.5)),z,rr(1.6,2.3),rr(11,16));addRock(xc+sd*(I.GW+4.5+rr(0,1)),z,rr(3,4),rr(15,22))}
+ addRock(xc+sd*(I.GW+2.9+rr(0,.4)),z,rr(1.5,1.9),rr(5,8));addRock(xc+sd*(I.GW+7+rr(0,1)),z,rr(3,4),rr(13,19))/* біля стежки — нижчі, щоб камера бачила героя */}
 /* навколо майданчика арки — півколо скель (вхід з ущелини вільний) */
-for(let a=0;a<Math.PI*2;a+=.2){const x=Math.cos(a)*(I.PR+1.8),z=I.PZ+Math.sin(a)*(I.PR+1.8);if(z>I.PZ+I.PR-1&&Math.abs(x)<I.GW+1.5)continue;
- addRock(x,z,rr(2.2,3),rr(10,15));addRock(Math.cos(a)*(I.PR+6),I.PZ+Math.sin(a)*(I.PR+6),rr(4,5),rr(16,24))}
+for(let a=0;a<Math.PI*2;a+=.2){const x=Math.cos(a)*(I.PR+3),z=I.PZ+Math.sin(a)*(I.PR+3);if(z>I.PZ+I.PR-1&&Math.abs(x)<I.GW+1.5)continue;
+ addRock(x,z,rr(2,2.6),rr(7,11));addRock(Math.cos(a)*(I.PR+8),I.PZ+Math.sin(a)*(I.PR+8),rr(4,5),rr(15,22))}
 const dummy=new THREE.Object3D(),col=new THREE.Color();
 rocks.forEach((L,k)=>{if(!L.length)return;const m=new THREE.InstancedMesh(RG[k],RMAT,L.length);
  L.forEach((r,i)=>{dummy.position.set(r[0],r[1],r[2]);dummy.scale.set(r[3],r[4],r[5]);dummy.rotation.set(0,r[6],0);dummy.updateMatrix();m.setMatrixAt(i,dummy.matrix);m.setColorAt(i,col.setHex(r[7]))});
@@ -42,9 +42,9 @@ rocks.forEach((L,k)=>{if(!L.length)return;const m=new THREE.InstancedMesh(RG[k],
 /* ---------- завал в ущелині ---------- */
 const gate=new THREE.Group();gate.position.set(0,H_(0,I.G0+1),I.G0+1);sc_.add(gate);
 {const SM=plCliff.mat();
- for(let i=0;i<9;i++){const m=new THREE.Mesh(RG[i%3],SM);m.scale.set(rr(.6,1.1),rr(.6,1.2),rr(.6,1));m.position.set(rr(-1.6,1.6),rr(.2,1.4)+(i>5?1:0),rr(-.6,.6));m.rotation.y=rnd()*6;m.castShadow=true;gate.add(m)}
+ for(let i=0;i<9;i++){const m=new THREE.Mesh(RG[i%3],SM);m.scale.set(rr(.6,1.1),rr(.6,1.2),rr(.6,1));m.position.set(rr(-I.GW,I.GW),rr(.2,1.4)+(i>5?1:0),rr(-.6,.6));m.rotation.y=rnd()*6;m.castShadow=true;gate.add(m)}
  const VM=new THREE.MeshStandardMaterial({color:0x58c46a,emissive:0x3cff9a,emissiveIntensity:.55,roughness:.6});
- for(let i=0;i<7;i++){const c=new THREE.CatmullRomCurve3([new THREE.Vector3(-1.9,rr(.3,2.6),.7),new THREE.Vector3(rr(-.8,0),rr(.5,3),.9),new THREE.Vector3(rr(0,.8),rr(.5,3),.9),new THREE.Vector3(1.9,rr(.3,2.6),.7)]);
+ for(let i=0;i<7;i++){const c=new THREE.CatmullRomCurve3([new THREE.Vector3(-I.GW-.3,rr(.3,2.6),.7),new THREE.Vector3(rr(-.8,0),rr(.5,3),.9),new THREE.Vector3(rr(0,.8),rr(.5,3),.9),new THREE.Vector3(I.GW+.3,rr(.3,2.6),.7)]);
   const v=new THREE.Mesh(new THREE.TubeGeometry(c,24,.05,5,false),VM);v.userData.vine=1;gate.add(v)}}
 /* відкритий прохід: ліани зникають, а каміння завалу лежить купою біля стіни ущелини (його туди відносить Брам, isle-npc.js) */
 I.PILE=[3.5,I.G0+3.3];I.gate=gate;
@@ -132,6 +132,9 @@ I.travel=()=>{if(going)return;if(!G('fbU')){if(reg.style.display!='flex'&&Date.n
  setTimeout(()=>{try{INV._rl='main';localStorage.setItem('zi_arrive','1');if(window.save)save();const cp=G('cloudPush');if(cp)cp(true)}catch(_){}
   const u=new URL(location.href);u.searchParams.delete('realm');u.searchParams.delete('gate');location.replace(u.toString())},1400)};
 
+/* ---------- камера в ущелині й біля арки — ближче, щоб не застрягала в скелях ---------- */
+{const z0=window.plZoom;window.plZoom=()=>{const v=z0?z0():9.5;return(I.inGorge(P_.x,P_.z)||I.inPlaza(P_.x,P_.z))?Math.min(v,5.5):v}}
+/* попали з бригади Попал-центру на острові не показуються самі: без центру core-world.js їх ховає; супутник лишається з героєм */
 /* ---------- анімація ---------- */
 let t=0;const ANI_=G('ANI');
 const tick=()=>{t+=.016;PU.t.value=t;PU.on.value+=((open?1:0)-PU.on.value)*.03;pl2.intensity=.6+PU.on.value*1.4+Math.sin(t*3)*.15;

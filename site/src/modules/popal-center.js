@@ -22,7 +22,7 @@ IT.B_cen=['🏠','Попал-центр'];if(inv.B_cen==null)inv.B_cen=0;
 RC.unshift({id:'B_cen',n:'Попал-центр',c:{w:20,s:15},d:'Серце вашої бази: ставиться один раз. Навколо нього будуєте базу, а попали в ньому працюють',one:1});
 
 /* гравцям зі старим табором — центр у подарунок, щоб перенести базу */
-if(hasSave&&!inv._cen&&!inv._cenG&&!(inv.B_cen>0)&&(pals.length||(inv._b||[]).length)){inv.B_cen=1;inv._cenG=1;setTimeout(()=>msg('🏠 Табір зник! У рюкзаку — Попал-центр у подарунок: поставте його, де хочете жити'),4000)}
+if(window.REALM!=='isle'&&hasSave&&!inv._cen&&!inv._cenG&&!(inv.B_cen>0)&&(pals.length||(inv._b||[]).length)){inv.B_cen=1;inv._cenG=1;setTimeout(()=>msg('🏠 Табір зник! У рюкзаку — Попал-центр у подарунок: поставте його, де хочете жити'),4000)}
 
 /* ---------- слоти ---------- */
 const used=()=>new Set(pals.filter(p=>p.cs!=null).map(p=>p.cs));
@@ -53,7 +53,7 @@ ANI.push(t=>{if(!cenG)return;orb.rotation.y=t*.6;orb.position.y=2.05+Math.sin(t*
 
 /* ---------- встановлення ---------- */
 /* 0.1.27: спершу передперегляд (place.js) з кільцем майбутньої бази, тоді встановлення */
-function placeCen(){if(inv._cen){msg('🏠 Попал-центр уже стоїть — він може бути лише один');return}if(!(inv.B_cen>0))return;
+function placeCen(){if(window.REALM==='isle'){msg('🏠 Попал-центр ставлять у великому світі — тут лише навчання');return}if(inv._cen){msg('🏠 Попал-центр уже стоїть — він може бути лише один');return}if(!(inv.B_cen>0))return;
  if(window.plPlace){plPlace({name:'🏠 Попал-центр',r:2.2,dist:4,center:true,mk:()=>{const o=orb,r=ring,g=mkCen();orb=o;ring=r;return g},onOk:(x,z)=>doPlaceCen(x,z)});return}
  doPlaceCen(P.x+Math.sin(P.face||0)*3,P.z+Math.cos(P.face||0)*3)}
 function doPlaceCen(x,z){if(inv._cen||!(inv.B_cen>0))return;if(H(x,z)<-.3){msg('🌊 Попал-центр не можна ставити у воді');return}
