@@ -3,7 +3,7 @@ if(HC.length<8)HC.push(0x7a1f3a,0x6b3f1e);if(SK.length<6)SK.push(0xf6d9c0,0x5a3a
 const BRW=[0x3a2a1e,0x6b3f1e,0xc89a5a,0x7a1f3a,0x1a1a1a],EYC=[0x5a3a1e,0x2f6ad6,0x3a9a4a,0x8a5ad6,0x7a5a2a,0x1a1a1a];window.BRW=BRW;window.EYC=EYC;
 const iLeo=HC.indexOf(0x6b3f1e),iMila=HC.indexOf(0x7a1f3a),iBlue=TC.indexOf(0x2f78d0);
 const PRE=g=>g?{hr:6,top:4,hc:iMila,tc:2,br:3,ey:0}:{hr:5,top:3,hc:iLeo,tc:iBlue,br:1,ey:0};
-Object.assign(DLOOK,{g:0,sk:0},PRE(0));
+Object.assign(DLOOK,{g:0,sk:0,model:0},PRE(0));
 const HRN=['Коротка','Довга','Хвостик','Їжак','Шолом','Кучерява','Хвіст з намистинами'],TPN=['Туніка','Куртка','Броня','Худі мандрівника','Жилет слідопита'];
 buildHero=function(g,lk){
 // Only geometries allocated by this builder are released; world materials stay cached.
@@ -74,12 +74,16 @@ partTag='body';let PZ=-.32;{const bg=(eq.bag&&inv[eq.bag]>0)?eq.bag:'',D={bp1:[.
  if(/^p(k|ick)/.test(tid)){partTag='body';A(Cy(.025,.03,.6,6),0x8e5a3a,-.2,1,PZ).rotation.z=.6;A(B(.4,.05,.05),tcl,-.33,1.23,PZ).rotation.z=.6}}
 outl(g)};
 ccShow=function(){menuO=1;ccO=1;dlgX();$('mm').style.display='none';const first=!look;if(!look)look=Object.assign({},DLOOK);if(look.br==null)look.br=0;if(look.ey==null)look.ey=0;
-const p=$('ccp');p.innerHTML=`<h2>${first?'Створення героя':'Зовнішність героя'}</h2><div class='ccr'><span>Імʼя героя</span><input id='ccn' maxlength='16'></div>`+ccRow('Стать','g',['Чоловіча','Жіноча'])+ccRow('Зачіска','hr',HRN)+ccRow('Колір волосся','hc',HC,1)+ccRow('Брови','br',BRW,1)+ccRow('Очі','ey',EYC,1)+ccRow('Одяг','top',TPN)+ccRow('Колір одягу','tc',TC,1)+ccRow('Тіло (шкіра)','sk',SK,1)+`<div id='cca'></div><button id='ccgo'>${first?'▶ Почати пригоду':'✔ Зберегти й грати'}</button>`;
+const p=$('ccp');p.innerHTML=`<h2>${first?'Створення героя':'Зовнішność героя'}</h2><div class='ccr'><span>Імʼя героя</span><input id='ccn' maxlength='16'></div>`+ccRow('Модель 3D','model',['Класичний','Айко'])+ccRow('Стать','g',['Чоловіча','Жіноча'])+ccRow('Зачіска','hr',HRN)+ccRow('Колір волосся','hc',HC,1)+ccRow('Брови','br',BRW,1)+ccRow('Очі','ey',EYC,1)+ccRow('Одяг','top',TPN)+ccRow('Колір одягу','tc',TC,1)+ccRow('Тіло (шкіра)','sk',SK,1)+`<div id='cca'></div><button id='ccgo'>${first?'▶ Почати пригоду':'✔ Зберегти й грати'}</button>`;
 $('ccn').value=pname;$('ccv').appendChild(R2.domElement);buildHero(hp2,look);ccSel();ccAcc();$('cc').style.display='grid';
 $('ccgo').onclick=()=>{pname=$('ccn').value.trim()||'Гість';$('nm').textContent=pname;buildHero(pl,look);drawAv();$('cc').style.display='none';ccO=0;save();mmHide()}};
 if($('mh'))$('mh').onclick=()=>ccShow();
-$('ccp').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b||!b.parentNode||b.parentNode.dataset.k!='g')return;Object.assign(look,PRE(look.g));ccSel();buildHero(hp2,look)});
+$('ccp').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b||!b.parentNode)return;const k=b.parentNode.dataset.k;
+ if(k=='g'){Object.assign(look,PRE(look.g));ccSel();buildHero(hp2,look);return}
+ if(k=='model'){look.model=+b.dataset.v;ccSel();const ids=window.importedHero&&window.importedHero.models,id=ids&&ids[look.model]||'classic';
+  if(window.importedHero&&window.importedHero.setModel)window.importedHero.setModel(id).then(ok=>{if(ok){buildHero(hp2,look);drawAv()}});return}});
 const _da=drawAv;drawAv=function(){_da();try{const lk=look||DLOOK,c=$('avc').getContext('2d'),h=v=>'#'+v.toString(16).padStart(6,'0');c.fillStyle=h(HC[lk.hc]||HC[0]);if(lk.hr==5)for(let i=0;i<7;i++){c.beginPath();c.arc(16+i*5.3,20+Math.abs(i-3)*2.2,6,0,7);c.fill()}if(lk.hr==6){c.beginPath();c.arc(32,12,7,0,7);c.fill()}c.fillStyle=h(EYC[lk.ey||0]);c.beginPath();c.arc(26,41,1.6,0,7);c.fill();c.beginPath();c.arc(38,41,1.6,0,7);c.fill();c.fillStyle=h(BRW[lk.br||0]);c.fillRect(22,35,8,2);c.fillRect(34,35,8,2)}catch(_){}};
-if(look&&!look.v2){Object.assign(look,PRE(look.g),{v2:1});setTimeout(()=>{try{save()}catch(_){}},500)}
+/* v2 migration backfills PRE() defaults; keep a chosen 3D model across the upgrade */
+if(look&&!look.v2){const m=look.model;Object.assign(look,PRE(look.g),{v2:1});if(m)look.model=m;setTimeout(()=>{try{save()}catch(_){}},500)}
 buildHero(pl,look||DLOOK);buildHero(hp2,look||DLOOK);drawAv();if(ccO)ccShow();
 }catch(e){console.warn('hero2',e)}})();
