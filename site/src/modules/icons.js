@@ -184,7 +184,19 @@ const triIcon=m=>mk(x=>{const M=BMAT[m],s=21,P=(X,Y,Z)=>[(X-Z)*.866*s,(X+Z)*.5*s
  const top=F.map(([X,Z])=>Q(X,h,Z)),ys3=top.map(p=>p[1]),L=[];
  if(m=='w')for(let z=.3;z<1.82;z+=.3)L.push([Q(0,h,z),Q(2.1,h,z)]);else for(let z=.35;z<1.82;z+=.35)L.push([Q(0,h,z),Q(2.1,h,z)]);
  poly_(top,lg(x,0,Math.min(...ys3),0,Math.max(...ys3),[[0,M.t[0]],[1,M.t[1]]]),L);const c=Q(cx*.85,h,cz*.8);shine(x,c[0],c[1],6,2.2)});
-const BICO={};for(const m of['w','s'])BICO['BP_tri_'+m]=()=>triIcon(m);for(const k in BSHAPE)for(const m of['w','s'])BICO['BP_'+k+'_'+m]=()=>isoIcon(BSHAPE[k],m);
+/* 0.5.x: насіння, верстаки II/III, лежанки (garden.js, world-007.js) */
+const seeds=()=>mk(x=>{shade(x,48,80,30,6);for(const[cx,cy,rt]of[[34,56,-.5],[60,52,.4],[48,66,0]]){x.save();x.translate(cx,cy);x.rotate(rt);x.beginPath();x.moveTo(0,-17);x.bezierCurveTo(13,-10,13,10,0,15);x.bezierCurveTo(-13,10,-13,-10,0,-17);x.closePath();
+ fillOL(x,rg(x,0,0,16,[[0,'#d9a86a'],[.6,'#9a6232'],[1,'#5e3a1c']]),2.6);x.strokeStyle='rgba(60,30,10,.5)';x.lineWidth=1.6;x.beginPath();x.moveTo(0,-12);x.quadraticCurveTo(3,0,0,11);x.stroke();shine(x,-4,-6,3.5,2);x.restore()}
+ x.save();x.translate(62,28);x.rotate(.5);x.beginPath();x.ellipse(0,0,10,4.5,0,0,7);fillOL(x,lg(x,-10,0,10,0,[[0,'#8fe08a'],[1,'#3f8a3a']]),2);x.restore()});
+const benchT=n=>mk(x=>{shade(x,48,84,38,6);for(const u of[16,74])rr(x,u,44,8,36,2),fillOL(x,n>2?'#4a5260':'#5e3a1c',2.5);rr(x,8,36,80,12,3);fillOL(x,lg(x,0,36,0,48,n>2?[[0,'#9aa3b2'],[1,'#5d6676']]:[[0,'#c8945a'],[1,'#7a4e28']]));
+ poly(x,[[22,36],[22,24],[16,20],[46,20],[40,24],[40,36]]);fillOL(x,lg(x,0,20,0,36,[[0,'#c9d1dc'],[1,'#6c7480']]),2.5);
+ if(n>2)for(const[cx,c]of[[56,'#7fe3f5'],[66,'#ff6b5a'],[76,'#5fdc7a']]){x.beginPath();x.arc(cx,30,4.2,0,7);fillOL(x,c,1.8)}else{rr(x,58,24,22,10,3);fillOL(x,'#c9a24a',2)}
+ rr(x,60,58,28,22,7);fillOL(x,'#e2bf67',2.5);x.fillStyle='#3a2a10';x.font='900 15px system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(n>2?'III':'II',74,69.5)});
+const nest=n=>mk(x=>{shade(x,48,80,38,8);x.beginPath();x.ellipse(48,60,38,20,0,0,7);fillOL(x,lg(x,0,40,0,80,[[0,'#d8b06a'],[1,'#8a6a3c']]));
+ x.strokeStyle='rgba(90,60,20,.55)';x.lineWidth=1.6;for(let i=0;i<14;i++){const a=i/14*6.28;x.beginPath();x.moveTo(48+Math.cos(a)*30,60+Math.sin(a)*15);x.lineTo(48+Math.cos(a+.3)*38,60+Math.sin(a+.3)*20);x.stroke()}
+ x.beginPath();x.ellipse(48,58,26,12,0,0,7);fillOL(x,lg(x,0,46,0,70,n>2?[[0,'#fffaf0'],[1,'#d9ccb6']]:[[0,'#f2e3c2'],[1,'#c9ad7a']]),2.2);shine(x,38,54,8,3);
+ x.beginPath();x.arc(74,30,14,0,7);fillOL(x,'#7fe3f5',2.5);x.fillStyle='#0d2a3a';x.font='900 17px system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(String(n),74,31)});
+const BICO={sd:seeds,B_wb2:()=>benchT(2),B_wb3:()=>benchT(3),B_nest2:()=>nest(2),B_nest5:()=>nest(5),B_garden:farm};for(const m of['w','s'])BICO['BP_tri_'+m]=()=>triIcon(m);for(const k in BSHAPE)for(const m of['w','s'])BICO['BP_'+k+'_'+m]=()=>isoIcon(BSHAPE[k],m);
 for(const m of['w','s'])BICO['BP_roof_'+m]=()=>isoIcon([],m,[0,2,2,1.2]);
 Object.assign(BICO,{BP_dwood:()=>bDoor(0),BP_dmetal:()=>bDoor(1),BP_wglass:()=>bWin('glass'),BP_wbars:()=>bWin('bars'),BP_wshut:()=>bWin('shut')});
 const D={wool,lth:leather,w:log,s:stone,sti:sticks,ing:ingot,ore:()=>lump('ore'),coal:()=>lump('coal'),be:berries,mu:mush,gm:skewer,pie,

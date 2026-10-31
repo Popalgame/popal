@@ -27,7 +27,7 @@ const WHAT={chop:['🪓','рубає дерево','дерев'],mine:['⛏️',
 /* ---------- рух ---------- */
 function moveTo(p,x,z,dt,stop){const dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);if(d<=stop+.08)return true;const s=Math.min(d-stop,SPD*(cf>0?1.2:1)*dt),nx=p.x+dx/d*s,nz=p.z+dz/d*s;p.a=Math.atan2(dx,dz);
  if(window.colPalStep)colPalStep(p,nx,nz,x,z,stop,dt);else{p.x=nx;p.z=nz}return false}/* 0.1.23: обходить будівлі (collide.js) */
-function place(p,tm,moving){p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(moving?Math.abs(Math.sin(tm*9+p.x))*.06:0),p.z);p.m.rotation.y=p.a||0}
+function place(p,tm,moving){if(!p.ai||p.ai.s!='rest'){if(p.sleep&&window.NEST)window.NEST.release(p);p.sleep=0}p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(p.sleep?.18:0)+(moving?Math.abs(Math.sin(tm*9+p.x))*.06:0),p.z);p.m.rotation.y=p.a||0}
 const bagW=A=>Object.entries(A.bag).reduce((a,[k,n])=>a+W(k)*n,0);
 const workRate=()=>1+.15*pals.reduce((level,q)=>q.wk&&q.cs!=null?Math.max(level,(T[q.ty].wk||{}).water||0):level,0);
 const say=(t,o,c)=>{if(o&&Math.hypot(P.x-o.position.x,P.z-o.position.z)<18)dmg(t,o,c||'#bdf5c9')};
@@ -49,12 +49,18 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
    if(Fu.ord>0&&Fu.ore>=2&&Fu.fuel>=1){A.s='fsmelt';break}
    if(Fu.ord>Math.min(Math.floor(Fu.ore/2),Fu.fuel)&&window.chCount&&chCount('ore')>=2&&(chCount('coal')>=1||chCount('w')>=1)){A.s='ffeed';A.ph=0;break}
    if(Fu.ing>0&&window.chNearFor&&chNearFor('ing',p.x,p.z)){A.s='fhaul';break}}
+  /* 0.5.x: збирач спершу доглядає грядки — збирає стиглі кущики й садить насіння зі скринь (garden.js) */
+  if(wk.gather&&window.GARDEN){const t=window.GARDEN.task(p);if(t){A.s='farm';A.ft=t;A.t=per;break}}
   for(const j of gj){const e=findTarget(p,j,C);if(e){A.job=j;A.tg=e[0];A.L=e[1];A.k=e[2];e[0]._cl=p;A.s='go';break}}
   if(A.s!='pick')break;
   if(Object.keys(A.bag).length){A.s='deliver';break}
   if(wk.cook&&kitPos()&&window.KIT&&KIT.dish()){A.s='cook';A.ph=0;break}
   if(wk.carry&&cf<20&&window.chCount&&['be','mu','gm','pie'].some(k=>chCount(k)>0)){A.s='fetch';break}
   A.s='rest';A.t=5;A.why=gj.length?'на базі не лишилось '+gj.map(j=>WHAT[j][2]).join(', '):wk.cook?(!kitPos()?'немає кухні-багаття — ніде готувати':window.KIT&&KIT.any()?'у скринях бракує продуктів для замовлення':'немає замовлень на кухні'):wk.carry?'годівниця повна або немає їжі':'немає роботи';break}
+ case'farm':{const t=A.ft;if(!t||!window.GARDEN){A.s='pick';break}p.st=t.job=='pick'?'🫐 збирає врожай на грядці':'🌱 садить насіння на грядці';
+  moving=!moveTo(p,t.x,t.z,dt,.35);if(moving)break;p.job='gather';A.t-=dt*workRate();if(A.t>0)break;A.t=per;const r=window.GARDEN.done(t,p);A.ft=null;
+  if(r&&r.be){A.bag.be=(A.bag.be||0)+r.be;if(r.sd)A.bag.sd=(A.bag.sd||0)+r.sd;say('+'+r.be+' 🫐'+(r.sd?' +1 🌰':''),p.m);XP(p)}else if(r&&r.sown){say('🌱',p.m);XP(p)}
+  A.s=bagW(A)>=cap-.05?'deliver':'pick';break}
  case'go':{const o=A.tg;if(!o||!A.L.includes(o)||!inBase(o,C)){if(o&&o._cl===p)o._cl=null;A.s='pick';break}
   p.st='🚶 іде '+(A.job=='chop'?'до дерева':A.job=='mine'?'до скелі':'по ягоди');moving=!moveTo(p,o.x,o.z,dt,1.25);if(!moving){A.s='work';A.t=per}break}
  case'work':{const o=A.tg;if(!o||!A.L.includes(o)){A.s='pick';break}p.st=WHAT[A.job][0]+' '+WHAT[A.job][1];p.job=A.job;p.a=Math.atan2(o.x-p.x,o.z-p.z);
@@ -63,6 +69,7 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
   if(bagW(A)+W(A.k)*n>cap+1e-6){o._cl=null;A.s='deliver';break}
   A.bag[A.k]=(A.bag[A.k]||0)+n;let tx='+'+n+' '+(A.k=='w'?'🪵':A.k=='s'?'🪨':A.k=='be'?'🫐':'🍄');
   if(A.k=='w'&&Math.random()<.35&&bagW(A)+W('sti')<=cap){A.bag.sti=(A.bag.sti||0)+1;tx+=' +1 🥢'}
+  if(A.k=='be'&&Math.random()<.3&&bagW(A)+W('sd')<=cap){A.bag.sd=(A.bag.sd||0)+1;tx+=' +1 🌰'}/* 0.5.x: насіння з кущів */
   if(!o.mx)o.mx=o.hp=(A.L===trees||A.L===rocks)?8:Math.max(1,o.hp||1);o.hp-=(A.L===trees||A.L===rocks)?1+L:1;
   try{if(window.flash)flash(o)}catch(_){}say(tx,o.m);XP(p);
   if(o.hp<=0){const L2=A.L,ix=L2.indexOf(o);if(ix>=0){sc.remove(o.m);L2.splice(ix,1)}
@@ -102,6 +109,9 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
  case'fhaul':{const fp=FUR.pos(),Fu=FUR.get();if(!fp||Fu.ing<=0){A.s='pick';break}p.st='🔩 забирає злитки з плавильні';
   moving=!moveTo(p,fp[0],fp[1],dt,1.9);if(moving)break;const n=Math.min(Fu.ing,Math.max(1,Math.floor(cap/W('ing'))));Fu.ing-=n;A.bag.ing=(A.bag.ing||0)+n;A.s='deliver';break}
  case'rest':{p.st='😴 відпочиває: '+(A.why||'немає роботи');p.job=null;A.t-=dt;
+  /* 0.5.x: є вільне місце на лежанці — іде туди й спить (garden.js, NEST) */
+  const ns=window.NEST&&window.NEST.claim(p);
+  if(ns){moving=!moveTo(p,ns.x,ns.z,dt,.05);p.sleep=!moving;if(p.sleep){p.st='😴 спить на лежанці';if((p._zz=(p._zz||0)-dt)<=0){p._zz=4;say('💤',p.m,'#cfe8ff')}}if(A.t<=0){A.s=Object.keys(A.bag).length?'deliver':'pick'}break}
   const d=Math.hypot(p.x-C[0],p.z-C[1]);if(d>6){moving=!moveTo(p,C[0],C[1],dt,4)}else{p.t=(p.t||0)-dt;if(p.t<=0){p.t=rn(2,4);p.a=rn(0,6.3)}{const nx=p.x+Math.sin(p.a)*.35*dt,nz=p.z+Math.cos(p.a)*.35*dt;if(window.colStep){const q=colStep(p.x,p.z,nx,nz,.42);if(Math.hypot(q[0]-nx,q[1]-nz)>.001)p.t=0;p.x=q[0];p.z=q[1]}else{p.x=nx;p.z=nz}}moving=true}
   if(A.t<=0)A.s=Object.keys(A.bag).length?'deliver':'pick';break}}
  place(p,tm,moving)};

@@ -5,7 +5,7 @@
    • попал, який кілька секунд не може дійти до цілі (стіна без проходу), перескакує до неї зі спалахом;
    • попал-супутник, що відстав за стіною, з’являється поруч із гравцем. */
 (function(){try{
-const BR={B_bed:1.0,B_kit:.75,B_wb:.85,B_rep:.8,B_fur:1.15,B_farm:1.0,B_lamp:.25,B_fen:.9};
+const BR={B_bed:1.0,B_kit:.75,B_wb:.85,B_wb2:.95,B_wb3:1.0,B_rep:.8,B_fur:1.15,B_garden:0,B_nest2:0,B_nest5:0,B_lamp:.25,B_fen:.9};/* 0 — прохідні: грядка й лежанки */
 /* круглі перешкоди: центр, скрині, будівлі бази */
 /* 0.5.x: дерева (стовбур) і скелі / рудні жили теж тверді. Беремо лише ті, що в кількох метрах від точки (x,z) — їх у світі сотні.
    Радіус скелі — 80% її півширини, не більше 0.8 м: так попали-працівники й далі підходять на 1.25 м і добувають */
@@ -16,7 +16,7 @@ function nature(L,x,z){if(x==null)return;const T=G_('trees')||[],R=G_('rocks')||
  for(const o of R)if(o.m&&Math.abs(o.x-x)<3.5&&Math.abs(o.z-z)<3.5)L.push({x:o.x,z:o.z,r:rockR(o)})}
 function cols(x,z){const L=[...(window.plSceneryObstacles||[])],C=inv._cen;if(C)L.push({x:C[0],z:C[1],r:2.2});nature(L,x,z);
  for(const c of inv._ch||[])L.push({x:c.x,z:c.z,r:.7});
- for(const b of window.BPLACED||[])L.push({x:b.x,z:b.z,r:BR[b.id]||.8});return L}
+ for(const b of window.BPLACED||[]){const r=BR[b.id];if(r===0)continue;L.push({x:b.x,z:b.z,r:r||.8})}return L}
 window.colList=cols;window.colR=BR;
 const wall=(ax,az,bx,bz)=>{try{return !!(window.BLDBLK&&BLDBLK(ax,az,bx,bz,H(bx,bz)))}catch(_){return false}};
 /* виштовхування з кіл (ковзання по дотичній виходить само собою) */
