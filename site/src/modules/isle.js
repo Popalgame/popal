@@ -106,7 +106,7 @@ const fire=new THREE.Group();{for(let i=0;i<8;i++){const s=new THREE.Mesh(new TH
  const bd=new THREE.Mesh(new THREE.BoxGeometry(1.1,.36,.06),W);bd.position.set(.3,1.35,0);g.add(bd);put(g,2.3,I.G0+4,0,-.2)}
 
 /* ---------- куди можна ходити ---------- */
-const ok=(x,z,m)=>I.walk(x,z,m)&&(open||!(I.inGorge(x,z)&&z<I.G0+1.2)&&!I.inPlaza(x,z));
+const ok=(x,z,m)=>I.walk(x,z,m)&&(open||!(z<I.G0+4.3+(m||0)&&z>I.G1-2&&Math.abs(x)<I.GW+1.5)&&!I.inPlaza(x,z))/* завал твердий по передній грані брил (центр G0+1, передні брили виступають до ~G0+3.9) */;
 I.ok=ok;
 /* ---------- оформлення ущелини й майданчика порталу ----------
    Бруківка кільцями, двоступеневий постамент під аркою, 4 обеліски з рунами (світяться в такт порталу), 2 жаровні біля входу,
