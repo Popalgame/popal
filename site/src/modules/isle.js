@@ -9,13 +9,9 @@ const sc_=G('sc'),P_=G('P'),H_=window.H;if(!sc_||!P_||!H_)return;
 let seed=91;const rnd=()=>(seed=seed*16807%2147483647)/2147483647,rr=(a,b)=>a+rnd()*(b-a);
 
 /* ---------- скелі: кілька варіантів «битого» каменю, інстансами ---------- */
-function rockGeo(k){const g=new THREE.IcosahedronGeometry(1,1),p=g.attributes.position,v=new THREE.Vector3();seed=17+k*31;
- for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const n=1+.22*Math.sin(v.x*3.1+k)*Math.cos(v.z*2.7-k)+.12*Math.sin(v.y*5.3+k*2);v.multiplyScalar(n);
-  if(v.y>.35)v.y=.35+(v.y-.35)*.55;/* пласкі верхівки — як плато */v.x+=Math.round(v.x*3)/3*.08;p.setXYZ(i,v.x,v.y,v.z)}
- g.computeVertexNormals();return g}
-const RG=[0,1,2].map(rockGeo);
-const RMAT=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.95,flatShading:true});
-const RC=[0x8b8277,0x7a7268,0x968b7c,0x6e675e,0xa39886];
+const RG=[0,1,2].map(k=>plCliff.geo(k));
+const RMAT=plCliff.mat();
+const RC=plCliff.cols;
 const rocks=[[],[],[]];/* [x,y,z,sx,sy,sz,ry,col] */
 const addRock=(x,z,w,h,yo)=>{const k=(rnd()*3)|0;rocks[k].push([x,(yo||0)+H_(x,z)-h*.15,z,w*rr(.85,1.15),h,w*rr(.85,1.2),rnd()*6.28,RC[(rnd()*RC.length)|0]])};
 const nearGorge=(x,z)=>z<I.G0+4&&z>I.G1-3&&Math.abs(x)<I.GW+1.6;
@@ -45,15 +41,16 @@ rocks.forEach((L,k)=>{if(!L.length)return;const m=new THREE.InstancedMesh(RG[k],
 
 /* ---------- завал в ущелині ---------- */
 const gate=new THREE.Group();gate.position.set(0,H_(0,I.G0+1),I.G0+1);sc_.add(gate);
-{const SM=new THREE.MeshStandardMaterial({color:0x857c70,roughness:.95,flatShading:true});
+{const SM=plCliff.mat();
  for(let i=0;i<9;i++){const m=new THREE.Mesh(RG[i%3],SM);m.scale.set(rr(.6,1.1),rr(.6,1.2),rr(.6,1));m.position.set(rr(-1.6,1.6),rr(.2,1.4)+(i>5?1:0),rr(-.6,.6));m.rotation.y=rnd()*6;m.castShadow=true;gate.add(m)}
  const VM=new THREE.MeshStandardMaterial({color:0x58c46a,emissive:0x3cff9a,emissiveIntensity:.55,roughness:.6});
  for(let i=0;i<7;i++){const c=new THREE.CatmullRomCurve3([new THREE.Vector3(-1.9,rr(.3,2.6),.7),new THREE.Vector3(rr(-.8,0),rr(.5,3),.9),new THREE.Vector3(rr(0,.8),rr(.5,3),.9),new THREE.Vector3(1.9,rr(.3,2.6),.7)]);
   gate.add(new THREE.Mesh(new THREE.TubeGeometry(c,24,.05,5,false),VM))}}
-let open=false;try{open=localStorage.getItem('zi_isle_gate')=='1'||new URLSearchParams(location.search).get('gate')=='open'}catch(_){}
+const INV=G('inv')||{};INV._rl='isle';
+let open=!!INV._isg;try{if(new URLSearchParams(location.search).get('gate')=='open')open=true}catch(_){}
 gate.visible=!open;
 I.isOpen=()=>open;
-I.open=()=>{open=true;gate.visible=false;try{localStorage.setItem('zi_isle_gate','1')}catch(_){}};
+I.open=()=>{open=true;gate.visible=false;INV._isg=1;try{save()}catch(_){}};
 
 /* ---------- арка-портал ---------- */
 const arch=new THREE.Group(),AX=0,AZ=I.PZ-1.5;arch.position.set(AX,H_(AX,AZ),AZ);sc_.add(arch);
@@ -109,14 +106,27 @@ window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(ok(P_.x,P_.z,0))re
  if(ok(P_.x,oz,0)){P_.z=oz;return}if(ok(ox,P_.z,0)){P_.x=ox;return}P_.x=ox;P_.z=oz};
 const cb0=window.colBlocked;
 window.colBlocked=function(x0,z0,x1,z1,r){if(!ok(x1,z1,.3))return true;return cb0?cb0.apply(this,arguments):false};
-/* збережена позиція з іншого виміру — на пляж */
+/* повернення з великого світу через печеру — до арки; збережена позиція з іншого виміру — на пляж */
+try{if(localStorage.getItem('zi_isle_at')){localStorage.removeItem('zi_isle_at');open=true;gate.visible=false;INV._isg=1;P_.x=0;P_.z=I.PZ+3;P_.face=0;setTimeout(()=>{try{msg('🏝️ Ви повернулися на Острів пробудження')}catch(_){}},1500)}}catch(_){}
 if(!ok(P_.x,P_.z,0)){P_.x=I.START[0];P_.z=I.START[1];P_.face=Math.PI}
 
 /* ---------- перехід у звичайний світ ---------- */
 const fade=document.createElement('div');fade.style.cssText='position:fixed;inset:0;background:radial-gradient(circle,#bff6ff 0%,#2a6fd8 55%,#06122e 100%);opacity:0;pointer-events:none;transition:opacity 1.2s;z-index:9999';document.body.appendChild(fade);
 let going=false;
-I.travel=()=>{if(going)return;going=true;fade.style.opacity='1';try{if(window.msg)msg('✨ Портал підхоплює вас…')}catch(_){}
- setTimeout(()=>{try{localStorage.setItem('zi_realm','main');localStorage.setItem('zi_arrive','1');if(window.save)save()}catch(_){}
+/* портал пропускає лише зареєстрованих: без акаунта — вікно реєстрації */
+const reg=document.createElement('div');reg.id='isreg';reg.style.cssText='position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,12,30,.62);z-index:9998';
+reg.innerHTML=`<div style="max-width:380px;margin:16px;padding:20px 22px;border-radius:16px;background:linear-gradient(#173a5a,#0e2236);border:2px solid #6fe6ff;color:#eaf6ff;font:15px/1.45 system-ui;text-align:center;box-shadow:0 0 40px rgba(80,200,255,.45)">
+<div style="font-size:34px">🌀</div><b style="font-size:18px;color:#9ff2ff">Портал мовчить…</b>
+<p style="margin:8px 0 14px">Руни світяться, але не пропускають безіменних. Назвіть себе — створіть акаунт, і портал відкриється. Усе з рюкзака й ваші попали вирушать із вами.</p>
+<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button id="isg" style="padding:10px 14px;border-radius:10px;border:0;background:#fff;color:#123;font-weight:800">Увійти через Google</button><button id="ise" style="padding:10px 14px;border-radius:10px;border:0;background:#ffb04a;color:#2a1600;font-weight:800">Через пошту</button></div>
+<button id="isx" style="margin-top:12px;background:none;border:0;color:#9fb8cc;text-decoration:underline">Пізніше</button></div>`;
+document.body.appendChild(reg);let regT=0;
+reg.querySelector('#isg').onclick=()=>{reg.style.display='none';try{G('googleAuth')()}catch(_){}};
+reg.querySelector('#ise').onclick=()=>{reg.style.display='none';const e=document.getElementById('em');if(e)e.style.display='flex'};
+reg.querySelector('#isx').onclick=()=>{reg.style.display='none';regT=Date.now()};
+I.travel=()=>{if(going)return;if(!G('fbU')){if(reg.style.display!='flex'&&Date.now()-regT>6000)reg.style.display='flex';return}
+ going=true;fade.style.opacity='1';try{if(window.msg)msg('✨ Портал підхоплює вас…')}catch(_){}
+ setTimeout(()=>{try{INV._rl='main';localStorage.setItem('zi_arrive','1');if(window.save)save();const cp=G('cloudPush');if(cp)cp(true)}catch(_){}
   const u=new URL(location.href);u.searchParams.delete('realm');u.searchParams.delete('gate');location.replace(u.toString())},1400)};
 
 /* ---------- анімація ---------- */

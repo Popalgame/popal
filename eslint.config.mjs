@@ -21,7 +21,7 @@ const PROJECT_GLOBALS = {
   $: 'writable', ANI: 'writable', B: 'writable', BALL: 'writable',
   BCOL: 'writable', BIO: 'writable', BLDBLK: 'writable', BLDC: 'writable',
   BLDY: 'writable', Co: 'writable', Cy: 'writable', DLOOK: 'writable',
-  DUR: 'readonly', PW: 'readonly',
+  DUR: 'readonly', PW: 'readonly', plCliff: 'readonly',
   EL: 'writable', EM: 'writable', FOOD: 'writable', FUR: 'writable',
   H: 'writable', HC: 'writable', HPM: 'writable', IT: 'writable',
   KIT: 'writable', NPCS: 'writable', P: 'writable', PALMODEL: 'writable',

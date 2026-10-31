@@ -15,10 +15,7 @@ const toL=(x,z)=>{const dx=x-MO[0],dz=z-MO[1];return[dx*fz-dz*fx,-(dx*fx+dz*fz)]
 const inTunnel=(x,z)=>{const[u,v]=toL(x,z);return v>-1&&v<7&&Math.abs(u)<1.5};
 
 /* ---------- скелі ---------- */
-function rockGeo(k){const g=new THREE.IcosahedronGeometry(1,1),p=g.attributes.position,v=new THREE.Vector3();
- for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const n=1+.22*Math.sin(v.x*3.1+k)*Math.cos(v.z*2.7-k)+.12*Math.sin(v.y*5.3+k*2);v.multiplyScalar(n);if(v.y>.35)v.y=.35+(v.y-.35)*.55;p.setXYZ(i,v.x,v.y,v.z)}
- g.computeVertexNormals();return g}
-const RG=[0,1,2].map(rockGeo),RC=[0x8b8277,0x7a7268,0x968b7c,0x6e675e,0xa39886],L=[[],[],[]];
+const RG=[0,1,2].map(k=>plCliff.geo(k)),RC=plCliff.cols,L=[[],[],[]];
 const add=(x,z,w,h)=>{L[(rnd()*3)|0].push([x,Math.min(H_(x,z),.4)-h*.12,z,w*rr(.85,1.15),h,w*rr(.85,1.2),rnd()*6.28,RC[(rnd()*RC.length)|0]])};
 const taper=u=>Math.max(.28,1-Math.pow(Math.abs(u)/(RU+2),2.2));
 for(let u=-RU;u<=RU;u+=2.1)for(const[v,w,h]of[[1.6,2.6,9],[4.6,3.6,14],[8.5,4.4,19],[12.5,4.6,15]]){
@@ -27,7 +24,7 @@ for(let u=-RU;u<=RU;u+=2.1)for(const[v,w,h]of[[1.6,2.6,9],[4.6,3.6,14],[8.5,4.4,
 /* склепіння над входом і тунелем */
 for(let v=0;v<8;v+=1.4){const[x,z]=toW(0,v);L[v%3|0].push([x,H_(MO[0],MO[1])+4.3+v*.35,z,2.2,1.6+v*.4,1.8,rnd()*6,RC[(rnd()*5)|0]])}
 for(const sd of[-1,1])for(let v=-.6;v<8;v+=1.3){const[x,z]=toW(sd*(2.35+Math.max(0,-v)*.6),v);add(x,z,1.25,7+v*.6)}
-const dm=new THREE.Object3D(),cl=new THREE.Color(),RMAT=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.95,flatShading:true});
+const dm=new THREE.Object3D(),cl=new THREE.Color(),RMAT=plCliff.mat();
 L.forEach((A,k)=>{if(!A.length)return;const m=new THREE.InstancedMesh(RG[k],RMAT,A.length);
  A.forEach((r,i)=>{dm.position.set(r[0],r[1],r[2]);dm.scale.set(r[3],r[4],r[5]);dm.rotation.set(0,r[6],0);dm.updateMatrix();m.setMatrixAt(i,dm.matrix);m.setColorAt(i,cl.setHex(r[7]))});
  m.castShadow=true;m.receiveShadow=true;sc_.add(m)});
@@ -61,6 +58,13 @@ window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(!blocked(P_.x,P_.z
 const cb0=window.colBlocked;
 window.colBlocked=function(x0,z0,x1,z1,r){if(blocked(x1,z1,.4))return true;return cb0?cb0.apply(this,arguments):false};
 window.SPAWN_CAVE={MO,RU,RV,blocked};
+/* у глибині печери — портал назад на Острів пробудження */
+{const fade=document.createElement('div');fade.style.cssText='position:fixed;inset:0;background:radial-gradient(circle,#bff6ff 0%,#2a6fd8 55%,#06122e 100%);opacity:0;pointer-events:none;transition:opacity 1.2s;z-index:9999';document.body.appendChild(fade);
+ let going=false,hint=0;const A=G('ANI'),INV=G('inv');if(INV&&!INV._rl)INV._rl='main';
+ if(A)A.push(()=>{if(going)return;const[u,v]=toL(P_.x,P_.z);if(Math.abs(u)>1.6)return;
+  if(v>.6&&v<2.2&&Date.now()-hint>8000){hint=Date.now();try{msg('🌀 У глибині печери гуде портал на Острів пробудження')}catch(_){}}
+  if(v>=2.2&&v<7){going=true;fade.style.opacity='1';setTimeout(()=>{try{INV._rl='isle';localStorage.setItem('zi_isle_at','1');save();const cp=G('cloudPush');if(cp)cp(true)}catch(_){}
+   const url=new URL(location.href);url.searchParams.delete('realm');location.replace(url.toString())},1400)}})}
 /* камера на старті — з боку суші, щоб у кадрі були герой і печера за ним */
 window.plCaveCam=()=>{try{eval('ang=S[2]')}catch(_){}};
 if(Math.hypot(P_.x-S[0],P_.z-S[1])<1)window.plCaveCam();

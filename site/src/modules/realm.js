@@ -1,14 +1,53 @@
 /* Вимір «Острів пробудження» — окремий маленький світ для навчання.
    Гра має два виміри: 'isle' (острів у скелях) і 'main' (звичайний світ). Вимір вибирається до завантаження світу:
    • ?realm=isle / ?realm=main у посиланні (для перевірки);
-   • інакше — з localStorage 'zi_realm', який виставляє цепочка навчання (поки що лише вручну).
+   • інакше — зі збереження: inv._rl ('isle' | 'main') — у якому вимірі гравець зараз (синхронізується з хмарою разом із прогресом);
+   • немає збереження — новий гравець, починає на острові;
+   • старе збереження без inv._rl: якщо воно належить акаунту (zi_uid) — звичайний світ; якщо гість без реєстрації — прогрес гостя
+     відкладаємо в 'zi_guest_bak' (на випадок помилки), а сам гість починає з острова: портал відкриється лише після реєстрації.
    Острів малий: ~60 м суші, з півдня — пляж і море, з півночі, сходу й заходу — високі скелі. У північних скелях — вузька ущелина,
    за нею на майданчику стоїть арка-портал у звичайний світ. Цей файл — лише геометрія острова (висоти, біоми, де можна ходити);
    скелі, арку й табір малює isle.js. */
 (function(){
 let r=null;try{r=new URLSearchParams(location.search).get('realm')}catch(_){}
-if(r!=='isle'&&r!=='main'){try{r=localStorage.getItem('zi_realm')}catch(_){r=null}}
+if(r!=='isle'&&r!=='main'){r='isle';try{const raw=localStorage.getItem('zi'),sv=raw?JSON.parse(raw):null;
+ if(sv){const rl=sv.inv&&sv.inv._rl;if(rl==='isle'||rl==='main')r=rl;else if(localStorage.getItem('zi_uid'))r='main';
+  else{localStorage.setItem('zi_guest_bak',raw);localStorage.removeItem('zi')}}}catch(_){r='main'}}
 window.REALM=r==='isle'?'isle':'main';
+
+/* ---------- спільні скелі для острова й спавну (isle.js, spawn-cliffs.js) ----------
+   Матеріал: процедурна текстура з горизонтальними пластами породи, тріщинами й мохом на верхівках (сферичні UV брили: v=1 — верх),
+   той самий малюнок — рельєф (bumpMap). Геометрія: «бита» брила з пласкою верхівкою. */
+window.plCliff=(()=>{let mat=null;const geos={};
+ function vnoise(n,seed){const g=[];let s=seed;const r=()=>(s=s*16807%2147483647)/2147483647;for(let i=0;i<n*n;i++)g.push(r());
+  return(x,y)=>{x*=n;y*=n;const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),G=(a,b)=>g[((b%n+n)%n)*n+((a%n+n)%n)];
+   return(G(i,j)*(1-u)+G(i+1,j)*u)*(1-v)+(G(i,j+1)*(1-u)+G(i+1,j+1)*u)*v}}
+ function build(){const S=512,c=document.createElement('canvas'),b=document.createElement('canvas');c.width=b.width=c.height=b.height=S;
+  const x=c.getContext('2d'),xb=b.getContext('2d'),im=x.createImageData(S,S),ib=xb.createImageData(S,S),d=im.data,db=ib.data;
+  const n1=vnoise(8,11),n2=vnoise(16,23),n3=vnoise(40,37),n4=vnoise(6,51);
+  let s=7;const r=()=>(s=s*16807%2147483647)/2147483647;
+  /* пласти: межі з легкою хвилею */const L=[];let y=0;while(y<1){const h=.025+r()*.07;L.push([y,h,r()]);y+=h}
+  for(let j=0;j<S;j++)for(let i=0;i<S;i++){const u=i/S,v=j/S,w=v+(n1(u,v)-.5)*.05+(n2(u*2,v)-.5)*.012;
+   let k=0;while(k+1<L.length&&L[k+1][0]<=w)k++;const st=L[k],e=Math.min(w-st[0],st[0]+st[1]-w)/st[1];/* 0 біля межі пласта */
+   const grain=n3(u,v)*.55+n2(u,v)*.45,edge=Math.min(1,e*7);
+   let l=.6+(st[2]-.5)*.16+(grain-.5)*.22;l*=.8+.2*edge;/* темні шви між пластами */
+   const crack=Math.abs(n1(u*2+.3,v*.6)-.5)<.006?.78:1;l*=crack;
+   const top=Math.max(0,(.24-v)/.24),moss=top*(n2(u*1.7,v*1.7)>.45?1:.25)*(n1(u*3,v)>.4?1:.4);/* верх текстури — верхівка брили */
+   let R=l*1.06,G_=l*1.0,B=l*.9;const warm=n4(u,v);R+= (warm-.5)*.08;B-=(warm-.5)*.05;
+   R=R*(1-moss)+.33*moss*(.8+grain*.4);G_=G_*(1-moss)+.48*moss*(.8+grain*.4);B=B*(1-moss)+.22*moss;
+   const o=(j*S+i)*4;d[o]=Math.min(255,R*255);d[o+1]=Math.min(255,G_*255);d[o+2]=Math.min(255,B*255);d[o+3]=255;
+   const bh=(grain*.6+edge*.4)*crack*255;db[o]=db[o+1]=db[o+2]=bh;db[o+3]=255}
+  x.putImageData(im,0,0);xb.putImageData(ib,0,0);
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,1);
+  const bt=new THREE.CanvasTexture(b);bt.wrapS=bt.wrapT=THREE.RepeatWrapping;bt.repeat.set(2,1);
+  mat=new THREE.MeshStandardMaterial({map:t,bumpMap:bt,bumpScale:.035,roughness:.93,flatShading:true})}
+ function geo(k){if(geos[k])return geos[k];const g=new THREE.IcosahedronGeometry(1,2),p=g.attributes.position,v=new THREE.Vector3();
+  for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const n=1+.2*Math.sin(v.x*3.1+k)*Math.cos(v.z*2.7-k)+.1*Math.sin(v.y*5.3+k*2)+.05*Math.sin(v.x*9+v.z*7+k);v.multiplyScalar(n);
+   if(v.y>.35)v.y=.35+(v.y-.35)*.5;/* пласка верхівка */if(v.y<-.5)v.y=-.5+(v.y+.5)*.6;p.setXYZ(i,v.x,v.y,v.z)}
+  g.computeVertexNormals();return geos[k]=g}
+ return{mat:()=>{if(!mat)build();return mat},geo,
+  /* кольори брил (множаться на текстуру) — теплі сіро-пісочні відтінки */
+  cols:[0xe8e0d2,0xd6cec0,0xf2e9da,0xc9c1b3,0xdcd2c0]}})();
 if(window.REALM!=='isle')return;
 
 const sm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
