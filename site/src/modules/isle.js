@@ -43,10 +43,10 @@ rocks.forEach((L,k)=>{if(!L.length)return;const m=new THREE.InstancedMesh(RG[k],
 const gate=new THREE.Group();gate.position.set(0,H_(0,I.G0+1),I.G0+1);sc_.add(gate);
 {const SM=plCliff.mat();
  /* завал на всю ширину ущелини: нижній ряд великих брил, верхній — менших, щілин немає */
- for(const dz of[-.75,0,.75])for(let row=0;row<3;row++){const n=row==2?4:7,y0=[.35,1.35,2.2][row]*(dz<0?1.1:1),sc0=[1.25,1.05,.8][row]*(dz?.9:1);for(let k=0;k<n;k++){const m=new THREE.Mesh(RG[(k+row)%3],SM);
+ for(const dz of[-.6,.6])for(let row=0;row<9;row++){const n=Math.max(4,7-(row>>1)),y0=.35+row*1.05,sc0=(1.3-row*.05)*(dz<0?.95:1);for(let k=0;k<n;k++){const m=new THREE.Mesh(RG[(k+row)%3],SM);/* завал утричі вищий: 9 рядів до ~10 м */
   m.scale.set(sc0*rr(.9,1.15),sc0*rr(.8,1.05),sc0*rr(.85,1.1));m.position.set(-(I.GW+.4)+(k+.5)/n*2*(I.GW+.4)+rr(-.2,.2),y0+rr(-.1,.15),rr(-.3,.3)+dz+(row==1?.15:0));m.rotation.y=rnd()*6;m.castShadow=true;gate.add(m)}}
  const VM=new THREE.MeshStandardMaterial({color:0x58c46a,emissive:0x3cff9a,emissiveIntensity:.55,roughness:.6});
- for(let i=0;i<33;i++){const vz=i%3==0?.2:i%3==1?1.1:1.5;const c=new THREE.CatmullRomCurve3([new THREE.Vector3(-I.GW-.3,rr(.2,3),vz-.3),new THREE.Vector3(rr(-I.GW*.7,0),rr(.4,3.4),vz),new THREE.Vector3(rr(0,I.GW*.7),rr(.4,3.4),vz),new THREE.Vector3(I.GW+.3,rr(.2,3),vz-.3)]);
+ for(let i=0;i<33;i++){const vz=i%3==0?.2:i%3==1?1.1:1.5;const c=new THREE.CatmullRomCurve3([new THREE.Vector3(-I.GW-.3,rr(.2,9.5),vz-.3),new THREE.Vector3(rr(-I.GW*.7,0),rr(.4,10),vz),new THREE.Vector3(rr(0,I.GW*.7),rr(.4,10),vz),new THREE.Vector3(I.GW+.3,rr(.2,9.5),vz-.3)]);
   const v=new THREE.Mesh(new THREE.TubeGeometry(c,24,.05,5,false),VM);v.userData.vine=1;gate.add(v)}}
 /* відкритий прохід: ліани зникають, а каміння завалу лежить купою біля стіни ущелини (його туди відносить Брам, isle-npc.js) */
 I.PILE=[3.5,I.G0+3.3];I.gate=gate;
