@@ -6,12 +6,11 @@ try{Object.assign(L,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 const sv=()=>{try{localStorage.setItem(KEY,JSON.stringify(L))}catch(e){}};
 const $=id=>document.getElementById(id),GRID=8,PROPS=['left','top','right','bottom','transform','transform-origin'];
 let D=null;const cur=()=>D||L;
-/* відступи під виріз камери й заокруглення екрана */
-const pr=document.createElement('div');pr.style.cssText='position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)';document.body.appendChild(pr);
-const ins=()=>{const c=getComputedStyle(pr);return{t:parseFloat(c.paddingTop)||0,r:parseFloat(c.paddingRight)||0,b:parseFloat(c.paddingBottom)||0,l:parseFloat(c.paddingLeft)||0}};
 const shown=e=>!!e&&e.getClientRects().length>0;
-function clamp(e){if(!shown(e))return;const r=e.getBoundingClientRect(),i=ins(),W=innerWidth,H=innerHeight;
- const x=Math.max(i.l,Math.min(W-i.r-r.width,r.left)),y=Math.max(i.t,Math.min(H-i.b-r.height,r.top));
+/* межі — самі краї екрана (не безпечна зона): гравець сам вирішує, чи ставити кнопку біля виїмки; ближче ніж на клітинку сітки до краю — прилипає до краю */
+function clamp(e,stick){if(!shown(e))return;const r=e.getBoundingClientRect(),W=innerWidth,H=innerHeight,mx=W-r.width,my=H-r.height;
+ let x=Math.max(0,Math.min(mx,r.left)),y=Math.max(0,Math.min(my,r.top));
+ if(stick){if(x<GRID)x=0;else if(mx-x<GRID)x=mx;if(y<GRID)y=0;else if(my-y<GRID)y=my}
  if(Math.abs(x-r.left)>.5||Math.abs(y-r.top)>.5){e.style.setProperty('left',x+'px','important');e.style.setProperty('top',y+'px','important')}}
 function place(e,p){const s=p.s||1;e.style.setProperty('transform-origin','0 0','important');e.style.setProperty('transform','scale('+s+')','important');
  e.style.setProperty('right','auto','important');e.style.setProperty('bottom','auto','important');
@@ -101,7 +100,7 @@ addEventListener('pointerdown',e=>{if(!editing())return;const t=e.target.closest
  e.stopPropagation();e.preventDefault();select(t);const p=ensure(t),r=t.getBoundingClientRect();drag={id:e.pointerId,el:t,p,ox:e.clientX-r.left,oy:e.clientY-r.top};ui()},true);
 addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;e.preventDefault();
  const x=Math.round((e.clientX-drag.ox)/GRID)*GRID,y=Math.round((e.clientY-drag.oy)/GRID)*GRID;
- drag.el.style.setProperty('left',x+'px','important');drag.el.style.setProperty('top',y+'px','important');clamp(drag.el);
+ drag.el.style.setProperty('left',x+'px','important');drag.el.style.setProperty('top',y+'px','important');clamp(drag.el,1);
  Object.assign(drag.p,pos(drag.el))},true);
 const end=e=>{if(drag&&e.pointerId===drag.id){drag=null;overlap()}};
 /* у режимі редагування дотик лише вибирає елемент: не відкриваємо рюкзак, не розгортаємо карту тощо */
