@@ -158,9 +158,14 @@ document.body.appendChild(bt);
 const bar=document.createElement('div');bar.id='bbar';document.body.appendChild(bar);
 const tip=document.createElement('div');tip.id='btip';document.body.appendChild(tip);
 const side=document.createElement('div');side.id='bside';side.innerHTML="<button id='bx' title='Вийти'>✕</button><button id='brot'>↻<small>Поворот</small></button><button id='bdel'>🔨<small>Розібрати</small></button><button id='bok'>✔<small>Поставити</small></button>";document.body.appendChild(side);
+/* 0.5.x: намальовані значки деталей і вкладок (icons.js: BP_<деталь>_<w|s>, BP_<двері/вікно>); без icons.js — емодзі */
+const bIco=(it,m)=>{const pi=window.plIconSrc,k=it.fix?'BP_'+it.k:'BP_'+it.k+'_'+(m?'s':'w'),src=pi&&pi(k);return src?`<img class='bico' src='${src}' alt=''>`:it.e};
+const CICO=['found','wall','dwood','wglass','roof'];
+const catLbl=(i,c,m)=>{const it=ITEMS.find(x=>x.k==CICO[i]),im=it?bIco(it,m):'';return im.startsWith('<img')?im+'<span>'+c.replace(/^\S+\s/,'')+'</span>':c};
+{const st=document.createElement('style');st.textContent='.bitems .bico{width:54px;height:54px;display:block;margin:0 auto;pointer-events:none}.btab .bico{width:28px;height:28px;display:inline-block;vertical-align:middle;margin:-6px 6px -4px -4px;pointer-events:none}.btab span{vertical-align:middle}';document.head.appendChild(st)}
 function costTxt(c){return Object.entries(c).filter(([,n])=>n).map(([k,n])=>`<span class='${have(k)>=n?'':'no'}'>${NM[k]}${n}</span>`).join(' ')}
-function drawBar(){bar.innerHTML=`<div class='bmat'>${CATS.map((c,i)=>`<button data-bc='${i}' class='btab ${i==tab?'on':''}'>${c}</button>`).join('')}<span class='bsep'></span><button data-bm='0' class='bmt ${mat?'':'on'}' title='Дерево'>🪵</button><button data-bm='1' class='bmt ${mat?'on':''}' title='Камінь'>🪨</button></div><div class='bitems'>`+
- ITEMS.map((it,i)=>it.cat!=tab?'':`<button data-bi='${i}' class='${i==cur&&!del?'on':''} ${it.fix?'fix':mat?'stone':'wood'}'><b>${it.e}</b><i>${it.n}${it.fix?'':`<u>${mat?'камінь':'дерево'}</u>`}</i><em>${costTxt(cost(it,mat))}</em></button>`).join('')+'</div>';
+function drawBar(){bar.innerHTML=`<div class='bmat'>${CATS.map((c,i)=>`<button data-bc='${i}' class='btab ${i==tab?'on':''}'>${catLbl(i,c,mat)}</button>`).join('')}<span class='bsep'></span><button data-bm='0' class='bmt ${mat?'':'on'}' title='Дерево'>🪵</button><button data-bm='1' class='bmt ${mat?'on':''}' title='Камінь'>🪨</button></div><div class='bitems'>`+
+ ITEMS.map((it,i)=>it.cat!=tab?'':`<button data-bi='${i}' class='${i==cur&&!del?'on':''} ${it.fix?'fix':mat?'stone':'wood'}'><b>${bIco(it,mat)}</b><i>${it.n}${it.fix?'':`<u>${mat?'камінь':'дерево'}</u>`}</i><em>${costTxt(cost(it,mat))}</em></button>`).join('')+'</div>';
  document.getElementById('bdel').classList.toggle('on',!!del);document.getElementById('bok').innerHTML=del?'🔨<small>Розібрати</small>':'✔<small>Поставити</small>'}
 function dropGhost(){if(ghost){SCN.remove(ghost);disposeGroup(ghost);ghost=null}}
 function setOn(v){on=v;document.body.classList.toggle('bmode',!!on);if(!on){dropGhost();ghostKey='';tip.textContent='';del=0}else{drawBar()}}

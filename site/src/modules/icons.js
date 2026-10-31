@@ -136,9 +136,50 @@ const leather=()=>mk(x=>{shade(x,48,86,34,6);x.save();x.translate(48,49);x.rotat
  fillOL(x,rg(x,0,0,40,[[0,'#e3b07a'],[.55,'#b07440'],[1,'#6e4020']]),3.5);
  x.save();x.clip();x.globalAlpha=.16;sd=53;for(let i=0;i<46;i++){x.fillStyle=rnd()<.5?'#3a1e0c':'#ffe0b0';x.beginPath();x.arc(-30+rnd()*60,-38+rnd()*80,.8+rnd()*1.8,0,7);x.fill()}x.restore();
  shine(x,-8,-12,7,3);x.restore()});
+/* 0.5.x: значки режиму будівництва (building.js) — ізометричні деталі з дерева й каменю, двері, вікна, дах */
+const BMAT={w:{t:['#e8b878','#c48a4c'],l:['#b07840','#8a5a2e'],r:['#8e5c30','#6e4420'],ln:'rgba(70,36,12,.5)'},s:{t:['#dfe2e8','#b9bec8'],l:['#a8aeb8','#8a909c'],r:['#878d98','#6c727e'],ln:'rgba(40,44,54,.45)'}};
+function isoIcon(boxes,m,prism){return mk(x=>{const M=BMAT[m],s=19,P=(X,Y,Z)=>[(X-Z)*.866*s,(X+Z)*.5*s-Y*s];
+ let pts=[];for(const b of boxes)for(const X of[b[0],b[0]+b[3]])for(const Y of[b[1],b[1]+b[4]])for(const Z of[b[2],b[2]+b[5]])pts.push(P(X,Y,Z));if(prism){const[x0,w,d,H]=prism;pts.push(P(x0,H,d/2),P(x0+w,H,d/2),P(x0,0,0),P(x0+w,0,d),P(x0,0,d))}
+ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),ox=48-(Math.min(...xs)+Math.max(...xs))/2,oy=46-(Math.min(...ys)+Math.max(...ys))/2;
+ const Q=(X,Y,Z)=>{const p=P(X,Y,Z);return[p[0]+ox,p[1]+oy]};
+ shade(x,48,46+(Math.max(...ys)-Math.min(...ys))/2+2,30,6);
+ const face=(pp,g,lines)=>{x.beginPath();pp.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.fillStyle=g;x.fill();
+  if(lines){x.save();x.clip();x.strokeStyle=M.ln;x.lineWidth=1.3;for(const[a,b]of lines){x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0],b[1]);x.stroke()}x.restore()}
+  x.beginPath();pp.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.lineWidth=2.4;x.strokeStyle=OL;x.stroke()};
+ const grad=(pp,c)=>{const ys2=pp.map(p=>p[1]);return lg(x,0,Math.min(...ys2),0,Math.max(...ys2),[[0,c[0]],[1,c[1]]])};
+ const sorted=boxes.slice().sort((a,b)=>(a[0]+a[2]+a[1]*.01)-(b[0]+b[2]+b[1]*.01));
+ for(const[bx,by,bz,w,h,d]of sorted){
+  const top=[Q(bx,by+h,bz),Q(bx+w,by+h,bz),Q(bx+w,by+h,bz+d),Q(bx,by+h,bz+d)],rf=[Q(bx+w,by,bz),Q(bx+w,by,bz+d),Q(bx+w,by+h,bz+d),Q(bx+w,by+h,bz)],lf=[Q(bx,by,bz+d),Q(bx+w,by,bz+d),Q(bx+w,by+h,bz+d),Q(bx,by+h,bz+d)];
+  const L=[],R=[],T=[];
+  if(m=='w'){for(let yy=by+.34;yy<by+h-.05;yy+=.34){L.push([Q(bx,yy,bz+d),Q(bx+w,yy,bz+d)]);R.push([Q(bx+w,yy,bz),Q(bx+w,yy,bz+d)])}for(let zz=bz+.4;zz<bz+d-.05;zz+=.4)T.push([Q(bx,by+h,zz),Q(bx+w,by+h,zz)])}
+  else{let row=0;for(let yy=by+.3;yy<by+h-.05;yy+=.3,row++){L.push([Q(bx,yy,bz+d),Q(bx+w,yy,bz+d)]);R.push([Q(bx+w,yy,bz),Q(bx+w,yy,bz+d)])}
+   row=0;for(let yy=by;yy<by+h-.05;yy+=.3,row++){const y2=Math.min(by+h,yy+.3);for(let xx=bx+(row%2?.25:.5);xx<bx+w-.05;xx+=.5)L.push([Q(xx,yy,bz+d),Q(xx,y2,bz+d)]);for(let zz=bz+(row%2?.25:.5);zz<bz+d-.05;zz+=.5)R.push([Q(bx+w,yy,zz),Q(bx+w,y2,zz)])}
+   for(let zz=bz+.5;zz<bz+d-.05;zz+=.5)T.push([Q(bx,by+h,zz),Q(bx+w,by+h,zz)])}
+  face(lf,grad(lf,M.l),L);face(rf,grad(rf,M.r),R);face(top,grad(top,M.t),T)}
+ if(prism){const[x0,w,d,H]=prism,RM=m=='w'?{a:['#c4643c','#8e3e22'],b:['#a24e2e','#74301a'],e:M.r}:{a:['#7f93b0','#56688a'],b:['#66789a','#45567a'],e:M.r};
+  const back=[Q(x0,0,0),Q(x0+w,0,0),Q(x0+w,H,d/2),Q(x0,H,d/2)],front=[Q(x0,0,d),Q(x0+w,0,d),Q(x0+w,H,d/2),Q(x0,H,d/2)],end=[Q(x0+w,0,0),Q(x0+w,0,d),Q(x0+w,H,d/2)];
+  const rl=[];for(let t=.25;t<1;t+=.25)rl.push([Q(x0,H*t,d-d/2*t),Q(x0+w,H*t,d-d/2*t)]);
+  face(back,grad(back,RM.b));face(end,grad(end,RM.e));face(front,grad(front,RM.a),rl)}
+ if(boxes.length){const hb=boxes.reduce((a,c)=>c[1]+c[4]>a[1]+a[4]?c:a),c=Q(hb[0]+hb[3]*.35,hb[1]+hb[4],hb[2]+hb[5]*.5);shine(x,c[0],c[1],Math.min(7,hb[3]*3),2.2)}})}
+const BSHAPE={found:[[0,0,0,2,.55,2]],floor:[[0,0,0,2,.2,2]],stairs:[[0,0,0,.7,.5,1.6],[.7,0,0,.7,1,1.6],[1.4,0,0,.7,1.5,1.6]],
+ wall:[[0,0,0,2,2,.42]],half:[[0,0,0,2,1,.42]],low:[[0,0,0,2,.5,.42]],
+ dframe:[[0,0,0,.6,2.1,.5],[1.4,0,0,.6,2.1,.5],[.6,1.5,0,.8,.6,.5]],wframe:[[0,0,0,2,.75,.5],[0,.75,0,.55,.7,.5],[1.45,.75,0,.55,.7,.5],[0,1.45,0,2,.6,.5]]};
+const flat=(f)=>mk(x=>{shade(x,48,86,26,5);f(x)});
+const bDoor=metal=>flat(x=>{rr(x,26,12,44,72,6);fillOL(x,lg(x,26,0,70,0,metal?[[0,'#c9d1dc'],[1,'#7d8696']]:[[0,'#c88a50'],[1,'#86542a']]),3);
+ x.strokeStyle=metal?'rgba(40,46,58,.5)':'rgba(70,36,12,.5)';x.lineWidth=1.6;if(metal){x.fillStyle='#5a6272';for(const yy of[22,48,74])for(const xx of[32,64]){x.beginPath();x.arc(xx,yy,2.2,0,7);x.fill()}x.beginPath();x.moveTo(30,48);x.lineTo(66,48);x.stroke()}else for(const xx of[37,48,59]){x.beginPath();x.moveTo(xx,16);x.lineTo(xx,80);x.stroke()}
+ x.beginPath();x.arc(61,50,3.4,0,7);fillOL(x,'#ffd34e',2);shine(x,36,22,5,9)});
+const bWin=kind=>flat(x=>{rr(x,16,16,64,64,7);fillOL(x,lg(x,0,16,0,80,kind=='shut'?[[0,'#c88a50'],[1,'#86542a']]:[[0,'#7a5232'],[1,'#5a3a20']]),3);
+ if(kind=='glass'){rr(x,24,24,48,48,3);fillOL(x,lg(x,24,24,72,72,[[0,'#d8f3ff'],[.55,'#8fd3f0'],[1,'#5aa8d8']]),2);x.strokeStyle='#5a3a20';x.lineWidth=3;x.beginPath();x.moveTo(48,24);x.lineTo(48,72);x.moveTo(24,48);x.lineTo(72,48);x.stroke();x.save();x.globalAlpha=.7;x.strokeStyle='#fff';x.lineWidth=3;x.beginPath();x.moveTo(29,40);x.lineTo(40,29);x.stroke();x.restore()}
+ else if(kind=='bars'){rr(x,24,24,48,48,3);fillOL(x,'#1d2a36',2);x.strokeStyle='#aeb6c2';x.lineWidth=4;for(const xx of[33,48,63]){x.beginPath();x.moveTo(xx,24);x.lineTo(xx,72);x.stroke()}x.beginPath();x.moveTo(24,48);x.lineTo(72,48);x.stroke();x.strokeStyle=OL;x.lineWidth=1}
+ else{x.strokeStyle='rgba(70,36,12,.55)';x.lineWidth=2;x.beginPath();x.moveTo(48,18);x.lineTo(48,78);x.stroke();x.lineWidth=1.6;for(const yy of[30,42,54,66]){x.beginPath();x.moveTo(20,yy);x.lineTo(46,yy-4);x.moveTo(50,yy-4);x.lineTo(76,yy);x.stroke()}}
+ shine(x,28,26,6,3)});
+const BICO={};for(const k in BSHAPE)for(const m of['w','s'])BICO['BP_'+k+'_'+m]=()=>isoIcon(BSHAPE[k],m);
+for(const m of['w','s'])BICO['BP_roof_'+m]=()=>isoIcon([],m,[0,2,2,1.2]);
+Object.assign(BICO,{BP_dwood:()=>bDoor(0),BP_dmetal:()=>bDoor(1),BP_wglass:()=>bWin('glass'),BP_wbars:()=>bWin('bars'),BP_wshut:()=>bWin('shut')});
 const D={wool,lth:leather,w:log,s:stone,sti:sticks,ing:ingot,ore:()=>lump('ore'),coal:()=>lump('coal'),be:berries,mu:mush,gm:skewer,pie,
  axw:()=>axe('w'),axe:()=>axe('s'),axm:()=>axe('m'),pkw:()=>pick('w'),pick:()=>pick('s'),pkm:()=>pick('m'),bp1,bp2,bp3,
  B_bed:bed,B_kit:kitchen,B_wb:bench,B_fur:furnace,B_farm:farm,B_lamp:lamp,B_fen:fence,B_cen:center,B_ch:chest};
+Object.assign(D,BICO);
 const SRC={};for(const k in D){try{SRC[k]=D[k]();if(IT[k])IT[k][0]=img(SRC[k],IT[k][1])}catch(e){console.warn('icon '+k,e)}}
 window.plIconSrc=k=>SRC[k]||((/src='([^']+)'/.exec((IT[k]||[''])[0])||[])[1])||null;
 window.plIcon=k=>SRC[k]?img(SRC[k]):(IT[k]?IT[k][0]:'');
