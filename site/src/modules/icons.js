@@ -135,7 +135,6 @@ const leather=()=>mk(x=>{shade(x,48,86,34,6);x.save();x.translate(48,49);x.rotat
  x.beginPath();x.moveTo(P[0][0],P[0][1]);for(let i=1;i<=P.length;i++){const[u,v]=P[i%P.length],[pu,pv]=P[i-1];x.quadraticCurveTo(pu,pv,(pu+u)/2,(pv+v)/2)}x.closePath();
  fillOL(x,rg(x,0,0,40,[[0,'#e3b07a'],[.55,'#b07440'],[1,'#6e4020']]),3.5);
  x.save();x.clip();x.globalAlpha=.16;sd=53;for(let i=0;i<46;i++){x.fillStyle=rnd()<.5?'#3a1e0c':'#ffe0b0';x.beginPath();x.arc(-30+rnd()*60,-38+rnd()*80,.8+rnd()*1.8,0,7);x.fill()}x.restore();
- x.save();x.setLineDash([3.5,3.5]);x.strokeStyle='rgba(255,232,196,.8)';x.lineWidth=1.8;x.beginPath();x.ellipse(0,1,11,19,0,0,7);x.stroke();x.restore();
  shine(x,-8,-12,7,3);x.restore()});
 const D={wool,lth:leather,w:log,s:stone,sti:sticks,ing:ingot,ore:()=>lump('ore'),coal:()=>lump('coal'),be:berries,mu:mush,gm:skewer,pie,
  axw:()=>axe('w'),axe:()=>axe('s'),axm:()=>axe('m'),pkw:()=>pick('w'),pick:()=>pick('s'),pkm:()=>pick('m'),bp1,bp2,bp3,
