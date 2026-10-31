@@ -50,8 +50,10 @@ const gate=new THREE.Group();gate.position.set(0,H_(0,I.G0+1),I.G0+1);sc_.add(ga
   const v=new THREE.Mesh(new THREE.TubeGeometry(c,24,.05,5,false),VM);v.userData.vine=1;gate.add(v)}}
 /* відкритий прохід: ліани зникають, а каміння завалу лежить купою біля стіни ущелини (його туди відносить Брам, isle-npc.js) */
 I.PILE=[3.5,I.G0+3.3];I.gate=gate;
-const toPile=()=>{gate.children.forEach(o=>{if(o.userData.vine)o.visible=false});gate.position.set(I.PILE[0],H_(I.PILE[0],I.PILE[1])-.25,I.PILE[1]);gate.rotation.set(0,.7,0);gate.scale.set(.85,.6,.85);gate.visible=true};
+const toPile=()=>{gate.children.forEach(o=>{if(o.userData.vine)o.visible=false});gate.position.set(I.PILE[0],H_(I.PILE[0],I.PILE[1])-.25,I.PILE[1]);gate.rotation.set(0,.7,0);gate.scale.set(.7,.16,.55);gate.visible=true};/* низька купа біля стіни, а не вежа */
 const INV=G('inv')||{};INV._rl='isle';
+const DONE=()=>!!(INV._q&&INV._q.v2);/* навчання справді пройдене (isle-quests.js) */
+if(INV._isg&&!DONE()&&!INV._skip)INV._isg=0;/* прохід, відкритий автоматично раніше, закривається, доки навчання не пройдене */
 let open=!!INV._isg;try{if(new URLSearchParams(location.search).get('gate')=='open')open=true}catch(_){}
 if(open)toPile();
 I.isOpen=()=>open;
@@ -166,7 +168,10 @@ window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(RCOL)RCOL.push(P_,
 const cb0=window.colBlocked;
 window.colBlocked=function(x0,z0,x1,z1,r){if(!ok(x1,z1,.3)||(RCOL&&RCOL.hit(x1,z1,.4)))return true;return cb0?cb0.apply(this,arguments):false};
 /* повернення з великого світу через печеру — до арки; збережена позиція з іншого виміру — на пляж */
-try{if(localStorage.getItem('zi_isle_at')){localStorage.removeItem('zi_isle_at');open=true;toPile();INV._isg=1;P_.x=0;P_.z=I.PZ+3;P_.face=0;setTimeout(()=>{try{msg('🏝️ Ви повернулися на Острів пробудження')}catch(_){}},1500)}}catch(_){}
+/* повернення з великого світу через печеру: хто пройшов навчання (або Брам уже пропустив) — до арки; решта — на пляж, як новачок */
+try{if(localStorage.getItem('zi_isle_at')){localStorage.removeItem('zi_isle_at');INV._cave=1;
+ if(open){P_.x=0;P_.z=I.PZ+3;P_.face=0;setTimeout(()=>{try{msg('🏝️ Ви повернулися на Острів пробудження')}catch(_){}},1500)}
+ else{P_.x=I.START[0];P_.z=I.START[1];P_.face=Math.PI;setTimeout(()=>{try{msg('🏝️ Острів пробудження: пройдіть навчання або попросіть Брама пропустити вас до порталу')}catch(_){}},1500)}}}catch(_){}
 if(!ok(P_.x,P_.z,0)){P_.x=I.START[0];P_.z=I.START[1];P_.face=Math.PI}
 
 /* ---------- перехід у звичайний світ ---------- */

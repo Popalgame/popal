@@ -96,6 +96,9 @@ function next(){S.i++;S.s=0;S.g={};snap();sv();marks();draw();const q=cur();if(q
 function finish(q){if(q.id=='gate')S.v2=1;if(q.xp)xp(q.xp);if(q.give)for(const k in q.give){try{ADD(k,q.give[k])}catch(_){INV[k]=(INV[k]||0)+q.give[k]}}try{hud();ivR()}catch(_){}
  sfx('levelup');next()}
 N.onTalk=id=>{const q=cur(),n=N.get(id);
+ /* досвідчений мандрівник (прийшов через печеру) може попросити Брама пропустити його без навчання */
+ if(id=='brm'&&INV._cave&&I.isOpen&&!I.isOpen()&&(!q||q.npc!=='brm')){N.say(id,['…ГРРР-РУМ. Ти вже бачив великий світ, мандрівнику.','Можу пропустити тебе до порталу. А можеш спершу пройти науку острова — Вітрило чекає біля вогнища.'],
+   {buttons:[{t:'Пропусти мене',go:1,fn:()=>{INV._skip=1;try{I.open()}catch(_){}}},{t:'Пройду навчання'}]});return true}
  if(!q||q.npc!==id){N.say(id,[(n.lines&&n.lines[(Math.random()*n.lines.length)|0])||'…']);return true}
  if(S.s==0){const accept=()=>{sfx('quest_new');if(q.onAccept)q.onAccept();if(q.instant){if(q.done)N.say(id,q.done,{buttons:[{t:'Гаразд',go:1}]});finish(q);return}S.s=1;S.g={};snap();sv();marks();draw()};
   const bs=(q.buttons||[{t:'Берусь!',go:1}]).map(b=>({t:b.t,go:b.go,fn:()=>{if(b.fn)b.fn();accept()}}));if(!q.buttons)bs.push({t:'Пізніше'});
