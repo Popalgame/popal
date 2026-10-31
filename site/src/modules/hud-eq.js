@@ -27,7 +27,9 @@ html body #eqp.pq .eqi img,html body #eqp.pq .eqi canvas,html body #eqp.pq .eqi 
 #eqp.pq .pqk kbd{display:inline-block;min-width:14px;height:16px;padding:0 3px;border-radius:3px;background:#dfe6ee;color:#1d2a36;font:800 11px/16px system-ui,sans-serif;text-align:center;box-shadow:0 1px 0 #7d8a96}
 #pqt{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:8px;display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;border-radius:4px;background:rgba(30,34,38,.55);color:#f2f2f2;font-size:13px;font-weight:600;white-space:nowrap;pointer-events:none;text-shadow:0 1px 2px #000}
 #pqt kbd{display:inline-block;min-width:16px;height:20px;padding:0 4px;border-radius:3px;background:#dfe6ee;color:#1d2a36;font:800 12px/20px system-ui,sans-serif;text-align:center;text-shadow:none}
-@media (pointer:coarse) and (max-width:960px){html body #eqp.pq .eqs{width:116px!important}#eqp.pq .pqn{font-size:22px}#eqp.pq .pqb{height:40px;padding:0 6px}html body #eqp.pq .eqi{flex-basis:30px;width:30px!important;height:30px!important;font-size:21px!important}}`;
+html body #eqp.pq #eqb{width:112px!important}#eqp.pq #eqb .pqb{gap:4px;padding:0 6px}
+@media (pointer:coarse){html body #eqp.pq #eqb{width:96px!important}#eqp.pq #eqb .pqb{gap:3px;padding:0 5px}}
+@media (pointer:coarse) and (max-width:960px){html body #eqp.pq .eqs:not(#eqb){width:116px!important}#eqp.pq .pqn{font-size:22px}#eqp.pq .pqb{height:40px;padding:0 6px}html body #eqp.pq .eqi{flex-basis:30px;width:30px!important;height:30px!important;font-size:21px!important}}`;
 document.head.appendChild(st);
 eqp.classList.add('pq');
 const mk=(b,sw)=>{const h=document.createElement('span');h.className='pqh';const bd=document.createElement('span');bd.className='pqb';const k=document.createElement('span');k.className='pqk';k.innerHTML=`<kbd>${sw}</kbd>⟳`;if(!fine)k.style.display='none';/* на телефоні клавіш немає — рядок підказок не показуємо */
