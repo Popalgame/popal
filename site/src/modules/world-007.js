@@ -20,7 +20,7 @@ if(!Array.isArray(inv._b))inv._b=[];
 if(inv.B_farm){inv.B_garden=(inv.B_garden||0)+inv.B_farm;inv.B_farm=0}inv._b.forEach(b=>{if(b[0]=='B_farm')b[0]='B_garden'});
 RC.push(...BUI.map(b=>({id:b.id,n:b.n,c:b.c,d:b.d+' · +'+b.p+' до бази',bld:1})));
 const REQ={bg:'B_wb',bb:'B_wb2',br:'B_wb3',B_wb2:'B_wb',B_wb3:'B_wb2',B_nest5:'B_wb',axm:'B_wb',pkm:'B_wb',bp3:'B_wb',ing:'B_fur',gm:'B_kit',pie:'B_kit'}/* 0.1.28: їжу готують лише на кухні-багатті */;
-const built=id=>inv._b.some(x=>x[0]==id)||(id=='B_wb'&&window.REALM==='isle');/* на Острові пробудження старий верстак Шкварки править за Верстак I */window.isBuilt=built;
+const built=id=>inv._b.some(x=>x[0]==id)||(window.REALM==='isle'&&!!window.ISLE&&!!window.ISLE.BASE&&window.ISLE.BASE.some(b=>b[0]==id));/* на острові база табору (realm.js, ISLE.BASE) */window.isBuilt=built;
 const LV=[0,2,5,9,14];
 window.campPts=()=>inv._b.reduce((a,x)=>a+(BI[x[0]]?BI[x[0]].p:0),0);
 window.campLv=()=>{const p=campPts();let l=1;LV.forEach((t,i)=>{if(p>=t)l=i+1});return l};
@@ -51,7 +51,8 @@ const placed=[];window.BPLACED=placed;
 /* 0.1.27: будівлю ставлять вільно (x,z,ry у сейві); старі записи без координат — на місці слота в кільці */
 function spawnB(id,si,X,Z,RY){const[x,z]=X!=null?[X,Z]:spos(si),g=mkB(id);const C=inv._cen||[0,0];g.position.set(x,H(x,z),z);g.rotation.y=RY!=null?RY:Math.atan2(C[0]-x,C[1]-z);sc.add(g);placed.push({id,g,x,z});for(let i=trees.length-1;i>=0;i--){const t=trees[i];if(Math.hypot(t.x-x,t.z-z)<2.2){sc.remove(t.m);trees.splice(i,1)}}}
 if(inv._cen||window.REALM==='isle')inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)});
-window.respawnB=()=>{placed.forEach(b=>sc.remove(b.g));placed.length=0;if(inv._cen||window.REALM==='isle')inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)})};
+const isleBase=()=>{if(window.REALM==='isle'&&window.ISLE&&window.ISLE.BASE)for(const[id,x,z,ry]of window.ISLE.BASE)if(BI[id]){spawnB(id,-1,x,z,ry);placed[placed.length-1].fixed=1}};isleBase();
+window.respawnB=()=>{placed.forEach(b=>sc.remove(b.g));placed.length=0;if(inv._cen||window.REALM==='isle')inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)});isleBase()};
 function placeB(id){if(!inv._cen&&window.REALM!=='isle'){msg('🏠 Спершу збудуйте й поставте Попал-центр');return}/* на острові база без центру */if(!(inv[id]>0))return;if(BI[id].u&&built(id)){msg('Це вже збудовано');return}
  const r=(window.colR&&colR[id])||.8;
  if(window.plPlace){plPlace({name:'🏗️ '+BI[id].n,r,dist:r+1.6,ry:(P.face||0)+Math.PI,mk:()=>mkB(id),onOk:(x,z,ry)=>doPlaceB(id,x,z,ry)});return}

@@ -27,7 +27,7 @@ for(let a=0;a<Math.PI*2;a+=.085){const R0=I.RAD(a),c=Math.cos(a),s=Math.sin(a);
 for(let z=I.G0+3;z>I.G1-2;z-=1.6)for(const sd of[-1,1]){const xc=-Math.sin(z*.35)*.6;
  addRock(xc+sd*(I.GW+2.9+rr(0,.4)),z,rr(1.5,1.9),rr(5,8));addRock(xc+sd*(I.GW+7+rr(0,1)),z,rr(3,4),rr(13,19))/* біля стежки — нижчі, щоб камера бачила героя */}
 /* навколо майданчика арки — півколо скель (вхід з ущелини вільний) */
-for(let a=0;a<Math.PI*2;a+=.2){const x=Math.cos(a)*(I.PR+3),z=I.PZ+Math.sin(a)*(I.PR+3);if(z>I.PZ+I.PR-1&&Math.abs(x)<I.GW+1.5)continue;
+for(let a=0;a<Math.PI*2;a+=.2){const x=Math.cos(a)*(I.PR+3.5),z=I.PZ+Math.sin(a)*(I.PR+3.5);if(z>I.PZ+I.PR-1&&Math.abs(x)<I.GW+1.5)continue;
  addRock(x,z,rr(2,2.6),rr(7,11));addRock(Math.cos(a)*(I.PR+8),I.PZ+Math.sin(a)*(I.PR+8),rr(4,5),rr(15,22))}
 const dummy=new THREE.Object3D(),col=new THREE.Color();
 rocks.forEach((L,k)=>{if(!L.length)return;const m=new THREE.InstancedMesh(RG[k],RMAT,L.length);
@@ -56,7 +56,7 @@ I.isOpen=()=>open;
 I.open=()=>{open=true;toPile();INV._isg=1;try{save()}catch(_){}};
 
 /* ---------- арка-портал ---------- */
-const arch=new THREE.Group(),AX=0,AZ=I.PZ-1.5;arch.position.set(AX,H_(AX,AZ),AZ);sc_.add(arch);
+const arch=new THREE.Group(),AX=0,AZ=I.PZ;arch.position.set(AX,H_(AX,AZ),AZ);sc_.add(arch);
 {const ST=new THREE.MeshStandardMaterial({color:0x9a9384,roughness:.9,flatShading:true}),RU=new THREE.MeshStandardMaterial({color:0x6fe6ff,emissive:0x39c8ff,emissiveIntensity:1.6});
  for(const s of[-1,1]){for(let i=0;i<5;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.9-.04*i,.82,.9-.04*i),ST);b.position.set(s*2.15+rr(-.04,.04),.41+i*.8,0);b.rotation.y=rr(-.08,.08);b.castShadow=true;arch.add(b);
    if(i%2){const r=new THREE.Mesh(new THREE.BoxGeometry(.06,.36,.04),RU);r.position.set(s*2.15-s*.46,.41+i*.8,.2);arch.add(r)}}}
@@ -86,7 +86,7 @@ const fire=new THREE.Group();{for(let i=0;i<8;i++){const s=new THREE.Mesh(new TH
  const fl=new THREE.Mesh(new THREE.ConeGeometry(.26,.75,7),new THREE.MeshStandardMaterial({color:0xff9a3a,emissive:0xff5a10,emissiveIntensity:2,transparent:true,opacity:.9}));fl.position.y=.5;fire.add(fl);fire.userData.fl=fl;
  const fpl=new THREE.PointLight(0xffa050,1.2,9,2);fpl.position.y=1;fire.add(fpl);
  for(const[a,r]of[[0,2.1],[2.3,2.2],[4.4,2]]){const lg=new THREE.Mesh(new THREE.CylinderGeometry(.22,.24,1.5,8),W);lg.rotation.set(0,a,Math.PI/2);lg.position.set(Math.cos(a)*r,.22,Math.sin(a)*r);lg.rotation.y=-a+Math.PI/2;fire.add(lg)}}
-put(fire,I.SP[0][0]+1.5,I.SP[0][1]-1);
+/* вогнище тепер — справжня кухня-багаття бази (ISLE.BASE) */
 /* хатина наставника */
 {const g=new THREE.Group(),w=new THREE.Mesh(new THREE.CylinderGeometry(1.9,2.05,2.1,10),W);w.position.y=1.05;g.add(w);
  const roof=new THREE.Mesh(new THREE.ConeGeometry(2.7,2,10),TH);roof.position.y=3.05;g.add(roof);
@@ -104,11 +104,13 @@ put(fire,I.SP[0][0]+1.5,I.SP[0][1]-1);
 /* ---------- куди можна ходити ---------- */
 const ok=(x,z,m)=>I.walk(x,z,m)&&(open||!(I.inGorge(x,z)&&z<I.G0+1.2)&&!I.inPlaza(x,z));
 I.ok=ok;
-const b0=window.BLDC;
-window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(ok(P_.x,P_.z,0))return;
+/* брили тверді: герой і істоти не проходять крізь камінь */
+const RCOL=window.plRockCol?window.plRockCol(rocks.flat().filter(r=>r[4]>2).map(r=>({x:r[0],z:r[2],r:Math.max(r[3],r[5])*.92}))):null;
+I.RCOL=RCOL;const b0=window.BLDC;
+window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(RCOL)RCOL.push(P_,.35);if(ok(P_.x,P_.z,0))return;
  if(ok(P_.x,oz,0)){P_.z=oz;return}if(ok(ox,P_.z,0)){P_.x=ox;return}P_.x=ox;P_.z=oz};
 const cb0=window.colBlocked;
-window.colBlocked=function(x0,z0,x1,z1,r){if(!ok(x1,z1,.3))return true;return cb0?cb0.apply(this,arguments):false};
+window.colBlocked=function(x0,z0,x1,z1,r){if(!ok(x1,z1,.3)||(RCOL&&RCOL.hit(x1,z1,.4)))return true;return cb0?cb0.apply(this,arguments):false};
 /* повернення з великого світу через печеру — до арки; збережена позиція з іншого виміру — на пляж */
 try{if(localStorage.getItem('zi_isle_at')){localStorage.removeItem('zi_isle_at');open=true;toPile();INV._isg=1;P_.x=0;P_.z=I.PZ+3;P_.face=0;setTimeout(()=>{try{msg('🏝️ Ви повернулися на Острів пробудження')}catch(_){}},1500)}}catch(_){}
 if(!ok(P_.x,P_.z,0)){P_.x=I.START[0];P_.z=I.START[1];P_.face=Math.PI}

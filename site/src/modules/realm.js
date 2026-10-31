@@ -48,6 +48,13 @@ window.plCliff=(()=>{let mat=null;const geos={};
  return{mat:()=>{if(!mat)build();return mat},geo,
   /* кольори брил (множаться на текстуру) — теплі сіро-пісочні відтінки */
   cols:[0xe8e0d2,0xd6cec0,0xf2e9da,0xc9c1b3,0xdcd2c0]}})();
+/* тверді брили: кола зіткнення за розміром кожної брили (сітка 4 м, щоб перевірка була швидкою). list — [{x,z,r}] */
+window.plRockCol=list=>{const C=4,grid=new Map(),key=(i,j)=>i+','+j;
+ for(const o of list){const i0=Math.floor((o.x-o.r)/C),i1=Math.floor((o.x+o.r)/C),j0=Math.floor((o.z-o.r)/C),j1=Math.floor((o.z+o.r)/C);
+  for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const k=key(i,j);if(!grid.has(k))grid.set(k,[]);grid.get(k).push(o)}}
+ const near=(x,z)=>grid.get(key(Math.floor(x/C),Math.floor(z/C)))||[];
+ return{hit(x,z,m){for(const o of near(x,z))if(Math.hypot(x-o.x,z-o.z)<o.r+m)return true;return false},
+  push(P,m){for(let n=0;n<3;n++){let moved=false;for(const o of near(P.x,P.z)){const dx=P.x-o.x,dz=P.z-o.z,d=Math.hypot(dx,dz),R=o.r+m;if(d<R){if(d<1e-4){P.x+=R;continue}P.x=o.x+dx/d*R;P.z=o.z+dz/d*R;moved=true}}if(!moved)break}}}};
 if(window.REALM!=='isle')return;
 
 const sm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
@@ -56,7 +63,7 @@ const RAD=a=>30+3.2*Math.sin(3*a+.7)+1.8*Math.sin(5*a+2.1)+1.1*Math.sin(8*a);
 /* скелі стоять там, де z < CLZ (північ, схід, захід); з півдня — відкрите море */
 const CLZ=9;
 /* ущелина: коридор уздовж осі z на півночі, |x| < GW; за нею — майданчик арки */
-const GW=2.6,G0=-29,G1=-47,PZ=-54,PR=8.5;
+const GW=3.4,G0=-29,G1=-47,PZ=-54,PR=8.5;
 const inGorge=(x,z)=>z<G0+2&&z>G1-1&&Math.abs(x+Math.sin(z*.35)*.6)<GW;
 const inPlaza=(x,z)=>Math.hypot(x,z-PZ)<PR;
 /* «ділянка скель»: усе за внутрішнім краєм кільця скель, крім ущелини й майданчика */
@@ -79,5 +86,7 @@ window.ISLE={RAD,CLZ,GW,G0,G1,PZ,PR,hAt,bioAt,walk,spawnOk,inGorge,inPlaza,
  START:[0,20.5],/* пробудження на пляжі */
  /* опорні точки стежок (як SP у core-world): табір, верстак, гай, лука з попалами, вхід в ущелину */
  SP:[[0,12],[11,-4],[-13,-6],[-12,15],[0,-24]],
+ /* табір Вітрила — це база острова: тут уже стоять Верстак I (у майстерні Шкварки) і кухня-багаття (біля Вітрила); не зберігаються в inv._b */
+ BASE:[['B_wb',12.6,-4.6,2.7],['B_kit',1.5,11,0]],
  fill(W){const P=W.P,N=W.N;for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=-P.R+i*P.STEP,z=-P.R+j*P.STEP;W.HG[j*N+i]=hAt(x,z);W.BG[j*N+i]=bioAt(x,z)}}};
 })();

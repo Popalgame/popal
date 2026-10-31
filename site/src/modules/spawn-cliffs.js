@@ -53,7 +53,8 @@ for(const nm of['trees','rocks','bushes','shrooms']){const A=G(nm);if(!A)continu
 {const W=G('wild');if(W)for(const w of W)if(under(w.x,w.z)){w.x=S[0]+fx*16+rr(-4,4);w.z=S[1]+fz*16+rr(-4,4)}}
 
 /* ---------- скелі тверді ---------- */
-const blocked=(x,z,m)=>inRidge(x,z,m)&&!inTunnel(x,z);
+const RCOL=window.plRockCol?window.plRockCol(L.flat().filter(r=>r[1]<H_(r[0],r[2])+1.5).map(r=>({x:r[0],z:r[2],r:Math.max(r[3],r[5])*.92}))):null;/* кожна брила тверда за своїм розміром */
+const blocked=(x,z,m)=>(inRidge(x,z,m)&&!inTunnel(x,z))||(!!RCOL&&!inTunnel(x,z)&&RCOL.hit(x,z,m+.35));
 const b0=window.BLDC;
 window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(!blocked(P_.x,P_.z,0))return;
  if(!blocked(P_.x,oz,0)){P_.z=oz;return}if(!blocked(ox,P_.z,0)){P_.x=ox;return}P_.x=ox;P_.z=oz};

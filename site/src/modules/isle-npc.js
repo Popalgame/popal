@@ -94,7 +94,7 @@ const put=(m,x,z,ry)=>{m.position.set(x,H_(x,z),z);m.rotation.y=ry||0;m.traverse
 /* старий верстак і ковадло Шкварки */
 {const g=new THREE.Group(),W=0x8e5a3a;P(g,BOX,W,0,.8,0,1.5,.12,.7);for(const x of[-.65,.65])for(const z of[-.28,.28])P(g,BOX,0x6b4228,x,.4,z,.1,.8,.1);
  P(g,BOX,0xb0b0b0,-.4,.9,.1,.25,.08,.12,{metalness:.5});P(g,CYL,0x7a5230,.3,.9,-.1,.03,.4,.03).rotation.z=1.5;P(g,BOX,0x6b4228,.45,.4,0,.9,.06,.5);
- put(g,I.SP[1][0]+1.6,I.SP[1][1]-.6,-.4);I.BENCH=[I.SP[1][0]+1.6,I.SP[1][1]-.6];const a=new THREE.Group();P(a,CYL,0x5a3a22,0,.25,0,.22,.5,.22);P(a,BOX,0x55585e,0,.58,0,.5,.16,.22,{metalness:.6,roughness:.4});put(a,I.SP[1][0]-1.2,I.SP[1][1]-1.1,.3)}
+ I.BENCH=[12.6,-4.6];/* справжній Верстак I бази (ISLE.BASE) */const a=new THREE.Group();P(a,CYL,0x5a3a22,0,.25,0,.22,.5,.22);P(a,BOX,0x55585e,0,.58,0,.5,.16,.22,{metalness:.6,roughness:.4});put(a,I.SP[1][0]-1.2,I.SP[1][1]-1.1,.3)}
 /* загорода з клубками на луці Клубочок */
 {const g=new THREE.Group();for(let i=0;i<14;i++){const a=i/14*Math.PI*2;if(i==3)continue;P(g,CYL,0x8e5a3a,Math.cos(a)*2.6,.35,Math.sin(a)*2.6,.05,.7,.05);
   const b=(i+1)/14*Math.PI*2;if(i!=2){const r=P(g,BOX,0x9a6a40,Math.cos((a+b)/2)*2.55,.5,Math.sin((a+b)/2)*2.55,.08,.06,1.18);r.rotation.y=-(a+b)/2}}
