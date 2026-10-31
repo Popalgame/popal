@@ -61,14 +61,16 @@ const css=document.createElement('style');css.textContent=`
 #qj .qo{display:flex;justify-content:space-between;gap:8px;margin-top:3px}#qj .qo.ok{color:#8ef0a0}#qj .qo.ok span::before{content:'✓ '}
 #qj .qr{margin-top:5px;color:#8ef0a0;font-weight:700}
 #qj.min .qb{display:none}
-body.mmon #qj,body.hedit #qj,body.bmode #qj,body.pmode #qj{display:none}
+body.mmon #qj,body.bmode #qj,body.pmode #qj{display:none}
 @media(max-width:700px){#qj{width:min(205px,calc(100vw - 24px));font-size:11px;padding:6px 8px}}`;
 document.head.appendChild(css);
-const J=document.createElement('aside');J.id='qj';document.body.appendChild(J);
+const J=document.createElement('aside');J.id='qj';document.body.appendChild(J);try{if(window.hudApply)window.hudApply()}catch(_){}
 let min=false;J.addEventListener('click',e=>{if(e.target.closest('[data-min]')){min=!min;J.classList.toggle('min',min);e.stopPropagation()}});
 const NM={vit:'Дід Вітрило',shk:'Тесля Шкварка',klu:'Пані Клубочок',brm:'Брам'};
 let lastJ='';
-function draw(){const q=cur();if(!q){J.style.display='none';return}const ob=q.goal&&S.s>=1?q.goal(S.g):null;
+function draw(){const q=cur(),ed=document.body.classList.contains('hedit');
+ /* вікно видно, лише поки завдання виконується або чекає, щоб його здали; у редакторі розташування — завжди, щоб його можна було перетягнути */
+ const vis=!!q&&(S.s>=1||ed);J.style.display=vis?'':'none';if(!vis)return;const ob=q.goal&&S.s>=1?q.goal(S.g):null;
  let h=`<div class='qh'><span>📜 Завдання ${Math.min(S.i+1,Q.length)}/${Q.length}</span><button data-min>${min?'▸':'▾'}</button></div><div class='qb'><div class='qt'>${q.title}</div>`;
  if(S.s==0&&q.npc)h+=`<div class='qw'>Поговоріть: ${NM[q.npc]}</div>`;
  else if(ob){for(const[n,a,b]of ob){const okk=a>=b;h+=`<div class='qo${okk?' ok':''}'><span>${n}</span><b>${b>1?Math.min(a,b)+'/'+b:''}</b></div>`}}
