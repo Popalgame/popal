@@ -94,7 +94,7 @@ const put=(m,x,z,ry)=>{m.position.set(x,H_(x,z),z);m.rotation.y=ry||0;m.traverse
 /* старий верстак і ковадло Шкварки */
 {const g=new THREE.Group(),W=0x8e5a3a;P(g,BOX,W,0,.8,0,1.5,.12,.7);for(const x of[-.65,.65])for(const z of[-.28,.28])P(g,BOX,0x6b4228,x,.4,z,.1,.8,.1);
  P(g,BOX,0xb0b0b0,-.4,.9,.1,.25,.08,.12,{metalness:.5});P(g,CYL,0x7a5230,.3,.9,-.1,.03,.4,.03).rotation.z=1.5;P(g,BOX,0x6b4228,.45,.4,0,.9,.06,.5);
- put(g,I.SP[1][0]+1.6,I.SP[1][1]-.6,-.4);const a=new THREE.Group();P(a,CYL,0x5a3a22,0,.25,0,.22,.5,.22);P(a,BOX,0x55585e,0,.58,0,.5,.16,.22,{metalness:.6,roughness:.4});put(a,I.SP[1][0]-1.2,I.SP[1][1]-1.1,.3)}
+ put(g,I.SP[1][0]+1.6,I.SP[1][1]-.6,-.4);I.BENCH=[I.SP[1][0]+1.6,I.SP[1][1]-.6];const a=new THREE.Group();P(a,CYL,0x5a3a22,0,.25,0,.22,.5,.22);P(a,BOX,0x55585e,0,.58,0,.5,.16,.22,{metalness:.6,roughness:.4});put(a,I.SP[1][0]-1.2,I.SP[1][1]-1.1,.3)}
 /* загорода з клубками на луці Клубочок */
 {const g=new THREE.Group();for(let i=0;i<14;i++){const a=i/14*Math.PI*2;if(i==3)continue;P(g,CYL,0x8e5a3a,Math.cos(a)*2.6,.35,Math.sin(a)*2.6,.05,.7,.05);
   const b=(i+1)/14*Math.PI*2;if(i!=2){const r=P(g,BOX,0x9a6a40,Math.cos((a+b)/2)*2.55,.5,Math.sin((a+b)/2)*2.55,.08,.06,1.18);r.rotation.y=-(a+b)/2}}
@@ -137,7 +137,5 @@ N.add({id:'brm',name:'Брам',role:'кам’яний страж',x:-2.6,z:I.G
 /* Пушинка — Пухоклуб пані Клубочок */
 try{if(window.PALMODEL){const r=PALMODEL.build(4),m=r.root;m.scale.multiplyScalar(.8);put(m,I.SP[3][0]-1.4,I.SP[3][1]+.9,.6);
  let t=0;const A=G('ANI');if(A)A.push(()=>{t+=.016;m.position.y=H_(m.position.x,m.position.z)+Math.abs(Math.sin(t*3))*.12;if(r.mixer)r.mixer.update(.016)})}}catch(e){console.warn('isle-npc pal',e)}
-/* поки що — розмови-знайомства: «!» над Вітрилом, компас показує на нього */
-N.mark('vit','!');N.hint(N.get('vit').x,N.get('vit').z,'Вітрило');
-const seen=new Set();N.onTalk=id=>{const n=N.get(id);N.say(id,n.lines);seen.add(id);if(id=='vit'){N.mark('vit',null);N.mark('shk','!');N.mark('klu','!');N.hint(n.x+12,n.z-14,'Майстерня')}else N.mark(id,null);return true};
+/* розмови й завдання — isle-quests.js */
 }catch(e){console.warn('isle-npc:',e)}})();

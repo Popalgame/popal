@@ -71,7 +71,7 @@ window.NEST={claim(p){let best=null,bd=1e9;for(const[b,lx,lz]of nestSlots()){con
 
 /* ---------- кулі за рідкістю: крафт лише біля верстака потрібного рівня ---------- */
 const TIER={B_wb:1,B_wb2:2,B_wb3:3},NEED={bg:1,bb:2,br:3},BN=['','Верстака I','Верстака II','Верстака III'];
-const benchNear=n=>placed().some(b=>TIER[b.id]>=n&&Math.hypot(b.x-P.x,b.z-P.z)<=5);
+const benchNear=n=>placed().some(b=>TIER[b.id]>=n&&Math.hypot(b.x-P.x,b.z-P.z)<=5)||(n<=1&&window.ISLE&&window.ISLE.BENCH&&Math.hypot(window.ISLE.BENCH[0]-P.x,window.ISLE.BENCH[1]-P.z)<=5);/* острів: старий верстак Шкварки */
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-r]');if(!t)return;const r=RC[+t.dataset.r];if(!r||!NEED[r.id])return;
  if(!benchNear(NEED[r.id])){e.stopImmediatePropagation();e.preventDefault();msg('🛠️ '+IT[r.id][1]+' створюється лише біля '+BN[NEED[r.id]]+(NEED[r.id]>1?' (або старшого)':'')+'. Підійдіть ближче')}},true);
 }catch(e){console.warn('garden:',e)}})();

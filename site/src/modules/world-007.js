@@ -20,7 +20,7 @@ if(!Array.isArray(inv._b))inv._b=[];
 if(inv.B_farm){inv.B_garden=(inv.B_garden||0)+inv.B_farm;inv.B_farm=0}inv._b.forEach(b=>{if(b[0]=='B_farm')b[0]='B_garden'});
 RC.push(...BUI.map(b=>({id:b.id,n:b.n,c:b.c,d:b.d+' · +'+b.p+' до бази',bld:1})));
 const REQ={bg:'B_wb',bb:'B_wb2',br:'B_wb3',B_wb2:'B_wb',B_wb3:'B_wb2',B_nest5:'B_wb',axm:'B_wb',pkm:'B_wb',bp3:'B_wb',ing:'B_fur',gm:'B_kit',pie:'B_kit'}/* 0.1.28: їжу готують лише на кухні-багатті */;
-const built=id=>inv._b.some(x=>x[0]==id);window.isBuilt=built;
+const built=id=>inv._b.some(x=>x[0]==id)||(id=='B_wb'&&window.REALM==='isle');/* на Острові пробудження старий верстак Шкварки править за Верстак I */window.isBuilt=built;
 const LV=[0,2,5,9,14];
 window.campPts=()=>inv._b.reduce((a,x)=>a+(BI[x[0]]?BI[x[0]].p:0),0);
 window.campLv=()=>{const p=campPts();let l=1;LV.forEach((t,i)=>{if(p>=t)l=i+1});return l};
