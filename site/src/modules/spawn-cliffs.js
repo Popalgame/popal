@@ -38,11 +38,13 @@ L.forEach((A,k)=>{if(!A.length)return;const m=new THREE.InstancedMesh(RG[k],RMAT
  const tun=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,7.5,12,1,true,Math.PI/2,Math.PI),new THREE.MeshStandardMaterial({color:0x1b1714,roughness:1,side:THREE.BackSide}));
  tun.rotation.x=Math.PI/2;tun.position.set(0,0,-3.6);g.add(tun);
  const back=new THREE.Mesh(new THREE.CircleGeometry(1.7,16),new THREE.MeshBasicMaterial({color:0x05080c}));back.position.set(0,1,-7.2);g.add(back);
- const gc=document.createElement('canvas');gc.width=gc.height=128;{const x=gc.getContext('2d'),gr=x.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(170,240,255,1)');gr.addColorStop(.35,'rgba(70,170,255,.55)');gr.addColorStop(1,'rgba(20,60,140,0)');x.fillStyle=gr;x.fillRect(0,0,128,128)}
- const glow=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(gc),transparent:true,opacity:.45,blending:THREE.AdditiveBlending,depthWrite:false}));
- glow.scale.set(.8,1.3,1);glow.position.set(0,1.3,-2.5);g.add(glow);
+ /* у глибині печери — такий самий синій вир, як в арці на острові (інший кінець того самого порталу) */
+ const PU={t:{value:0}};const glow=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.ShaderMaterial({uniforms:PU,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,
+  vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'uniform float t;varying vec2 vU;void main(){vec2 p=vU*2.-1.;float r=length(p),a=atan(p.y,p.x);float sw=sin(a*5.-r*12.+t*3.)*.5+.5;float edge=smoothstep(1.,.75,r);vec3 c=mix(vec3(.15,.55,1.),vec3(.55,1.,.95),sw);float k=edge*(.35+.65*sw);gl_FragColor=vec4(c*k,k);}'}));
+ glow.scale.set(1.05,1.5,1);glow.position.set(0,1.55,-2.5);g.add(glow);
  const pl=new THREE.PointLight(0x5fd0ff,1.1,8,2);pl.position.set(0,1.4,-1.5);g.add(pl);sc_.add(g);
- const A=G('ANI');let t=0;if(A)A.push(()=>{t+=.016;glow.material.opacity=.28+Math.sin(t*2)*.08;pl.intensity=.9+Math.sin(t*2)*.25})}
+ const A=G('ANI');let t=0;if(A)A.push(()=>{t+=.016;PU.t.value=t;pl.intensity=.9+Math.sin(t*2)*.25})}
 
 /* ---------- прибрати все, що опинилось під скелями ---------- */
 const inRidge=(x,z,m)=>{const[u,v]=toL(x,z);return Math.abs(u)<RU+1+m&&v>-.1-m+Math.abs(u)*.12&&v<RV+m};
