@@ -18,11 +18,12 @@ const cobble=cv2(256,(x,n)=>{x.fillStyle='#8f8372';x.fillRect(0,0,n,n);for(let r
 const mc={},M=c=>mc[c]||(mc[c]=new THREE.MeshStandardMaterial({color:c,roughness:.85,metalness:0}));
 const B=(w,h,d)=>new THREE.BoxGeometry(w,h,d),Cy=(a,b,h,s=8)=>new THREE.CylinderGeometry(a,b,h,s),Co=(r,h,s=8)=>new THREE.ConeGeometry(r,h,s),S=r=>new THREE.SphereGeometry(r,12,9);
 function add(g,geo,c,x,y,z,ry){const m=new THREE.Mesh(geo,M(c));m.position.set(x,y,z);if(ry)m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;g.add(m);return m}
-const SZ=230,rn=(a,b)=>a+Math.random()*(b-a);
-const SP=[[0,0],[54,-30],[-60,42],[24,84],[-42,-72]],PC=new THREE.Color(0xc9a66b);
+const ISLE=window.REALM==='isle'&&window.ISLE?window.ISLE:null;/* вимір «острів» (realm.js) */
+const SZ=ISLE?62:230,rn=(a,b)=>a+Math.random()*(b-a);
+const SP=ISLE?ISLE.SP:[[0,0],[54,-30],[-60,42],[24,84],[-42,-72]],PC=new THREE.Color(0xc9a66b);
 const nearS=(x,z,r)=>SP.some(s=>Math.hypot(x-s[0],z-s[1])<r);
 /* ===== 0.1.10: новий світ POPAL-11638-g15-s75-o40-v1 (генератор як у прототипі) ===== */
-const WG={seed:11638,mount:.15,land:.75,frag:4.0,volc:1,R:250,STEP:2};
+const WG={seed:11638,mount:.15,land:.75,frag:4.0,volc:1,R:ISLE?90:250,STEP:ISLE?1:2};
 const WGEN=(()=>{const P=WG;function mul(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const perm=new Uint8Array(512),gr=[[1,1],[-1,1],[1,-1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]];{const r=mul(P.seed),p=[...Array(256).keys()];for(let i=255;i>0;i--){const j=(r()*(i+1))|0;[p[i],p[j]]=[p[j],p[i]]}for(let i=0;i<512;i++)perm[i]=p[i&255]}
 const F2=.5*(Math.sqrt(3)-1),G2=(3-Math.sqrt(3))/6;
@@ -47,15 +48,15 @@ const mh=()=>0;
 function pathD(x,z){let m=99;for(let i=1;i<5;i++){const a=SP[0],b=SP[i],dx=b[0]-a[0],dz=b[1]-a[1],L=dx*dx+dz*dz,Ls=Math.sqrt(L);let t=((x-a[0])*dx+(z-a[1])*dz)/L;t=Math.max(0,Math.min(1,t));const w=Math.sin(t*9+i)*1.3,px=a[0]+dx*t-dz/Ls*w,pz=a[1]+dz*t+dx/Ls*w;m=Math.min(m,Math.hypot(x-px,z-pz))}return m}
 
 {const sm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
-WGEN.fill((x,z)=>{let b=0;for(const c of SP){const d=Math.hypot(x-c[0],z-c[1]);b=Math.max(b,.5*(1-sm(14,32,d)))}b=Math.max(b,.24*(1-sm(3,9,pathD(x,z))));return b})}
+if(ISLE)ISLE.fill(WGEN);else WGEN.fill((x,z)=>{let b=0;for(const c of SP){const d=Math.hypot(x-c[0],z-c[1]);b=Math.max(b,.5*(1-sm(14,32,d)))}b=Math.max(b,.24*(1-sm(3,9,pathD(x,z))));return b})}
 const WG_N=WGEN.N,WG_R=WG.R,WG_S=WG.STEP,WG_H=WGEN.HG;
 function GH(x,z){let fx=(x+WG_R)/WG_S,fz=(z+WG_R)/WG_S;if(fx<0)fx=0;if(fz<0)fz=0;if(fx>WG_N-1.001)fx=WG_N-1.001;if(fz>WG_N-1.001)fz=WG_N-1.001;const i=fx|0,j=fz|0,a=fx-i,b=fz-j,k=j*WG_N+i;return(WG_H[k]*(1-a)+WG_H[k+1]*a)*(1-b)+(WG_H[k+WG_N]*(1-a)+WG_H[k+WG_N+1]*a)*b}
-const H=(x,z)=>{let k=1;for(let i=0;i<5;i++){const s=SP[i];k=Math.min(k,Math.max(0,(Math.hypot(x-s[0],z-s[1])-(i?3:5))/6))}return k>=1?GH(x,z):k*GH(x,z)};
+const H=ISLE?GH:(x,z)=>{let k=1;for(let i=0;i<5;i++){const s=SP[i];k=Math.min(k,Math.max(0,(Math.hypot(x-s[0],z-s[1])-(i?3:5))/6))}return k>=1?GH(x,z):k*GH(x,z)};
 window.H=H;
 const BCOL={deep:0x1d5d86,shal:0x3aa6b9,sand:0xe9d79a,mead:0x649e42,forest:0x4a8838,swamp:0x7a8a3e,desert:0xe8c46e,tundra:0x7fae8a,rock:0x9a988f,snow:0xf2f6fc,ash:0x544040,lava:0xff5a1f};
 function BIO(x,z){const i=Math.max(0,Math.min(WG_N-1,Math.round((x+WG_R)/WG_S))),j=Math.max(0,Math.min(WG_N-1,Math.round((z+WG_R)/WG_S)));return WGEN.BG[j*WG_N+i]}
 window.BIO=BIO;window.BCOL=BCOL;
-{const v=WGEN.VC;MT.push([v.x*WG_R,v.z*WG_R,24,0])}
+if(!ISLE){const v=WGEN.VC;MT.push([v.x*WG_R,v.z*WG_R,24,0])}
 const tg=new THREE.PlaneGeometry(2*WG_R,2*WG_R,WG_N-1,WG_N-1);tg.rotateX(-Math.PI/2);const tp=tg.attributes.position,tcol=[],c1=new THREE.Color();
 function colorHash(i,j){let h=Math.imul(i,374761393)^Math.imul(j,668265263)^WG.seed;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967295}
 function colorNoise(x,z){const ix=Math.floor(x),iz=Math.floor(z),a=x-ix,b=z-iz,u=a*a*(3-2*a),v=b*b*(3-2*b);
@@ -146,19 +147,19 @@ const trees=[],rocks=[],wild=[],pals=[],fx=[],bushes=[],shrooms=[];
 function mkTree(){const g=new THREE.Group(),or=Math.random()<.2,cs=or?[0xff7a22,0xffa03a,0xffc84a]:[0x2fb14a,0x4fd05a,0x82ea6a];add(g,Cy(.13,.22,1.3,7),0x8e5a3a,0,.65,0);for(let i=0;i<3;i++)add(g,new THREE.IcosahedronGeometry(.95-i*.2,1),cs[i],(i%2?.12:-.1),1.5+i*.65,(i==1?.1:0));g.rotation.y=Math.random()*6;g.scale.setScalar(rn(.85,1.3));return g}
 function mkRock(){const g=new THREE.Group(),m=add(g,new THREE.DodecahedronGeometry(.7,1),0xa8acd0,0,.45,0);m.scale.y=.8;m.rotation.y=Math.random()*6;return g}
 const TDENS={forest:1,tundra:.8,swamp:.5,mead:.22,desert:.03,sand:.02,rock:.05,snow:.05,ash:0,lava:0,deep:0,shal:0},RDENS={rock:1,desert:.7,tundra:.6,mead:.5,forest:.35,swamp:.3,snow:.5,sand:.3,ash:.8,lava:0,deep:0,shal:0};
-function spawn(list,mk,hp){let x,z,g=0;do{x=rn(-SZ,SZ);z=rn(-SZ,SZ);g++}while(Math.hypot(x,z)<3||pathD(x,z)<(list===trees?2.8:1.8)||H(x,z)<-.35||H(x,z)>7.5||(g<400&&Math.random()>(list===trees?TDENS:list===rocks?RDENS:TDENS)[BIO(x,z)]*(list===trees||list===rocks?1:1.6)));const m=mk();m.position.set(x,H(x,z),z);sc.add(m);list.push({m,hp,x,z})}
-for(let i=0;i<540;i++)spawn(trees,mkTree,3);for(let i=0;i<260;i++)spawn(rocks,mkRock,3);
+function spawn(list,mk,hp){let x,z,g=0;do{x=rn(-SZ,SZ);z=rn(-SZ,SZ);g++}while(Math.hypot(x,z)<3||pathD(x,z)<(list===trees?2.8:1.8)||H(x,z)<-.35||H(x,z)>7.5||(ISLE&&g<900&&!ISLE.spawnOk(x,z,1.5))||(g<400&&Math.random()>(list===trees?TDENS:list===rocks?RDENS:TDENS)[BIO(x,z)]*(list===trees||list===rocks?1:1.6)));const m=mk();m.position.set(x,H(x,z),z);sc.add(m);list.push({m,hp,x,z})}
+for(let i=0;i<(ISLE?26:540);i++)spawn(trees,mkTree,3);for(let i=0;i<(ISLE?12:260);i++)spawn(rocks,mkRock,3);
 function mkBush(){const g=new THREE.Group();for(let i=0;i<3;i++)add(g,S(.32),[0x3fb83a,0x58d046,0x32a431][i],(i-1)*.25,.3+(i%2)*.08,(i%2)*.15);for(let i=0;i<8;i++){const a=i*.8;add(g,S(.055),0x4a5fd6,Math.cos(a)*.38,.3+Math.sin(i*1.7)*.15,Math.sin(a)*.3)}return g}
 function mkShroom(){const g=new THREE.Group(),n=1+(Math.random()*3|0);for(let i=0;i<n;i++){const x=(i-1)*.16,z=(i%2)*.12,s=.8+Math.random()*.5;add(g,Cy(.04*s,.05*s,.22*s,8),0xf4ead8,x,.11*s,z);const c=add(g,S(.13*s),0xd93b3b,x,.24*s,z);c.scale.y=.55;add(g,S(.022),0xffffff,x+.05*s,.29*s,z+.05*s);add(g,S(.022),0xffffff,x-.05*s,.3*s,z-.02)}return g}
-for(let i=0;i<150;i++)spawn(bushes,mkBush,2);for(let i=0;i<150;i++)spawn(shrooms,mkShroom,1);
+for(let i=0;i<(ISLE?8:150);i++)spawn(bushes,mkBush,2);for(let i=0;i<(ISLE?6:150);i++)spawn(shrooms,mkShroom,1);
 const T=[{n:'Бамбузл',c:0x5fb04a,d:'w',hp:35,ag:0,el:'Трав’яний',sk:'Збір врожаю 3 · Бамбуковий смерч'},{n:'Грумрок',c:0x8a6a4a,d:'s',hp:45,ag:0,el:'Земля/Кристал',sk:'Видобуток 3 · Кристальна лавина'},{n:'Ігніс-Виверг',c:0x2a2630,d:'s',hp:30,ag:1,el:'Вогняний',sk:'Плавлення 4 · Плазмова павутина'},{n:'Міражбр',c:0x8a6ad6,d:'w',hp:25,ag:0,el:'Темрява/Привид',sk:'Перенесення 4 · Тіньовий двійник'},{n:'Пухоклуб',c:0xf4f4f8,d:'w',hp:30,ag:0,el:'Нормальний',sk:'Збір урожаю 2 · Хмарний відскок'},{n:'Крилоша',c:0xe8903a,d:'w',hp:22,ag:0,el:'Повітряний',sk:'Запилення 3 · Пилковий вихор'},{n:'Мороріг',c:0xa9d8ee,d:'s',hp:40,ag:0,el:'Лід',sk:'Охолодження 3 · Крижаний спалах'},{n:'Грозовик',c:0x1e1e2a,d:'s',hp:38,ag:1,el:'Електро',sk:'Генерація 4 · Грозовий стрибок'},{n:'Хвилезуб',c:0x4a78a8,d:'w',hp:34,ag:0,el:'Вода',sk:'Поливання 3 · Хвильовий укус'},{n:'Сонцеклюв',c:0xc8382a,d:'w',hp:32,ag:0,el:'Вогонь/Повітря',sk:'Розпалювання 3 · Сонячний вінець'}];
 function mkPal(c){const g=new THREE.Group(),mx=(k,f)=>f(c>>16&255,k)<<16|f(c>>8&255,k)<<8|f(c&255,k),lt=mx(.55,(v,k)=>v+(255-v)*k|0),dk=mx(.7,(v,k)=>v*k|0);
 add(g,S(.45),c,0,.62,0).scale.set(1,.9,1.3);add(g,S(.3),lt,0,.5,.3).scale.set(1,.9,1);
 add(g,S(.36),c,0,1.0,.55);add(g,S(.14),lt,0,.93,.84).scale.z=.8;add(g,S(.05),0x222222,0,.97,.95);
 for(const s of[-1,1]){add(g,Co(.13,.34,6),dk,s*.2,1.35,.5).rotation.z=-s*.25;add(g,S(.09),0xffffff,s*.15,1.05,.82);add(g,S(.05),0x111111,s*.15,1.05,.89);add(g,S(.15),dk,s*.22,.15,.4);add(g,S(.15),dk,s*.22,.15,-.35)}
 add(g,S(.2),lt,0,.7,-.65);outl(g);return g}
-function spawnWild(){let x,z;do{x=rn(-SZ,SZ);z=rn(-SZ,SZ)}while(Math.hypot(x-P.x,z-P.z)<9||(inv._cen&&Math.hypot(x-inv._cen[0],z-inv._cen[1])<12)||H(x,z)<-.35||H(x,z)>7.5);const ty=Math.random()*T.length|0,m=mkPal(T[ty].c);m.position.set(x,H(x,z),z);sc.add(m);wild.push({m,ty,hp:T[ty].hp,x,z,a:rn(0,6),t:0,ag:T[ty].ag,cd:0})}
-const WILDN=80;for(let i=0;i<WILDN;i++)spawnWild();
+function spawnWild(){let x,z;do{x=rn(-SZ,SZ);z=rn(-SZ,SZ)}while(Math.hypot(x-P.x,z-P.z)<9||(inv._cen&&Math.hypot(x-inv._cen[0],z-inv._cen[1])<12)||H(x,z)<-.35||H(x,z)>7.5||(ISLE&&!ISLE.spawnOk(x,z,1.5)));const ty=ISLE?[4,0,5][Math.random()*3|0]:Math.random()*T.length|0,m=mkPal(T[ty].c);m.position.set(x,H(x,z),z);sc.add(m);wild.push({m,ty,hp:T[ty].hp,x,z,a:rn(0,6),t:0,ag:T[ty].ag,cd:0})}
+const WILDN=ISLE?5:80;for(let i=0;i<WILDN;i++)spawnWild();
 /* вказівники між островами */
 const SIGNS=[];window.SIGNS=SIGNS;
 /* npc */

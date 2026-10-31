@@ -8,7 +8,8 @@ const zoneAt=(x,z)=>{const r=Math.hypot(x,z);let i=0;while(i+1<ZN.length&&r>=ZN[
 /* 0.5.x: точка появи нового гравця — на березі моря на краю карти (рівний берег на луках, ~7 м від води).
    Від неї рівні зростають тими самими сходинками, що й від центру (до 30 м — «Тиха бухта» 1–3, далі 3–10, 10–25…):
    істота отримує менший із двох рівнів, тож новачок біля моря не зустріне сильних */
-const SPAWN=window.SPAWN=(()=>{let best=null;
+const ISL=window.REALM==='isle'&&window.ISLE;
+const SPAWN=window.SPAWN=ISL?[ISL.START[0],ISL.START[1],Math.PI]:(()=>{let best=null;
  for(let a=0;a<360;a+=5){const t=a*Math.PI/180,dx=Math.cos(t),dz=Math.sin(t);let r=REND+50;while(r>60&&H(dx*r,dz*r)<-.45)r-=.5;if(r<=60)continue;
   const x=dx*(r-7),z=dz*(r-7),h=H(x,z);if(h<-.2)continue;
   let sl=0;for(const[u,v]of[[1,0],[-1,0],[0,1],[0,-1]])sl=Math.max(sl,Math.abs(H(x+u*2,z+v*2)-h)/2);
@@ -19,11 +20,13 @@ const dSp=(x,z)=>Math.hypot(x-SPAWN[0],z-SPAWN[1]);
 const inBay=(x,z)=>dSp(x,z)<ZN[1][0];
 const zoneEff=(x,z)=>Math.min(zoneAt(x,z),zIdx(dSp(x,z)));
 const lvR=r=>{const i=zIdx(r),Z=ZN[i],r1=ZN[i+1]?ZN[i+1][0]:REND,k=Math.min(1,(r-Z[0])/(r1-Z[0]));return Z[2]+(Z[3]-Z[2])*k};
-function lvAt(x,z){return Math.max(1,Math.min(WMAX,Math.round(Math.min(lvR(Math.hypot(x,z)),lvR(dSp(x,z)))+(Math.random()*2-1))))}
+function lvAt(x,z){if(ISL)return 1+(Math.random()<.4?1:0);/* на острові пробудження — лише 1–2 рівень */return Math.max(1,Math.min(WMAX,Math.round(Math.min(lvR(Math.hypot(x,z)),lvR(dSp(x,z)))+(Math.random()*2-1))))}
 /* на самій точці появи не стоїть дерево */
 try{const TR=eval('trees');for(let i=TR.length-1;i>=0;i--){const t=TR[i];if(dSp(t.x,t.z)<6){sc.remove(t.m);TR.splice(i,1)}}}catch(_){}
 /* новий гравець (без збереження) починає в бухті, обличчям до суші */
 {let hs=1;try{hs=eval('hasSave')}catch(_){}if(!hs){P.x=SPAWN[0];P.z=SPAWN[1];P.face=SPAWN[2]}}
+/* прибуття з острова пробудження через портал — на точку спавну */
+try{if(!ISL&&localStorage.getItem('zi_arrive')){localStorage.removeItem('zi_arrive');P.x=SPAWN[0];P.z=SPAWN[1];P.face=SPAWN[2];setTimeout(()=>{try{msg('🌊 Ви прибули у великий світ Popal!')}catch(_){}},1500)}}catch(_){}
 /* рівень визначає здоровʼя, шкоду по герою й агресію */
 function setup(w){const L=lvAt(w.x,w.z),b=T[w.ty].hp;w.lv=L;
  if(window.PW){const s=PW.stats(w.ty,L);w.mh=s.hp;w.atk=s.atk;w.def=s.def;w.hp=Math.round(w.mh*Math.max(0,Math.min(1,w.hp/b)));w.dm=PW.wildHit(w,true)}/* 0.5.x: показники Palworld, combat.js */
@@ -39,7 +42,7 @@ window.gXp=n=>Math.max(1,Math.round(n*XPM*(1+.02*(plv-1))));
 /* здоровʼя героя росте з рівнем */
 if(!window.PW)window.hpMax=()=>100+4*(plv-1);/* з combat.js — HP героя в масштабі Palworld */
 window.wPalLv=w=>Math.max(1,Math.min(PMAX,plv,(w&&w.lv)||1));
-window.zoneInfo=(x,z)=>{if(inBay(x,z))return{n:'Тиха бухта',a:1,b:3};const Z=ZN[zoneEff(x,z)];return{n:Z[1],a:Z[2],b:Z[3]}};
+window.zoneInfo=(x,z)=>{if(ISL)return{n:'Острів пробудження',a:1,b:2};if(inBay(x,z))return{n:'Тиха бухта',a:1,b:3};const Z=ZN[zoneEff(x,z)];return{n:Z[1],a:Z[2],b:Z[3]}};
 /* старі збереження: рівні в межах нових максимумів, зайвий досвід обрізається */
 if(plv>100)plv=100;if(plv>=100)xp=0;else if(xp>=xpN(plv))xp=xpN(plv)-1;
 for(const p of pals){if((p.lv||1)>PMAX)p.lv=PMAX;if(window.palXpNeed&&(p.xp||0)>=palXpNeed(p.lv||1))p.xp=0}
@@ -75,6 +78,6 @@ let zT=0,zLast=-1;
   const x=(v3.x+1)/2*innerWidth,y=(1-v3.y)/2*innerHeight;b.d.style.display='flex';b.d.style.transform=`translate(${x|0}px,${y|0}px) translate(-50%,-100%)`;
   const k=w.lv+':'+Math.max(0,Math.ceil(w.hp))+':'+w.mh+':'+(w.sl?1:0);if(b.w!==w||b.k!==k){b.w=w;b.k=k;b.s.innerHTML=`<b>${w.lv}</b> ${T[w.ty].n}${w.sl?' 💤':''}`;b.u.style.width=Math.max(0,Math.min(100,w.hp/w.mh*100))+'%';b.d.classList.toggle('hi',w.lv>plv+5)}}
  /* повідомлення про зону, коли гравець переходить в іншу */
- zT+=1;if(zT>30){zT=0;const z=inBay(P.x,P.z)?-2:zoneEff(P.x,P.z);if(z!==zLast){if(zLast!==-1&&!busy){if(z==-2)msg('🏖️ Тиха бухта · істоти рівня 1–3');else{const Z=ZN[z];msg('🗺️ '+Z[1]+' · істоти рівня '+Z[2]+'–'+Z[3])}}zLast=z}}
+ zT+=1;if(!ISL&&zT>30){zT=0;const z=inBay(P.x,P.z)?-2:zoneEff(P.x,P.z);if(z!==zLast){if(zLast!==-1&&!busy){if(z==-2)msg('🏖️ Тиха бухта · істоти рівня 1–3');else{const Z=ZN[z];msg('🗺️ '+Z[1]+' · істоти рівня '+Z[2]+'–'+Z[3])}}zLast=z}}
 }catch(e){}loop()})})();
 }catch(e){console.warn('wild-levels',e)}})();

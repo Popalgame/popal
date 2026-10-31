@@ -1,6 +1,6 @@
 /* Original expedition landmark: terrain-fitted stonework, no external assets. */
 (function(){try{
- if(typeof THREE==='undefined'||!window.H)return;
+ if(typeof THREE==='undefined'||!window.H||window.REALM==='isle')return;
  const root=new THREE.Group();root.name='MeadowWaygate';
  // Keep existing player buildings clear. The scenery is never stored as inventory.
  const spots=[[14,-8],[19,-11],[24,-13.5]];

@@ -91,7 +91,7 @@ const hud0=document.getElementById('hud');let clk=null;if(hud0){clk=document.cre
 let bgT=9,lastD=-1,clT=9,svT=0;window.isNight=()=>Math.max(0,Math.min(1,(Math.abs(tod-.5)-.24)/.08))>.5;
 /* 0.2.0: чтення точного часу доби ззовні (tod в IIFE-замиканні, звідти не видно) */
 window.ziTod=()=>tod;
-function dn(dt){tod=(tod+dt*(tod>=N0&&tod<N1?(N1-N0)/DAYS:(1-N1+N0)/NIGHTS))%1;const d=Math.max(0,Math.min(1,(Math.abs(tod-.5)-.24)/.08));
+function dn(dt){if(window.REALM==='isle')dt=0,tod=.36;/* на острові пробудження завжди ранок */tod=(tod+dt*(tod>=N0&&tod<N1?(N1-N0)/DAYS:(1-N1+N0)/NIGHTS))%1;const d=Math.max(0,Math.min(1,(Math.abs(tod-.5)-.24)/.08));
 R.toneMappingExposure=e0*(1-.42*d);if(hemi){hemi.intensity=h0*(1-.7*d);hemi.color.copy(hc0).lerp(MOONH,d)}sun.intensity=s0*(1-.88*d);sun.color.copy(sc0).lerp(MOON,d);if(fog0)sc.fog.color.copy(fog0).lerp(NIG,d);
 placed.forEach(b=>{if(b.g.userData.light)b.g.userData.light.intensity=1.8*d});stars.material.opacity=d;stars.position.set(P.x,0,P.z);
 bgT+=dt;if(bgc&&bgT>.4&&Math.abs(d-lastD)>.005){bgT=0;lastD=d;const x=bgc.getContext('2d'),g=x.createLinearGradient(0,0,0,bgc.height);g.addColorStop(0,mix(DC[0],NC[0],d));g.addColorStop(.6,mix(DC[1],NC[1],d));g.addColorStop(1,mix(DC[2],NC[2],d));x.fillStyle=g;x.fillRect(0,0,bgc.width,bgc.height);sc.background.needsUpdate=true}
