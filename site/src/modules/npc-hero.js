@@ -39,14 +39,18 @@ function build(root,spec){const model=T.SkeletonUtils.clone(gl.scene);model.upda
  const bones={};model.traverse(n=>{if(n.isBone)bones[n.name.replace('mixamorig:','').replace('mixamorig','')]=n;if(n.isMesh){n.castShadow=true;n.receiveShadow=true;n.frustumCulled=false;n.material=material(n.material,spec)}});
  if(spec.scale)model.scale.set(...spec.scale);model.updateMatrixWorld(true);
  const add=(bn,mesh,p)=>{mesh.position.set(p[0],p[1],p[2]);mesh.traverse(o=>{if(o.isMesh)o.castShadow=true});model.add(mesh);model.updateMatrixWorld(true);(bones[bn]||model).attach(mesh);return mesh};
- if(spec.acc)spec.acc(add,M,bones);
+ /* предмети в руці: не приклеєні до кисті, а щокадру ставляться так, щоб кулак тримав їх (палиця стоїть на землі, кошик висить) */
+ const held=[],v1=new T.Vector3(),v2=new T.Vector3();
+ const hold=(bn,obj,fn)=>{model.add(obj);obj.traverse(o=>{if(o.isMesh)o.castShadow=true});held.push({b:bones[bn],fa:bones[bn.replace('Hand','ForeArm')],obj,fn})};
+ if(spec.acc)spec.acc(add,M,bones,hold);
  root.add(model);
  const mixer=new T.AnimationMixer(model),clip=gl.animations.find(a=>/idle/i.test(a.name));if(clip){const a=mixer.clipAction(clip);a.time=Math.random()*clip.duration;a.play()}
  const ra=bones.RightArm,la=bones.LeftArm;let last=null,talk=false;
  root.userData.wave=t=>{talk=t!=null};
  root.userData.idle=t=>{const dt=last==null?0:Math.min(.1,Math.max(0,t-last));last=t;mixer.update(dt);
   if(talk&&la){la.rotation.z+=Math.sin(t*9)*.25-.9}/* ліва рука махає */
-  if(spec.pose)spec.pose(bones,t,talk)};
+  if(spec.pose)spec.pose(bones,t,talk);
+  if(held.length){model.updateMatrixWorld(true);for(const h of held){if(!h.b)continue;h.b.getWorldPosition(v1);if(h.fa){h.fa.getWorldPosition(v2);v2.subVectors(v1,v2).normalize().multiplyScalar(.07);v1.add(v2)}model.worldToLocal(v1);h.fn(h.obj,v1)}}};
  root.userData.bones=bones}
 window.NPCHERO={make(spec){const root=new T.Group();root.userData.idle=()=>{};root.userData.wave=()=>{};
   const go=()=>{try{build(root,spec)}catch(e){console.warn('npc-hero',e)}};if(gl)go();else wait.push(go);return root},ready:()=>!!gl};

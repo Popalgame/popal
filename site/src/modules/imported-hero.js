@@ -31,17 +31,30 @@ function accessory(parent,geometry,material,x,y,z,rx,rz){
 }
 function equipment(model,g){
  const equipped=get('eq')||{},tool=equipped.tool||'';
- const hand=bone(model,['righthand','handr']);
- if(hand&&/^(ax|pk|pick)/.test(tool)){
+ const hand=bone(model,['righthand','handr']),has=!!(hand&&/^(ax|pk|pick)/.test(tool));
+ /* з інструментом у правій руці меч героя (частина моделі, у лівій руці) ховаємо */
+ model.traverse(node=>{if(!node.isSkinnedMesh||!node.material)return;const m=node.material;
+  if(!m.userData.noSword){const u={value:0};m.userData.noSword=u;const prev=m.onBeforeCompile;
+   m.onBeforeCompile=function(sh,r){if(prev)prev.call(this,sh,r);sh.uniforms.uNoSword=u;
+    sh.vertexShader='varying vec3 vSwP;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvSwP=position;');
+    sh.fragmentShader='varying vec3 vSwP;uniform float uNoSword;\n'+sh.fragmentShader.replace('void main() {','void main() {\n if(uNoSword>.5&&vSwP.x>.545&&vSwP.y>.86)discard;')};
+   m.needsUpdate=true}
+  m.userData.noSword.value=has?1:0});
+ if(has){
   const metal=/^(axm|pkm)$/.test(tool)?0xc7d3dc:/^(axe|pick)$/.test(tool)?0x858d96:0xa8753d;
   const grip=new T.Group();grip.name='equippedTool';hand.add(grip);
-  /* the hand bone's +Y runs wrist->fingertips, so the shaft must extend along +y or the tool
-     renders back through the forearm */
-  accessory(grip,new T.CylinderGeometry(.022,.026,.48,8),new T.MeshStandardMaterial({color:0x79512f}),0,.18,0,0,0);
+  /* руків'я проходить крізь кулак (поперек пальців), а не вздовж них: напрям рахуємо в позі привʼязки (T-поза),
+     де «вперед» — +z, а «вгору» для опущеної руки — +x; отже руків'я дивиться вперед і вгору під ~45° */
+  let dir=new T.Vector3(0,0,1);
+  model.traverse(node=>{if(!node.isSkinnedMesh||!node.skeleton)return;const i=node.skeleton.bones.indexOf(hand);if(i<0)return;
+   const bw=new T.Matrix4().copy(node.skeleton.boneInverses[i]).invert(),q=new T.Quaternion();bw.decompose(new T.Vector3(),q,new T.Vector3());
+   dir=new T.Vector3(.62,.12,.78).normalize().applyQuaternion(q.invert())});
+  grip.position.set(0,.075,0);/* центр кулака — трохи далі від зап'ястя */
+  grip.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),dir.normalize());
+  accessory(grip,new T.CylinderGeometry(.022,.026,.56,8),new T.MeshStandardMaterial({color:0x79512f}),0,.16,0,0,0);
   if(/^ax/.test(tool))accessory(grip,new T.BoxGeometry(.2,.105,.045),new T.MeshStandardMaterial({color:metal}),-.075,.4,0,0,.18);
   else accessory(grip,new T.BoxGeometry(.34,.055,.055),new T.MeshStandardMaterial({color:metal}),0,.4,0,0,0);
  }
-
 }
 function upperClip(clip){
  /* hips rotation joins the overlay so strikes pivot the whole body, but hips position stays
