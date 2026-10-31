@@ -122,7 +122,22 @@ const btnHit=()=>mk(x=>{shade(x,48,86,26,5);const sw=a=>{x.save();x.translate(48
 /* ---------- застосування ---------- */
 const css=document.createElement('style');css.textContent='img.iic{width:1.25em;height:1.25em;vertical-align:-.25em;object-fit:contain;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}#bag img.iic,#craft img.iic,#hit img.iic,#bld img.iic{width:1.45em;height:1.45em;display:block;margin:0 auto}.i2s img.iic,.ivs img.iic{width:40px;height:40px}.i2q img.iic{width:34px;height:34px}#chs .sl img.iic{width:38px;height:38px}#chs .r .ic img.iic,#chs .tk img.iic{width:28px;height:28px}.rc .ri img.iic{width:44px;height:44px}#fur .bx i img.iic{width:34px;height:34px}';document.head.appendChild(css);
 const img=(src,alt)=>`<img class='iic' src='${src}' alt='${alt||''}'>`;
-const D={w:log,s:stone,sti:sticks,ing:ingot,ore:()=>lump('ore'),coal:()=>lump('coal'),be:berries,mu:mush,gm:skewer,pie,
+/* 0.5.x: шерсть (пухке руно) і шкіра (розтягнута шкура зі швом) — здобич із диких істот, creature-drops.js */
+const wool=()=>mk(x=>{shade(x,48,82,34,7);sd=37;const B=[[30,58,17],[48,62,19],[66,57,17],[38,42,16],[58,40,17],[48,50,18]];
+ x.beginPath();B.forEach(([u,v,r])=>{x.moveTo(u+r,v);x.arc(u,v,r,0,7)});x.lineWidth=6;x.strokeStyle=OL;x.stroke();
+ B.forEach(([u,v,r])=>{x.beginPath();x.arc(u,v,r,0,7);x.fillStyle=rg(x,u,v,r,[[0,'#fffaf0'],[.6,'#efe2c8'],[1,'#c9b48e']]);x.fill()});
+ x.strokeStyle='rgba(150,120,80,.55)';x.lineWidth=2;for(let i=0;i<9;i++){const u=26+rnd()*44,v=34+rnd()*34,r=3+rnd()*3;x.beginPath();x.arc(u,v,r,.3,4.6);x.stroke()}
+ shine(x,40,36,9,4)});
+const leather=()=>mk(x=>{shade(x,48,86,34,6);x.save();x.translate(48,49);x.rotate(-.12);
+ /* розтягнута шкура: шия, передні лапи, бока, задні лапи, хвіст (симетрично) */
+ const R=[[0,-38],[7,-30],[11,-27],[30,-34],[33,-27],[17,-15],[19,0],[18,14],[32,30],[27,37],[12,24],[5,32],[2,42]];
+ const P=R.concat(R.slice(0,-1).reverse().map(([u,v])=>[-u,v]).slice(0,-1));
+ x.beginPath();x.moveTo(P[0][0],P[0][1]);for(let i=1;i<=P.length;i++){const[u,v]=P[i%P.length],[pu,pv]=P[i-1];x.quadraticCurveTo(pu,pv,(pu+u)/2,(pv+v)/2)}x.closePath();
+ fillOL(x,rg(x,0,0,40,[[0,'#e3b07a'],[.55,'#b07440'],[1,'#6e4020']]),3.5);
+ x.save();x.clip();x.globalAlpha=.16;sd=53;for(let i=0;i<46;i++){x.fillStyle=rnd()<.5?'#3a1e0c':'#ffe0b0';x.beginPath();x.arc(-30+rnd()*60,-38+rnd()*80,.8+rnd()*1.8,0,7);x.fill()}x.restore();
+ x.save();x.setLineDash([3.5,3.5]);x.strokeStyle='rgba(255,232,196,.8)';x.lineWidth=1.8;x.beginPath();x.ellipse(0,1,11,19,0,0,7);x.stroke();x.restore();
+ shine(x,-8,-12,7,3);x.restore()});
+const D={wool,lth:leather,w:log,s:stone,sti:sticks,ing:ingot,ore:()=>lump('ore'),coal:()=>lump('coal'),be:berries,mu:mush,gm:skewer,pie,
  axw:()=>axe('w'),axe:()=>axe('s'),axm:()=>axe('m'),pkw:()=>pick('w'),pick:()=>pick('s'),pkm:()=>pick('m'),bp1,bp2,bp3,
  B_bed:bed,B_kit:kitchen,B_wb:bench,B_fur:furnace,B_farm:farm,B_lamp:lamp,B_fen:fence,B_cen:center,B_ch:chest};
 const SRC={};for(const k in D){try{SRC[k]=D[k]();if(IT[k])IT[k][0]=img(SRC[k],IT[k][1])}catch(e){console.warn('icon '+k,e)}}
