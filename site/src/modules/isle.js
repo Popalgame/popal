@@ -28,7 +28,7 @@ for(let z=I.G0+3;z>I.G1-2;z-=1.6)for(const sd of[-1,1]){const xc=-Math.sin(z*.35
  addRock(xc+sd*(I.GW+2.9+rr(0,.4)),z,rr(1.5,1.9),rr(5,8));addRock(xc+sd*(I.GW+7+rr(0,1)),z,rr(3,4),rr(13,19))/* біля стежки — нижчі, щоб камера бачила героя */}
 /* навколо майданчика арки — півколо скель (вхід з ущелини вільний) */
 for(let a=0;a<Math.PI*2;a+=.2){const x=Math.cos(a)*(I.PR+3.5),z=I.PZ+Math.sin(a)*(I.PR+3.5);if(z>I.PZ+I.PR-1&&Math.abs(x)<I.GW+1.5)continue;
- addRock(x,z,rr(2,2.6),rr(7,11));addRock(Math.cos(a)*(I.PR+8),I.PZ+Math.sin(a)*(I.PR+8),rr(4,5),rr(15,22))}
+ addRock(x,z,rr(2,2.6),rr(7,11));{const x2=Math.cos(a+.1)*(I.PR+1.7),z2=I.PZ+Math.sin(a+.1)*(I.PR+1.7);addRock(x2,z2,rr(1.3,1.7),rr(4,6.5))}/* низький ряд — закриває стіну землі за майданчиком */addRock(Math.cos(a)*(I.PR+8),I.PZ+Math.sin(a)*(I.PR+8),rr(4,5),rr(15,22))}
 const dummy=new THREE.Object3D(),col=new THREE.Color();
 rocks.forEach((L,k)=>{if(!L.length)return;const m=new THREE.InstancedMesh(RG[k],RMAT,L.length);
  L.forEach((r,i)=>{dummy.position.set(r[0],r[1],r[2]);dummy.scale.set(r[3],r[4],r[5]);dummy.rotation.set(0,r[6],0);dummy.updateMatrix();m.setMatrixAt(i,dummy.matrix);m.setColorAt(i,col.setHex(r[7]))});
@@ -104,8 +104,60 @@ const fire=new THREE.Group();{for(let i=0;i<8;i++){const s=new THREE.Mesh(new TH
 /* ---------- куди можна ходити ---------- */
 const ok=(x,z,m)=>I.walk(x,z,m)&&(open||!(I.inGorge(x,z)&&z<I.G0+1.2)&&!I.inPlaza(x,z));
 I.ok=ok;
+/* ---------- оформлення ущелини й майданчика порталу ----------
+   Бруківка кільцями, двоступеневий постамент під аркою, 4 обеліски з рунами (світяться в такт порталу), 2 жаровні біля входу,
+   світні кристали біля підніжжя скель, плити-сходинки вздовж стежки в ущелині, світлячки, що повільно здіймаються. */
+const DECOR=[];/* тверді оздоби — додаються до зіткнень брил */
+const DC={};
+{const g=new THREE.Group();sc_.add(g);
+ const tc=document.createElement('canvas');tc.width=tc.height=512;{const x=tc.getContext('2d');x.fillStyle='#6f6a62';x.fillRect(0,0,512,512);
+  let sd=5;const r=()=>(sd=sd*16807%2147483647)/2147483647;const C=256;
+  for(let ring=0;ring<9;ring++){const r0=ring*28+8,r1=r0+26,n=Math.max(6,Math.round(ring*7.5));for(let k=0;k<n;k++){const a0=k/n*6.283+ring*.37,a1=(k+1)/n*6.283+ring*.37-.035;
+    const l=150+r()*45|0;x.fillStyle=`rgb(${l},${l-6},${l-16})`;x.beginPath();x.arc(C,C,r1,a0,a1);x.arc(C,C,r0+2,a1,a0,true);x.closePath();x.fill();
+    x.fillStyle='rgba(0,0,0,.08)';for(let m=0;m<6;m++){const aa=a0+(a1-a0)*r(),rr_=r0+(r1-r0)*r();x.beginPath();x.arc(C+Math.cos(aa)*rr_,C+Math.sin(aa)*rr_,1+r()*3,0,7);x.fill()}}}
+  x.strokeStyle='rgba(120,220,255,.55)';x.lineWidth=3;x.beginPath();x.arc(C,C,40,0,7);x.stroke()}
+ const tt=new THREE.CanvasTexture(tc);tt.encoding=THREE.sRGBEncoding;
+ const floor=new THREE.Mesh(new THREE.CircleGeometry(I.PR-.2,48),new THREE.MeshStandardMaterial({map:tt,roughness:.95}));floor.rotation.x=-Math.PI/2;floor.position.set(0,H_(0,I.PZ)+.03,I.PZ);floor.receiveShadow=true;g.add(floor);
+ const ST=new THREE.MeshStandardMaterial({color:0x9a958a,roughness:.9,flatShading:true});
+ for(const[r,h]of[[3.1,.14],[2.4,.28]]){const st=new THREE.Mesh(new THREE.CylinderGeometry(r,r+.1,h,24),ST);st.position.set(0,H_(0,I.PZ)+h/2,I.PZ);st.receiveShadow=st.castShadow=true;g.add(st)}
+ /* обеліски з рунами */
+ const RU=new THREE.MeshStandardMaterial({color:0x6fe6ff,emissive:0x39c8ff,emissiveIntensity:1.4});DC.ru=RU;
+ for(const[x,z]of[[-4.6,I.PZ-1.2],[4.6,I.PZ-1.2],[-6.3,I.PZ+2.8],[6.3,I.PZ+2.8]]){const o=new THREE.Group();o.position.set(x,H_(x,z),z);
+  const b=new THREE.Mesh(new THREE.BoxGeometry(.9,.35,.9),ST);b.position.y=.17;o.add(b);
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.22,.38,3,4),ST);sh.position.y=1.85;sh.rotation.y=Math.PI/4;o.add(sh);
+  const tip=new THREE.Mesh(new THREE.ConeGeometry(.24,.5,4),ST);tip.position.y=3.6;tip.rotation.y=Math.PI/4;o.add(tip);
+  for(let k=0;k<3;k++){const r=new THREE.Mesh(new THREE.BoxGeometry(.08,.22,.02),RU);r.position.set(0,1.1+k*.6,.31-k*.04);o.add(r)}
+  o.lookAt(0,o.position.y,I.PZ);o.traverse(m=>{if(m.isMesh)m.castShadow=true});g.add(o);DECOR.push({x,z,r:.55})}
+ /* жаровні біля входу на майданчик */
+ DC.fl=[];const FM=new THREE.MeshStandardMaterial({color:0xffa040,emissive:0xff6010,emissiveIntensity:2.2,transparent:true,opacity:.92});
+ for(const x of[-2.9,2.9]){const z=I.PZ+I.PR-1.4,o=new THREE.Group();o.position.set(x,H_(x,z),z);
+  const leg=new THREE.Mesh(new THREE.CylinderGeometry(.12,.2,1,6),new THREE.MeshStandardMaterial({color:0x3a3530,roughness:.6,metalness:.5}));leg.position.y=.5;o.add(leg);
+  const bowl=new THREE.Mesh(new THREE.CylinderGeometry(.45,.22,.3,10,1,true),new THREE.MeshStandardMaterial({color:0x4a4038,roughness:.5,metalness:.6,side:THREE.DoubleSide}));bowl.position.y=1.12;o.add(bowl);
+  const f=new THREE.Mesh(new THREE.ConeGeometry(.3,.8,8),FM);f.position.y=1.55;o.add(f);DC.fl.push(f);
+  const L=new THREE.PointLight(0xffa050,1.1,9,2);L.position.y=1.9;o.add(L);f.userData.L=L;
+  o.traverse(m=>{if(m.isMesh)m.castShadow=true});g.add(o);DECOR.push({x,z,r:.5})}
+ /* світні кристали */
+ const CM=new THREE.MeshStandardMaterial({color:0x8ff0ff,emissive:0x2fb8e8,emissiveIntensity:1.2,roughness:.25,metalness:.1,transparent:true,opacity:.9});DC.cm=CM;
+ const crys=(x,z,s)=>{const o=new THREE.Group();o.position.set(x,H_(x,z),z);for(let k=0;k<4;k++){const c=new THREE.Mesh(new THREE.OctahedronGeometry(.18,0),CM);c.scale.set(1,2.4+k*.5,1);
+   c.position.set(Math.cos(k*1.7)*.18,.3+k*.06,Math.sin(k*1.7)*.18);c.rotation.set(Math.cos(k)*.4,k,Math.sin(k)*.4);o.add(c)}o.scale.setScalar(s);g.add(o)};
+ for(let a=-2.6;a<=-.55;a+=.42)crys(Math.cos(a)*(I.PR-.7),I.PZ+Math.sin(a)*(I.PR-.7),1+Math.abs(Math.sin(a*3))*.6);
+ for(const[x,z]of[[-1,-32],[1,-36],[-1,-40],[1,-44]])crys(x*(I.GW-.35),z,.8);
+ /* плити-сходинки вздовж ущелини */
+ const PM=new THREE.MeshStandardMaterial({color:0x8d877c,roughness:.95,flatShading:true});const PG=new THREE.CylinderGeometry(.55,.6,.12,7);
+ const pv=[];for(let z=I.G0+3;z>I.G1-1;z-=1.15){const x=-Math.sin(z*.35)*.6+Math.sin(z*1.7)*.25;pv.push([x,z])}
+ const pm=new THREE.InstancedMesh(PG,PM,pv.length),dm=new THREE.Object3D();pv.forEach(([x,z],i)=>{dm.position.set(x,H_(x,z)+.04,z);dm.rotation.set(0,i*1.3,0);dm.scale.set(1+(i%3)*.12,1,.85+(i%2)*.15);dm.updateMatrix();pm.setMatrixAt(i,dm.matrix)});
+ pm.receiveShadow=true;g.add(pm);
+ /* світлячки */
+ const N=90,gp=new THREE.BufferGeometry(),pos=new Float32Array(N*3),mv=[];
+ for(let k=0;k<N;k++){const inP=k<45,x=inP?(Math.random()-.5)*I.PR*1.6:(Math.random()-.5)*I.GW*1.6,z=inP?I.PZ+(Math.random()-.5)*I.PR*1.6:I.G0-Math.random()*(I.G0-I.G1);mv.push([x,z,Math.random()*4,.15+Math.random()*.3,Math.random()*6])}
+ gp.setAttribute('position',new THREE.BufferAttribute(pos,3));DC.mv=mv;DC.gp=gp;
+ g.add(new THREE.Points(gp,new THREE.PointsMaterial({color:0xbff6ff,size:.11,transparent:true,opacity:.8,depthWrite:false,blending:THREE.AdditiveBlending})))}
+{let t=0;const A=G('ANI'),f=()=>{t+=.016;const k=open?1:.35;DC.ru.emissiveIntensity=(.8+Math.sin(t*2)*.4)*(.5+k*.7);DC.cm.emissiveIntensity=.9+Math.sin(t*1.3)*.35;
+  for(const fl of DC.fl){fl.scale.set(1+Math.sin(t*11+fl.id)*.12,1+Math.sin(t*8+fl.id)*.22,1);fl.userData.L.intensity=.9+Math.sin(t*13+fl.id)*.25}
+  const p=DC.gp.attributes.position;DC.mv.forEach((m,i)=>{m[2]+=m[3]*.016;if(m[2]>5)m[2]=0;p.setXYZ(i,m[0]+Math.sin(t+m[4])*.3,H_(m[0],m[1])+.3+m[2],m[1]+Math.cos(t*.7+m[4])*.3)});p.needsUpdate=true};
+ if(A)A.push(f);else setInterval(f,16)}
 /* брили тверді: герой і істоти не проходять крізь камінь */
-const RCOL=window.plRockCol?window.plRockCol(rocks.flat().filter(r=>r[4]>2).map(r=>({x:r[0],z:r[2],r:Math.max(r[3],r[5])*.92}))):null;
+const RCOL=window.plRockCol?window.plRockCol(rocks.flat().filter(r=>r[4]>2).map(r=>({x:r[0],z:r[2],r:Math.max(r[3],r[5])*.92})).concat(DECOR)):null;
 I.RCOL=RCOL;const b0=window.BLDC;
 window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(RCOL)RCOL.push(P_,.35);if(ok(P_.x,P_.z,0))return;
  if(ok(P_.x,oz,0)){P_.z=oz;return}if(ok(ox,P_.z,0)){P_.x=ox;return}P_.x=ox;P_.z=oz};
