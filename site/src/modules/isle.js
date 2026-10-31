@@ -101,9 +101,6 @@ const fire=new THREE.Group();{for(let i=0;i<8;i++){const s=new THREE.Mesh(new TH
 {const g=new THREE.Group();for(let i=0;i<7;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(1.6,.12,.32),W);b.position.set(0,.55,i*.42);g.add(b)}
  for(const x of[-.7,.7])for(const z of[0,1.3,2.6]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.09,.1,1.8,6),WD);p.position.set(x,-.2,z);g.add(p)}
  put(g,8,31.5,-.45,-.35)}
-/* вказівник біля входу в ущелину */
-{const g=new THREE.Group(),post=new THREE.Mesh(new THREE.CylinderGeometry(.07,.08,1.6,6),WD);post.position.y=.8;g.add(post);
- const bd=new THREE.Mesh(new THREE.BoxGeometry(1.1,.36,.06),W);bd.position.set(.3,1.35,0);g.add(bd);put(g,2.3,I.G0+4,0,-.2)}
 
 /* ---------- куди можна ходити ---------- */
 const ok=(x,z,m)=>I.walk(x,z,m)&&(open||!(z<I.G0+4.3+(m||0)&&z>I.G1-2&&Math.abs(x)<I.GW+1.5)&&!I.inPlaza(x,z))/* завал твердий по передній грані брил (центр G0+1, передні брили виступають до ~G0+3.9) */;
