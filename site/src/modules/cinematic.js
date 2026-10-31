@@ -58,7 +58,7 @@ function tick(){if(!on)return;const t=fz!=null?fz:(performance.now()-t0)/1000;
   else if(t<4.75)o=.72*(1-seg(t,4.6,4.75));else if(t<5.1)o=seg(t,4.75,5.1);else if(t<7.5)o=1;else o=1-seg(t,7.5,8.05);lids(o);
   const bl=t<4.8?Math.max(0,7-t*1.4):0;R_.domElement.style.filter=bl>.2?'blur('+bl.toFixed(1)+'px)':'';
   const sh=t>5.3&&t<6.1?.012:0;/* Пухоклуб тицяється носом — камера здригається */
-  cam_.up.set(0,0,-1);cam_.position.set(HEAD.x+(Math.random()-.5)*sh,HEAD.y+(Math.random()-.5)*sh,HEAD.z);look.set(HEAD.x+Math.sin(t*.5)*.3,HEAD.y+6,HEAD.z-2.4);{const k=seg(t,6.0,6.8);look.z+=k*2.6;look.y-=k*.8}/* погляд — на обличчя Вітрила */cam_.lookAt(look);
+  cam_.up.set(0,0,-1);cam_.position.set(HEAD.x+(Math.random()-.5)*sh,HEAD.y+(Math.random()-.5)*sh,HEAD.z);look.set(HEAD.x+Math.sin(t*.5)*.3,HEAD.y+6,HEAD.z-2.4);{const k=seg(t,6.0,6.8);look.z+=k*4.2;look.y-=k*2.4}/* погляд — на обличчя Вітрила */cam_.lookAt(look);
   for(const p of pals)setPal(p,t);
   if(vit){const k=seg(t,6.0,6.7);vit.g.visible=t>5.9;vit.nm.visible=vit.mk.visible=false;/* стоїть за головою героя (з боку моря) і нахиляється над обличчям */
    vit.g.position.set(HX,H_(HX,HEAD.z+1.1),HEAD.z+1.2+(1-k)*.7);vit.g.rotation.set(.45*k,Math.PI,0,'YXZ');}
