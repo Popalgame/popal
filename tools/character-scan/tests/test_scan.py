@@ -38,6 +38,27 @@ def silhouette() -> Image.Image:
     return image
 
 
+def faced_silhouette() -> Image.Image:
+    """Sylwetka z twarzą: skóra, różowe włosy i para turkusowych tęczówek."""
+    image = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    skin = (238, 196, 172, 255)
+    hair = (232, 140, 168, 255)
+    jacket = (20, 90, 96, 255)
+    shorts = (92, 62, 38, 255)
+    draw.ellipse([76, 24, 164, 118], fill=hair)  # włosy wokół głowy
+    draw.ellipse([82, 36, 158, 114], fill=skin)  # twarz
+    draw.rectangle([82, 100, 158, 150], fill=skin)  # szyja
+    draw.rectangle([80, 150, 160, 200], fill=jacket)  # tors
+    draw.rectangle([20, 152, 220, 172], fill=jacket)  # ręce
+    draw.rectangle([65, 200, 175, 220], fill=shorts)  # biodra
+    draw.rectangle([60, 220, 115, BOTTOM], fill=skin)  # lewa noga
+    draw.rectangle([125, 220, 180, BOTTOM], fill=skin)  # prawa noga
+    draw.ellipse([96, 64, 112, 88], fill=(20, 140, 150, 255))  # lewa tęczówka
+    draw.ellipse([128, 64, 144, 88], fill=(20, 140, 150, 255))  # prawa tęczówka
+    return image
+
+
 def save(image: Image.Image, directory: str, name: str) -> Path:
     path = Path(directory) / name
     image.save(path)
@@ -148,6 +169,9 @@ class MeasureTests(unittest.TestCase):
         self.assertTrue(self.data["palette"])
         self.assertIn("#c8503c", [item["hex"] for item in self.data["palette"]])
 
+    def test_figure_without_eyes_has_no_face_guess(self):
+        self.assertIsNone(self.data["face"])
+
     def test_no_warnings_for_clean_reference(self):
         self.assertEqual(self.data["warnings"], [])
 
@@ -161,6 +185,38 @@ class MeasureTests(unittest.TestCase):
         self.assertTrue(data["character"]["clipped"]["left"])
         self.assertTrue(data["character"]["clipped"]["right"])
         self.assertTrue(any("przycina" in item for item in data["warnings"]))
+
+
+class FaceTests(unittest.TestCase):
+    def test_face_measurements_from_synthetic_eyes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = save(faced_silhouette(), temporary, "face.png")
+            data, _, _ = scan.measure(path, 1800.0)
+        face = data["face"]
+        self.assertIsNotNone(face)
+        self.assertEqual(face["eye_centers_px"], [104, 136])
+        self.assertGreaterEqual(face["face_width_px"], 70)
+        self.assertLessEqual(face["face_width_px"], 90)
+        self.assertGreater(face["face_width_mm"], 400)
+        self.assertLess(face["eye_line_y"], face["chin_y"])
+        self.assertGreater(face["visible_face_height_px"], 40)
+        self.assertAlmostEqual(
+            face["eye_line_y_ratio"],
+            (face["eye_line_y"] - data["character"]["bbox_px"][1])
+            / (data["character"]["height_px"] - 1),
+            places=4,
+        )
+
+    def test_report_and_overlay_include_face(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = save(faced_silhouette(), temporary, "face.png")
+            out = Path(temporary) / "out"
+            with contextlib.redirect_stdout(io.StringIO()):
+                scan.main(["scan", str(source), "--out", str(out)])
+            report = (out / "report.md").read_text(encoding="utf-8")
+            document = json.loads((out / "measurements.json").read_text())
+        self.assertIn("## Twarz", report)
+        self.assertIn("face_width_mm", document["face"])
 
 
 class CommandTests(unittest.TestCase):
