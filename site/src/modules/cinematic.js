@@ -17,16 +17,16 @@ if(!force&&(INV._cin||INV._isg||!fresh)){INV._cin=1;return}
 const st=document.createElement('style');st.textContent=`
 body.cine :is(#pc,#mbt,#bag,#mmap,.inmap,#cmp,#pw2,#eqp,#eqm,#btns,#bld,#joy,#hud,#guide,#msg,#pqt,#pdm,#emb,#hit,#npcd,#hpb){visibility:hidden!important;pointer-events:none!important}
 #cine{position:fixed;inset:0;z-index:9000;pointer-events:none;overflow:hidden}
-#cine .lid{position:absolute;left:-10%;width:120%;height:52%;background:#000;transition:none}
-#cine .lt{top:0;border-radius:0 0 50% 50%/0 0 38% 38%}#cine .lb{bottom:0;border-radius:50% 50% 0 0/38% 38% 0 0}
+#cine .eye{position:absolute;left:50%;top:50%;width:150vw;height:0;transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 0 6vh 3vh #000,0 0 0 200vmax #000}
 #cine .bar{position:absolute;left:0;right:0;height:0;background:#000;transition:height .8s ease}#cine .b1{top:0}#cine .b2{bottom:0}
 #cine .sub{position:absolute;left:50%;bottom:13%;transform:translateX(-50%);max-width:86vw;padding:6px 14px;border-radius:10px;background:rgba(0,0,0,.45);color:#fff;font:600 17px/1.4 system-ui,sans-serif;text-align:center;opacity:0;transition:opacity .35s;text-shadow:0 1px 3px #000}
 #cine .sub b{color:#ffd98a}
 #cine .skip{position:absolute;right:calc(env(safe-area-inset-right,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 12px);pointer-events:auto;padding:7px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.35);color:#fff;font:700 13px system-ui,sans-serif;opacity:.8}`;
 document.head.appendChild(st);
-const O=document.createElement('div');O.id='cine';O.innerHTML=`<div class='bar b1'></div><div class='bar b2'></div><div class='lid lt'></div><div class='lid lb'></div><div class='sub'></div><button class='skip'>Пропустити ▸▸</button>`;
-const lt=O.querySelector('.lt'),lb=O.querySelector('.lb'),b1=O.querySelector('.b1'),b2=O.querySelector('.b2'),sub=O.querySelector('.sub'),skip=O.querySelector('.skip');
-const lids=o=>{const h=(1-o)*52;lt.style.height=lb.style.height=h+'%';lt.style.display=lb.style.display=o>=.999?'none':'block'};
+const O=document.createElement('div');O.id='cine';O.innerHTML=`<div class='bar b1'></div><div class='bar b2'></div><div class='eye'></div><div class='sub'></div><button class='skip'>Пропустити ▸▸</button>`;
+const eye=O.querySelector('.eye'),b1=O.querySelector('.b1'),b2=O.querySelector('.b2'),sub=O.querySelector('.sub'),skip=O.querySelector('.skip');
+/* око: еліптична щілина, що розкривається (o=0 — заплющене, 1 — розплющене) */
+const lids=o=>{eye.style.height=(o*o*170)+'vh';eye.style.display=o>=.999?'none':'block'};
 const say=t=>{if(!t){sub.style.opacity=0;return}sub.innerHTML=t;sub.style.opacity=1};
 const voice=(ty,k)=>{try{if(window.PSFX)PSFX.voice(ty,k,.8)}catch(_){}};
 
@@ -40,7 +40,7 @@ const v=new THREE.Vector3(),look=new THREE.Vector3();
 let t0=0,on=false,pals=[],stage=0,done_=false,vit=null,vitHome=null;
 function begin(){on=true;t0=performance.now();document.body.classList.add('cine');document.body.appendChild(O);lids(0);
  P_.x=HX;P_.z=HZ;P_.face=Math.PI;pl_.rotation.order='YXZ';
- pals=[{r:mk(4,.72),ty:4,a:[-.95,1.05,-.55],b:[-.38,.78,-.3],c:[-.1,.52,-.12]},{r:mk(0,.68),ty:0,a:[1.0,1.1,-.7],b:[.58,.9,-.45]},{r:mk(5,.6),ty:5,a:[.2,2.2,-1.5],b:[-.1,1.9,-1.2]}].filter(p=>p.r);
+ pals=[{r:mk(4,.72),ty:4,a:[-1.5,1.7,-1.2],b:[-.75,1.45,-.95],c:[-.3,1.0,-.55]},{r:mk(0,.68),ty:0,a:[1.6,1.8,-1.4],b:[.95,1.6,-1.15]},{r:mk(5,.6),ty:5,a:[.6,3.4,-2.6],b:[.1,3.0,-2.2]}].filter(p=>p.r);
  vit=N.get('vit');if(vit){vitHome=[vit.x,vit.z,vit.face0];vit.busy=1;vit.g.visible=false}
  skip.onclick=()=>{finish()}}
 function setPal(p,t){const k1=seg(t,2.5,4.2),k2=p.c?seg(t,5,6.1)*(1-seg(t,6.4,6.9)):0,flee=seg(t,6.5,7.6);
@@ -58,9 +58,10 @@ function tick(){if(!on)return;const t=fz!=null?fz:(performance.now()-t0)/1000;
   else if(t<4.75)o=.72*(1-seg(t,4.6,4.75));else if(t<5.1)o=seg(t,4.75,5.1);else if(t<7.5)o=1;else o=1-seg(t,7.5,8.05);lids(o);
   const bl=t<4.8?Math.max(0,7-t*1.4):0;R_.domElement.style.filter=bl>.2?'blur('+bl.toFixed(1)+'px)':'';
   const sh=t>5.3&&t<6.1?.012:0;/* Пухоклуб тицяється носом — камера здригається */
-  cam_.up.set(0,0,-1);cam_.position.set(HEAD.x+(Math.random()-.5)*sh,HEAD.y+(Math.random()-.5)*sh,HEAD.z);look.set(HEAD.x+Math.sin(t*.5)*.3,HEAD.y+6,HEAD.z-2.4);cam_.lookAt(look);
+  cam_.up.set(0,0,-1);cam_.position.set(HEAD.x+(Math.random()-.5)*sh,HEAD.y+(Math.random()-.5)*sh,HEAD.z);look.set(HEAD.x+Math.sin(t*.5)*.3,HEAD.y+6,HEAD.z-2.4);{const k=seg(t,6.0,6.8);look.z+=k*2.6;look.y-=k*.8}/* погляд — на обличчя Вітрила */cam_.lookAt(look);
   for(const p of pals)setPal(p,t);
-  if(vit){const k=seg(t,6.0,6.6);vit.g.visible=t>5.9;vit.g.position.set(HX,H_(HX,HZ-.4),HZ-.45+(1-k)*.8);vit.g.rotation.set(.32*k,0,0,'YXZ');}
+  if(vit){const k=seg(t,6.0,6.7);vit.g.visible=t>5.9;vit.nm.visible=vit.mk.visible=false;/* стоїть за головою героя (з боку моря) і нахиляється над обличчям */
+   vit.g.position.set(HX,H_(HX,HEAD.z+1.1),HEAD.z+1.2+(1-k)*.7);vit.g.rotation.set(.45*k,Math.PI,0,'YXZ');}
   if(stage<1&&t>.4){stage=1;say('<i>…шшш… шшш… шум прибою…</i>')}
   if(stage<2&&t>2.0){stage=2;say('');voice(4,'idle')}
   if(stage<3&&t>3.5){stage=3;voice(0,'idle')}
@@ -69,7 +70,7 @@ function tick(){if(!on)return;const t=fz!=null?fz:(performance.now()-t0)/1000;
   if(stage<6&&t>6.2){stage=6;say('<b>Дід Вітрило:</b> Ого! Живий!');voice(4,'hurt')}
  }else if(t<12){/* ---- вид збоку: камера спускається, герой підводиться ---- */
   if(stage<7){stage=7;lids(1);R_.domElement.style.filter='';cam_.up.set(0,1,0);for(const p of pals)sc_.remove(p.r.root);pals=[];b1.style.height=b2.style.height='11%';say('');
-   if(vit){vit.g.rotation.set(0,0,0);N.place('vit',HX-1.6,HZ-1.4,2.3);vit.g.visible=true}}
+   if(vit){vit.g.rotation.set(0,0,0);N.place('vit',HX-1.6,HZ-1.4,2.3);vit.g.visible=true;vit.nm.visible=true;vit.mk.visible=!!vit.mark}}
   pl_.visible=true;const k=seg(t,8.1,10.6),up=seg(t,10.4,11.6);
   pl_.rotation.x=-Math.PI/2*(1-up);pl_.position.y=H_(HX,HZ)+.12*(1-up)+Math.sin(up*Math.PI)*.15;
   v.set(lerp(HX+9,HX+3.2,k),lerp(H_(HX,HZ)+10,H_(HX,HZ)+2.4,k),lerp(HZ+7,HZ+3.8,k));cam_.position.copy(v);look.set(HX,H_(HX,HZ)+.5+up*.6,HZ+.3);cam_.lookAt(look);
@@ -80,7 +81,7 @@ function finish(){if(done_)return;done_=true;on=false;
  lids(1);b1.style.height=b2.style.height='0';say('');setTimeout(()=>{O.remove();document.body.classList.remove('cine')},850);
  try{eval('ang=Math.PI')}catch(_){}
  INV._cin=1;try{save()}catch(_){}
- if(vit&&vitHome){vit.g.rotation.set(0,vit.g.rotation.y,0);if(!vit.g.visible||Math.hypot(vit.x-HX,vit.z-HZ)>6)N.place('vit',HX-1.6,HZ-1.4,2.3);vit.g.visible=true;
+ if(vit&&vitHome){vit.g.rotation.set(0,vit.g.rotation.y,0);vit.nm.visible=true;vit.mk.visible=!!vit.mark;if(!vit.g.visible||Math.hypot(vit.x-HX,vit.z-HZ)>6)N.place('vit',HX-1.6,HZ-1.4,2.3);vit.g.visible=true;
   N.walkTo('vit',vitHome[0],vitHome[1],()=>{vit.face0=vitHome[2]},1.2)}}
 const R_=G('R');
 /* старт: коли гравець створив героя й гра почалась */
