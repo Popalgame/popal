@@ -25,7 +25,9 @@ try{const TR=eval('trees');for(let i=TR.length-1;i>=0;i--){const t=TR[i];if(dSp(
 /* новий гравець (без збереження) починає в бухті, обличчям до суші */
 {let hs=1;try{hs=eval('hasSave')}catch(_){}if(!hs){P.x=SPAWN[0];P.z=SPAWN[1];P.face=SPAWN[2]}}
 /* рівень визначає здоровʼя, шкоду по герою й агресію */
-function setup(w){const L=lvAt(w.x,w.z),b=T[w.ty].hp;w.lv=L;w.mh=Math.round(b*(1+.12*(L-1)));w.hp=Math.round(w.mh*Math.max(0,Math.min(1,w.hp/b)));w.dm=Math.round(10*(1+.06*(L-1)));if(!w.ag&&L>plv+5)w.ag=1}
+function setup(w){const L=lvAt(w.x,w.z),b=T[w.ty].hp;w.lv=L;
+ if(window.PW){const s=PW.stats(w.ty,L);w.mh=s.hp;w.atk=s.atk;w.def=s.def;w.hp=Math.round(w.mh*Math.max(0,Math.min(1,w.hp/b)));w.dm=PW.wildHit(w,true)}/* 0.5.x: показники Palworld, combat.js */
+ else{w.mh=Math.round(b*(1+.12*(L-1)));w.hp=Math.round(w.mh*Math.max(0,Math.min(1,w.hp/b)));w.dm=Math.round(10*(1+.06*(L-1)))}if(!w.ag&&L>plv+5)w.ag=1}
 /* досвід під таблицю XPT (core-world.js): усі нагороди ×5 (XPM), за бій ще +10% за кожен рівень істоти;
    за значно слабших дають менше (до 20%), за сильніших — трохи більше. Модель: 20 рівень ~1 год, 50 — ~10 год, 100 — ~130 год активного бою */
 window.XPM=5;
@@ -35,7 +37,7 @@ window.wCatch=(w,ch)=>{const L=(w&&w.lv)||1,d=L-plv;let c=ch/(1+(L-1)/30);if(d>0
 /* мирні справи (збір, крафт): +2% за рівень героя — повільніше за бій, але не марно на високих рівнях */
 window.gXp=n=>Math.max(1,Math.round(n*XPM*(1+.02*(plv-1))));
 /* здоровʼя героя росте з рівнем */
-window.hpMax=()=>100+4*(plv-1);
+if(!window.PW)window.hpMax=()=>100+4*(plv-1);/* з combat.js — HP героя в масштабі Palworld */
 window.wPalLv=w=>Math.max(1,Math.min(PMAX,plv,(w&&w.lv)||1));
 window.zoneInfo=(x,z)=>{if(inBay(x,z))return{n:'Тиха бухта',a:1,b:3};const Z=ZN[zoneEff(x,z)];return{n:Z[1],a:Z[2],b:Z[3]}};
 /* старі збереження: рівні в межах нових максимумів, зайвий досвід обрізається */
@@ -71,7 +73,7 @@ let zT=0,zLast=-1;
   const w=it[1];if(!w._h){try{w._h=Math.min(2.4,(new THREE.Box3().setFromObject(w.m).max.y-w.m.position.y)/(w.m.scale.y||1))+.15}catch(_){w._h=1.8}}
   v3.set(w.x,w.m.position.y+w._h,w.z).project(cam);if(v3.z>1||Math.abs(v3.x)>1.1||Math.abs(v3.y)>1.1){b.d.style.display='none';b.w=null;continue}
   const x=(v3.x+1)/2*innerWidth,y=(1-v3.y)/2*innerHeight;b.d.style.display='flex';b.d.style.transform=`translate(${x|0}px,${y|0}px) translate(-50%,-100%)`;
-  const k=w.lv+':'+Math.max(0,Math.ceil(w.hp))+':'+w.mh;if(b.w!==w||b.k!==k){b.w=w;b.k=k;b.s.innerHTML=`<b>${w.lv}</b> ${T[w.ty].n}`;b.u.style.width=Math.max(0,Math.min(100,w.hp/w.mh*100))+'%';b.d.classList.toggle('hi',w.lv>plv+5)}}
+  const k=w.lv+':'+Math.max(0,Math.ceil(w.hp))+':'+w.mh+':'+(w.sl?1:0);if(b.w!==w||b.k!==k){b.w=w;b.k=k;b.s.innerHTML=`<b>${w.lv}</b> ${T[w.ty].n}${w.sl?' 💤':''}`;b.u.style.width=Math.max(0,Math.min(100,w.hp/w.mh*100))+'%';b.d.classList.toggle('hi',w.lv>plv+5)}}
  /* повідомлення про зону, коли гравець переходить в іншу */
  zT+=1;if(zT>30){zT=0;const z=inBay(P.x,P.z)?-2:zoneEff(P.x,P.z);if(z!==zLast){if(zLast!==-1&&!busy){if(z==-2)msg('🏖️ Тиха бухта · істоти рівня 1–3');else{const Z=ZN[z];msg('🗺️ '+Z[1]+' · істоти рівня '+Z[2]+'–'+Z[3])}}zLast=z}}
 }catch(e){}loop()})})();
