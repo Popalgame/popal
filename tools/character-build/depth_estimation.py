@@ -1,26 +1,16 @@
 #!/usr/bin/env python3
-"""Wariant B: względna mapa głębi z jednego widoku (Depth Anything V2, ONNX).
+"""Wariant B: względny inverse depth, NIE pomiar grubości postaci.
 
-Model nie zna ukrytych powierzchni — zwraca względny „inverse depth”
-(obraz nie niesie skali). Skrypt zapisuje mapę i **wskazówki** proporcji
-(mnożniki głębokości pierścieni torsu), nigdy pomiar milimetrowy.
-
-Uruchomienie:
-    python3 tools/character-build/depth_estimation.py \
-        --image output/character-scan/reference.png \
-        --measurements output/character-scan/aiko/measurements.json \
-        --out output/character-build/aiko/depth
-
-Wymaga: numpy, Pillow, onnxruntime, (opcjonalnie) cv2 do skalowania.
-Model pobierany jest raz do katalogu cache (--cache), ok. 25 MB.
+Domyślnie zapisuje mapę float32 i diagnostykę. --derive-hints włącza jawny,
+eksperymentalny model: relief poprzeczny zwiększa głębokość torsu o <=15%.
+To założenie modelarskie, nie przeliczenie inverse depth na metry.
 """
 
 from __future__ import annotations
 
 import argparse
-import importlib.util
+import hashlib
 import json
-import sys
 import urllib.request
 from pathlib import Path
 
@@ -34,27 +24,11 @@ MODEL_URL = (
 INPUT_SIZE = 518
 IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-
-# Pasma torsu: (nazwa, od y_ratio, do y_ratio) w układzie referencji.
 BANDS = {
-    "chest": (0.50, 0.58),
-    "waist": (0.58, 0.64),
-    "hip": (0.64, 0.70),
-    "thigh": (0.70, 0.80),
+    "chest": (0.43, 0.50),
+    "waist": (0.51, 0.55),
+    "hip": (0.57, 0.62),
 }
-
-# Względna bliskość (0..1) mapowana na mnożnik głębokości ringu.
-MULTIPLIER_RANGE = (0.85, 1.20)
-MIN_USABLE_STD = 0.02
-
-
-def fail(message: str) -> "NoReturn":  # type: ignore[name-defined]
-    print(f"Błąd: {message}", file=sys.stderr)
-    raise SystemExit(1)
-
-
-def have_module(name: str) -> bool:
-    return importlib.util.find_spec(name) is not None
 
 
 def ensure_model(cache: Path) -> Path:
@@ -62,216 +36,197 @@ def ensure_model(cache: Path) -> Path:
     path = cache / "depth-anything-v2-small-q.onnx"
     if path.is_file() and path.stat().st_size > 1_000_000:
         return path
-    print(f"Pobieram model: {MODEL_URL}", file=sys.stderr)
+    temporary = path.with_suffix(".download")
     request = urllib.request.Request(MODEL_URL, headers={"User-Agent": "polpal/1.0"})
     try:
-        with urllib.request.urlopen(request, timeout=120) as response, path.open("wb") as handle:
-            handle.write(response.read())
-    except Exception as error:  # noqa: BLE001 - raport sieci jawnie
-        path.unlink(missing_ok=True)
-        fail(f"nie udało się pobrać modelu: {error}")
+        with urllib.request.urlopen(request, timeout=120) as response:
+            with temporary.open("wb") as handle:
+                while chunk := response.read(1024 * 1024):
+                    handle.write(chunk)
+        if temporary.stat().st_size < 1_000_000:
+            raise ValueError("pobrany model jest zbyt mały")
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
     return path
 
 
-def character_mask(rgb: np.ndarray) -> np.ndarray:
-    """Maska postaci jak w character-scan: tło z narożników."""
-    corners = np.array(
-        [rgb[0, 0], rgb[0, -1], rgb[-1, 0], rgb[-1, -1]], dtype=np.int16
-    )
-    background = np.median(corners, axis=0)
-    distance = np.abs(rgb.astype(np.int16) - background).max(axis=2)
-    return distance > 12
+def load_source(path: Path) -> tuple[np.ndarray, np.ndarray]:
+    image = Image.open(path).convert("RGBA")
+    rgba = np.asarray(image)
+    if (rgba[..., 3] < 250).mean() >= 0.005:
+        mask = rgba[..., 3] > 127
+        # Nie karm modelu przypadkowymi kolorami w całkowicie przezroczystym tle.
+        background = Image.new("RGBA", image.size, (128, 128, 128, 255))
+        rgb = np.asarray(Image.alpha_composite(background, image).convert("RGB"))
+    else:
+        rgb = rgba[..., :3]
+        corners = np.array([rgb[0, 0], rgb[0, -1], rgb[-1, 0], rgb[-1, -1]],
+                           dtype=np.int16)
+        mask = np.abs(rgb.astype(np.int16) - np.median(corners, axis=0)).max(axis=2) > 12
+    if not mask.any():
+        raise ValueError("pusta maska postaci")
+    return rgb, mask
 
 
-def run_depth(image: np.ndarray, model_path: Path) -> np.ndarray:
-    import onnxruntime as ort
+def prepare_input(image: np.ndarray) -> np.ndarray:
+    """DPT: zachowaj proporcje, rozmiary wielokrotnością 14, bicubic.
 
-    session = ort.InferenceSession(
-        str(model_path), providers=["CPUExecutionProvider"]
-    )
-    input_name = session.get_inputs()[0].name
-    resized = Image.fromarray(image).resize(
-        (INPUT_SIZE, INPUT_SIZE), Image.Resampling.BILINEAR
-    )
+    Reguła skalowania z DPTImageProcessor: wybierz skalę najmniej odległą
+    od 1 spośród 518/H i 518/W (preprocessor_config modelu).
+    """
+    height, width = image.shape[:2]
+    scale = min((INPUT_SIZE / height, INPUT_SIZE / width), key=lambda s: abs(1 - s))
+    target = (max(14, round(width * scale / 14) * 14),
+              max(14, round(height * scale / 14) * 14))
+    resized = Image.fromarray(image).resize(target, Image.Resampling.BICUBIC)
     array = np.asarray(resized).astype(np.float32) / 255.0
     array = (array - IMAGENET_MEAN) / IMAGENET_STD
-    tensor = array.transpose(2, 0, 1)[None]
-    output = session.run(None, {input_name: tensor})[0]
-    field = output[0, 0]
-    field = field - field.min()
-    maximum = float(field.max())
-    if maximum > 0:
-        field = field / maximum
-    return np.asarray(
-        Image.fromarray((field * 255).astype(np.uint8)).resize(
-            (image.shape[1], image.shape[0]), Image.Resampling.BILINEAR
-        ),
-        dtype=np.float32,
-    ) / 255.0
+    return np.ascontiguousarray(array.transpose(2, 0, 1)[None])
 
 
-def band_medians(
-    depth: np.ndarray, mask: np.ndarray, y0: int, y1: int
-) -> dict[str, float]:
-    rows, columns = np.nonzero(mask)
+def output_field(output: np.ndarray) -> np.ndarray:
+    """Obsłuż [1,H,W] i [1,1,H,W], bez niejawnego rozciągania wiersza."""
+    array = np.asarray(output, dtype=np.float32)
+    if array.ndim == 3 and array.shape[0] == 1:
+        array = array[0]
+    elif array.ndim == 4 and array.shape[:2] == (1, 1):
+        array = array[0, 0]
+    else:
+        raise ValueError(f"nieobsługiwany kształt wyjścia ONNX: {array.shape}")
+    if min(array.shape) < 2 or not np.isfinite(array).all():
+        raise ValueError("mapa głębi ma niepoprawny rozmiar lub NaN/Inf")
+    return array
+
+
+def run_depth(image: np.ndarray, model_path: Path) -> tuple[np.ndarray, dict]:
+    import onnxruntime as ort
+
+    session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
+    tensor = prepare_input(image)
+    output = session.run(None, {session.get_inputs()[0].name: tensor})[0]
+    field = output_field(output)
+    # Tryb F zachowuje float32. Kwantyzacja do 8 bitów dopiero w podglądzie.
+    restored = np.asarray(Image.fromarray(field).resize(
+        (image.shape[1], image.shape[0]), Image.Resampling.BICUBIC), dtype=np.float32)
+    return restored, {"input_shape": list(tensor.shape), "output_shape": list(output.shape)}
+
+
+def band_statistics(depth: np.ndarray, mask: np.ndarray, measurements: dict | None = None) -> dict:
+    if depth.shape != mask.shape or not mask.any():
+        raise ValueError("mapa i maska muszą mieć ten sam rozmiar i niepustą sylwetkę")
+    rows, cols = np.nonzero(mask)
     top, bottom = int(rows.min()), int(rows.max())
-    axis = int(np.median(columns))
-    result = {}
     height = bottom - top + 1
-    for name, (start, end) in BANDS.items():
-        band_top = int(top + start * height)
-        band_bottom = int(top + end * height)
-        window = mask[band_top:band_bottom + 1]
-        columns_band = np.nonzero(window.any(axis=0))[0]
-        if columns_band.size == 0:
-            result[name] = float("nan")
-            continue
-        # Środek sylwetki w tym pasie: unikamy rekwizytów przy krawędziach.
-        center = int(np.median(columns_band))
-        near = [
-            index
-            for index in range(band_top, band_bottom + 1)
-            for column in np.flatnonzero(window[index - band_top])
-            if abs(column - center) <= (columns_band.max() - columns_band.min()) * 0.25
-        ]
-        if not near:
-            near = list(range(band_top, band_bottom + 1))
-        samples = depth[max(0, band_top):band_bottom + 1][
-            np.asarray(near)[: depth[max(0, band_top):band_bottom + 1].shape[0]]
-        ] if False else depth[max(0, band_top):band_bottom + 1][
-            np.nonzero(mask[max(0, band_top):band_bottom + 1, max(0, center - 40):center + 40].any(axis=1))
-        ]
-        if samples.size == 0:
-            result[name] = float("nan")
-        else:
-            result[name] = float(np.median(samples))
+    bands = dict(BANDS)
+    landmarks = {item["name"]: item for item in (measurements or {}).get("landmarks", [])}
+    for name in ("waist", "hip"):
+        if name in landmarks:
+            center = float(landmarks[name]["y_ratio"])
+            bands[name] = (max(0, center - 0.02), min(1, center + 0.02))
+    if measurements and "character" in measurements:
+        reference = measurements["character"]
+        # Profil może pochodzić z innej rozdzielczości; użyj osi względnej.
+        x0, _, x1, _ = reference["bbox_px"]
+        fraction = (reference["axis_x"] - x0) / max(1, x1 - x0)
+        axis = cols.min() + fraction * (cols.max() - cols.min())
+    else:
+        axis = float(np.median(cols))
+    xlo = max(0, int(axis - height * 0.08))
+    xhi = min(mask.shape[1], int(axis + height * 0.08) + 1)
+    result = {}
+    for name, (start, end) in bands.items():
+        lo = top + round(start * (height - 1))
+        hi = top + round(end * (height - 1)) + 1
+        region = depth[lo:hi, xlo:xhi]
+        valid = mask[lo:hi, xlo:xhi] & np.isfinite(region)
+        values = region[valid]
+        relief = []
+        for line, selected in zip(region, valid):
+            if selected.sum() >= 5:
+                relief.append(float(np.percentile(line[selected], 90)
+                                    - np.percentile(line[selected], 10)))
+        result[name] = {
+            "median": float(np.median(values)) if values.size else None,
+            "lateral_relief": float(np.median(relief)) if relief else None,
+            "samples": int(values.size),
+            "y_ratio_range": [start, end],
+        }
     return result
 
 
-def hints_from_medians(medians: dict[str, float]) -> dict[str, float] | None:
-    values = [value for value in medians.values() if np.isfinite(value)]
-    if len(values) < 3:
-        return None
-    low, high = min(values), max(values)
-    if high - low < 1e-6:
-        return {name: 1.0 for name in BANDS}
-    normalized = {
-        name: (value - low) / (high - low) if np.isfinite(value) else 0.5
-        for name, value in medians.items()
-    }
-    low_m, high_m = MULTIPLIER_RANGE
+def assess_depth(depth: np.ndarray, mask: np.ndarray, measurements: dict | None = None,
+                 derive_hints: bool = False) -> dict:
+    stats = band_statistics(depth, mask, measurements)
+    values = depth[mask]
+    if not np.isfinite(values).all():
+        raise ValueError("NaN/Inf w mapie głębi")
+    dynamic_range = float(np.percentile(values, 95) - np.percentile(values, 5))
+    rows = np.nonzero(mask)[0].astype(float)
+    correlation = float(np.corrcoef(rows, values)[0, 1]) if values.std() > 1e-9 else 0.0
+    # Korelacja jest diagnostyką, nie dowodem błędnej anatomii. Wymagamy
+    # reliefu w obrębie rzędów, którego pionowy gradient nie dostarczy.
+    reliefs = [entry["lateral_relief"] for entry in stats.values()
+               if entry["lateral_relief"] is not None]
+    technical_usable = bool(dynamic_range > 1e-6 and len(reliefs) == len(BANDS)
+                            and max(reliefs) > dynamic_range * 0.02)
+    hints = None
+    if technical_usable and derive_hints:
+        hints = {name: round(1.0 + 0.15 * min(1.0, entry["lateral_relief"] / dynamic_range), 4)
+                 for name, entry in stats.items()}
     return {
-        name: round(low_m + (high_m - low_m) * normalized[name], 4)
-        for name in BANDS
+        "technical_usable": technical_usable,
+        "usable": hints is not None,
+        "band_statistics": stats,
+        "row_gradient_correlation": correlation,
+        "foreground_dynamic_range": dynamic_range,
+        "depth_hints": hints,
+        "hint_policy": "lateral-relief-v1" if hints is not None else None,
+        "verdict": ("eksperymentalne mnożniki (założenie modelarskie)" if hints else
+                    "mapa diagnostyczna; brak zgody na heurystykę lub brak reliefu"),
     }
 
 
 def save_colormap(depth: np.ndarray, mask: np.ndarray, path: Path) -> None:
-    mapped = np.clip(depth * 255.0, 0, 255).astype(np.uint8)
+    low, high = np.percentile(depth[mask], [2, 98])
+    normalized = np.clip((depth - low) / max(float(high - low), 1e-9), 0, 1)
+    mapped = (normalized * 255).astype(np.uint8)
     rgb = np.stack([mapped, mapped // 2, 255 - mapped], axis=2)
-    rgb[~mask] = (rgb[~mask] * 0.15).astype(np.uint8)
+    rgb[~mask] = 24
     Image.fromarray(rgb).save(path)
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Względna głębia z jednego widoku")
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", type=Path, required=True)
-    parser.add_argument("--measurements", type=Path, default=None)
+    parser.add_argument("--measurements", type=Path)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--cache", type=Path,
-                        default=Path("output/character-build/models"))
+    parser.add_argument("--cache", type=Path, default=Path("output/character-build/models"))
+    parser.add_argument("--derive-hints", action="store_true",
+                        help="eksperymentalna heurystyka reliefu; NIE pomiar grubości")
     args = parser.parse_args(argv)
-
-    if not have_module("onnxruntime"):
-        fail("brak onnxruntime — zainstaluj go osobno (poza Blenderem)")
-
-    image = np.asarray(Image.open(args.image).convert("RGB"))
-    mask = character_mask(image)
-    if not mask.any():
-        fail("maska postaci jest pusta")
-
-    model_path = ensure_model(args.cache)
-    depth = run_depth(image, model_path)
-
-    out_dir = args.out.expanduser()
-    out_dir.mkdir(parents=True, exist_ok=True)
-    save_colormap(depth, mask, out_dir / "depth-map.png")
-
-    inside = depth[mask]
-    usable = bool(inside.size > 100 and float(inside.std()) >= MIN_USABLE_STD)
-    medians: dict[str, float] = {}
-    hints = None
-    gradient_artifact = 0.0
-    residual_ratio = 1.0
-    if usable:
-        # Na płaskiej ilustracji model potrafi zwrócić sam pionowy gradient
-        # kadru („bliżej” = niżej w obrazie). Odrzuć mapy, które po odjęciu
-        # liniowego trendu od rzędu prawie nie mają treści.
-        rows, _ = np.nonzero(mask)
-        row_norm = rows / max(1, image.shape[0] - 1)
-        depth_values = depth[mask].astype(np.float64)
-        row_centered = row_norm - row_norm.mean()
-        depth_centered = depth_values - depth_values.mean()
-        denominator = float(
-            np.sqrt((row_centered**2).sum() * (depth_centered**2).sum())
-        )
-        gradient_artifact = (
-            float((row_centered * depth_centered).sum() / denominator)
-            if denominator
-            else 0.0
-        )
-        if denominator:
-            slope = float((row_centered * depth_centered).sum() / (row_centered**2).sum())
-            residuals = depth_centered - slope * row_centered
-            residual_ratio = float(
-                residuals.std() / max(1e-9, depth_values.std())
-            )
-        if abs(gradient_artifact) > 0.85 or residual_ratio < 0.35:
-            usable = False
-    if usable:
-        medians = band_medians(depth, mask, 0, image.shape[0])
-        hints = hints_from_medians(medians)
-        # Plauzybilność: u stojącej postaci fotografowanej z przodu pasy
-        # ciała są w przybliżeniu równie blisko kamery. Gdy „uda” wychodzą
-        # wyraźnie bliżej niż klatka, mapa śledzi pozycję w kadrze, nie formę.
-        if (
-            np.isfinite(medians.get("thigh", float("nan")))
-            and np.isfinite(medians.get("chest", float("nan")))
-            and medians["thigh"] > medians["chest"] + 0.15
-        ):
-            usable = False
-            hints = None
-            medians = {key: value for key, value in medians.items()}
-
+    image, mask = load_source(args.image.expanduser())
+    measurements = (json.loads(args.measurements.expanduser().read_text(encoding="utf-8"))
+                    if args.measurements else None)
+    model_path = ensure_model(args.cache.expanduser())
+    depth, shapes = run_depth(image, model_path)
     report = {
-        "tool": "character-build depth_estimation",
-        "variant": "B (monokularna względna głębia; brak skali, brak tyłu)",
-        "model": "Depth Anything V2 Small (ONNX, CPU)",
+        "tool": "character-build depth_estimation", "version": 2,
+        "model_url": MODEL_URL,
+        "model_sha256": hashlib.sha256(model_path.read_bytes()).hexdigest(),
         "image": str(args.image),
-        "usable": usable,
-        "std_inside_mask": round(float(inside.std()), 4) if inside.size else 0.0,
-        "row_gradient_correlation": round(gradient_artifact, 4),
-        "row_residual_ratio": round(residual_ratio, 4),
-        "verdict": (
-            "odrzucono: mapa śledzi pionową pozycję w kadrze, nie anatomię "
-            "(thigh znacznie bliżej niż chest)"
-            if not usable and medians
-            else ("użyteczne wskazówki" if usable else "mapa bez treści albo artefakt gradientu")
-        ),
-        "band_medians": {key: round(value, 4) for key, value in medians.items()},
-        "depth_hints": hints,
-        "multiplier_range": list(MULTIPLIER_RANGE),
-        "warning": (
-            "Wskazówki są interpretacją cieniowania, nie pomiarem. "
-            "Na ilustracji stylizowanej model może zwrócić mapę bez sensu; "
-            "gdy usable=false, nie używaj hints. Odrzucamy mapy, których "
-            "głębia jest w >85% pionowym gradientem kadru."
-        ),
+        "source_sha256": hashlib.sha256(args.image.expanduser().read_bytes()).hexdigest(),
+        **shapes,
+        **assess_depth(depth, mask, measurements, args.derive_hints),
+        "warning": "Inverse depth nie określa grubości ani ukrytego tyłu. Mnożniki są założeniem.",
     }
-    (out_dir / "depth-hints.json").write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-    print(json.dumps(report, indent=2, ensure_ascii=False))
+    out = args.out.expanduser()
+    out.mkdir(parents=True, exist_ok=True)
+    np.save(out / "depth.npy", depth, allow_pickle=False)
+    save_colormap(depth, mask, out / "depth-map.png")
+    document = json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False)
+    (out / "depth-hints.json").write_text(document + "\n", encoding="utf-8")
+    print(document)
     return 0
 
 

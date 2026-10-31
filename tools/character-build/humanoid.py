@@ -103,6 +103,7 @@ def build_plan(
     data: dict,
     height: float | None = None,
     depth_profile: dict | None = None,
+    depth_hints: dict | None = None,
 ) -> Plan:
     """Zbuduj plan w metrach. Domyślna wysokość pochodzi z measurements.json.
 
@@ -110,8 +111,18 @@ def build_plan(
     torsu i głowy. Nadal to nie jest pomiar z referencji frontu.
     """
     height = float(height if height is not None else data["scale"]["height_mm"] / 1000.0)
-    if height <= 0:
+    if not math.isfinite(height) or height <= 0:
         raise ValueError("wysokość musi być dodatnia")
+    if depth_profile is not None and depth_hints is not None:
+        raise ValueError("wybierz profil boczny ALBO heurystykę głębi, nie oba naraz")
+
+    def positive(value, label: str) -> float:
+        if isinstance(value, bool):
+            raise ValueError(f"{label}: oczekiwana liczba dodatnia")
+        value = float(value)
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError(f"{label}: oczekiwana liczba dodatnia i skończona")
+        return value
 
     landmarks = _landmarks(data, height)
     fallback = Landmark("fallback", 0.0, height * 0.3, height)
@@ -200,11 +211,15 @@ def build_plan(
     hip_depth = max(0.18, hip_width * 0.58)
     waist_depth = max(0.14, waist_width * 0.55)
     if depth_profile:
+        if depth_profile.get("height_mm") is not None:
+            profile_height = positive(depth_profile["height_mm"], "height_mm") / 1000
+            if not math.isclose(profile_height, height, rel_tol=1e-4):
+                raise ValueError("profil boczny ma inną skalę wysokości niż plan")
         landmarks_depth = depth_profile.get("landmarks", {})
 
         def measured(name: str) -> float | None:
             value = (landmarks_depth.get(name) or {}).get("depth_m")
-            return float(value) if value else None
+            return positive(value, name) if value is not None else None
 
         head_measured = measured("eye_line") or measured("head_max")
         if head_measured:
@@ -249,6 +264,22 @@ def build_plan(
         },
     ]
     torso_rings.sort(key=lambda ring: ring["z"])
+    if depth_hints is not None:
+        # Starszy v1 zawierał błędnie odczytaną mapę ONNX. Nigdy nie stosuj
+        # go do geometrii, nawet jeśli zapisał usable=true.
+        if (depth_hints.get("version") != 2
+                or depth_hints.get("usable") is not True
+                or depth_hints.get("hint_policy") != "lateral-relief-v1"):
+            raise ValueError("odrzucone/stare wskazówki głębi; wygeneruj v2 z --derive-hints")
+        factors = depth_hints.get("depth_hints")
+        if not isinstance(factors, dict) or set(factors) != {"chest", "waist", "hip"}:
+            raise ValueError("wskazówki muszą zawierać chest, waist, hip")
+        factors = {name: positive(value, name) for name, value in factors.items()}
+        if any(not 1.0 <= factor <= 1.15 for factor in factors.values()):
+            raise ValueError("mnożniki reliefu muszą mieścić się w zakresie 1..1.15")
+        for ring in torso_rings:
+            name = {"shoulder": "chest", "crotch": "hip"}.get(ring["name"], ring["name"])
+            ring["depth"] *= factors[name]
 
     return Plan(
         height=height,

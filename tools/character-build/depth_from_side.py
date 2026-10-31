@@ -19,8 +19,10 @@ Uruchomienie:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -56,7 +58,7 @@ def row_run_near_center(
     runs.append((start, previous))
     best = min(
         runs,
-        key=lambda run: min(abs(run[0] - center), abs(run[1] - center)),
+        key=lambda run: max(run[0] - center, 0, center - run[1]),
     )
     return best
 
@@ -67,32 +69,47 @@ def measure_depths(
     rows: dict[str, float],
     height_m: float,
 ) -> dict:
-    rgb, mask, mode = module.load_image(image_path)
+    if not math.isfinite(height_m) or height_m <= 0:
+        raise ValueError("wysokość musi być dodatnia i skończona (metry)")
+    _, mask, mode = module.load_image(image_path)
+    if mask[0].any() or mask[-1].any():
+        raise ValueError("widok boczny przycięty w pionie — brak pełnej wysokości")
     top = int(np.flatnonzero(mask.any(axis=1))[0])
     bottom = int(np.flatnonzero(mask.any(axis=1))[-1])
     height_px = bottom - top + 1
     mm_per_px = height_m * 1000.0 / height_px
 
-    body_center: float | None = None
+    # Oś oszacuj z torsu, nie z pierwszego rzędu włosów. Kolejność punktów
+    # wejściowych nie może zmieniać wyboru komponentu sylwetki.
+    centers = []
+    for row in range(top + round(0.45 * (height_px - 1)),
+                     top + round(0.65 * (height_px - 1)) + 1):
+        runs = module.row_runs(mask[row])
+        if runs:
+            start, end = max(runs, key=lambda run: run[1] - run[0])
+            centers.append((start + end) / 2)
+    body_center = float(np.median(centers)) if centers else mask.shape[1] / 2
     landmarks: dict[str, dict] = {}
     for name, ratio in rows.items():
+        if not math.isfinite(ratio) or not 0 <= ratio <= 1:
+            raise ValueError(f"{name}: y_ratio musi być w zakresie 0..1")
         row = int(round(top + ratio * (height_px - 1)))
         row = max(top, min(bottom, row))
-        if body_center is None:
-            columns = np.flatnonzero(mask[row])
-            if columns.size:
-                body_center = float((columns[0] + columns[-1]) / 2.0)
-        run = row_run_near_center(mask[row], body_center or image.shape[1] / 2.0)
+        run = row_run_near_center(mask[row], body_center,
+                                  max_gap=max(1, round(height_px * 0.004)))
         if run is None:
             landmarks[name] = {"y_ratio": ratio, "depth_m": None}
             continue
+        clipped = run[0] == 0 or run[1] == mask.shape[1] - 1
         landmarks[name] = {
             "y_ratio": ratio,
             "y": row,
             "left": int(run[0]),
             "right": int(run[1]),
             "depth_px": int(run[1] - run[0] + 1),
-            "depth_m": round((run[1] - run[0] + 1) * mm_per_px / 1000.0, 4),
+            "depth_m": (None if clipped else
+                        round((run[1] - run[0] + 1) * mm_per_px / 1000.0, 4)),
+            "clipped": clipped,
         }
     return {
         "landmarks": landmarks,
@@ -117,18 +134,18 @@ def main(argv: list[str] | None = None) -> int:
 
     scan = _load_scan()
     data = json.loads(args.measurements.read_text(encoding="utf-8"))
-    height_m = float(
+    height_mm = float(
         args.height_mm if args.height_mm is not None
-        else data["scale"]["height_mm"] / 1000.0
+        else data["scale"]["height_mm"]
     )
-    if height_m <= 0:
+    if not math.isfinite(height_mm) or height_mm <= 0:
         scan.fail("wysokość musi być dodatnia")
+    height_m = height_mm / 1000.0
 
     face = data.get("face") or {}
     eye_ratio = face.get("eye_line_y_ratio")
-    rows = {"head_max": 0.203, "waist": 0.5313, "hip": 0.5832, "crotch": 0.6751}
-    for item in data["landmarks"]:
-        rows[item["name"]] = item["y_ratio"]
+    rows = {item["name"]: item["y_ratio"] for item in data["landmarks"]
+            if item["name"] in {"head_max", "waist", "hip", "crotch"}}
     if eye_ratio is not None:
         rows["eye_line"] = eye_ratio
 
@@ -137,6 +154,7 @@ def main(argv: list[str] | None = None) -> int:
         "tool": "character-build depth_from_side",
         "variant": "C tor pomiarowy (widok boczny)",
         "image": str(args.image),
+        "source_sha256": hashlib.sha256(args.image.read_bytes()).hexdigest(),
         "source_label": args.source_label,
         "provenance": (
             "Widok z generatora to interpretacja referencji, nie pomiar."
@@ -149,7 +167,7 @@ def main(argv: list[str] | None = None) -> int:
     args.out.expanduser().mkdir(parents=True, exist_ok=True)
     output = args.out.expanduser() / "depth-profile.json"
     output.write_text(
-        json.dumps(profile, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(profile, indent=2, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8"
     )
     print(json.dumps(profile["landmarks"], indent=2, ensure_ascii=False))
     return 0

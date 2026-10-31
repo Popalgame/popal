@@ -49,6 +49,10 @@ modelu.
 
 ## Eksport
 
+**Integracja z grą wyłącznie po osobnej decyzji użytkownika.** Generowanie,
+walidacja i zapisywanie kandydatów nie upoważnia do podmiany modeli w `site/`,
+zmiany importera ani wdrożenia. Polecenie „kontynuuj” nie zmienia tej zasady.
+
 Procedura dla obecnego pipeline'u, sprawdzona w tej sesji:
 
 1. Zapisz edytowalny `.blend` i zapakuj wymagane tekstury.

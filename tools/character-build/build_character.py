@@ -18,6 +18,7 @@ nie produkcją animation-ready.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import sys
@@ -887,7 +888,10 @@ def main() -> int:
         depth_profile = json.loads(
             args.depth_profile.expanduser().read_text(encoding="utf-8")
         )
-    plan = humanoid.build_plan(data, args.height, depth_profile)
+    depth_hints = None
+    if args.depth_hints is not None:
+        depth_hints = json.loads(args.depth_hints.expanduser().read_text(encoding="utf-8"))
+    plan = humanoid.build_plan(data, args.height, depth_profile, depth_hints)
     out_dir = args.out.expanduser().resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -989,32 +993,43 @@ def main() -> int:
     body.select_set(True)
     armature.select_set(True)
     bpy.context.view_layer.objects.active = armature
-    for track in armature.animation_data.nla_tracks:
-        track.mute = False
-    armature.data.pose_position = "REST"
     glb_path = out_dir / f"{args.name.lower()}-generated.glb"
-    bpy.ops.export_scene.gltf(
-        filepath=str(glb_path),
-        export_format="GLB",
-        use_selection=True,
-        use_active_scene=True,
-        export_apply=False,
-        export_animations=True,
-        export_animation_mode="NLA_TRACKS",
-        export_nla_strips=True,
-        export_force_sampling=True,
-        export_frame_step=1,
-        export_skins=True,
-        export_influence_nb=4,
-        export_all_influences=False,
-        export_rest_position_armature=True,
-        export_yup=True,
-        export_cameras=False,
-        export_lights=False,
-        export_materials="EXPORT",
-        export_normals=True,
-        export_texcoords=False,
-    )
+    saved_tracks = [(track, track.mute) for track in armature.animation_data.nla_tracks]
+    saved_pose, saved_frame = armature.data.pose_position, scene.frame_current
+    try:
+        for track, _ in saved_tracks:
+            track.mute = False
+        # Rest Position wyłącza ocenę animacji — wtedy glTF zapisuje siedem
+        # nazw klipów, lecz wszystkie kanały pozostają stałe.
+        armature.data.pose_position = "POSE"
+        bpy.ops.export_scene.gltf(
+            filepath=str(glb_path),
+            export_format="GLB",
+            use_selection=True,
+            use_active_scene=True,
+            export_apply=False,
+            export_animations=True,
+            export_animation_mode="NLA_TRACKS",
+            export_nla_strips=True,
+            export_force_sampling=True,
+            export_frame_step=1,
+            export_skins=True,
+            export_influence_nb=4,
+            export_all_influences=False,
+            export_rest_position_armature=True,
+            export_yup=True,
+            export_cameras=False,
+            export_lights=False,
+            export_materials="EXPORT",
+            export_normals=True,
+            export_texcoords=False,
+        )
+    finally:
+        for track, mute in saved_tracks:
+            track.mute = mute
+        armature.data.pose_position = saved_pose
+        scene.frame_set(saved_frame)
+        bpy.context.view_layer.update()
 
     bounds = [body.matrix_world @ Vector(corner) for corner in body.bound_box]
     zs = [point.z for point in bounds]
@@ -1023,9 +1038,17 @@ def main() -> int:
         "version": VERSION,
         "name": args.name,
         "source_measurements": str(args.measurements),
+        "depth_hints": ({
+            "file": str(args.depth_hints),
+            "sha256": hashlib.sha256(args.depth_hints.expanduser().read_bytes()).hexdigest(),
+            "hint_policy": depth_hints["hint_policy"],
+            "multipliers": depth_hints["depth_hints"],
+            "warning": "Eksperymentalne założenie modelarskie, nie pomiar grubości.",
+        } if depth_hints is not None else None),
         "depth_profile": (
             {
                 "file": str(args.depth_profile),
+                "sha256": hashlib.sha256(args.depth_profile.expanduser().read_bytes()).hexdigest(),
                 "source_label": depth_profile.get("source_label"),
                 "provenance": depth_profile.get("provenance"),
             }
@@ -1052,6 +1075,7 @@ def main() -> int:
         "blend": str(blend_path),
         "glb": str(glb_path),
         "glb_bytes": glb_path.stat().st_size if glb_path.exists() else 0,
+        "glb_sha256": hashlib.sha256(glb_path.read_bytes()).hexdigest(),
         "warnings": warnings,
     }
     (out_dir / "build.json").write_text(

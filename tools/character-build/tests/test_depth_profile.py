@@ -1,6 +1,8 @@
 """Testy profilu głębokości z widoku bocznego i planu z profilem."""
 
 import importlib.util
+import contextlib
+import io
 import json
 from pathlib import Path
 import sys
@@ -44,6 +46,59 @@ def side_silhouette() -> Image.Image:
 
 
 class DepthFromSideTests(unittest.TestCase):
+    def test_run_containing_center_beats_nearest_edge(self):
+        row = np.zeros(100, dtype=bool)
+        row[10:70] = True
+        row[80:90] = True
+        self.assertEqual(depth_from_side.row_run_near_center(row, 65, max_gap=1), (10, 69))
+
+    def test_missing_first_row_does_not_use_undefined_image_variable(self):
+        module = depth_from_side._load_scan()
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "side.png"
+            image = side_silhouette()
+            ImageDraw.Draw(image).rectangle((0, 190, 299, 210), fill=(0, 0, 0, 0))
+            image.save(path)
+            result = depth_from_side.measure_depths(module, path, {"empty": .3077}, 1.8)
+        self.assertIsNone(result["landmarks"]["empty"]["depth_m"])
+
+    def test_clipped_cross_section_does_not_become_measured_depth(self):
+        module = depth_from_side._load_scan()
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "side.png"
+            image = side_silhouette()
+            ImageDraw.Draw(image).rectangle((0, 190, 190, 210), fill=(238, 196, 172, 255))
+            image.save(path)
+            result = depth_from_side.measure_depths(module, path, {"waist": .3077}, 1.8)
+        self.assertTrue(result["landmarks"]["waist"]["clipped"])
+        self.assertIsNone(result["landmarks"]["waist"]["depth_m"])
+
+    def test_cli_height_override_stays_in_millimeters(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            image, measurements = root / "side.png", root / "measurements.json"
+            side_silhouette().save(image)
+            measurements.write_text(json.dumps({"scale": {"height_mm": 1800},
+                "landmarks": [{"name": "waist", "y_ratio": 0.3077}]}))
+            with contextlib.redirect_stdout(io.StringIO()):
+                depth_from_side.main(["--image", str(image), "--measurements", str(measurements),
+                                     "--out", str(root), "--height-mm", "1800"])
+            report = json.loads((root / "depth-profile.json").read_text())
+        self.assertEqual(report["height_mm"], 1800)
+        self.assertLess(report["landmarks"]["waist"]["depth_m"], 1)
+
+    def test_rejects_vertical_clipping_and_bad_height(self):
+        module = depth_from_side._load_scan()
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "side.png"
+            image = side_silhouette()
+            ImageDraw.Draw(image).line([(150, 0), (150, 60)], fill=(255, 0, 0, 255))
+            image.save(path)
+            with self.assertRaises(ValueError):
+                depth_from_side.measure_depths(module, path, {"waist": .5}, 1.8)
+            with self.assertRaises(ValueError):
+                depth_from_side.measure_depths(module, path, {"waist": .5}, float("nan"))
+
     def test_measures_known_depths(self):
         module = depth_from_side._load_scan()
         with tempfile.TemporaryDirectory() as temporary:
@@ -94,6 +149,7 @@ class PlanWithDepthProfileTests(unittest.TestCase):
                 {"name": "ground", "y_ratio": 1.0, "width_mm": 252.79},
             ],
             "face": {
+                "face_width_px": 298,
                 "face_width_mm": 302.54,
                 "eye_line_y_ratio": 0.3172,
                 "chin_y_ratio": 0.3883,
@@ -162,6 +218,34 @@ class PlanWithDepthProfileTests(unittest.TestCase):
             self.measurements(), depth_profile={"landmarks": {}}
         )
         self.assertEqual(baseline.as_dict(), profiled.as_dict())
+
+    def test_invalid_profile_and_scale_mismatch_fail(self):
+        for value in (float("nan"), float("inf"), -1, 0, True):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                humanoid.build_plan(self.measurements(), depth_profile={
+                    "landmarks": {"hip": {"depth_m": value}}})
+        with self.assertRaises(ValueError):
+            humanoid.build_plan(self.measurements(), depth_profile={"height_mm": 1800000})
+
+    def test_hints_really_modify_depth_without_modifying_front_dimensions(self):
+        hints = {"version": 2, "usable": True, "hint_policy": "lateral-relief-v1",
+                 "depth_hints": {"chest": 1.1, "waist": 1.05, "hip": 1.15}}
+        baseline = humanoid.build_plan(self.measurements())
+        modified = humanoid.build_plan(self.measurements(), depth_hints=hints)
+        before, after = self.rings(baseline), self.rings(modified)
+        for name in ("chest", "waist", "hip"):
+            self.assertAlmostEqual(after[name]["depth"], before[name]["depth"] * hints["depth_hints"][name])
+            self.assertEqual(after[name]["width"], before[name]["width"])
+            self.assertEqual(after[name]["z"], before[name]["z"])
+
+    def test_legacy_rejected_or_unbounded_hints_never_apply(self):
+        for hints in ({"version": 1, "usable": True}, {"version": 2, "usable": False},
+                      {"version": 2, "usable": True, "hint_policy": "lateral-relief-v1",
+                       "depth_hints": {"chest": 2, "waist": 1, "hip": 1}}):
+            with self.subTest(hints=hints), self.assertRaises(ValueError):
+                humanoid.build_plan(self.measurements(), depth_hints=hints)
+        with self.assertRaises(ValueError):
+            humanoid.build_plan(self.measurements(), depth_profile={}, depth_hints={})
 
 
 if __name__ == "__main__":

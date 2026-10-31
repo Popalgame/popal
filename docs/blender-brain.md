@@ -162,7 +162,7 @@ kontekst jest niejednoznaczny. Automatyzacja nie zwalnia z walidacji.
 | P0 | Indeks API 5.2 + wyszukiwanie + testy | gotowe (39 116 rekordów, 5.2.2) |
 | P1 | Manual 5.2 w tym samym indeksie; receptury i walidatory sceny | gotowe (14 stron manuala, 3 receptury zweryfikowane, `scene_check.py`) |
 | P2 | Generator parametryczny humanoida z `measurements.json` | gotowe (`tools/character-build`, commit d608030) |
-| P3 | Automatyczne uzupełnienie tyłu/boków + render 4 widoków + compare | gotowe w wariancie A: budowa parametryczna z jawnymi założeniami głębokości, 4 widoki, pętla `compare` (IoU 76,8% dla Aiko). Warianty B (depth) i C (generatywne) niezrealizowane |
+| P3 | Automatyczne uzupełnienie tyłu/boków + render 4 widoków + compare | wariant A działa; B sprawdzony eksperymentalnie (mapa + jawna heurystyka reliefu); C ma tor pomiarowy, lecz generacja zablokowana brakiem kredytów |
 | P4 | Materiały, rig, wagi, animacje, eksport i reimport | blockout gotowy: 19 materiałów, rig 22 kości, 7 akcji, GLB + weryfikacja reimportu. Docelowa jakość assetu gry wymaga dalszej pracy |
 
 P1 jest tanie i natychmiast poprawia trafność. P2 daje pierwszy realny model
@@ -177,14 +177,27 @@ sceny bez jej zmiany). Zapis do cudzej sesji pozostaje świadomą decyzją:
 każdy batch tworzy checkpoint, ale nie jest transakcyjny.
 
 Warianty głębokości:
-- **B (depth monokularny)** — gotowy narzędziowo (`tools/character-build/depth_estimation.py`,
-  Depth Anything V2 Small ONNX na CPU), z kontrolami jakości mapy (gradient
-  kadru, plauzybilność anatomiczna). Dla referencji Aiko wskazówki zostały
-  odrzucone: mapa śledziła pozycję w kadrze, nie formę. Przyda się na
-  fotografiach i renderach, nie na płaskiej ilustracji.
+- **B (depth monokularny)** — `tools/character-build/depth_estimation.py`,
+  Depth Anything V2 Small ONNX na CPU. Korekta: wcześniejsza mapa pasków
+  pochodziła z błędu odczytu tensora, nie z ograniczenia modelu na Aiko.
+  Wersja 2 zachowuje mapę float32 i właściwy aspekt obrazu. Inverse depth
+  nie określa grubości. Domyślnie nie zmienia geometrii; `--derive-hints`
+  jawnie uruchamia eksperymentalną heurystykę reliefu, stosowaną przez
+  `build_character.py --depth-hints`. Dla Aiko zmiany torsu wynoszą 1,94–3,67%.
 - **C (widok generatywny)** — tor pomiarowy gotowy (`depth_from_side.py` +
   `--depth-profile` w build), przetestowany syntetycznie. Generacja widoków
-  wymaga kredytów OpenRouter (stan: brak); bez nich wracamy do wariantu A.
+  użytym backendem zakończyła się odmową (brak kredytów); nie ma wygenerowanych
+  widoków do weryfikacji. Nie zastępuj wyniku C lustrem frontu.
+
+Korekta walidacji P4: wcześniejszy GLB miał stałe kanały animacji wskutek
+eksportu w Rest. Eksporter pracuje teraz w Pose. Walidator v2 sprawdza
+binarną zmienność kanałów oraz izoluje klipy NLA do próbkowania i renderu;
+same nazwy siedmiu animacji nie są dowodem ruchu. Zapisuje SHA-256 eksportu.
+Kandydat `output/character-build/aiko-depth-v2-animated` ma potwierdzony ruch
+w każdym klipie, ale pozostaje blockoutem, nie zatwierdzonym assetem gry.
+
+**Integracja z grą zawsze wymaga osobnej decyzji użytkownika.** Praca nad
+kandydatami ani polecenie „kontynuuj” nie upoważniają do podmiany modeli runtime.
 
 ## 6. Ryzyka
 
