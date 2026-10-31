@@ -129,7 +129,7 @@ N.add({id:'brm',name:'Брам',role:'кам’яний страж',x:-2.6,z:I.G
     const k=L.act=='lift'?Math.min(1,t/L.d):1;B.mode='lift';B.load=k;v.set(n.x+fwd.x*.7,H_(n.x,n.z)+2.4*k+(g0.y-H_(n.x,n.z))*(1-k),n.z+fwd.z*.7);
     if(L.act=='lift')gate.position.lerpVectors(g0,v,k);else gate.position.copy(v);gate.scale.setScalar(1-.25*k);if(L.act=='lift'&&t>=L.d){i++;t=0}}
    if(L.act=='throw'){if(!L.p0)L.p0=gate.position.clone();const k=Math.min(1,t/L.d),p0=L.p0,py=H_(pile[0],pile[1])-.25;B.load=1-k;
-    gate.position.set(p0.x+(pile[0]-p0.x)*k,p0.y+(py-p0.y)*k*k+Math.sin(k*Math.PI)*.8,p0.z+(pile[1]-p0.z)*k);gate.rotation.y+=dt*3;gate.scale.set(.75-.05*k,.75-.59*k,.75-.2*k);/* осідає в низьку купу */
+    gate.position.set(p0.x+(pile[0]-p0.x)*k,p0.y+Math.sin(k*Math.PI)*7+k*6,p0.z+(pile[1]-p0.z)*k);gate.rotation.y+=dt*3;gate.rotation.z+=dt*1.5;gate.scale.setScalar(.75*(1-k*.85));/* летить високо за скелю й зникає */
     if(k>=1){B.mode='walk';B.load=0;i++;t=0;open0();try{msg('🗿 Брам: «Прохід вільний. Іди… і назви себе порталу»')}catch(_){}}}
    if(L.act=='end'){B.mode='idle';n.busy=0;n.face0=.25;i++;return true}
    return false};

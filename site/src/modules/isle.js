@@ -49,8 +49,8 @@ const gate=new THREE.Group();gate.position.set(0,H_(0,I.G0+1),I.G0+1);sc_.add(ga
  for(let i=0;i<33;i++){const vz=i%3==0?.2:i%3==1?1.1:1.5;const c=new THREE.CatmullRomCurve3([new THREE.Vector3(-I.GW-.3,rr(.2,9.5),vz-.3),new THREE.Vector3(rr(-I.GW*.7,0),rr(.4,10),vz),new THREE.Vector3(rr(0,I.GW*.7),rr(.4,10),vz),new THREE.Vector3(I.GW+.3,rr(.2,9.5),vz-.3)]);
   const v=new THREE.Mesh(new THREE.TubeGeometry(c,24,.05,5,false),VM);v.userData.vine=1;gate.add(v)}}
 /* відкритий прохід: ліани зникають, а каміння завалу лежить купою біля стіни ущелини (його туди відносить Брам, isle-npc.js) */
-I.PILE=[3.5,I.G0+3.3];I.gate=gate;
-const toPile=()=>{gate.children.forEach(o=>{if(o.userData.vine)o.visible=false});gate.position.set(I.PILE[0],H_(I.PILE[0],I.PILE[1])-.25,I.PILE[1]);gate.rotation.set(0,.7,0);gate.scale.set(.7,.16,.55);gate.visible=true};/* низька купа біля стіни, а не вежа */
+I.PILE=[11,I.G0+1];/* куди Брам жбурляє завал — за стіну ущелини */I.gate=gate;
+const toPile=()=>{gate.visible=false};/* прохід відкрито — завалу більше немає зовсім (Брам жбурнув його за скелю) */
 const INV=G('inv')||{};INV._rl='isle';
 const DONE=()=>!!(INV._q&&INV._q.v2);/* навчання справді пройдене (isle-quests.js) */
 if(INV._isg&&!DONE()&&!INV._skip)INV._isg=0;/* прохід, відкритий автоматично раніше, закривається, доки навчання не пройдене */
