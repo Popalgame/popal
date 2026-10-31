@@ -26,9 +26,9 @@ function makeCoal(g){const m=g.children[0];if(!m||g.userData.ore)return;g.userDa
 
 /* ---------- на карті — як залізні жили: у горах, тундрі й на попелищі частіше; біля початку шляху — щонайменше 3 ---------- */
 const RICH={rock:1,snow:1,ash:1,tundra:1};
-for(const o of RK){if(!o.m||o.m.userData.ore)continue;let b='';try{b=BIO(o.x,o.z)}catch(_){}if(Math.random()<(RICH[b]?.19:.07))makeCoal(o.m)}
+for(const o of RK){if(!o.m||o.m.userData.ore)continue;let b='';try{b=BIO(o.x,o.z)}catch(_){}if(window.REALM!=='isle'&&Math.random()<(RICH[b]?.19:.07))makeCoal(o.m)}/* на Острові пробудження вугілля немає */
 {const near=RK.filter(o=>!o.m.userData.ore&&Math.hypot(o.x-P.x,o.z-P.z)<45).sort((a,b)=>Math.hypot(a.x-P.x,a.z-P.z)-Math.hypot(b.x-P.x,b.z-P.z));
- let have=near.filter(o=>o.m.userData.coal).length;for(const o of near){if(have>=3)break;if(!o.m.userData.coal&&Math.hypot(o.x-P.x,o.z-P.z)>8){makeCoal(o.m);have++}}}
+ let have=window.REALM==='isle'?99:near.filter(o=>o.m.userData.coal).length;for(const o of near){if(have>=3)break;if(!o.m.userData.coal&&Math.hypot(o.x-P.x,o.z-P.z)>8){makeCoal(o.m);have++}}}
 /* розбита жила виростає знову (в іншому місці) як вугільна */
 let pend=0;const _mk=mkRock;mkRock=function(){const g=_mk.apply(this,arguments);if(pend>0&&!g.userData.ore){pend--;makeCoal(g)}return g};
 

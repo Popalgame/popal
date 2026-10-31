@@ -70,9 +70,9 @@ mkRock=function(){const ore=pend>0,g=new THREE.Group(),m=new THREE.Mesh(ore?pick
 /* ---------- перетворюємо наявні скелі: ~16% стають жилами, у горах і тундрі частіше; біля табору — щонайменше 3 ---------- */
 const RICH={rock:1,snow:1,ash:1,tundra:1};
 for(const o of RK){const m=o.m&&o.m.children[0];if(!m)continue;dressStone(m);let b='';try{b=BIO(o.x,o.z)}catch(_){}
- if(Math.random()<(RICH[b]?.32:.12))makeOre(o.m)}
+ if(window.REALM!=='isle'&&Math.random()<(RICH[b]?.32:.12))makeOre(o.m)}/* на Острові пробудження руди немає */
 const near=RK.filter(o=>Math.hypot(o.x,o.z)<45).sort((a,b)=>Math.hypot(a.x,a.z)-Math.hypot(b.x,b.z));
-let have=near.filter(o=>o.m.userData.ore).length;for(const o of near){if(have>=3)break;if(!o.m.userData.ore&&Math.hypot(o.x,o.z)>12){makeOre(o.m);have++}}
+let have=window.REALM==='isle'?99:near.filter(o=>o.m.userData.ore).length;for(const o of near){if(have>=3)break;if(!o.m.userData.ore&&Math.hypot(o.x,o.z)>12){makeOre(o.m);have++}}
 
 /* Model arrives after the world is built. Only ordinary stones change shape; resource markers and groups stay intact. */
 if(THREE.GLTFLoader)new THREE.GLTFLoader().load('assets/models/terrain-rocks.glb',gltf=>{

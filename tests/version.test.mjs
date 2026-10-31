@@ -13,7 +13,7 @@ const sw = readFileSync(path.join(SITE, 'sw.js'), 'utf8');
 const index = readFileSync(path.join(SITE, 'index.html'), 'utf8');
 
 const swVer = sw.match(/const C='popal-v([\d.]+)-/)?.[1];
-const footerVer = index.match(/версія\s+([\d.]+)/)?.[1];
+const footerVer = index.match(/версія\s+(?:Beta\s+)?([\d.]+)/)?.[1];
 
 test('package.json ma poprawny semver', () => {
   assert.match(pkg.version, /^\d+\.\d+\.\d+$/);

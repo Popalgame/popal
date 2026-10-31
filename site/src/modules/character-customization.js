@@ -74,9 +74,9 @@ partTag='body';let PZ=-.32;{const bg=(eq.bag&&inv[eq.bag]>0)?eq.bag:'',D={bp1:[.
  if(/^p(k|ick)/.test(tid)){partTag='body';A(Cy(.025,.03,.6,6),0x8e5a3a,-.2,1,PZ).rotation.z=.6;A(B(.4,.05,.05),tcl,-.33,1.23,PZ).rotation.z=.6}}
 outl(g)};
 ccShow=function(){menuO=1;ccO=1;dlgX();$('mm').style.display='none';const first=!look;if(!look)look=Object.assign({},DLOOK);if(look.br==null)look.br=0;if(look.ey==null)look.ey=0;
-const p=$('ccp');p.innerHTML=`<h2>${first?'Створення героя':'Зовнішність героя'}</h2><div class='ccr'><span>Імʼя</span><input id='ccn' maxlength='16'></div>`+ccRow('Модель 3D','model',['Класичний','Айко'])+ccRow('Стать','g',['Чоловіча','Жіноча'])+ccRow('Зачіска','hr',HRN)+ccRow('Колір волосся','hc',HC,1)+ccRow('Брови','br',BRW,1)+ccRow('Очі','ey',EYC,1)+ccRow('Одяг','top',TPN)+ccRow('Колір одягу','tc',TC,1)+ccRow('Тіло (шкіра)','sk',SK,1)+`<div id='cca'></div><button id='ccgo'>${first?'▶ Почати пригоду':'✔ Зберегти й грати'}</button>`;
+const p=$('ccp');p.innerHTML=`<h2>${first?'Створення героя':'Зовнішność героя'}</h2><div class='ccr'><span>Імʼя героя</span><input id='ccn' maxlength='16'></div>`+ccRow('Модель 3D','model',['Класичний','Айко'])+ccRow('Стать','g',['Чоловіча','Жіноча'])+ccRow('Зачіска','hr',HRN)+ccRow('Колір волосся','hc',HC,1)+ccRow('Брови','br',BRW,1)+ccRow('Очі','ey',EYC,1)+ccRow('Одяг','top',TPN)+ccRow('Колір одягу','tc',TC,1)+ccRow('Тіло (шкіра)','sk',SK,1)+`<div id='cca'></div><button id='ccgo'>${first?'▶ Почати пригоду':'✔ Зберегти й грати'}</button>`;
 $('ccn').value=pname;$('ccv').appendChild(R2.domElement);buildHero(hp2,look);ccSel();ccAcc();$('cc').style.display='grid';
-$('ccgo').onclick=()=>{pname=$('ccn').value.trim()||'Меглен';$('nm').textContent=pname;buildHero(pl,look);drawAv();$('cc').style.display='none';ccO=0;save();mmHide()}};
+$('ccgo').onclick=()=>{pname=$('ccn').value.trim()||'Гість';$('nm').textContent=pname;buildHero(pl,look);drawAv();$('cc').style.display='none';ccO=0;save();mmHide()}};
 if($('mh'))$('mh').onclick=()=>ccShow();
 $('ccp').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b||!b.parentNode)return;const k=b.parentNode.dataset.k;
  if(k=='g'){Object.assign(look,PRE(look.g));ccSel();buildHero(hp2,look);return}

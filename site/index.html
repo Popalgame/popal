@@ -1,129 +1,231 @@
 <!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Popal — гра для телефона</title>
-<meta name="description" content="Ловіть істот, збирайте ресурси й будуйте власну базу. Безкоштовна 3D-гра, що працює просто в браузері телефона.">
-<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.jpg"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0e1c44"><meta property="og:image" content="https://popalgame.pl/logo.jpg">
-<link rel="canonical" href="https://popalgame.pl/"><meta property="og:title" content="Popal"><meta property="og:description" content="Ловіть істот, збирайте ресурси й будуйте власну базу. Безкоштовна 3D-гра в браузері."><meta property="og:url" content="https://popalgame.pl/">
+<title>Popal — безкоштовна 3D-гра в браузері</title>
+<meta name="description" content="Лови попалів, будуй базу й бийся разом зі своїми помічниками. Безкоштовна 3D-гра для телефона й ПК, що працює просто в браузері.">
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.jpg"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1c26"><meta property="og:image" content="https://popalgame.pl/img/shots/coast.webp">
+<link rel="canonical" href="https://popalgame.pl/"><meta property="og:title" content="Popal"><meta property="og:description" content="Лови попалів, будуй базу й бийся разом з помічниками. Безкоштовна 3D-гра в браузері."><meta property="og:url" content="https://popalgame.pl/">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="img/shots/coast.webp">
 <style>
-:root{--sky:#6fa6dc;--haze:#f6dfb4;--grass:#8fb94e;--moss:#4f8a3e;--night:#1a2040;--gold:#e2bf67;--ember:#e8803a;--ink:#1d2433;--paper:#fffaf0}
+:root{--bg:#0b1c26;--bg2:#10252f;--panel:rgba(16,37,47,.78);--line:rgba(217,197,156,.24);--cream:#f2ead8;--muted:#a9bcb8;--gold:#e2bf67;--gold2:#d9c59c;--teal:#8fd3e8;--ember:#e8803a;--ember2:#c8431f}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;font:400 17px/1.6 Nunito,system-ui,sans-serif;color:var(--ink);background:var(--paper)}
+body{margin:0;font:400 17px/1.6 Nunito,system-ui,sans-serif;color:var(--cream);background:var(--bg)}
 h1,h2,h3{font-family:Unbounded,system-ui,sans-serif;line-height:1.1;margin:0}
 a{color:inherit}
-:focus-visible{outline:3px solid var(--ember);outline-offset:3px}
-.hero{position:relative;min-height:100svh;overflow:hidden;background:linear-gradient(var(--sky) 0%,#a9c9e8 38%,var(--haze) 62%);display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 9vh) 20px 0;text-align:center}
-.hero h1 img{display:block;margin:0 auto;width:min(78vw,360px);height:auto;border-radius:32px;box-shadow:0 12px 40px rgba(14,28,68,.45)}
-.hero h1{font-size:clamp(44px,11vw,112px);font-weight:800;color:#fff;letter-spacing:-.02em;text-shadow:0 4px 0 var(--night),0 10px 30px rgba(26,32,64,.35)}
-.hero p{max-width:30ch;margin:18px auto 28px;font-size:clamp(17px,2.4vw,21px);color:var(--night);font-weight:700}
-.play{display:inline-block;font:800 20px Unbounded,system-ui,sans-serif;text-decoration:none;color:#fff;background:radial-gradient(circle at 35% 30%,#ffa356,#c8431f);border:3px solid var(--gold);padding:16px 40px;border-radius:999px;box-shadow:0 0 0 6px rgba(226,191,103,.25),0 8px 20px rgba(200,67,31,.4);position:relative;z-index:3}
-.play:active{transform:translateY(2px)}
-.hint{margin-top:14px;font-size:14px;color:var(--night);opacity:.8;position:relative;z-index:3}
-.scene{position:absolute;left:0;right:0;bottom:0;height:46%;pointer-events:none}
-.scene svg{width:100%;height:100%;display:block}
-.bob{animation:bob 2.4s ease-in-out infinite}
-.bob:nth-of-type(2){animation-delay:-.8s}.bob:nth-of-type(3){animation-delay:-1.6s}
-@keyframes bob{50%{transform:translateY(-10px)}}
-@media (prefers-reduced-motion:reduce){.bob{animation:none}html{scroll-behavior:auto}}
-section{padding:72px 20px}
-.wrap{max-width:980px;margin:0 auto}
-h2{font-size:clamp(28px,5vw,44px);color:var(--night);margin-bottom:12px}
-.lead{max-width:60ch;margin:0 0 36px}
-.meadow{background:var(--grass);color:#fff}
-.meadow h2{color:#fff}
-.crits{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
-@media (max-width:520px){.crits{grid-template-columns:1fr 1fr;gap:10px}.crit{padding:12px 8px 14px;border-radius:18px}.crit img{width:104px!important;height:104px!important}.crit h3{font-size:16px}.crit p{font-size:13px}.crit .jobs li{font-size:11.5px;padding:2px 6px}}
-.crit{background:rgba(26,32,64,.18);border-radius:24px;padding:18px 18px 22px;text-align:center}
-.crit img{width:140px;height:140px;display:block;margin:0 auto;filter:drop-shadow(0 8px 6px rgba(0,0,0,.22));animation:bob 3.2s ease-in-out infinite;animation-delay:calc(var(--d,0s)*-1);transition:transform .25s}
-.crit:hover img{animation:hop .6s ease}
-@keyframes bob{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-5px) scale(1.015,.985)}}
-@keyframes hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-18px) rotate(-4deg)}60%{transform:translateY(0) scale(1.06,.94)}80%{transform:translateY(-4px)}}
-.crit .el{display:inline-block;font-size:13px;font-weight:700;background:rgba(255,255,255,.35);border-radius:20px;padding:2px 10px;margin-bottom:6px}
-.crit .jobs{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-wrap:wrap;gap:5px;justify-content:center}.crit .jobs li{font-size:13px;background:rgba(26,32,64,.22);border-radius:10px;padding:3px 8px}
-@media (prefers-reduced-motion:reduce){.crit img,.crit:hover img{animation:none}}
-.crit h3{font-size:19px;margin:8px 0 4px}
-.crit p{margin:0;font-size:15px;opacity:.95}
-.steps{list-style:none;padding:0;margin:0;display:grid;gap:14px;counter-reset:s}
-.steps li{counter-increment:s;display:grid;grid-template-columns:56px 1fr;gap:14px;align-items:start;max-width:62ch}
-.steps li::before{content:counter(s);font:800 22px Unbounded,system-ui,sans-serif;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--night);color:var(--gold)}
-.steps b{display:block;font-size:18px}
-.night{background:var(--night);color:#e9ecf8}
-.night h2{color:var(--gold)}
-.npcs{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
-.npcs li{border:2px solid var(--gold);border-radius:14px;padding:8px 14px}
-.npcs li span{color:#7fe3f5;font-weight:700}
-.end{text-align:center;background:linear-gradient(var(--haze),var(--paper))}
-.end p{margin:10px auto 26px;max-width:40ch}
-footer{padding:24px 20px calc(env(safe-area-inset-bottom,0px) + 24px);text-align:center;font-size:14px;color:#5b6274}
-
+img{max-width:100%}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+section{padding:88px 0;scroll-margin-top:64px}
+.eyebrow{display:inline-block;font:800 12px Unbounded,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h2{font-size:clamp(28px,4.6vw,46px);margin:10px 0 14px;color:var(--cream)}
+.lead{max-width:62ch;margin:0 0 36px;color:var(--muted);font-size:18px}
+/* кнопки */
+.btn{display:inline-flex;align-items:center;gap:10px;font:800 17px Unbounded,system-ui,sans-serif;text-decoration:none;border-radius:999px;padding:16px 30px;transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+.btn:active{transform:translateY(2px)}
+.btn.main{color:#fff;background:linear-gradient(180deg,#ffa356,var(--ember2));box-shadow:0 0 0 1px rgba(255,214,150,.55) inset,0 10px 28px rgba(200,67,31,.45)}
+.btn.main:hover{box-shadow:0 0 0 1px rgba(255,214,150,.8) inset,0 14px 34px rgba(232,128,58,.55)}
+.btn.ghost{color:var(--cream);background:rgba(11,28,38,.45);border:1px solid rgba(242,234,216,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.btn.ghost:hover{background:rgba(242,234,216,.12)}
 /* меню */
-section{scroll-margin-top:64px}
-.nav{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 8px;background:rgba(26,32,64,.95);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:2px solid rgba(226,191,103,.5)}
-.brand{font:800 19px Unbounded,system-ui,sans-serif;color:var(--gold);text-decoration:none}
-.links{display:flex;gap:4px;align-items:center;overflow-x:auto}
-.links a{color:#e9ecf8;text-decoration:none;font-weight:700;font-size:15px;padding:8px 13px;border-radius:999px;white-space:nowrap}
-.links a:hover{background:rgba(226,191,103,.2)}
-.links a.navplay{background:var(--ember);color:#fff}
-@media (max-width:560px){.brand{display:none}.links{width:100%;justify-content:space-between}.links a{padding:8px 10px;font-size:14px}}
-.hero{min-height:calc(100svh - 56px)!important;padding-top:6vh!important}
-/* про гру */
-.about .feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:8px}
-.feat{background:#fff;border:2px solid #eadfc2;border-radius:22px;padding:18px}
-.feat .ic{font-size:34px;line-height:1}
-.feat h3{font-size:17px;margin:8px 0 4px;color:var(--night)}
-.feat p{margin:0;font-size:15px}
-/* завантаження */
-.dl{background:var(--night);color:#e9ecf8}
-.dl h2{color:var(--gold)}
-.dls{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px;margin-top:8px}
-.dc{position:relative;background:rgba(255,255,255,.06);border:2px solid rgba(226,191,103,.4);border-radius:24px;padding:24px 22px;display:flex;flex-direction:column;gap:12px}
-.dc.rec{border-color:var(--gold);box-shadow:0 0 0 4px rgba(226,191,103,.2)}
-.dc .ic{font-size:42px;line-height:1}
-.dc h3{font-size:20px;color:var(--gold)}
-.dc ol{margin:0;padding-left:20px;font-size:15px}
-.dc li{margin:4px 0}
-.dc small{opacity:.8;font-size:13px;line-height:1.4}
-.dc a:not(.dbtn){color:#7fe3f5}
-.dbtn{display:block;text-align:center;font:800 16px Unbounded,system-ui,sans-serif;text-decoration:none;color:#fff;background:radial-gradient(circle at 35% 30%,#ffa356,#c8431f);border:3px solid var(--gold);padding:14px 18px;border-radius:999px;box-shadow:0 6px 16px rgba(200,67,31,.35)}
+.nav{position:sticky;top:0;z-index:30;background:rgba(11,28,38,.82);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:14px;padding-top:calc(env(safe-area-inset-top,0px) + 10px);padding-bottom:10px}
+.brand{display:flex;align-items:center;gap:10px;font:800 19px Unbounded,system-ui,sans-serif;color:var(--cream);text-decoration:none;margin-right:auto}
+.brand img{width:32px;height:32px;border-radius:9px}
+.links{display:flex;gap:2px}
+.links a{color:var(--muted);text-decoration:none;font-weight:800;font-size:15px;padding:8px 12px;border-radius:999px}
+.links a:hover{color:var(--cream);background:rgba(242,234,216,.08)}
+.ig{width:36px;height:36px;border-radius:10px;overflow:hidden;display:block;flex:none;box-shadow:0 4px 12px rgba(0,0,0,.35);transition:transform .15s}
+.ig:hover{transform:scale(1.06)}.ig svg{width:100%;height:100%;display:block}
+.nav .btn{padding:10px 18px;font-size:14px}
+@media (max-width:820px){.links{display:none}}
+/* перший екран */
+.hero{position:relative;min-height:calc(100svh - 60px);display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:72px 0 0;isolation:isolate}
+.hero .bg{position:absolute;inset:0;z-index:-2;background:url(img/shots/coast.webp) center/cover no-repeat;transform:scale(1.04);animation:drift 24s ease-in-out infinite alternate}
+@keyframes drift{to{transform:scale(1.1) translate(-1.5%,1%)}}
+.hero::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(8,20,28,.92) 0%,rgba(8,20,28,.72) 38%,rgba(8,20,28,.08) 72%),linear-gradient(0deg,var(--bg) 0%,rgba(11,28,38,0) 32%)}
+.chip{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px;color:var(--cream);background:rgba(11,28,38,.6);border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 10px;text-decoration:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.chip i{width:9px;height:9px;border-radius:50%;background:#5fe08a;box-shadow:0 0 0 4px rgba(95,224,138,.18)}
+.hero h1{display:flex;align-items:center;gap:18px;font-size:clamp(54px,10vw,112px);letter-spacing:-.02em;margin:22px 0 6px;text-shadow:0 6px 30px rgba(0,0,0,.45)}
+.hero h1 img{width:clamp(62px,9vw,96px);height:auto;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.motto{font:800 clamp(13px,1.6vw,16px) Unbounded,system-ui,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+.hero p.sub{max-width:34ch;font-size:clamp(18px,2.2vw,22px);margin:18px 0 30px;color:#e7efe9}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.note{margin-top:16px;color:var(--muted);font-size:15px}
+.stats{margin-top:64px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:20px;overflow:hidden;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.stats div{background:rgba(11,28,38,.72);padding:18px 20px}
+.stats b{display:block;font:800 clamp(20px,2.6vw,28px) Unbounded,system-ui,sans-serif;color:var(--cream)}
+.stats span{color:var(--muted);font-size:14px}
+@media (min-width:1000px){.hero .bg{left:18%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);mask-image:linear-gradient(90deg,transparent 0,#000 30%)}}
+@media (max-width:720px){.motto{letter-spacing:.1em;font-size:11.5px}.cta .btn{width:100%;justify-content:center;text-align:center;padding:15px 20px;font-size:16px}.stats{grid-template-columns:1fr 1fr}.hero::after{background:linear-gradient(180deg,rgba(8,20,28,.55) 0%,rgba(8,20,28,.82) 55%,var(--bg) 100%)}.hero h1{gap:12px}}
+/* можливості */
+.feature{display:grid;grid-template-columns:1.15fr 1fr;gap:48px;align-items:center;margin-bottom:84px}
+.feature:last-child{margin-bottom:0}
+.feature.flip .shot{order:2}
+.shot{position:relative;margin:0;border-radius:24px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 60px rgba(0,0,0,.45)}
+.shot img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}
+.shot figcaption{position:absolute;left:14px;bottom:14px;font-weight:800;font-size:13px;background:rgba(11,28,38,.78);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.feature h3{font-size:clamp(24px,3vw,32px);margin:10px 0 12px}
+.feature p{color:var(--muted);margin:0 0 18px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0}
+.tags li{font-weight:800;font-size:14px;color:var(--cream);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+.tags li b{color:var(--gold)}
+@media (max-width:860px){.feature{grid-template-columns:1fr;gap:22px;margin-bottom:64px}.feature.flip .shot{order:0}}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px}
+.card .ic{font-size:30px;line-height:1}
+.card h3{font-size:18px;margin:12px 0 6px}
+.card p{margin:0;color:var(--muted);font-size:15px}
+/* істоти */
+.creatures{background:radial-gradient(1200px 500px at 50% -10%,rgba(143,211,232,.14),transparent),var(--bg2)}
+.crits{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.crit{background:linear-gradient(180deg,rgba(242,234,216,.06),rgba(242,234,216,.02));border:1px solid var(--line);border-radius:22px;padding:18px 16px 20px;text-align:center;transition:transform .2s ease,border-color .2s ease}
+.crit:hover{transform:translateY(-4px);border-color:rgba(226,191,103,.6)}
+.crit img{width:132px;height:132px;display:block;margin:0 auto;filter:drop-shadow(0 12px 10px rgba(0,0,0,.4));animation:bob 3.2s ease-in-out infinite;animation-delay:calc(var(--d,0s)*-1)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.crit h3{font-size:18px;margin:10px 0 6px}
+.crit .el{display:inline-block;font-size:13px;font-weight:800;color:var(--gold2);background:rgba(217,197,156,.12);border-radius:999px;padding:2px 10px;margin-bottom:8px}
+.crit p{margin:0;font-size:14.5px;color:var(--muted)}
+.crit .jobs{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.crit .jobs li{font-size:12.5px;background:rgba(143,211,232,.1);border:1px solid rgba(143,211,232,.2);border-radius:10px;padding:2px 8px}
+@media (max-width:520px){.crits{grid-template-columns:1fr 1fr;gap:10px}.crit{padding:12px 8px 14px}.crit img{width:100px;height:100px}.crit h3{font-size:15px}.crit p{font-size:13px}}
+/* як грати */
+.steps{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;counter-reset:s}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px;color:var(--muted);font-size:15px}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:40px;height:40px;border-radius:12px;margin-bottom:12px;font:800 18px Unbounded,system-ui,sans-serif;color:var(--bg);background:var(--gold)}
+.steps b{display:block;font-size:17px;color:var(--cream);margin-bottom:4px}
+/* що нового */
+.new{background:var(--bg2)}
+.newbox{display:grid;grid-template-columns:320px 1fr;gap:40px;align-items:start}
+.ver{position:sticky;top:90px;background:linear-gradient(160deg,rgba(226,191,103,.18),rgba(226,191,103,.04));border:1px solid rgba(226,191,103,.45);border-radius:24px;padding:26px}
+.ver small{display:block;color:var(--muted);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.ver b{display:block;font:800 40px Unbounded,system-ui,sans-serif;color:var(--gold);margin:8px 0 6px}
+.ver p{margin:0 0 18px;color:var(--muted);font-size:15px}
+.log{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.log li{display:grid;grid-template-columns:42px 1fr;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+.log li span{font-size:26px;line-height:1.2}
+.log b{display:block;color:var(--cream)}
+.log p{margin:2px 0 0;color:var(--muted);font-size:15px}
+@media (max-width:860px){.newbox{grid-template-columns:1fr;gap:20px}.ver{position:static}}
+/* встановлення */
+.dls{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
+.dc{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:24px 22px;display:flex;flex-direction:column;gap:12px}
+.dc.rec{border-color:var(--gold);box-shadow:0 0 0 4px rgba(226,191,103,.14)}
+.dc .ic{font-size:38px;line-height:1}
+.dc h3{font-size:19px;color:var(--cream)}
+.dc ol{margin:0;padding-left:20px;font-size:15px;color:var(--muted)}
+.dc li{margin:4px 0}.dc li b{color:var(--cream)}
+.dc a:not(.dbtn){color:var(--teal)}
+.dbtn{display:block;text-align:center;font:800 15px Unbounded,system-ui,sans-serif;text-decoration:none;color:#fff;background:linear-gradient(180deg,#ffa356,var(--ember2));padding:14px 18px;border-radius:999px;box-shadow:0 0 0 1px rgba(255,214,150,.5) inset,0 8px 20px rgba(200,67,31,.35)}
 .dbtn:active{transform:translateY(2px)}
-.badge{position:absolute;top:-12px;right:18px;background:var(--gold);color:var(--night);font:800 11px Unbounded,system-ui,sans-serif;padding:5px 10px;border-radius:999px;display:none}
+.badge{position:absolute;top:-12px;right:18px;background:var(--gold);color:var(--bg);font:800 11px Unbounded,system-ui,sans-serif;padding:5px 10px;border-radius:999px;display:none}
 .rec .badge{display:block}
-.dnote{margin-top:22px;font-size:14px;opacity:.85;max-width:70ch}
+.dnote{margin-top:22px;font-size:14px;color:var(--muted);max-width:72ch}
+/* фінал */
+.end{position:relative;text-align:center;overflow:hidden;isolation:isolate;padding:120px 0}
+.end::before{content:'';position:absolute;inset:0;z-index:-2;background:url(img/shots/night.webp) center/cover}
+.end::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,var(--bg) 0%,rgba(11,28,38,.55) 40%,rgba(11,28,38,.7) 70%,var(--bg) 100%)}
+.end p{margin:12px auto 30px;max-width:44ch;color:#dfe8e4}
+.end .cta{justify-content:center}
+.follow{display:inline-flex;align-items:center;gap:12px;margin-top:34px;text-decoration:none;font-weight:800;color:var(--cream)}
+.follow .ig{width:42px;height:42px}
+footer{border-top:1px solid var(--line);padding:26px 20px calc(env(safe-area-inset-bottom,0px) + 26px);text-align:center;font-size:14px;color:var(--muted)}
+footer a{color:var(--cream)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.hero .bg,.crit img{animation:none}.crit,.btn{transition:none}}
 </style></head><body>
-<svg width="0" height="0" style="position:absolute"><defs>
-</defs></svg>
-<nav class="nav" aria-label="Головне меню"><a class="brand" href="#top">Popal</a><div class="links"><a href="#about">Про гру</a><a href="#creatures">Істоти</a><a href="#download">Завантажити</a><a class="navplay" href="game.html">Грати</a></div></nav>
-<header class="hero" id="top">
-<h1><img src="logo.jpg" alt="PopalGame" width="440" height="394"></h1>
-<p>Ловіть істот, збирайте ресурси й будуйте базу, де помічники працюють на вас.</p>
-<a class="play" href="game.html">Грати</a>
-<div class="hint">Безкоштовно, без реєстрації. Тримайте телефон горизонтально.</div>
-<div class="scene" aria-hidden="true"><svg viewBox="0 0 1200 400" preserveAspectRatio="xMidYMax slice">
-<path d="M0 170 Q200 90 420 150 T820 120 T1200 140 V400 H0Z" fill="#a6c457"/>
-<path d="M0 240 Q260 170 560 230 T1200 210 V400 H0Z" fill="#8fb94e"/>
-<path d="M0 320 Q300 270 640 310 T1200 300 V400 H0Z" fill="#6ea443"/>
-<g fill="#4f9a4a"><path d="M150 210 175 120 200 210Z"/><path d="M1010 190 1040 90 1070 190Z"/><path d="M1060 200 1082 130 1104 200Z"/></g>
-<g fill="#e8803a"><path d="M220 225 240 160 260 225Z"/></g>
-<g class="bob"><image href="img/pals/0.webp" x="290" y="205" width="150" height="150"/></g>
-<g class="bob"><image href="img/pals/5.webp" x="90" y="70" width="120" height="120"/></g>
-<g class="bob"><image href="img/pals/4.webp" x="830" y="215" width="145" height="145"/></g>
-</svg></div>
-</header>
-<section class="about" id="about"><div class="wrap">
-<h2>Про гру</h2>
-<p class="lead">Popal — безкоштовна 3D-гра про пригоди й власну базу, яка працює просто на телефоні чи комп’ютері. Ви потрапляєте в яскравий край з островами, горами та стежками, ловите істот кулями, а вони стають вашими помічниками: добувають ресурси, захищають вас і допомагають розвивати вашу базу.</p>
-<div class="feats">
-<div class="feat"><div class="ic">🌍</div><h3>Великий світ</h3><p>П’ять островів, гори, вказівники між ними й міні-карта, щоб не заблукати.</p></div>
-<div class="feat"><div class="ic">🔮</div><h3>Ловіть істот</h3><p>Десять видів істот і чарівні кулі різних кольорів. Ослабте істоту та киньте кулю.</p></div>
-<div class="feat"><div class="ic">🏠</div><h3>Будуйте базу</h3><p>Поставте Попал-центр будь-де у світі, будуйте навколо нього, а помічники працюють на вас.</p></div>
-<div class="feat"><div class="ic">🌙</div><h3>День і ніч</h3><p>Час у світі змінюється: уночі світять ліхтарі й літають світлячки.</p></div>
+<nav class="nav" aria-label="Головне меню"><div class="wrap">
+<a class="brand" href="#top"><img src="favicon.png" alt="" width="32" height="32">Popal</a>
+<div class="links"><a href="#game">Гра</a><a href="#creatures">Істоти</a><a href="#new">Що нового</a><a href="#download">Встановити</a></div>
+<a class="ig" href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener" aria-label="Popal в Instagram"><svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='ig' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(#ig)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg></a>
+<a class="btn main" href="game.html">Грати</a>
+</div></nav>
+
+<header class="hero" id="top"><div class="bg" role="img" aria-label="Герой на березі моря у світі Popal"></div>
+<div class="wrap">
+<a class="chip" href="#new"><i></i><span id="verChip">Нове оновлення</span></a>
+<h1><img src="logo.jpg" alt="" width="96" height="86">Popal</h1>
+<div class="motto">Досліджуй · Приручай · Будуй</div>
+<p class="sub">Безкоштовна 3D-гра в браузері: лови попалів, будуй базу й бийся разом зі своїми помічниками.</p>
+<div class="cta"><a class="btn main" href="game.html">▶ Грати безкоштовно</a><a class="btn ghost" href="#download">Встановити як застосунок</a></div>
+<div class="note">📱 Телефон і ПК — без завантаження й реєстрації</div>
+<div class="stats">
+<div><b>10</b><span>видів попалів</span></div>
+<div><b>7</b><span>стихій у бою</span></div>
+<div><b>День і ніч</b><span>живий світ</span></div>
+<div><b>☁️</b><span>хмарні збереження</span></div>
+</div></div></header>
+
+<section id="game"><div class="wrap">
+<span class="eyebrow">Гра</span>
+<h2>Великий світ, твої попали, твоя база</h2>
+<p class="lead">Починаєш на березі моря в Тихій бухті, де живуть лише слабкі істоти. Далі — ліси, гори й дикі землі, де попали сильніші, а здобич цінніша.</p>
+<div class="feature"><figure class="shot"><img src="img/shots/fight.webp" width="1280" height="720" loading="lazy" alt="Попал-павук захищає героя від дикої істоти"><figcaption>⚔️ Бій</figcaption></figure>
+<div><span class="eyebrow">Бій</span><h3>Бийся разом з попалами</h3>
+<p>Твій попал б’є своєю навичкою, а урон залежить від рівня, атаки, захисту й стихій. Вогонь пече траву, вода гасить вогонь, а сплячу вночі істоту можна застати зненацька.</p>
+<ul class="tags"><li>Стихія <b>×1.5</b></li><li>Своя стихія <b>×1.2</b></li><li>Крит <b>×1.5</b></li><li>По сплячій <b>×3</b></li></ul></div></div>
+<div class="feature flip"><figure class="shot"><img src="img/shots/base.webp" width="1280" height="720" loading="lazy" alt="База з Попал-центром, плавильнею, верстаками й попалами"><figcaption>🏕️ База</figcaption></figure>
+<div><span class="eyebrow">База</span><h3>Будуй базу де завгодно</h3>
+<p>Постав Попал-центр будь-де на суші, а навколо — кухню, плавильню, верстак і ліжко. Попали з бригади самі рубають дерева, добувають руду, плавлять злитки й готують їжу.</p>
+<ul class="tags"><li>🔥 Плавильня</li><li>🍲 Кухня</li><li>🔧 Ремонтний верстак</li><li>📦 Скрині</li></ul></div></div>
+<div class="feature"><figure class="shot"><img src="img/shots/night.webp" width="1280" height="720" loading="lazy" alt="Нічний берег під зорями"><figcaption>🌙 Ніч</figcaption></figure>
+<div><span class="eyebrow">Світ</span><h3>День змінює ніч</h3>
+<p>Уночі світять ліхтарі й літають світлячки, а мирні істоти засинають просто неба. Ліжко на базі дозволяє проспати до ранку.</p>
+<ul class="tags"><li>🌅 45 хв день</li><li>🌙 15 хв ніч</li><li>💤 Сплячі істоти</li></ul></div></div>
+<div class="cards" style="margin-top:28px">
+<div class="card"><div class="ic">🪓</div><h3>Інструменти й ремонт</h3><p>Сокири й кирки зношуються від роботи. Лагодь їх на ремонтному верстаку.</p></div>
+<div class="card"><div class="ic">🧶</div><h3>Здобич з істот</h3><p>Шерсть з Пухоклуба, шкіра з Моророга, Грозовика й Бамбузла.</p></div>
+<div class="card"><div class="ic">📱</div><h3>Під твій пристрій</h3><p>Розстав кнопки як зручно, а на слабкому телефоні зменш траву — гра не лагатиме.</p></div>
+</div>
+</div></section>
+
+<section class="creatures" id="creatures"><div class="wrap">
+<span class="eyebrow">Істоти</span>
+<h2>Кого можна зловити</h2>
+<p class="lead">Десять видів попалів. Ослаб істоту, кинь кулю — і вона стане твоїм помічником у бою чи працівником на базі.</p>
+<div class="crits">
+<div class="crit" style="--d:0.00s"><img src="img/pals/0.webp" width="140" height="140" loading="lazy" alt="Бамбузл"><h3>Бамбузл</h3><span class="el">🌿 Трава</span><p>Добродушна панда з бамбуковим списом.</p><ul class="jobs"><li>🪓 Рубає дерева</li><li>🫐 Збирає ягоди й гриби</li></ul></div>
+<div class="crit" style="--d:0.37s"><img src="img/pals/1.webp" width="140" height="140" loading="lazy" alt="Грумрок"><h3>Грумрок</h3><span class="el">💎 Земля</span><p>Броньований копач із кристалами на спині.</p><ul class="jobs"><li>⛏️ Добуває камінь</li><li>📦 Носить вантажі</li></ul></div>
+<div class="crit" style="--d:0.74s"><img src="img/pals/2.webp" width="140" height="140" loading="lazy" alt="Ігніс-Виверг"><h3>Ігніс-Виверг</h3><span class="el">🔥 Вогонь</span><p>Вогняний павук. Нападає першим, тож бережіть здоровʼя.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує на кухні-багатті</li></ul></div>
+<div class="crit" style="--d:1.11s"><img src="img/pals/3.webp" width="140" height="140" loading="lazy" alt="Міражбр"><h3>Міражбр</h3><span class="el">👻 Темрява</span><p>Напівпрозорий хамелеон, ловиться легше за інших.</p><ul class="jobs"><li>📦 Найкращий носій: годує бригаду</li></ul></div>
+<div class="crit" style="--d:1.48s"><img src="img/pals/4.webp" width="140" height="140" loading="lazy" alt="Пухоклуб"><h3>Пухоклуб</h3><span class="el">⚪ Нейтральний</span><p>Хмаринка-овечка з золотими ріжками.</p><ul class="jobs"><li>🫐 Збирає ягоди й гриби</li><li>📦 Носить вантажі</li></ul></div>
+<div class="crit" style="--d:1.85s"><img src="img/pals/5.webp" width="140" height="140" loading="lazy" alt="Крилоша"><h3>Крилоша</h3><span class="el">🌪️ Повітря</span><p>Метелик-фея з чотирма крилами.</p><ul class="jobs"><li>🫐 Найкращий збирач урожаю</li></ul></div>
+<div class="crit" style="--d:2.22s"><img src="img/pals/6.webp" width="140" height="140" loading="lazy" alt="Мороріг"><h3>Мороріг</h3><span class="el">❄️ Вода й лід</span><p>Крижаний олень з кришталевими рогами.</p><ul class="jobs"><li>⛏️ Добуває камінь</li></ul></div>
+<div class="crit" style="--d:2.59s"><img src="img/pals/7.webp" width="140" height="140" loading="lazy" alt="Грозовик"><h3>Грозовик</h3><span class="el">⚡ Темрява й повітря</span><p>Чорний вовк з неоновими блискавками. Нападає першим.</p><ul class="jobs"><li>📦 Носить вантажі</li><li>🪓 Рубає дерева</li></ul></div>
+<div class="crit" style="--d:2.96s"><img src="img/pals/8.webp" width="140" height="140" loading="lazy" alt="Хвилезуб"><h3>Хвилезуб</h3><span class="el">💧 Вода</span><p>Сухопутна акула на лапках.</p><ul class="jobs"><li>🪓 Рубає дерева</li></ul></div>
+<div class="crit" style="--d:3.33s"><img src="img/pals/9.webp" width="140" height="140" loading="lazy" alt="Сонцеклюв"><h3>Сонцеклюв</h3><span class="el">☀️ Вогонь і повітря</span><p>Високий птах із сонячним вінцем за головою.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує</li><li>📦 Носить</li></ul></div>
 </div></div></section>
-<section class="dl" id="download"><div class="wrap">
-<h2>Завантажити гру</h2>
-<p class="lead">Popal встановлюється як застосунок з власною іконкою й відкривається на весь екран. Обирайте свій пристрій.</p>
+
+<section><div class="wrap">
+<span class="eyebrow">Старт</span>
+<h2>Як грати</h2>
+<p class="lead">Перша істота на твоїй базі за кілька хвилин.</p>
+<ol class="steps">
+<li><div><b>Зберіть ресурси</b>Підійдіть до дерева чи скелі й натискайте «Дія».</div></li>
+<li><div><b>Створіть кулю</b>Кнопка «Крафт» робить кулю з 3 деревини та 2 каменю.</div></li>
+<li><div><b>Ослабте істоту</b>Кілька ударів знижують її здоровʼя, і шанс ловлі росте.</div></li>
+<li><div><b>Киньте кулю</b>Спіймана істота буде з вами у сфері.</div></li>
+<li><div><b>Поставте Попал-центр</b>Скрафтіть його з 20 деревини й 15 каменю, покладіть туди істот — і вони почнуть працювати.</div></li>
+</ol>
+</div></section>
+
+<section class="new" id="new"><div class="wrap"><div class="newbox">
+<div class="ver"><small>Актуальна версія</small><b id="verBig">—</b><p>Гра оновлюється сама: просто відкрий її знову.</p><a class="btn main" href="game.html">Грати</a></div>
+<div><span class="eyebrow">Що нового</span><h2>Останні оновлення</h2>
+<ul class="log">
+<li><span>🏝️</span><div><b>Острів пробудження</b><p>Нові гравці прокидаються на окремому острові серед скель і проходять навчання з 10 завдань.</p></div></li>
+<li><span>🧓</span><div><b>Мешканці острова</b><p>Дід Вітрило, Тесля Шкварка, Пані Клубочок і кам’яний страж Брам дають завдання й розповідають, як вижити.</p></div></li>
+<li><span>📜</span><div><b>Журнал завдань і компас</b><p>Журнал показує прогрес, а компас — одне слово в напрямку мети: «Гай», «Лука», «Портал».</p></div></li>
+<li><span>🌀</span><div><b>Портал у великий світ</b><p>Після навчання Брам відкриває ущелину, а портал пропускає тих, хто зареєструвався. Повернутися можна через печеру.</p></div></li>
+<li><span>⛰️</span><div><b>Скелі й печера на спавні</b><p>Нова текстура скель із пластами породи й мохом; у великому світі ви виходите з печери в прибережних скелях.</p></div></li>
+<li><span>🪓</span><div><b>Інструмент у руці</b><p>Сокира й кирка тепер тримаються в кулаці головкою вгору, а ім’я героя за замовчуванням — «Гість».</p></div></li>
+</ul></div></div></div></section>
+
+<section id="download"><div class="wrap">
+<span class="eyebrow">Встановлення</span>
+<h2>Встановити гру</h2>
+<p class="lead">Popal встановлюється як застосунок з власною іконкою й відкривається на весь екран. Обирай свій пристрій.</p>
 <div class="dls">
 <div class="dc" data-p="android"><span class="badge">Для вашого пристрою</span><div class="ic">🤖</div><h3>Android</h3>
 <a class="dbtn" id="btnAndroid" href="game.html">Завантажити для Android</a>
@@ -137,41 +239,15 @@ section{scroll-margin-top:64px}
 </div>
 <p class="dnote">Гра безкоштовна й без реєстрації. Прогрес зберігається на вашому пристрої. Гру можна просто відкрити в браузері кнопкою «Грати» і встановити пізніше з розділу «Налаштування» всередині гри.</p>
 </div></section>
-<section class="meadow" id="creatures"><div class="wrap">
-<h2>Кого можна зловити</h2>
-<p class="lead">У світі живуть десять видів істот. Додайте спійману істоту до бригади Попал-центру — і вона сама добуватиме ресурси, плавитиме руду чи готуватиме їжу.</p>
-<div class="crits">
-<div class="crit" style="--d:0.00s"><img src="img/pals/0.webp" width="140" height="140" loading="lazy" alt="Бамбузл"><h3>Бамбузл</h3><span class="el">🌿 Трава</span><p>Добродушна панда з бамбуковим списом.</p><ul class="jobs"><li>🪓 Рубає дерева</li><li>🫐 Збирає ягоди й гриби</li></ul></div>
-<div class="crit" style="--d:0.37s"><img src="img/pals/1.webp" width="140" height="140" loading="lazy" alt="Грумрок"><h3>Грумрок</h3><span class="el">💎 Земля</span><p>Броньований копач із кристалами на спині.</p><ul class="jobs"><li>⛏️ Добуває камінь</li><li>📦 Носить вантажі</li></ul></div>
-<div class="crit" style="--d:0.74s"><img src="img/pals/2.webp" width="140" height="140" loading="lazy" alt="Ігніс-Виверг"><h3>Ігніс-Виверг</h3><span class="el">🔥 Вогонь</span><p>Вогняний павук. Нападає першим, тож бережіть здоровʼя.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує на кухні-багатті</li></ul></div>
-<div class="crit" style="--d:1.11s"><img src="img/pals/3.webp" width="140" height="140" loading="lazy" alt="Міражбр"><h3>Міражбр</h3><span class="el">👻 Темрява</span><p>Напівпрозорий хамелеон, ловиться легше за інших.</p><ul class="jobs"><li>📦 Найкращий носій: годує бригаду</li></ul></div>
-<div class="crit" style="--d:1.48s"><img src="img/pals/4.webp" width="140" height="140" loading="lazy" alt="Пухоклуб"><h3>Пухоклуб</h3><span class="el">⚪ Нейтральний</span><p>Хмаринка-овечка з золотими ріжками.</p><ul class="jobs"><li>🫐 Збирає ягоди й гриби</li><li>📦 Носить вантажі</li></ul></div>
-<div class="crit" style="--d:1.85s"><img src="img/pals/5.webp" width="140" height="140" loading="lazy" alt="Крилоша"><h3>Крилоша</h3><span class="el">🌪️ Повітря</span><p>Метелик-фея з чотирма крилами.</p><ul class="jobs"><li>🫐 Найкращий збирач урожаю</li></ul></div>
-<div class="crit" style="--d:2.22s"><img src="img/pals/6.webp" width="140" height="140" loading="lazy" alt="Мороріг"><h3>Мороріг</h3><span class="el">❄️ Вода й лід</span><p>Крижаний олень з кришталевими рогами.</p><ul class="jobs"><li>⛏️ Добуває камінь</li></ul></div>
-<div class="crit" style="--d:2.59s"><img src="img/pals/7.webp" width="140" height="140" loading="lazy" alt="Грозовик"><h3>Грозовик</h3><span class="el">⚡ Темрява й повітря</span><p>Чорний вовк з неоновими блискавками. Нападає першим.</p><ul class="jobs"><li>📦 Носить вантажі</li><li>🪓 Рубає дерева</li></ul></div>
-<div class="crit" style="--d:2.96s"><img src="img/pals/8.webp" width="140" height="140" loading="lazy" alt="Хвилезуб"><h3>Хвилезуб</h3><span class="el">💧 Вода</span><p>Сухопутна акула на лапках.</p><ul class="jobs"><li>🪓 Рубає дерева</li></ul></div>
-<div class="crit" style="--d:3.33s"><img src="img/pals/9.webp" width="140" height="140" loading="lazy" alt="Сонцеклюв"><h3>Сонцеклюв</h3><span class="el">☀️ Вогонь і повітря</span><p>Високий птах із сонячним вінцем за головою.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує</li><li>📦 Носить</li></ul></div>
-</div></div></section>
-<section><div class="wrap">
-<h2>Як грати</h2>
-<p class="lead">Перша істота на вашій базі за кілька хвилин.</p>
-<ol class="steps">
-<li><div><b>Зберіть ресурси</b>Підійдіть до дерева чи скелі й натискайте «Дія».</div></li>
-<li><div><b>Створіть кулю</b>Кнопка «Крафт» робить кулю з 3 деревини та 2 каменю.</div></li>
-<li><div><b>Ослабте істоту</b>Кілька ударів знижують її здоровʼя, і шанс ловлі росте.</div></li>
-<li><div><b>Киньте кулю</b>Спіймана істота буде з вами у сфері.</div></li>
-<li><div><b>Поставте Попал-центр</b>Скрафтіть його з 20 деревини й 15 каменю, покладіть туди істот — і вони почнуть працювати.</div></li>
-</ol></div></section>
-<section class="night"><div class="wrap">
-<h2>Ваша база — де забажаєте</h2>
-<p class="lead">Попал-центр ставиться будь-де на суші. Навколо нього ви будуєте дім, кухню, верстак і стіни, а в його сховищі — 8 сторінок по 30 місць — живуть і працюють ваші помічники.</p>
-</div></section>
+
 <section class="end"><div class="wrap">
-<h2>Готові до пригоди?</h2>
-<p>Гра працює в браузері телефона чи компʼютера. Прогрес зберігається на вашому пристрої.</p>
-<a class="play" href="game.html">Грати</a>
+<h2>Готовий до пригоди?</h2>
+<p>Гра працює в браузері телефона чи комп’ютера. Без завантаження, без реєстрації.</p>
+<div class="cta"><a class="btn main" href="game.html">▶ Грати безкоштовно</a></div>
+<a class="follow" href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener"><span class="ig"><svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='ig' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(#ig)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg></span>Слідкуй за оновленнями @popalgame</a>
 </div></section>
-<footer>Popal, 2026. popalgame.pl · версія 0.5.0</footer>
+
+<footer>Popal, 2026. popalgame.pl · версія Beta 0.2.4 · <a href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener">Instagram</a></footer>
 <script>
 /* Прямі посилання на файли (необов'язково): коли з'являться APK чи інсталятор для ПК, впишіть сюди шлях, і кнопка стане завантаженням файлу. */
 const ANDROID_URL='',PC_URL='';
@@ -183,5 +259,10 @@ function wire(id,url){const b=document.getElementById(id);if(!b)return;if(url){b
 wire('btnAndroid',ANDROID_URL);wire('btnPC',PC_URL);
 const ua=navigator.userAgent,kind=/android/i.test(ua)?'android':(/iphone|ipad|ipod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))?'ios':'pc';
 const card=document.querySelector('.dc[data-p="'+kind+'"]');if(card)card.classList.add('rec');
+</script>
+<script>
+/* актуальна версія — з футера (його оновлюють разом із package.json, це перевіряють тести) */
+(function(){const m=/версія\s+([^·]+)/.exec(document.querySelector('footer').textContent);if(!m)return;const v=m[1].trim();
+document.getElementById('verChip').textContent=v+' · нове оновлення';document.getElementById('verBig').textContent=v})();
 </script>
 </body></html>

@@ -14,13 +14,13 @@ function ratioFor(cfg){if(cfg.res)return Math.max(1,Math.min(4,cfg.res/longEdge(
 function setShadow(size){if(!size)return;try{const sun=read('sun');if(!sun||!sun.shadow)return;if(sun.shadow.mapSize.x!==size){sun.shadow.mapSize.set(size,size);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}}catch(_){}}
 function applyQuality(reset){const cfg=profile(),ratio=ratioFor(cfg);
  if(Math.abs(renderer.getPixelRatio()-ratio)>.02){renderer.setPixelRatio(ratio);try{read('rs')()}catch(_){}}
- const grassMesh=read('gm');if(grassMesh)grassMesh.count=Math.min(grassMesh.instanceMatrix.count,Math.round(cfg.grass*(mode==='auto'?Math.max(.65,scale):1)));
+ const grassMesh=read('gm');if(grassMesh)grassMesh.count=Math.min(grassMesh.instanceMatrix.count,Math.round(cfg.grass*(mode==='auto'?Math.max(.65,scale):1)*(window.plGrassK?window.plGrassK():1)));/* plGrassK — пункт «Трава», grass-quality.js */
  if(reset&&window.plGfx)window.plGfx.set({fps:cfg.fps,dist:mode==='auto'?1:cfg.dist});
  if(window.plVis)window.plVis.setHQ(cfg.hq&&(mode!=='auto'||scale>.78));
  setShadow(cfg.shadow);qualityAt=performance.now();
 }
 function setMode(next){if(!['auto',...Object.keys(profiles)].includes(next))return;mode=next;scale=1;slowWindows=fastWindows=0;try{localStorage.setItem(KEY,JSON.stringify({mode}))}catch(_){}applyQuality(true)}
-window.plQuality={set:setMode,state:()=>({mode,scale,pixelRatio:renderer.getPixelRatio(),buffer:(()=>{const el=renderer.domElement||{};return [el.width||0,el.height||0]})(),target:profile().res||null,averageMs,profile:profile().name,...window.plFrameStats})};
+window.plQuality={set:setMode,apply:()=>applyQuality(false),state:()=>({mode,scale,pixelRatio:renderer.getPixelRatio(),buffer:(()=>{const el=renderer.domElement||{};return [el.width||0,el.height||0]})(),target:profile().res||null,averageMs,profile:profile().name,...window.plFrameStats})};
 setTimeout(()=>applyQuality(true),0);
 try{let resizeT=0;addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(()=>applyQuality(false),180)})}catch(_){}
 
