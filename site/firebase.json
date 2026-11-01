@@ -1,7 +1,7 @@
 {
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", ".firebaserc", "README-modular.md", "manus-routes.json", "**/.*"],
+    "ignore": ["firebase.json", ".firebaserc", "README-modular.md", "manus-routes.json", "**/.*", "**/*.bak*"],
     "cleanUrls": true,
     "headers": [
       { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
