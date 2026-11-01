@@ -72,7 +72,7 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
   if(A.k=='be'&&Math.random()<.3&&bagW(A)+W('sd')<=cap){A.bag.sd=(A.bag.sd||0)+1;tx+=' +1 🌰'}/* 0.5.x: насіння з кущів */
   if(!o.mx)o.mx=o.hp=(A.L===trees||A.L===rocks)?8:Math.max(1,o.hp||1);o.hp-=(A.L===trees||A.L===rocks)?1+L:1;
   try{if(window.flash)flash(o)}catch(_){}say(tx,o.m);XP(p);
-  if(o.hp<=0){const L2=A.L,ix=L2.indexOf(o);if(ix>=0){sc.remove(o.m);L2.splice(ix,1)}
+  if(o.hp<=0){const L2=A.L,ix=L2.indexOf(o);if(ix>=0){sc.remove(o.m);L2.splice(ix,1)}try{if(window.plVeinGone)window.plVeinGone(o)}catch(_){}
    const mk=L2===trees?mkTree:L2===rocks?mkRock:L2===bushes?mkBush:mkShroom,hp=L2===bushes?2:L2===shrooms?1:3;setTimeout(()=>spawn(L2,mk,hp),L2===trees||L2===rocks?20000:25000);A.s='pick'}
   if(bagW(A)>=cap-.05){if(o._cl===p)o._cl=null;A.s='deliver'}break}
  case'deliver':{const k0=Object.keys(A.bag)[0];if(!k0){A.s='pick';break}

@@ -70,9 +70,9 @@ mkRock=function(){const ore=pend>0,g=new THREE.Group(),m=new THREE.Mesh(ore?pick
 /* ---------- перетворюємо наявні скелі: ~16% стають жилами, у горах і тундрі частіше; біля табору — щонайменше 3 ---------- */
 const RICH={rock:1,snow:1,ash:1,tundra:1};
 for(const o of RK){const m=o.m&&o.m.children[0];if(!m)continue;dressStone(m);let b='';try{b=BIO(o.x,o.z)}catch(_){}
- if(window.REALM!=='isle'&&Math.random()<(RICH[b]?.32:.12))makeOre(o.m)}/* на Острові пробудження руди немає */
+ if(window.REALM!=='isle'&&Math.random()<(RICH[b]?.16:.06))makeOre(o.m)}/* 0.2.6: удвічі менше жил *//* на Острові пробудження руди немає */
 const near=RK.filter(o=>Math.hypot(o.x,o.z)<45).sort((a,b)=>Math.hypot(a.x,a.z)-Math.hypot(b.x,b.z));
-let have=window.REALM==='isle'?99:near.filter(o=>o.m.userData.ore).length;for(const o of near){if(have>=3)break;if(!o.m.userData.ore&&Math.hypot(o.x,o.z)>12){makeOre(o.m);have++}}
+let have=window.REALM==='isle'?99:near.filter(o=>o.m.userData.ore).length;for(const o of near){if(have>=2)break;if(!o.m.userData.ore&&Math.hypot(o.x,o.z)>12){makeOre(o.m);have++}}
 
 /* Model arrives after the world is built. Only ordinary stones change shape; resource markers and groups stay intact. */
 if(THREE.GLTFLoader)new THREE.GLTFLoader().load('assets/models/terrain-rocks.glb',gltf=>{
@@ -92,7 +92,10 @@ window.gHit=function(k,o){if(k!='s'||!o.m.userData.ore)return _gh.apply(this,arg
  if(!o.mx)o.mx=o.hp=12;o.hp-=t.d;const n=t.t>=3?1+(Math.random()<.35?1:0):(Math.random()<.6?1:0);inv.ore=(inv.ore||0)+n;
  return{y:n,dm:t.d,tx:n?['+'+n+' 🟤']:[]}};
 window.fellB=function(k,o){if(k!='s'||!o.m.userData.ore)return _fb.apply(this,arguments);
- const t=TT[eq.tool],n=t&&t.t>=3?3:2;inv.ore=(inv.ore||0)+n;res.s+=1;try{st.s+=1}catch(_){}pend++;
+ const t=TT[eq.tool],n=t&&t.t>=3?3:2;inv.ore=(inv.ore||0)+n;res.s+=1;try{st.s+=1}catch(_){}regrow();
  const p=o.m.position.clone();setTimeout(()=>dmg('+'+n+' 🟤 +1 🪨',{position:p},'#ffb070'),250)};
 window.oreVeins=()=>RK.filter(o=>o.m.userData.ore);
+/* 0.2.6: розбита жила не зʼявляється одразу — через 5 хвилин рудою стає звичайна скеля далеко від героя (≥35 м) */
+function regrow(){setTimeout(()=>{const far=RK.filter(o=>o.m&&!o.m.userData.ore&&!o.m.userData.coal&&Math.hypot(o.x-P.x,o.z-P.z)>35);if(far.length)makeOre(far[(Math.random()*far.length)|0].m)},300000)}
+const vg0=window.plVeinGone;window.plVeinGone=o=>{if(o&&o.m&&o.m.userData.ore)regrow();if(vg0)vg0(o)};/* жилу розбив попал (pal-ai.js) */
 }catch(e){console.warn('ore-veins',e)}})();

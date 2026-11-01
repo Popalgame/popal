@@ -49,9 +49,11 @@ const gate=new THREE.Group();gate.position.set(0,H_(0,I.G0+1),I.G0+1);sc_.add(ga
  for(let i=0;i<33;i++){const vz=i%3==0?.2:i%3==1?1.1:1.5;const c=new THREE.CatmullRomCurve3([new THREE.Vector3(-I.GW-.3,rr(.2,9.5),vz-.3),new THREE.Vector3(rr(-I.GW*.7,0),rr(.4,10),vz),new THREE.Vector3(rr(0,I.GW*.7),rr(.4,10),vz),new THREE.Vector3(I.GW+.3,rr(.2,9.5),vz-.3)]);
   const v=new THREE.Mesh(new THREE.TubeGeometry(c,24,.05,5,false),VM);v.userData.vine=1;gate.add(v)}}
 /* відкритий прохід: ліани зникають, а каміння завалу лежить купою біля стіни ущелини (його туди відносить Брам, isle-npc.js) */
-I.PILE=[3.5,I.G0+3.3];I.gate=gate;
-const toPile=()=>{gate.children.forEach(o=>{if(o.userData.vine)o.visible=false});gate.position.set(I.PILE[0],H_(I.PILE[0],I.PILE[1])-.25,I.PILE[1]);gate.rotation.set(0,.7,0);gate.scale.set(.85,.6,.85);gate.visible=true};
+I.PILE=[11,I.G0+1];/* куди Брам жбурляє завал — за стіну ущелини */I.gate=gate;
+const toPile=()=>{gate.visible=false};/* прохід відкрито — завалу більше немає зовсім (Брам жбурнув його за скелю) */
 const INV=G('inv')||{};INV._rl='isle';
+const DONE=()=>!!(INV._q&&INV._q.v2);/* навчання справді пройдене (isle-quests.js) */
+if(INV._isg&&!DONE()&&!INV._skip)INV._isg=0;/* прохід, відкритий автоматично раніше, закривається, доки навчання не пройдене */
 let open=!!INV._isg;try{if(new URLSearchParams(location.search).get('gate')=='open')open=true}catch(_){}
 if(open)toPile();
 I.isOpen=()=>open;
@@ -99,12 +101,9 @@ const fire=new THREE.Group();{for(let i=0;i<8;i++){const s=new THREE.Mesh(new TH
 {const g=new THREE.Group();for(let i=0;i<7;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(1.6,.12,.32),W);b.position.set(0,.55,i*.42);g.add(b)}
  for(const x of[-.7,.7])for(const z of[0,1.3,2.6]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.09,.1,1.8,6),WD);p.position.set(x,-.2,z);g.add(p)}
  put(g,8,31.5,-.45,-.35)}
-/* вказівник біля входу в ущелину */
-{const g=new THREE.Group(),post=new THREE.Mesh(new THREE.CylinderGeometry(.07,.08,1.6,6),WD);post.position.y=.8;g.add(post);
- const bd=new THREE.Mesh(new THREE.BoxGeometry(1.1,.36,.06),W);bd.position.set(.3,1.35,0);g.add(bd);put(g,2.3,I.G0+4,0,-.2)}
 
 /* ---------- куди можна ходити ---------- */
-const ok=(x,z,m)=>I.walk(x,z,m)&&(open||!(I.inGorge(x,z)&&z<I.G0+1.2)&&!I.inPlaza(x,z));
+const ok=(x,z,m)=>I.walk(x,z,m)&&(open||!(z<I.G0+4.3+(m||0)&&z>I.G1-2&&Math.abs(x)<I.GW+1.5)&&!I.inPlaza(x,z))/* завал твердий по передній грані брил (центр G0+1, передні брили виступають до ~G0+3.9) */;
 I.ok=ok;
 /* ---------- оформлення ущелини й майданчика порталу ----------
    Бруківка кільцями, двоступеневий постамент під аркою, 4 обеліски з рунами (світяться в такт порталу), 2 жаровні біля входу,
@@ -166,7 +165,10 @@ window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(RCOL)RCOL.push(P_,
 const cb0=window.colBlocked;
 window.colBlocked=function(x0,z0,x1,z1,r){if(!ok(x1,z1,.3)||(RCOL&&RCOL.hit(x1,z1,.4)))return true;return cb0?cb0.apply(this,arguments):false};
 /* повернення з великого світу через печеру — до арки; збережена позиція з іншого виміру — на пляж */
-try{if(localStorage.getItem('zi_isle_at')){localStorage.removeItem('zi_isle_at');open=true;toPile();INV._isg=1;P_.x=0;P_.z=I.PZ+3;P_.face=0;setTimeout(()=>{try{msg('🏝️ Ви повернулися на Острів пробудження')}catch(_){}},1500)}}catch(_){}
+/* повернення з великого світу через печеру: хто пройшов навчання (або Брам уже пропустив) — до арки; решта — на пляж, як новачок */
+try{if(localStorage.getItem('zi_isle_at')){localStorage.removeItem('zi_isle_at');INV._cave=1;
+ if(open){P_.x=0;P_.z=I.PZ+3;P_.face=0;setTimeout(()=>{try{msg('🏝️ Ви повернулися на Острів пробудження')}catch(_){}},1500)}
+ else{P_.x=I.START[0];P_.z=I.START[1];P_.face=Math.PI;setTimeout(()=>{try{msg('🏝️ Острів пробудження: пройдіть навчання або попросіть Брама пропустити вас до порталу')}catch(_){}},1500)}}}catch(_){}
 if(!ok(P_.x,P_.z,0)){P_.x=I.START[0];P_.z=I.START[1];P_.face=Math.PI}
 
 /* ---------- перехід у звичайний світ ---------- */

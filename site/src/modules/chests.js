@@ -17,6 +17,7 @@ function mkChest(){const g=new THREE.Group(),m=(geo,mat,x,y,z)=>{const o=new THR
  for(const x of[-.42,.42])m(new THREE.BoxGeometry(.08,.62,.8),FE,x,.36,0);
  m(new THREE.BoxGeometry(.18,.22,.06),GO,0,.5,.39);return g}
 const meshes=[];
+window.chMeshes=meshes;/* для tree-fade.js */
 function showAll(){meshes.forEach(g=>sc.remove(g));meshes.length=0;CH.forEach(c=>{const g=mkChest();g.position.set(c.x,Math.max(-.2,H(c.x,c.z)),c.z);g.rotation.y=c.ry||0;sc.add(g);meshes.push(g)})}
 showAll();
 

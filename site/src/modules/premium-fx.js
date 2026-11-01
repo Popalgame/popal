@@ -236,13 +236,13 @@ function pullHit(hx,hy,hz,cx,cy,cz){
   if(hys>tp||hys<bt)return;                         /* przechodzi nad koroną / pod spodem — ok */
   if(!hit||tt<hit.t)hit={t:tt,tp:tp};
  };
- for(const w0 of oT){if(!w0||!w0.m)continue;const s0=w0.m.scale.x||1;
+ for(const w0 of oT){if(window.plTreeFade)break;/* дерева не відводять камеру — вони стають напівпрозорими (tree-fade.js) */if(!w0||!w0.m)continue;const s0=w0.m.scale.x||1;
   const ddx=w0.x-hx,ddz=w0.z-hz;if(ddx*ddx+ddz*ddz>400)continue;
   test(w0.x,w0.z,1.4*s0,w0.m.position.y+1.35*s0,w0.m.position.y+3.7*s0)}
  for(const w1 of oRk){if(!w1||!w1.m)continue;const s1=w1.m.scale.x||1;
   const ddx=w1.x-hx,ddz=w1.z-hz;if(ddx*ddx+ddz*ddz>400)continue;
   test(w1.x,w1.z,1.15*s1,w1.m.position.y,w1.m.position.y+1.35*s1)}
- try{if(typeof colList==='function'){const lc=colList();for(let qi=0;qi<lc.length;qi++){const w2=lc[qi];if(!w2)continue;
+ try{if(typeof colList==='function'){const lc=window.plBaseFade?(window.plSceneryObstacles||[]):colList();/* 0.2.7: Попал-центр, скрині й будівлі бази не відводять камеру — стають напівпрозорими (tree-fade.js) */for(let qi=0;qi<lc.length;qi++){const w2=lc[qi];if(!w2)continue;
   const ddx=w2.x-hx,ddz=w2.z-hz;if(ddx*ddx+ddz*ddz>400)continue;
   const baseY=oHt?oHt(w2.x,w2.z):0;test(w2.x,w2.z,(w2.r||.8)+.35,baseY,baseY+(w2.h||2.6))}}}catch(_){}
  if(hit)hit.Lh=Lh;

@@ -45,7 +45,7 @@ function mkCen(){const g=new THREE.Group(),m=(geo,mat,x,y,z)=>{const o=new THREE
  const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.font='bold 46px system-ui';x.textAlign='center';x.textBaseline='middle';x.lineWidth=8;x.strokeStyle='#1a1430';x.strokeText('🏠 Попал-центр',256,48);x.fillStyle='#ffe7a8';x.fillText('🏠 Попал-центр',256,48);
  const tx=new THREE.CanvasTexture(c);tx.encoding=THREE.sRGBEncoding;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthTest:false}));sp.scale.set(3.2,.6,1);sp.position.y=3.3;g.add(sp);
  return g}
-function showCen(){if(cenG){sc.remove(cenG);cenG=null}const C=inv._cen;if(!C)return;cenG=mkCen();cenG.position.set(C[0],Math.max(-.2,H(C[0],C[1]))-.05,C[1]);sc.add(cenG);
+function showCen(){if(cenG){sc.remove(cenG);cenG=null;window.plCenG=null}const C=inv._cen;if(!C)return;cenG=mkCen();cenG.position.set(C[0],Math.max(-.2,H(C[0],C[1]))-.05,C[1]);sc.add(cenG);window.plCenG=cenG;/* для tree-fade.js */
  for(const L of[trees,rocks,bushes,shrooms])for(let i=L.length-1;i>=0;i--){const o=L[i];if(Math.hypot(o.x-C[0],o.z-C[1])<3.6){sc.remove(o.m);L.splice(i,1)}}}
 showCen();
 ANI.push(t=>{if(!cenG)return;orb.rotation.y=t*.6;orb.position.y=2.05+Math.sin(t*1.6)*.08;ring.rotation.z=t*.9;ring.position.y=orb.position.y;
