@@ -1,0 +1,15 @@
+{
+  "schema": "polpal.annotation-benchmark/1",
+  "source_sha256": "61374b60ac966e44db410c9ea10afd4d83b3561b851096daed0016b0af215da1",
+  "origin": "Agent visual annotation of source-only crop (380,600)-(800,930), displayed at 2x; not copied from scanner output",
+  "review_status": "candidate; no independent human review or inter-annotator study",
+  "annotation_sigma_px": 2.0,
+  "scope": "Visible iris outer silhouettes and lower chin edge only. Highlights are filled for outer-silhouette evaluation. Source interpretation is not ground-truth 3D.",
+  "polygons": {
+    "iris_left": [[501,720],[511,722],[520,728],[527,738],[533,752],[535,766],[534,780],[530,792],[524,801],[515,805],[505,805],[494,801],[486,793],[480,781],[477,766],[478,751],[482,738],[490,727]],
+    "iris_right": [[667,719],[678,720],[687,725],[694,736],[699,749],[701,763],[700,777],[695,791],[687,800],[677,805],[667,805],[655,801],[647,791],[641,779],[639,764],[641,748],[646,735],[655,724]]
+  },
+  "polylines": {
+    "chin": [[475,877],[495,887],[515,894],[535,900],[555,905],[575,909],[585,909],[605,907],[625,903],[645,897],[665,889],[685,879]]
+  }
+}

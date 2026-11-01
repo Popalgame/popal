@@ -1,6 +1,6 @@
 # Plan Polpal Studio
 
-**Stan dokumentu:** 1 listopada 2026 r.
+**Stan dokumentu:** 1 listopada 2026 r. (uzupełniony o wynik P0-A)
 
 **Punkt wyjścia:** Scan Studio 2.0, moduł automatycznego dopasowania v6.
 
@@ -160,20 +160,158 @@ Priorytety oznaczają kolejność zależności: **P0** — najbliższa blokada,
 
 ### P0-A. Ustalić, co faktycznie blokuje korektę Aiko
 
-- [ ] Dodać nakładkę pokazującą osobno: ochronę użytkownika, zamrożenie przez
-  brak danych, wygaszanie na końcach fragmentów i efektywny wpływ kontrolek.
-- [ ] Sprawdzić, które wierzchołki rzeczywiście tworzą mierzony obrys oraz
-  czy dostępne kontrolki mogą poruszyć właśnie ten brzeg.
+- [x] Dodać nakładkę pokazującą osobno: ochronę użytkownika, zamrożenie przez
+  brak danych, wygaszanie (na końcach fragmentów i przy blokadach) i efektywny
+  wpływ kontrolek — `control_reach.py`, plik `control-reach.png` w każdym przebiegu.
+- [x] Sprawdzić, które wierzchołki rzeczywiście tworzą mierzony obrys oraz
+  czy dostępne kontrolki mogą poruszyć właśnie ten brzeg — raport
+  `control_reach` w `autopilot-report.json`.
 - [ ] Rozdzielić wkład kamery, niepewności referencji i zakresu deformacji
   poprzez kontrolowane eksperymenty z zachowanymi źródłami.
 - [ ] Sprawdzić uogólnione sposoby budowania kontrolek dla krótkich fragmentów,
   z uwzględnieniem sąsiedztwa siatki i łagodnego przejścia do blokad.
-- [ ] Przy braku dopuszczalnej korekty podać konkretny brak danych lub konflikt
-  wymagań, zamiast ponawiać tę samą optymalizację.
+- [x] Przy braku dopuszczalnej korekty podać konkretny brak danych lub konflikt
+  wymagań, zamiast ponawiać tę samą optymalizację — nowa akcja
+  `resolve_protection_conflict` oraz ustalenia `outline_locked_by_protection`,
+  `reach_below_observed_error`, `step_below_raster_resolution`.
+
+#### Wynik P0-A dla przebiegu `716bc5786c78` (1 listopada 2026 r.)
+
+Sonda tylko do odczytu:
+`output/character-scan/aiko-pipeline-v2/probes/p0a-control-reach-2026-11-01/`.
+
+| Region | Wierzchołki obrysu | Chronione przez użytkownika | Zasięg kontrolek | Średni błąd |
+| --- | --- | --- | --- | --- |
+| Lewa żuchwa | 128 | 128 (100%) | 0 px | 29,0 px |
+| Broda | 1104 | 1104 (100%) | 0 px | 6,2 px |
+| Prawa żuchwa | 188 | 166 (88%); 11 zamrożonych z braku wsparcia, 11 wytłumionych | 0,40 px | 7,5 px |
+
+- **Dlaczego lewa kontrolka nie działa:** manifest ochrony nie chroni samej
+  brody, lecz cały pas obrazu `pixel[1] >= 870` na pełnej szerokości twarzy.
+  Obserwowane fragmenty lewej żuchwy leżą w wierszach 880–904, więc każdy
+  wierzchołek tworzący ten obrys jest zablokowany. To konflikt wymagań, nie błąd
+  algorytmu ani brak danych.
+- **Co ogranicza prawą:** wolne są tylko wiersze 863–869 nad pasem. Pozostałe
+  wierzchołki leżą w odległości mniejszej niż wygaszanie (~5,9 mm) od blokad,
+  więc pełny zakres kontrolki daje 0,40 px. Pierwszy krok (0,5) przesuwa brzeg
+  o 0,2 px; rasteryzator zaokrągla rzut do pikseli, więc sylwetka się nie
+  zmienia. 27 z 28 prób kończy się „brakiem poprawy”, a krok maleje do limitu.
+- **Broda** w trybie częściowym nie ma żadnej kontrolki, a jej obrys i tak jest
+  w pełni chroniony.
+- **Kierunek rozbieżności:** punkty referencji leżą wewnątrz sylwetki modelu —
+  referencja ma węższą i wyżej położoną żuchwę oraz brodę niż model. Zatwierdzona
+  „szersza broda” jest więc wprost sprzeczna z obserwowanym obrysem w tym ujęciu
+  (przy obecnej kamerze; wkład kamery pozostaje nierozdzielony).
+
+**Decyzja użytkownika (1 listopada 2026 r.): zawęzić ochronę.** Nowy manifest
+`protection-aiko-v17-chin-center.json` jest podzbiorem v16 (3020 z 4993
+wierzchołków): chroni środek brody, |x − oś| ≤ 0,30 × rozstaw oczu (~49 px).
+Zostaje zablokowane 1062 z 1104 wierzchołków obrysu brody, a obrys obu boków
+żuchwy jest wolny. Plik v16 pozostaje bez zmian, a projekt Studio nadal jest
+powiązany z v16; przełączenie wymaga `bind-blender --protection` przy
+zatrzymanym serwerze projektu.
+
+#### Próba z ochroną v17 — `probes/p0a-v17-narrowed-protection-2026-11-01/`
+
+Ten sam snapshot, skan i kamera co `716bc5786c78`; tylko ochrona v17.
+
+| Region | p95 przed → po | Średnio przed → po | Zasięg kontrolki |
+| --- | --- | --- | --- |
+| Lewa żuchwa | 36,5 → 35,5 px | 29,0 → 27,8 px | 3,4 px |
+| Prawa żuchwa | 14,8 → 13,5 px | 7,5 → **7,9** px | 10,5 px |
+| Broda | 10,5 → 10,5 px | 6,2 → 6,2 px | 0,05 px (chroniona) |
+
+- Kontrolki ruszyły: 5 przyjętych kroków, obie na granicy zakresu (−0,98 i −1).
+- Status `rejected`: brama końcowa wykryła wzrost błędu średniego prawej żuchwy.
+  Kandydat nie powstał i nie trafia do Blendera.
+- **Następna blokada to ekspresja kontrolek, nie ochrona.** Na prawej żuchwie
+  referencja wymaga poszerzenia górnych wierszy (863–866, model węższy o ~10 px)
+  i zwężenia dolnych (890–902, szerszy o 8–16 px). Jedna kontrolka boczna na
+  stronę może tylko przesunąć cały bok, więc poprawia dół kosztem wierszy
+  878–884 (1,5 → 10 px). Po lewej zasięg 3,4 px wobec błędu 29 px.
+- Wniosek: P0-C wymaga najpierw P0-D — kilku lokalnych kontrolek wzdłuż żuchwy
+  oraz zakresu dobranego do mierzonego błędu.
 
 **Kryterium ukończenia:** raport wskazuje, dlaczego lewa kontrolka nie działa
 i co ogranicza prawą. Ewentualna zmiana algorytmu działa również na oddzielnych
 przypadkach testowych i respektuje ochronę zatwierdzonej geometrii.
+
+### P0-D. Naprawić ograniczenia wyszukiwania wykryte przy P0-A
+
+Wynikają z kodu i dotyczą każdego modelu, nie tylko Aiko.
+
+- [ ] **Rozdzielczość rastra:** `render_silhouette` zaokrągla rzut do pełnych
+  pikseli, więc kroki poniżej ~0,5 px są niewidoczne dla celu. Dodać
+  rasteryzację z nadpróbkowaniem lub pomiar brzegu z dokładnością podpikselową.
+  Po zmianie skali kontrolek przestało to blokować Aiko, ale nadal ogranicza
+  dokładność końcowych kroków.
+- [x] **Skala kontrolek:** w układzie lokalnym jednostka oznacza znany ruch brzegu
+  (`edge_px_per_unit`) = 1,25 × błąd zmierzony w paśmie, w zakresie
+  `sep·fraction`…`sep·0,25`; żaden wierzchołek nie przekracza `sep·0,25`.
+- [x] **Podwójne tłumienie w trybie częściowym:** w układzie lokalnym wygaszanie
+  przy blokadach dotyczy tylko ochrony użytkownika; końce fragmentu wygasza
+  raz samo pasmo.
+- [ ] **Akceptacja:** każda zmiana 1 px poza obserwowanymi wierszami odrzuca
+  próbę (`max_error_px > 0`), a regresja dowolnego regionu przy tolerancji 0
+  blokuje ruch drgający o ±1 px. Wprowadzić tolerancję rzędu rozdzielczości rastra.
+- [ ] **Wspólne przesunięcie boków:** kontrolki są wyłącznie poprzeczne i osobne
+  dla stron; przesunięcie osi (kamera, `axis_x_px`) nie jest korygowane.
+  Dodać kontrolkę translacji poziomej albo jawnie przypisać ją kamerze.
+  Aiko: w wierszu 899 model wystaje poza referencję o 34 px po lewej i 14,5 px
+  po prawej, przy niemal symetrycznej referencji (46 i 51 px od osi) — wskazuje
+  to na przesunięcie poziome ~10 px między modelem a referencją (kamera z 3 punktów).
+- [ ] **Broda w trybie częściowym:** brak kontrolki mimo pomiaru regionu
+  (dla Aiko obojętne, dopóki środek brody jest chroniony).
+- [x] **Lokalne kontrolki wzdłuż żuchwy:** `local_controls()` w `autopilot.py`,
+  domyślne w trybie częściowym (`control_layout: 'local'`; stary układ:
+  `'regional'`). Każdy fragment dostaje pasma co `max(2·taper, sep·0,06)` px,
+  tworzące podział jedności w wierszach; waga boczna liczona względem brzegu
+  sylwetki w danym wierszu, liniowo od 0,15 do 1 półszerokości.
+- [x] **Załamania na zamrożonych przerwach** (decyzja użytkownika: interpolować
+  krótkie przerwy). `bridge_gaps()` łączy fragmenty jednej strony oddalone
+  o nie więcej niż `bridge_gap_px` (domyślnie odstęp pasm, Aiko ~11,5 px;
+  `0` wyłącza). Wiersze przerwy są zapisane w `coverage.interpolated_gaps_px`
+  i ustaleniu `interpolated_gaps`; nigdy nie są mierzone ani oceniane.
+  Dłuższe przerwy pozostają zamrożone.
+- [x] **Ścinanie brzegu:** zmiana przesunięcia brzegu między sąsiednimi wierszami
+  jest ograniczona do `max_edge_shear_px_per_row` (domyślnie 1 px/wiersz,
+  minimum 1); próby, które ją przekraczają, są odrzucane (`edge_shear`).
+  Usuwa schodki na zewnętrznych końcach obserwowanych odcinków, gdzie ruchomy
+  brzeg spotyka nieobserwowany. Wynik zapisuje `report.edge_shear`.
+
+#### Wynik P0-D dla Aiko — `probes/p0d-final-bridged-v17-2026-11-01/`
+
+Ochrona v17, ten sam snapshot, skan i kamera co `716bc5786c78`; 7 pasm,
+przerwy 884–891 (lewa) i 867–875 (prawa) interpolowane, limit 1 px/wiersz.
+
+| Region | p95 przed → po | Średnio przed → po |
+| --- | --- | --- |
+| Prawa żuchwa | 14,8 → **11,5** px | 7,5 → **5,0** px |
+| Lewa żuchwa | 36,5 → 34,5 px | 29,0 → 27,2 px |
+| Broda (chroniona) | 10,5 → 10,5 px | 6,2 → 6,2 px |
+
+Porównanie wariantów na tych samych danych (średni błąd prawa / lewa żuchwa):
+
+| Wariant | Prawa | Lewa | Sylwetka |
+| --- | --- | --- | --- |
+| Pasma bez interpolacji | 4,6 px | 26,1 px | schodki na przerwach |
+| Interpolacja, bez limitu | 3,8 px | 24,1 px | schodki na końcach odcinków |
+| Interpolacja, 2 px/wiersz | 3,9 px | 23,9 px | hak u góry prawej żuchwy |
+| **Interpolacja, 1 px/wiersz (domyślnie)** | 5,0 px | 27,2 px | bez nowych schodków |
+
+- Wybrano wariant bez nowych załamań kosztem ~1 px średniego błędu prawej strony.
+  Drobny uskok lewego brzegu ok. wiersza 887 istniał w modelu przed korektą.
+- Lewa żuchwa: w wierszach 899–903 obrys referencji (x 542–556) leży wewnątrz
+  chronionego środka brody v17 (x ≥ 538); wyżej brzeg musiałby wejść ~30 px
+  w pas ~35 px przed blokadą, co składa siatkę. Ograniczenie wynika z ochrony
+  i prawdopodobnego przesunięcia kamery, nie z liczby pasm.
+- Sylwetka 2D bez nowych schodków; **ocena 3D (front, boki, tył, ¾) w Blenderze
+  nie była jeszcze wykonana** — to warunek P0-C przed jakimkolwiek importem.
+
+**Kryterium ukończenia:** na przypadkach testowych z odblokowanym obrysem
+pierwszy krok zmienia mierzony brzeg, a raport `control_reach` nie zgłasza
+`step_below_raster_resolution` dla kontrolek o zasięgu powyżej 1 px; wynik
+nie zawiera załamań na granicach fragmentów.
 
 ### P0-B. Zweryfikować granice na rzeczywistych referencjach
 
@@ -331,23 +469,43 @@ Te prace można prowadzić równolegle z rozwojem geometrii.
   i kopie projektów. Obecny worker korzysta z `fcntl` na macOS/Linux;
   wsparcie Windows wymaga osobnej implementacji i weryfikacji.
 - [ ] Uporządkować zmiany Studio w repozytorium i wydania odtwarzalne z konkretnej
-  rewizji kodu, z zachowaniem innych trwających prac.
+  rewizji kodu, z zachowaniem innych trwających prac. **Stan 1 listopada:**
+  ~35 modułów Studio, `studio-web/` i ~20 plików testów istniały tylko jako
+  nieśledzone pliki w głównym katalogu; serwery uruchamiano z kopii
+  w `output/…/runtime-…` i z dodatku Blendera.
+- [ ] `studio_project.commit()` zapisuje `revisions/N.json` przed `project.json`;
+  przerwanie między zapisami blokuje dalsze zapisy projektu („Revision already
+  exists”). Brak blokady międzyprocesowej między CLI a `serve`.
+- [ ] `import_view` tworzy `views/<id>/` przed zapisem rewizji; nieudany import
+  zostawia katalog i blokuje ten identyfikator widoku.
+- [ ] `import fcntl` na poziomie modułu w `blender_pipeline.py` uniemożliwia
+  `serve` na Windows, nawet bez `--blender`.
+- [ ] Anulowanie: zdarzenie może zostać utracone między pobraniem dzierżawy
+  a utworzeniem nowego `cancel_event`; etap `fit` nie sprawdza anulowania.
+- [ ] Jeden uszkodzony `state.json` psuje całą listę `/api/pipeline`.
+- Sprawdzone bez zastrzeżeń: serwer słucha tylko na 127.0.0.1, ochrona Host/Origin,
+  `safe_path` przeciw wyjściu poza projekt, brak `innerHTML` w UI, Blender
+  uruchamiany listą argumentów z `--disable-autoexec`.
 
 **Kryterium ukończenia:** zadanie można przerwać i odtworzyć bez utraty źródeł
 oraz bez mylenia częściowych artefaktów ze zweryfikowanym kandydatem.
 
 ## 6. Zalecana kolejność najbliższych prac
 
-1. **Diagnoza kontrolek i blokad Aiko — P0-A.** Ustalić osiągalny zakres
-   korekty, zanim zmienimy siłę optymalizacji.
-2. **Nowe dane i walidacja detektora — P0-B.** Rozstrzygnąć widoczne fragmenty,
-   zachowując uczciwe luki danych; można prowadzić równolegle z punktem 1.
-3. **Nowy kandydat i oględziny — P0-C.** Dopiero po wykazaniu dopuszczalnej zmiany.
-4. **Jakość powierzchni i adapter bazy — P1-A/P1-C.** Utrwalić rozwiązanie
+1. **Diagnoza kontrolek i blokad Aiko — P0-A.** Główna przyczyna ustalona
+   (konflikt ochrony z obserwowanym obrysem); pozostaje rozdzielenie wkładu kamery.
+2. **Zakres ochrony brody** — zdecydowano o zawężeniu (manifest v17);
+   próba pokazała, że kontrolki ruszają, ale nie dają dopuszczalnego wyniku.
+3. **Ograniczenia wyszukiwania — P0-D.** Lokalne pasma, skala, interpolacja
+   przerw i limit ścinania gotowe; zostały wspólne przesunięcie boków (kamera),
+   tolerancja akceptacji i rozdzielczość rastra.
+4. **Nowe dane i walidacja detektora — P0-B.** Można prowadzić równolegle.
+5. **Nowy kandydat i oględziny — P0-C.** Dopiero po wykazaniu dopuszczalnej zmiany.
+6. **Jakość powierzchni i adapter bazy — P1-A/P1-C.** Utrwalić rozwiązanie
    jako funkcję programu, nie jednorazową poprawkę Aiko.
-5. **Wiele ujęć — P1-B**, gdy dostępne będą odpowiednie referencje.
-6. **Rysy twarzy → włosy → sylwetka i strój → materiały — P2.**
-7. **Automatyczny rig/eksport — P3-A**, po uzyskaniu właściwego wyglądu.
+7. **Wiele ujęć — P1-B**, gdy dostępne będą odpowiednie referencje.
+8. **Rysy twarzy → włosy → sylwetka i strój → materiały — P2.**
+9. **Automatyczny rig/eksport — P3-A**, po uzyskaniu właściwego wyglądu.
 
 Nie przypisujemy jeszcze terminów etapom zależnym od brakujących referencji
 i wyników eksperymentów. Podstawą przejścia dalej są kryteria odbioru.
