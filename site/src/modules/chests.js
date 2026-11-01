@@ -18,6 +18,9 @@ function mkChest(){const g=new THREE.Group(),m=(geo,mat,x,y,z)=>{const o=new THR
  m(new THREE.BoxGeometry(.18,.22,.06),GO,0,.5,.39);return g}
 const meshes=[];
 window.chMeshes=meshes;/* для tree-fade.js */
+/* 0.2.8: «Розібрати» в режимі «Будова» (building.js) — лише порожня скриня, вона повертається в рюкзак */
+window.chDelList=()=>CH.map((c,i)=>({x:c.x,z:c.z,y:meshes[i]?meshes[i].position.y:H(c.x,c.z),n:'Скриня',g:meshes[i],del:()=>{
+ if(Object.values(c.it||{}).some(n=>n>0))return{err:'Спершу заберіть усе зі скрині'};const k=CH.indexOf(c);if(k<0)return'';CH.splice(k,1);inv.B_ch=(inv.B_ch||0)+1;showAll();try{hud();save()}catch(_){}return'Скриня — у рюкзаку'}})).filter(o=>o.g);
 function showAll(){meshes.forEach(g=>sc.remove(g));meshes.length=0;CH.forEach(c=>{const g=mkChest();g.position.set(c.x,Math.max(-.2,H(c.x,c.z)),c.z);g.rotation.y=c.ry||0;sc.add(g);meshes.push(g)})}
 showAll();
 
