@@ -1,12 +1,13 @@
 /* Дерева між камерою й героєм стають напівпрозорими (замість того, щоб камера відскакувала вбік чи наближалась — premium-fx.js).
    Кожен кадр перевіряємо відрізок «голова героя → камера» проти крони кожного дерева в радіусі 25 м; таке дерево плавно
    тьмяніє до 45 % непрозорості, а коли більше не заважає — повертається до звичайного вигляду (і своїх спільних матеріалів).
-   0.2.7: так само — Попал-центр, скрині й будівлі бази (плавильня, верстаки, кухня…): камера біля них більше не смикається. */
+   0.2.7: так само — Попал-центр, скрині й будівлі бази (плавильня, верстаки, кухня…): камера біля них більше не смикається.
+   0.2.8: і камінь та рудні жили — коли герой копає впритул, камера не стрибає. */
 (function(){try{
 if(typeof THREE=='undefined')return;
 const G=n=>{try{return eval(n)}catch(_){return undefined}};
-const TR=G('trees'),cam_=G('cam'),pl_=G('pl'),ANI_=G('ANI');if(!TR||!cam_||!pl_||!ANI_)return;
-window.plTreeFade=1;window.plBaseFade=1;
+const TR=G('trees'),RK=G('rocks'),cam_=G('cam'),pl_=G('pl'),ANI_=G('ANI');if(!TR||!cam_||!pl_||!ANI_)return;
+window.plTreeFade=1;window.plBaseFade=1;window.plRockFade=1;
 const MIN=.45,live=new Set();let last=performance.now();
 /* відрізок (hx,hz)→(cx,cz) проти кола (ox,oz,r): параметр t першого перетину або -1 */
 function seg(hx,hz,cx,cz,ox,oz,r){const dx=cx-hx,dz=cz-hz,a=dx*dx+dz*dz;if(a<1e-6)return-1;let t=((ox-hx)*dx+(oz-hz)*dz)/a;t=Math.max(0,Math.min(1,t));
@@ -17,13 +18,14 @@ function setFade(g,v){const ud=g.userData;
  g.traverse(m=>{if(m.isMesh&&m.userData.mat0)m.material.opacity=m.userData.mat0.transparent?Math.min(m.userData.mat0.opacity,v):v})}
 /* висота й радіус будівлі — з габаритів моделі, один раз */
 const _bx=new THREE.Box3(),_sz=new THREE.Vector3();
-function dims(g){const ud=g.userData;if(ud.fdim)return ud.fdim;_bx.setFromObject(g);_bx.getSize(_sz);
+function dims(g){const ud=g.userData,sk=g.scale.x+','+g.scale.y;if(ud.fdim&&ud.fdimK===sk)return ud.fdim;ud.fdimK=sk;/* жила меншає, коли її копають */_bx.setFromObject(g);_bx.getSize(_sz);
  return ud.fdim=isFinite(_sz.y)&&_sz.y>0?{h:_sz.y,r:Math.max(.5,Math.min(3,Math.max(_sz.x,_sz.z)/2))}:{h:1.5,r:.8}}
 const colR=()=>window.colR||{};
 function bases(){const L=[],cr=colR();
  for(const b of window.BPLACED||[])if(b.g&&b.g.parent&&b.g.visible&&cr[b.id]!==0)L.push(b.g);/* 0 — пласкі (грядка, лежанки) */
  for(const g of window.chMeshes||[])if(g.parent)L.push(g);
- if(window.plCenG&&window.plCenG.parent)L.push(window.plCenG);return L}
+ if(window.plCenG&&window.plCenG.parent)L.push(window.plCenG);
+ for(const o of RK||[])if(o&&o.m&&o.m.parent&&o.m.visible)L.push(o.m);return L}
 ANI_.push(()=>{const now=performance.now(),dt=Math.min(.1,(now-last)/1000);last=now;
  const hx=pl_.position.x,hz=pl_.position.z,hy=pl_.position.y+1.2,cx=cam_.position.x,cz=cam_.position.z,cy=cam_.position.y;
  const want=new Set();
