@@ -71,8 +71,8 @@ Pliki [`hero-walk-candidate.blend`](assets/hero-walk-candidate.blend) i
 eksperymentalne i nie są używane przez grę.
 
 Osobny wariant wizualny bohatera, przygotowany jako kandydat do three.js r128,
-opisuje [`hero-anime-remaster.md`](hero-anime-remaster.md). Nie jest ładowany
-przez grę.
+opisuje [`hero-anime-remaster.md`](https://github.com/Popalgame/polpal-studio/blob/main/docs/hero-anime-remaster.md) w Polpal Studio
+(tam też są jego pliki i skrypty). Nie jest ładowany przez grę.
 
 ## Wybieralny wariant bohatera: Ajko (Aiko)
 

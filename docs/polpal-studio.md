@@ -4,6 +4,11 @@ Polpal Studio to osobna aplikacja do tworzenia bohaterów 3D, w prywatnym
 repozytorium [Popalgame/polpal-studio](https://github.com/Popalgame/polpal-studio). Wcześniej leżała tu jako `tools/character-scan` i
 `tools/character-build`; wydzielono ją 1 listopada 2026 r. (stan z commita
 `5e9f314`, wcześniejsza historia tych plików zostaje w tym repozytorium).
+Tego samego dnia przeniesiono do Studio pozostałe narzędzia produkcji:
+`tools/blender-mcp`, `tools/blender-api`, `scripts/trellis2_space.py`,
+`docs/blender-brain.md` i `docs/hero-anime-remaster.md`. W grze zostały tylko
+skrypty budujące jej własne zasoby (`scripts/build-*`, `scripts/prepare-*`),
+serwer, benchmark i `tools/ue5-pipeline`.
 
 ## Kontrakt połączenia
 
