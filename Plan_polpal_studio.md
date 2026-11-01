@@ -167,6 +167,19 @@ rzeźby bazy (tak powstała v16: etapy `output/aiko-sculpt/production-v16`).
   three.js r128) osobna tekstura kości na każdy prymityw. Dla telefonów warto
   złączyć materiały w atlas i współdzielić szkielet — dotyczy też ładowania
   w grze, więc wymaga decyzji o integracji.
+- [x] **Nos bohaterki** (1 listopada, zatwierdzone przez użytkownika: 10 mm).
+  Rzeźba v16 nie miała nosa (gładki profil twarzy). Na kopii bazy
+  `output/aiko-sculpt/production-v16-nose/aiko-v16-nose-10mm.blend` dodano mały
+  nos w stylu referencji: wierzchołek 60% drogi od środka oczu do ust (z = 1,166),
+  szerokość ~14% rozstawu oczu, delikatny grzbiet, stromszy spód. Lokalne
+  zagęszczenie siatki (180 ścian, interpolacja UV, kolorów i wag), przesunięte
+  tylko wierzchołki skóry twarzy niewspółdzielone z innymi częściami. Skrypty:
+  `nose_candidate.py`, `render_face.py` obok pliku. Oryginał v16 bez zmian
+  (suma kontrolna przed i po). W optymalizatorze twarz ma priorytet 5 (wcześniej 3)
+  — przy 40 tys. trójkątów skóra twarzy ma 4,2 tys. zamiast 2,7 tys.; bez tego
+  nos wygładzał się w wersji do gry. Baza `aiko-v16-nose` zastąpiła `aiko-v16`
+  (stara przeniesiona do `bases/_retired/`); bohaterka zbudowana w Studio:
+  40 038 trójkątów, 22 kości, 7 klipów, nos widoczny w podglądzie Three.js.
 - [ ] Wymiana części na inne kształty (np. inna fryzura, płaszcz zamiast kurtki)
   — potrzebna biblioteka rzeźbionych części zgodnych ze szkieletem.
 - [ ] Półautomatyczny warsztat rzeźby nowej bazy w Studio (etapy jak przy v16).

@@ -34,7 +34,7 @@ variant = json.loads(Path(args[4]).read_text()) if len(args) > 4 else {'remove':
 CLIPS = {'idle', 'walk', 'run', 'swim', 'hit', 'throw', 'jump'}
 # Detail priority by material name (lower-case stems); first match wins.
 PRIORITY = (('iris', 6), ('pupil', 6), ('catchlight', 6), ('sclera', 5), ('eye', 5), ('eyelashes', 4), ('lash', 4),
-            ('brow', 4), ('mouth', 4), ('lip', 4), ('hair', 3), ('fringe', 3), ('pony', 3), ('skin', 3), ('face', 3),
+            ('brow', 4), ('mouth', 4), ('lip', 4), ('face', 5), ('freckles', 5), ('nose', 5), ('hair', 3), ('fringe', 3), ('pony', 3), ('skin', 3), ('face', 3),
             ('freckles', 3), ('hand', 2.5), ('finger', 2.5), ('nylon', 1.5), ('rune', 1.5),
             # Fine surface detail that reads as texture at game distance:
             ('fibres', .4), ('channels', .5), ('seam', .5), ('piping', .5), ('hardware', .5), ('inset', .5))
