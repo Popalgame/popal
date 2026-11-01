@@ -71,6 +71,16 @@ def fit_mesh(job,out,root=None):
         targets.append(mask>127)
     a,b,c=triangles.T
     source_normals=np.cross(vertices[b]-vertices[a],vertices[c]-vertices[a])
+    surface=job.get('surface_limits')
+    if surface is not None:
+        need={'max_normal_rotation_deg','max_crease_change_deg','min_area_ratio','max_area_ratio'}
+        if not isinstance(surface,dict) or not need<=set(surface) or not all(isinstance(surface[k],(int,float)) and np.isfinite(surface[k]) for k in need) \
+           or not 0<surface['min_area_ratio']<1<surface['max_area_ratio'] or surface['max_normal_rotation_deg']<=0 or surface['max_crease_change_deg']<=0:
+            raise ValueError('Invalid surface limits')
+        from surface_quality import _normals,_interior_edges
+        unit0,area0=_normals(vertices,triangles);solid=area0>1e-12
+        edge_pairs=_interior_edges(triangles);edge_pairs=edge_pairs[solid[edge_pairs[:,0]]&solid[edge_pairs[:,1]]]
+        dihedral0=np.degrees(np.arccos(np.clip(np.sum(unit0[edge_pairs[:,0]]*unit0[edge_pairs[:,1]],axis=1),-1,1)))
     regularization=float(job.get('regularization',.001))
     if not np.isfinite(regularization) or regularization<0:raise ValueError('Invalid regularization')
     frozen_baselines=[render_silhouette(vertices,triangles,v['camera'],v['size']) if 'mutable_outline_intervals_px' in v else None for v in views]
@@ -87,6 +97,14 @@ def fit_mesh(job,out,root=None):
         normals=np.cross(proposal[b]-proposal[a],proposal[c]-proposal[a])
         meaningful=np.linalg.norm(source_normals,axis=1)>1e-12
         if np.any(np.sum(normals[meaningful]*source_normals[meaningful],axis=1)<=1e-12):return reject('triangle_orientation')
+        if surface is not None:
+            # Cheap per-trial surface checks; a clean silhouette can hide a twisted surface.
+            unit1,area1=_normals(proposal,triangles)
+            if np.degrees(np.arccos(np.clip(np.sum(unit0[solid]*unit1[solid],axis=1),-1,1))).max()>surface['max_normal_rotation_deg']:return reject('surface_quality')
+            ratio=area1[solid]/area0[solid]
+            if ratio.min()<surface['min_area_ratio'] or ratio.max()>surface['max_area_ratio']:return reject('surface_quality')
+            dihedral1=np.degrees(np.arccos(np.clip(np.sum(unit1[edge_pairs[:,0]]*unit1[edge_pairs[:,1]],axis=1),-1,1)))
+            if len(edge_pairs) and np.abs(dihedral1-dihedral0).max()>surface['max_crease_change_deg']:return reject('surface_quality')
         masks=[render_silhouette(proposal,triangles,v['camera'],v['size']) for v in views]
         for mask,baseline,view in zip(masks,frozen_baselines,views):
             if baseline is not None and any(g['max_error_px']>0 for g in frozen_outline_error(baseline,mask,view['mutable_outline_intervals_px']).values()):return reject('unobserved_outline_motion')

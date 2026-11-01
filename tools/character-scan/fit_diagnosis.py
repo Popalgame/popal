@@ -45,9 +45,11 @@ def diagnose(report, evidence=None, camera=None, result=None):
         'observed_mean_px':reach_regions[r]['observed_mean_px']} for r in reach['reach_below_error']})
     if reach.get('first_step_below_raster'):finding('controls','step_below_raster_resolution',{r:reach_regions[r]['first_step_motion_px']
         for r in reach['first_step_below_raster']})
+    surface=report.get('surface_quality') or {}
+    if surface.get('status')=='fail':finding('surface','surface_quality_failed',{'failures':surface['failures'],'metrics':surface['metrics']})
     search=result.get('search_diagnostics',{})
     counts=search.get('trial_reasons',{})
-    constrained={key:counts[key] for key in ('displacement_limit','triangle_orientation','unobserved_outline_motion','edge_shear','region_regression') if counts.get(key)}
+    constrained={key:counts[key] for key in ('displacement_limit','triangle_orientation','unobserved_outline_motion','edge_shear','surface_quality','region_regression') if counts.get(key)}
     if constrained:finding('constraints','rejected_search_trials',constrained)
     if search.get('controls_at_bounds'):finding('controls','controls_at_bounds',search['controls_at_bounds'])
     residual={name:g['after']['p95_px'] for name,g in report.get('regions',{}).items() if g.get('after') and not g.get('within_target')}
@@ -73,6 +75,8 @@ def diagnose(report, evidence=None, camera=None, result=None):
         action='review_candidate';summary='Próg obserwowanego obrysu osiągnięty; podobieństwo 3D pozostaje niezatwierdzone.'
     else:
         action='review_shape_and_controls';summary='Pozostał błąd kształtu lub ograniczeń korekty; samo zwiększenie liczby iteracji nie ma uzasadnienia.'
+    if surface.get('status')=='fail':
+        summary+=' Powierzchnia 3D nie przeszła kontroli: '+', '.join(surface['failures'])+'; dopasowanie obrysu nie wystarcza.'
     if locked_regions and action!='resolve_protection_conflict':
         summary+=' Bez korekty z powodu ochrony użytkownika: '+', '.join(locked_regions)+'.'
     if any(contextual.values()):summary=f"Broda: kandydat styku z szyją ({sum(contextual.values())} próbek). "+summary

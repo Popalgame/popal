@@ -8,6 +8,7 @@ import math
 from pathlib import Path
 import re
 import shutil
+import time
 import uuid
 
 import numpy as np
@@ -38,19 +39,51 @@ def write_json(path,value):
     temp=path.with_name(path.name+'.'+uuid.uuid4().hex+'.tmp');temp.write_text(text);temp.replace(path)
 
 
+def lock(path,wait=True,required=False):
+    """Exclusive cross-process advisory lock; close the returned handle to release it.
+    POSIX uses flock, Windows msvcrt; without either, raise only if required, else degrade to no lock."""
+    handle=Path(path).open('a+')
+    try:
+        try:import fcntl
+        except ImportError:fcntl=None
+        if fcntl:
+            try:fcntl.flock(handle,fcntl.LOCK_EX|(0 if wait else fcntl.LOCK_NB))
+            except BlockingIOError:raise BlockingIOError('Lock held by another process') from None
+            return handle
+        try:import msvcrt
+        except ImportError:
+            if required:raise RuntimeError('No file locking available on this platform') from None
+            return handle
+        while True:
+            try:handle.seek(0);msvcrt.locking(handle.fileno(),msvcrt.LK_NBLCK,1);return handle
+            except OSError:
+                if not wait:raise BlockingIOError('Lock held by another process') from None
+                time.sleep(.05)
+    except BaseException:handle.close();raise
+
+
 def read(root):
     p=json.loads((Path(root)/'project.json').read_text())
     if p.get('schema')!='polpal.scan-studio/2':raise ValueError('Unsupported studio project')
     return p
 
 
-def commit(root,p,expected=None):
+def commit(root,p,expected=None,prepare=None):
+    """Check-and-write under a project lock shared by `serve` and CLI commands.
+    `prepare` runs under the lock after the revision check, before anything is published."""
     root=Path(root)
-    if expected is not None and read(root)['revision']!=expected:raise ValueError('Revision conflict; reload the project')
-    p['revision']+=1
-    history=root/'revisions'/f"{p['revision']:06}.json"
-    if history.exists():raise ValueError('Revision already exists')
-    write_json(history,p);write_json(root/'project.json',p);return p
+    with lock(root/'.studio.lock'):
+        current=read(root)['revision'] if (root/'project.json').exists() else None
+        if expected is not None and current!=expected:raise ValueError('Revision conflict; reload the project')
+        p['revision']+=1
+        history=root/'revisions'/f"{p['revision']:06}.json"
+        if history.exists():
+            # project.json is published last, so history above it is an orphan of an interrupted
+            # commit: set it aside (kept for inspection) instead of blocking every later commit.
+            if current is None or p['revision']<=current:raise ValueError('Revision already exists')
+            history.replace(history.with_name(history.name+'.orphan-'+uuid.uuid4().hex[:8]))
+        if prepare:prepare()
+        write_json(history,p);write_json(root/'project.json',p);return p
 
 
 def create(root,name='Aiko / Scan Studio'):
@@ -66,13 +99,22 @@ def import_view(root,view_id,image,report_path=None,label=None):
     if not re.fullmatch(r'[a-z0-9_-]{1,40}',view_id):raise ValueError('Invalid view identifier')
     root=Path(root);p=read(root)
     if view_id in p['views']:raise ValueError('View already exists')
-    folder=root/'views'/view_id
-    image=Path(image);destination=folder/'source.png';rgba=Image.open(image).convert('RGBA')
+    final=root/'views'/view_id
+    image=Path(image);rgba=Image.open(image).convert('RGBA')
     report=json.loads(Path(report_path).read_text()) if report_path else {}
     if report and report['source_sha256']!=digest(image):raise ValueError('Scan/source mismatch')
-    folder.mkdir(parents=True);shutil.copy2(image,destination) if image.suffix.lower()=='.png' else rgba.save(destination)
+    # Stage in a private folder; it becomes views/<id> only inside commit(), so a failed import
+    # never leaves a folder that blocks the identifier.
+    folder=root/'views'/f'.{view_id}.{uuid.uuid4().hex[:8]}.staging';folder.mkdir(parents=True)
+    try:return _import_view(root,p,view_id,final,folder,image,rgba,report,report_path,label)
+    finally:shutil.rmtree(folder,ignore_errors=True)
+
+
+def _import_view(root,p,view_id,final,folder,image,rgba,report,report_path,label):
+    rel=lambda path:str((final/path.relative_to(folder)).relative_to(root))
+    destination=folder/'source.png';shutil.copy2(image,destination) if image.suffix.lower()=='.png' else rgba.save(destination)
     w,h=rgba.size;roi=report.get('roi_px',[0,0,w,h]);cal=report.get('ocular_metrology',{}).get('calibration',{})
-    v={'id':view_id,'label':label or view_id,'image':str(destination.relative_to(root)),'source_sha256':digest(destination),
+    v={'id':view_id,'label':label or view_id,'image':rel(destination),'source_sha256':digest(destination),
        'original_source_sha256':digest(image),'width':w,'height':h,'roi':roi,'masks':{},'proposals':{},'landmarks':{},
        'calibration':{'mm_per_px':cal.get('mm_per_px'),'origin_px':cal.get('origin_px',[0,0]),'scale_relative_uncertainty':cal.get('scale_relative_uncertainty')},
        'outline':[],'camera':None,'camera_config':{'kind':'orthographic','world_unit':'mm','frame_id':'aiko-model'},'results':{},
@@ -82,14 +124,18 @@ def import_view(root,view_id,image,report_path=None,label=None):
             source=Path(report_path).parent/'masks'/(name+'.png')
             if source.exists():
                 target=folder/(name+'.png');shutil.copy2(source,target)
-                v['masks'][name]={'path':str(target.relative_to(root)),'sha256':digest(target),'status':report['features'].get(name,{}).get('status','candidate'),
+                v['masks'][name]={'path':rel(target),'sha256':digest(target),'status':report['features'].get(name,{}).get('status','candidate'),
                                   'origin':'scanner proposal','active':False,'reviewed':False}
         for side in ('left','right'):
             f=report['features']['iris_'+side]
             if f.get('centroid_px'):v['landmarks']['iris_center_'+side]={'point_px':f['centroid_px'],'sigma_px':2,'visible':True,'origin':'mask centroid candidate'}
         tip=report.get('face_shape',{}).get('chin_bottom',{}).get('point_px')
         if tip:v['landmarks']['chin_bottom']={'point_px':tip,'sigma_px':3,'visible':True,'origin':'contrast boundary candidate'}
-    p['views'][view_id]=v;return commit(root,p,p['revision'])
+    def publish():
+        # Under the lock with an unchanged revision, an existing folder is an unpublished orphan.
+        if final.exists():shutil.rmtree(final)
+        folder.rename(final)
+    p['views'][view_id]=v;return commit(root,p,p['revision'],publish)
 
 
 def validate_view(root,v):

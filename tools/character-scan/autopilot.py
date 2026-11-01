@@ -16,6 +16,7 @@ from metrology3d import project
 from outline_objective import REGIONS, measure_outline, validate_segments, frozen_outline_error, edge_shear
 from fit_diagnosis import diagnose
 from control_reach import control_reach, overlay as reach_overlay
+from surface_quality import check as surface_check, LIMITS as SURFACE_LIMITS
 
 
 class Blocked(ValueError):
@@ -50,6 +51,29 @@ def outline_readiness(scan):
             'missing_regions':missing,'low_coverage_regions':low,
             'scope':'Observed contour coverage only; sufficient coverage does not confirm semantic accuracy.',
             'next_action':'Provide a reference with the missing contour visible, or a source-matched annotation of genuinely visible fragments. Do not trace through hair or mirror the other cheek.' if missing or low else None}
+
+
+def adjacency(count, triangles):
+    """Row-normalised vertex adjacency of a triangle mesh (sparse)."""
+    from scipy.sparse import coo_matrix, diags
+    i = triangles[:, [0, 1, 2, 1, 2, 0]].ravel()
+    j = triangles[:, [1, 2, 0, 0, 1, 2]].ravel()
+    a = coo_matrix((np.ones(len(i)), (i, j)), shape=(count, count)).tocsr()
+    a.data[:] = 1
+    degree = np.asarray(a.sum(axis=1)).ravel()
+    return diags(1/np.maximum(degree, 1))@a
+
+
+def diffuse(weight, neighbours, allowed, iterations=12):
+    """Laplacian smoothing of a deformation weight inside its support only.
+
+    Removes ridges where per-vertex factors meet, without spreading motion to
+    rows outside the observed (or bridged) fragment.
+    """
+    out = weight.copy()
+    for _ in range(iterations):
+        out = np.where(allowed, .5*out+.5*(neighbours@out), 0.)
+    return out
 
 
 def bridge_gaps(mutable, max_gap):
@@ -93,6 +117,7 @@ def local_controls(vertices, triangles, camera, size, segments, mutable, inverse
     spacing = max(2*taper, sep*.06)
     floor = sep*fraction
     ceiling = max(floor, sep*.25)
+    neighbours = adjacency(len(vertices), np.asarray(triangles))
     controls = []
     names = Counter()
     for side, sign in (('left', -1), ('right', 1)):
@@ -100,9 +125,9 @@ def local_controls(vertices, triangles, camera, size, segments, mutable, inverse
         boundary = edge-.5 if side == 'left' else edge+.5
         half = np.where(occupied, sign*(boundary-cx), 0.)[rows]
         reach = np.where(half > 1, sign*(xy[:, 0]-cx)/np.maximum(half, 1), 0.)
-        # A gentle ramp over most of the half-row lets the edge move inward by
-        # a large share of the half-width without overtaking inner vertices.
-        lateral_weight = np.clip((reach-.15)/.85, 0, 1)
+        # A C1 ramp over most of the half-row: wide enough for large inward
+        # moves, without the crease lines a linear ramp leaves at its ends.
+        lateral_weight = smooth(.1, 1., reach)
         points = [(p, s['region']) for s in segments if s['region'] != 'chin' and s['region'].endswith('_'+side) for p in s['points_px']]
         for lo, hi in mutable[side]:
             # Each band stays inside its own fragment, never a neighbouring one.
@@ -120,7 +145,7 @@ def local_controls(vertices, triangles, camera, size, segments, mutable, inverse
                 else:
                     hat = np.ones(len(vertices))
                     near = [(p, r) for p, r in points if lo <= p[1] <= hi]
-                weight = hat*lateral_weight*fragment
+                weight = diffuse(hat*lateral_weight*fragment, neighbours, (fragment > 0) & (reach > 0))
                 if not near or weight.max() < 1e-9:
                     continue
                 errors = [abs(boundary[int(round(y))]-x) for (x, y), _ in near if occupied[int(round(y))]]
@@ -294,6 +319,8 @@ def prepare_job(snapshot, scan, camera, config=None):
         # The change of edge position may grow by at most 1 px per row: a moved
         # edge then meets a still one without a visible notch.
         job['views'][0]['max_edge_shear_px_per_row']=float(config.get('max_edge_shear_px_per_row',1.))
+    # Search-time surface limits; self-intersections are checked once after the fit.
+    job['surface_limits']={k:float(v) for k,v in {**SURFACE_LIMITS,**config.get('surface_limits',{})}.items() if k!='max_new_intersections'}
     return job, tolerance
 
 
@@ -336,6 +363,13 @@ def run(snapshot, scan, camera, out, config=None):
         supported_target_met = no_regression and all(g['within_target'] for g in gates.values())
         target_met = supported_target_met and not partial
         status = 'target_met' if target_met else ('partial_candidate' if partial else 'candidate') if no_regression and result['accepted_steps'] else 'stalled' if no_regression else 'rejected'
+        outline_status=status
+        surface=surface_check(job['mesh']['vertices'],result['vertices'],job['mesh']['triangles'],(config or {}).get('surface_limits')) if result['accepted_steps'] else None
+        surface_failed=surface is not None and surface['status']=='fail'
+        if surface_failed and status in ('target_met','candidate','partial_candidate'):status='rejected'
+        report['outline_status']=outline_status
+        report['quality_status']=surface['status'] if surface else 'not_checked'
+        if surface:report['surface_quality']=surface
         if partial:
             stability=frozen_outline_error(before_mask,after_mask,view['mutable_outline_intervals_px'])
             if any(g['max_error_px']>0 for g in stability.values()):raise ValueError('Unobserved outline changed')
@@ -350,7 +384,7 @@ def run(snapshot, scan, camera, out, config=None):
                       source_mesh_sha256=job['mesh']['sha256'],
                       result='fit/fit-result.json', job='fit-job.json',
                       import_recommended=status in ('target_met', 'candidate','partial_candidate'),
-                       stop_reason='regional_target_met' if target_met else 'regional_regression' if not no_regression else result['search_diagnostics']['stop_reason'],
+                       stop_reason='surface_quality' if surface_failed else 'regional_target_met' if target_met else 'regional_regression' if not no_regression else result['search_diagnostics']['stop_reason'],
                       protection={'vertices': len(job['protected_vertices']), 'source_vertices':len(snapshot.get('protected_vertices',[])), 'preserved': True})
         report['events'] += [{'stage': 'optimize', 'status': 'complete'}, {'stage': 'regional_validation', 'status': status}]
     except Blocked as error:

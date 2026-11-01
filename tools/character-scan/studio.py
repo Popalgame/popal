@@ -14,6 +14,8 @@ import uuid
 from PIL import Image
 import studio_project as project
 
+DISCONNECT=(BrokenPipeError,ConnectionResetError,ConnectionAbortedError)
+
 
 class Server(ThreadingHTTPServer):
     daemon_threads=True
@@ -21,6 +23,8 @@ class Server(ThreadingHTTPServer):
         super().__init__(address,Handler);self.root=Path(root).resolve();self.model=model;self.lock=threading.Lock()
         from blender_pipeline import Jobs
         self.jobs=Jobs(self.root,blender)
+        import engine  # local character engine, tab 05; runs live inside the project
+        self.engine=engine.Engine(self.root/'engine-runs',blender)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -29,6 +33,12 @@ class Handler(BaseHTTPRequestHandler):
         data=json.dumps(value,ensure_ascii=False,allow_nan=False).encode()
         self.send_response(status);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(data)))
         self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(data)
+    def fail(self,error):
+        if isinstance(error,DISCONNECT):return  # client went away mid-response; nothing to answer
+        status=(404 if isinstance(error,FileNotFoundError) else 409 if isinstance(error,ValueError) and 'Revision conflict' in str(error)
+                else 400 if isinstance(error,ValueError) else 500)
+        try:self.respond({'error':str(error)},status)
+        except DISCONNECT:pass
     def local_request(self):
         host=self.headers.get('Host','');allowed={f'127.0.0.1:{self.server.server_port}',f'localhost:{self.server.server_port}'}
         if host not in allowed:raise ValueError('Local host required')
@@ -37,6 +47,10 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             self.local_request();path=unquote(urlparse(self.path).path)
+            if path=='/engine':
+                self.send_response(301);self.send_header('Location','/engine/');self.send_header('Content-Length','0');self.end_headers();return
+            if path.startswith('/engine/'):
+                import engine;return engine.route_get(self,self.server.engine,path[len('/engine'):])
             if path=='/api/project':
                 p=project.read(self.server.root);p['runtime']={'semantic_available':bool(self.server.model),'local_only':True};return self.respond(p)
             if path=='/api/pipeline':return self.respond({'enabled':bool(self.server.jobs.blender),'jobs':self.server.jobs.states()})
@@ -48,10 +62,12 @@ class Handler(BaseHTTPRequestHandler):
             data=file.read_bytes();self.send_response(200);self.send_header('Content-Type',mimetypes.guess_type(str(file))[0] or 'application/octet-stream')
             self.send_header('Content-Length',str(len(data)));self.send_header('Cache-Control','no-cache');self.send_header('X-Content-Type-Options','nosniff')
             self.end_headers();self.wfile.write(data)
-        except Exception as error:self.respond({'error':str(error)},400)
+        except Exception as error:self.fail(error)
     def do_POST(self):
         try:
             self.local_request()
+            if urlparse(self.path).path.startswith('/engine/'):
+                import engine;return engine.route_post(self,self.server.engine,urlparse(self.path).path[len('/engine'):])
             if urlparse(self.path).path!='/api/action':return self.respond({'error':'Not found'},404)
             if self.headers.get('Content-Type','').split(';')[0]!='application/json':raise ValueError('JSON required')
             length=int(self.headers.get('Content-Length',0))
@@ -60,17 +76,17 @@ class Handler(BaseHTTPRequestHandler):
             with self.server.lock:
                 if payload.get('action')=='blender_pipeline':return self.respond(self.server.jobs.start(payload),202)
                 if payload.get('action')=='cancel_pipeline':
-                    self.server.jobs.cancel();return self.respond({'status':'cancellation_requested'})
+                    return self.respond({'status':'cancellation_requested' if self.server.jobs.cancel() else 'no_active_job'})
                 if payload.get('action')=='add_view':
                     if project.read(self.server.root)['revision']!=payload.get('revision'):raise ValueError('Revision conflict')
                     image=Image.open(io.BytesIO(base64.b64decode(payload['image'].split(',')[-1],validate=True)))
                     if image.width*image.height>32_000_000:raise ValueError('Image too large')
-                    folder=self.server.root/'uploads';folder.mkdir(exist_ok=True);path=folder/(uuid.uuid4().hex+'.png');image.save(path)
-                    result=project.import_view(self.server.root,payload['id'],path,label=payload.get('label'))
+                    folder=self.server.root/'uploads';folder.mkdir(exist_ok=True);path=folder/(uuid.uuid4().hex+'.png')
+                    try:image.save(path);result=project.import_view(self.server.root,payload['id'],path,label=payload.get('label'))
+                    except BaseException:path.unlink(missing_ok=True);raise  # a rejected upload is never referenced
                 else:result=project.action(self.server.root,payload,self.server.model)
             result['runtime']={'semantic_available':bool(self.server.model),'local_only':True};self.respond(result)
-        except ValueError as error:self.respond({'error':str(error)},409 if 'Revision conflict' in str(error) else 400)
-        except Exception as error:self.respond({'error':str(error)},500)
+        except Exception as error:self.fail(error)
 
 
 if __name__=='__main__':

@@ -1,6 +1,6 @@
 # Plan Polpal Studio
 
-**Stan dokumentu:** 1 listopada 2026 r. (uzupełniony o wynik P0-A)
+**Stan dokumentu:** 1 listopada 2026 r. (uzupełniony o P0-A, P0-D, P1-A, P3-B i próby P0-C)
 
 **Punkt wyjścia:** Scan Studio 2.0, moduł automatycznego dopasowania v6.
 
@@ -43,6 +43,76 @@ ciała, ubrań, materiałów i rigowania pozostaje do wykonania.
 | Kamery i 3D | Dopasowanie kamer, kontrola reprojekcji oraz pomiary wspólnych punktów z wielu ujęć. |
 | Odchylenia | Porównanie masek i konturów, mapy różnic oraz zakres dostępnych danych. |
 | Dopasowanie | Uruchomienie automatu, podgląd stanu, diagnoza, raporty i pliki kandydata, jeśli powstał. |
+
+## 1a. Lokalny silnik postaci (od 1 listopada 2026 r.)
+
+Decyzja użytkownika: Studio ma samodzielnie tworzyć postać do gry z paczki
+referencyjnej (zip lub obrazy + opis), **wyłącznie lokalnie** — bez kont,
+tokenów i limitów generacji. Wybrany kierunek: **silnik parametryczny**
+(baza ze szkieletem i animacjami + biblioteka części sterowana receptą).
+Generatory obraz→3D działają na Macu tylko jako nieoficjalne porty i wymagają
+24 GB+ pamięci (M4 ma 16 GB); Hunyuan3D wyklucza UE licencyjnie.
+
+```text
+zip / obrazy + opis
+   → reference_pack.py   (bezpieczne rozpakowanie, opis → kolory/style/proporcje,
+                          sylwetka T-pose → proporcje, pasy ubrania w Lab)
+   → recipe.json         (character_recipe.py: schemat, zakresy, pochodzenie każdej wartości)
+   → engine_blender.py   (Blender w tle: części → proporcje → wysokość 1,8 →
+                          22 kości mixamorig → wagi → 7 klipów → GLB → reimport)
+   → engine_render.py    (rendery kontrolne: przód, ¾, bok, tył, pozy)
+   → engine.py serve     (okno podglądu: model narasta etapami, klipy, paleta,
+                          proporcje, uwagi; tylko 127.0.0.1)
+```
+
+**Silnik jest zakładką „05 Silnik postaci” w Scan Studio** (ten sam serwer
+`studio.py serve`, przebiegi w `<projekt>/engine-runs/`); `engine.py serve`
+pozostaje jako samodzielny podgląd. Budowa wymaga Blender AI Bridge
+z włączonym Pythonem (ta sama zgoda co w potoku Studio).
+
+Skanery Studio pracują dla silnika: `face_scan` na obrazie T-pose daje
+rozstaw, szerokość i wysokość oczu, udział tęczówki, wysokość brwi i ust
+(sekcja `face` recepty, źródło `scan`), w jednostkach „linia oczu → broda”.
+
+**Stan po pierwszym przebiegu (paczka `girl_hero_blender_pack.zip`):**
+
+- Paczka zawiera 5 renderów póz i opis; oba GLB to atrapy (2 i 168 trójkątów,
+  bez szkieletu). `blender_import.py` z paczki jest pomijany, nigdy uruchamiany.
+- Z opisu: 19 kolorów z poprawnymi przypisaniami, style części, 5 kul Pal Sphere,
+  głowa 1/3, oczy 30% twarzy. Z obrazu T-pose: krok, ramiona, rozpiętość rąk,
+  szerokość tułowia oraz długości kurtki, topu, brzucha, ud, skarpet i butów.
+- Wynik: 11 232 trójkąty (cel z opisu 12 tys.), 22 kości, 7 klipów, wysokość 1,8,
+  reimport zgodny z kontraktem; budowa < 1 s, cały przebieg z renderami kilka sekund.
+- **Wygląd niezatwierdzony i daleki od referencji**: układ, kolory i długości
+  ubrań się zgadzają, ale części to proste bryły z obecnego modelu gry.
+- Gra nietknięta: brak podmiany modeli w `site/` (kontrakt).
+
+**Biblioteka części v2 (1 listopada):** pasma włosów jako zwężające się rurki
+z dwoma kolorami (różowa nasada, błękitny koniec), czapa z oknem na twarz,
+grzywka, pasma boczne i tylne, wysoki kucyk z 14 pasm; anime-oczy osadzone na
+krzywiźnie głowy (białko, tęczówka, źrenica, 2 odblaski, rzęsa z „pazurkiem”),
+brwi, usta, nos; rozpięta kurtka puchowa z wałkami i bufiastymi rękawami,
+futrzany kołnierz z kępkami; zaokrąglone szorty z paskiem, klamrą i kieszeniami;
+skarpety z wywinięciem; buty z podeszwą, cholewką i klamrami; dwukolorowe
+kule Pal Sphere z guzikiem; młot ze świecącymi panelami run. Kolory palety
+konwertowane z sRGB do liniowych (wcześniej wszystko było wyprane).
+Wynik: 15 308 trójkątów, 22 kości, 7 klipów, wysokość 1,8, skala normalizacji 0,99.
+
+### Dalsze kroki silnika
+
+- [ ] Budżet trójkątów: 15,3 tys. wobec 12 tys. z opisu — redukcja lub wariant
+  mobilny z limitem z opisu.
+- [ ] Dalsza jakość części: włosy jako karty z teksturą zamiast rurek, pikowanie
+  kurtki szwami, kształt dłoni, ciało pod ubraniem (szyja, ramiona), uszy.
+- [x] Twarz z obrazu ze skanerów Studio (`face_scan`).
+- [ ] Kości kucyka (3) — wymaga rozszerzenia kontraktu gry (dziś dokładnie 22 kości).
+- [ ] Pozy z obrazów (bieg, atak, rzut) jako wzorzec do strojenia klipów;
+  porównanie sylwetek pozy z referencją.
+- [ ] Wariant mobilny i budżet trójkątów z opisu; tekstury zamiast samych kolorów.
+- [ ] Edycja recepty w oknie (suwaki, kolory) z ponowną budową — punkt
+  `/api/runs/<id>/build` już przyjmuje poprawioną receptę.
+- [ ] Porównanie renderu frontu z referencją (sylwetka) jako automatyczna miara
+  podobieństwa i pętla dopasowania proporcji.
 
 ## 2. Jak działa aktualny automat
 
@@ -166,8 +236,9 @@ Priorytety oznaczają kolejność zależności: **P0** — najbliższa blokada,
 - [x] Sprawdzić, które wierzchołki rzeczywiście tworzą mierzony obrys oraz
   czy dostępne kontrolki mogą poruszyć właśnie ten brzeg — raport
   `control_reach` w `autopilot-report.json`.
-- [ ] Rozdzielić wkład kamery, niepewności referencji i zakresu deformacji
-  poprzez kontrolowane eksperymenty z zachowanymi źródłami.
+- [x] Rozdzielić wkład kamery, niepewności referencji i zakresu deformacji
+  poprzez kontrolowane eksperymenty z zachowanymi źródłami —
+  `probes/p0a-camera-separation-2026-11-01/` (wynik poniżej).
 - [ ] Sprawdzić uogólnione sposoby budowania kontrolek dla krótkich fragmentów,
   z uwzględnieniem sąsiedztwa siatki i łagodnego przejścia do blokad.
 - [x] Przy braku dopuszczalnej korekty podać konkretny brak danych lub konflikt
@@ -202,6 +273,26 @@ Sonda tylko do odczytu:
   referencja ma węższą i wyżej położoną żuchwę oraz brodę niż model. Zatwierdzona
   „szersza broda” jest więc wprost sprzeczna z obserwowanym obrysem w tym ujęciu
   (przy obecnej kamerze; wkład kamery pozostaje nierozdzielony).
+
+#### Rozdzielenie wkładu kamery — `probes/p0a-camera-separation-2026-11-01/`
+
+Siatka bez deformacji, zmieniana tylko kamera ortograficzna:
+
+| Kamera | Lewa żuchwa | Prawa żuchwa | Broda | Punkty oczu/brody |
+| --- | --- | --- | --- | --- |
+| Obecna (oczy + broda) | 29,0 px | 7,5 px | 6,2 px | ≤ 1,1 σ |
+| Oś symetrii twarzy (+6,4 px) | 22,3 px | 10,7 px | 6,3 px | do 8 px |
+| +12 px, skala 0,96 | 2,5 px | 5,5 px | 1,4 px | do 8,4 σ |
+
+- Siatka twarzy jest symetryczna względem x = 0 mm, ale środek tęczówek modelu
+  (`Iris L` −76,4 mm, `Iris R` +90,5 mm) leży na x = +7,0 mm. W referencji oczy
+  leżą na osi twarzy.
+- Kamera dopasowana do oczu przenosi tę asymetrię na przesunięcie twarzy
+  o ~6,4 px; dolna część twarzy jest też ~4% większa względem rozstawu oczu.
+- **Większość błędu żuchwy wynika z położenia oczu i proporcji oczy–żuchwa
+  w modelu, a nie z kształtu żuchwy.** Bez ruszania siatki obrys pasuje do
+  ~2–6 px, jeśli te dwie różnice usunąć. Czy asymetria oczu jest zamierzona —
+  decyzja użytkownika (P2-A).
 
 **Decyzja użytkownika (1 listopada 2026 r.): zawęzić ochronę.** Nowy manifest
 `protection-aiko-v17-chin-center.json` jest podzbiorem v16 (3020 z 4993
@@ -251,9 +342,9 @@ Wynikają z kodu i dotyczą każdego modelu, nie tylko Aiko.
 - [x] **Podwójne tłumienie w trybie częściowym:** w układzie lokalnym wygaszanie
   przy blokadach dotyczy tylko ochrony użytkownika; końce fragmentu wygasza
   raz samo pasmo.
-- [ ] **Akceptacja:** każda zmiana 1 px poza obserwowanymi wierszami odrzuca
-  próbę (`max_error_px > 0`), a regresja dowolnego regionu przy tolerancji 0
-  blokuje ruch drgający o ±1 px. Wprowadzić tolerancję rzędu rozdzielczości rastra.
+- [x] **Akceptacja (sprawdzone, bez zmiany):** tolerancja regresji regionu
+  0 / 0,5 / 1 / 2 px daje na Aiko identyczny wynik — odrzucenia nie są szumem
+  rastra, lecz rzeczywistym pogorszeniem sąsiedniego regionu. Zostaje 0.
 - [ ] **Wspólne przesunięcie boków:** kontrolki są wyłącznie poprzeczne i osobne
   dla stron; przesunięcie osi (kamera, `axis_x_px`) nie jest korygowane.
   Dodać kontrolkę translacji poziomej albo jawnie przypisać ją kamerze.
@@ -338,6 +429,27 @@ a nie zbiorem do dalszego dostrajania. Adnotacja zewnętrzna zachowuje swoje poc
 
 ### P0-C. Uzyskać pierwszą wykazaną poprawę kształtu
 
+#### Próby P0-C (1 listopada 2026 r.) — **kryterium niespełnione**
+
+Kandydaci w Blenderze 5.2.2 z workera Studio, ponowne otwarcie zweryfikowane
+(błąd 0,0001 mm, 23 428 chronionych wierzchołków bez zmian, UV/materiały/grupy
+zachowane), oględziny z 8 ujęć tym samym aparatem i światłem.
+
+| Próba | Żuchwa P / L (średnio) | Powierzchnia (liczbowo) | Oględziny |
+| --- | --- | --- | --- |
+| `p0c-blender-candidate-2026-11-01` (bez kontroli powierzchni w wyszukiwaniu) | 5,6 / 26,6 px | pass przy progach 25°/20° | **fałdy i półka u dołu żuchwy** |
+| `p0c-blender-candidate-v2-2026-11-01` (rampa C1, laplasjan, zgięcie ≤ 10°) | 6,3 / 26,8 px | obrót 10,4°, zgięcie 9,5°, pole 0,62–1,24 | **słabe poziome pasy w cieniowaniu** (bok, ¾) |
+
+Przyczyna: obserwowane odcinki żuchwy mają 4–29 wierszy, a wiersze powyżej
+i poniżej muszą pozostać nieruchome. Zmiana o kilka pikseli mieści się w 2–3
+rzędach siatki (~4,6 mm), co zawsze zostawia ślad w cieniowaniu. Dalsze
+dokręcanie progów daje zerową korektę albo pasy.
+
+**Decyzja wymagana:** (a) poprawić położenie oczu / proporcje oczy–żuchwa
+(wg P0-A to główna przyczyna rozbieżności), (b) dopuścić łagodne wygaszanie
+ruchu w wiersze nieobserwowane, oznaczone jako interpolacja, albo (c) uznać,
+że z jednego ujęcia ta korekta Aiko nie jest dostępna, i przejść do kolejnych baz.
+
 Zależność: wyniki P0-A i P0-B muszą wskazać dopuszczalną zmianę.
 
 - [ ] Uruchomić nowy przebieg na osobnym kandydacie z niezmiennymi źródłami.
@@ -354,13 +466,23 @@ wejście — nie oznaczać etapu jako osiągniętej poprawy.
 
 ### P1-A. Rozszerzyć kontrolę jakości powierzchni
 
-- [ ] Dodać kontrolę samoprzecięć, gwałtownych zmian normalnych, lokalnego
-  rozciągania i granic między ruchomymi a chronionymi obszarami.
-- [ ] Rozwijać regularizację deformacji, która ogranicza artefakty bez
-  wygładzania zatwierdzonych cech postaci.
-- [ ] Dodać stały zestaw neutralnych ujęć kontrolnych i czytelne porównanie przed/po.
-- [ ] Rozdzielić statusy jakości technicznej, dopasowania obserwowanego obrysu
-  i zatwierdzenia wyglądu.
+- [x] Dodać kontrolę samoprzecięć, gwałtownych zmian normalnych, lokalnego
+  rozciągania i nowych zgięć — `surface_quality.py`. Wady obecne w źródle nie
+  są liczone. Obrót normalnych, zgięcia i rozciąganie są sprawdzane w każdej
+  próbie wyszukiwania (`surface_limits`, odrzucenie `surface_quality`);
+  samoprzecięcia raz po dopasowaniu.
+- [x] Regularizacja deformacji: rampa boczna C1 i wygładzanie laplasjanem pola
+  przesunięć wewnątrz wsparcia pasma (bez przenoszenia ruchu na drugą stronę
+  osi ani do wierszy nieobserwowanych).
+- [ ] Dodać stały zestaw neutralnych ujęć kontrolnych i czytelne porównanie
+  przed/po do Studio. Prototyp: skrypt oględzin użyty w P0-C (przód, boki, tył,
+  oba ¾, żuchwa od dołu, ten sam aparat i światło, plik bez zapisu).
+- [x] Rozdzielić statusy: `outline_status`, `quality_status`, `likeness_approved`.
+  Nieudana kontrola powierzchni zmienia status kandydata na `rejected`
+  (`stop_reason: surface_quality`).
+- **Progi** (`LIMITS`: obrót 25°, zgięcie 10°, pole 0,5–2,0) są wstępne.
+  Próba P0-C pokazała, że przejście progów nie gwarantuje braku widocznych
+  pasów w cieniowaniu — progi trzeba skalibrować na oględzinach.
 
 **Kryterium ukończenia:** znane wadliwe deformacje są wykrywane lub odrzucane,
 a poprawne przypadki zachowują atrybuty siatki. Test orientacji trójkątów
@@ -394,6 +516,23 @@ skryptu dla jego nazw obiektów; przeniesienie korekty zachowuje wymagane atrybu
 Do tego czasu źródłem Aiko pozostaje etap przed rigowaniem.
 
 ### P2-A. Automatyzacja rysów twarzy
+
+#### Ręczna korekta oczu Aiko (decyzja użytkownika, 1 listopada 2026 r.)
+
+Szczegóły: `output/character-scan/aiko-pipeline-v2/probes/p2a-eyes-2026-11-01/README.md`.
+
+- Przyczyna z P0-A potwierdzona w Blenderze: otwory oczu w siatce i całe zespoły
+  oczu były przesunięte o ~4,5 mm w +X, a spojrzenie było nierówne (10 / 5 mm).
+- **Kandydat C3** (`eyes-C3.blend`): całe oczy przesunięte sztywnie (−4,55 mm
+  i rozsunięcie 3 mm na oko), otwory w siatce razem z nimi, spojrzenie bez zmian.
+  Punkty oczu i brody zgadzają się z kamerą do 0,71 px (było 2,17 px), a obrys
+  bez żadnej deformacji żuchwy: 29,0 / 7,5 / 6,2 → **17,8 / 6,1 / 3,4 px**.
+  Kontrola powierzchni i oględziny bez nowych wad. **Wygląd niezatwierdzony.**
+- Odrzucone: wyrównanie spojrzenia przesunięciem tęczówek (prawa tęczówka
+  chowa się za zakrzywioną twardówką — wymagałoby obrotu wokół środka gałki)
+  oraz dodatkowa korekta żuchwy na C3 (słabe pasy w cieniowaniu, jak w P0-C).
+- To ręczna, jednorazowa edycja. Automatyczne kontrolki oczu z tego punktu
+  pozostają otwarte; skrypt edycji jest w katalogu próby jako punkt wyjścia.
 
 - [ ] Dodać osobne kontrolki rozmiaru i położenia oczu, powiek, tęczówek,
   źrenic oraz widocznych fragmentów brwi.
@@ -473,16 +612,22 @@ Te prace można prowadzić równolegle z rozwojem geometrii.
   ~35 modułów Studio, `studio-web/` i ~20 plików testów istniały tylko jako
   nieśledzone pliki w głównym katalogu; serwery uruchamiano z kopii
   w `output/…/runtime-…` i z dodatku Blendera.
-- [ ] `studio_project.commit()` zapisuje `revisions/N.json` przed `project.json`;
+- [x] `studio_project.commit()` zapisuje `revisions/N.json` przed `project.json`;
   przerwanie między zapisami blokuje dalsze zapisy projektu („Revision already
   exists”). Brak blokady międzyprocesowej między CLI a `serve`.
-- [ ] `import_view` tworzy `views/<id>/` przed zapisem rewizji; nieudany import
+- [x] `import_view` tworzy `views/<id>/` przed zapisem rewizji; nieudany import
   zostawia katalog i blokuje ten identyfikator widoku.
-- [ ] `import fcntl` na poziomie modułu w `blender_pipeline.py` uniemożliwia
+- [x] `import fcntl` na poziomie modułu w `blender_pipeline.py` uniemożliwia
   `serve` na Windows, nawet bez `--blender`.
-- [ ] Anulowanie: zdarzenie może zostać utracone między pobraniem dzierżawy
+- [x] Anulowanie: zdarzenie może zostać utracone między pobraniem dzierżawy
   a utworzeniem nowego `cancel_event`; etap `fit` nie sprawdza anulowania.
-- [ ] Jeden uszkodzony `state.json` psuje całą listę `/api/pipeline`.
+- [x] Jeden uszkodzony `state.json` psuje całą listę `/api/pipeline`.
+  Naprawione 1 listopada: blokada `.studio.lock` (flock / msvcrt) wokół zapisu
+  rewizji, osierocone rewizje przenoszone do `*.orphan-*`, import widoku przez
+  katalog tymczasowy, `fcntl` ładowany leniwie (Windows bez testu na sprzęcie),
+  anulowanie pod tą samą blokadą co start i sprawdzane po etapie `fit`,
+  uszkodzone stany zgłaszane jako `unreadable`, GET/POST zwracają 404/400/500
+  zgodnie z przyczyną, rozłączenie klienta nie generuje śladu błędu.
 - Sprawdzone bez zastrzeżeń: serwer słucha tylko na 127.0.0.1, ochrona Host/Origin,
   `safe_path` przeciw wyjściu poza projekt, brak `innerHTML` w UI, Blender
   uruchamiany listą argumentów z `--disable-autoexec`.
@@ -494,11 +639,13 @@ oraz bez mylenia częściowych artefaktów ze zweryfikowanym kandydatem.
 
 1. **Diagnoza kontrolek i blokad Aiko — P0-A.** Główna przyczyna ustalona
    (konflikt ochrony z obserwowanym obrysem); pozostaje rozdzielenie wkładu kamery.
-2. **Zakres ochrony brody** — zdecydowano o zawężeniu (manifest v17);
-   próba pokazała, że kontrolki ruszają, ale nie dają dopuszczalnego wyniku.
+2. **Zakres ochrony brody** — zdecydowano o zawężeniu (manifest v17).
+   **Korekta oczu C3** usuwa większość rozbieżności bez deformacji żuchwy;
+   czeka na ocenę wyglądu przez użytkownika.
 3. **Ograniczenia wyszukiwania — P0-D.** Lokalne pasma, skala, interpolacja
-   przerw i limit ścinania gotowe; zostały wspólne przesunięcie boków (kamera),
-   tolerancja akceptacji i rozdzielczość rastra.
+   przerw, limit ścinania i kontrola powierzchni gotowe. P0-C dla Aiko
+   zablokowane decyzją (oczy/proporcje, wygaszanie w wiersze nieobserwowane
+   albo rezygnacja z tej korekty).
 4. **Nowe dane i walidacja detektora — P0-B.** Można prowadzić równolegle.
 5. **Nowy kandydat i oględziny — P0-C.** Dopiero po wykazaniu dopuszczalnej zmiany.
 6. **Jakość powierzchni i adapter bazy — P1-A/P1-C.** Utrwalić rozwiązanie

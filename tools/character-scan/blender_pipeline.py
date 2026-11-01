@@ -1,6 +1,5 @@
 """Durable local snapshot → fit → Blender render jobs, isolated from the live scene."""
 import copy
-import fcntl
 import importlib.util
 import json
 from pathlib import Path
@@ -88,29 +87,32 @@ class Jobs:
     def __init__(self, root, blender):
         self.root=Path(root).resolve();self.blender=str(Path(blender).expanduser().resolve()) if blender else None
         self.folder=self.root/'pipeline';self.folder.mkdir(exist_ok=True)
-        self.guard=threading.Lock();self.cancel_event=threading.Event();self.thread=None
+        self.guard=threading.Lock();self.cancel_event=threading.Event();self.thread=None;self.active=False
         # A restart must not mistake an unfinished job for a verified candidate.
         try:lease=self.lease()
-        except ValueError:return
+        except (ValueError,RuntimeError):return
         try:
             for path in self.folder.glob('*/state.json'):
-                value=json.loads(path.read_text())
+                try:value=json.loads(path.read_text());value['status']
+                except (OSError,ValueError,KeyError,TypeError):continue  # reported as 'unreadable' by states()
                 if value['status'] not in TERMINAL:
                     value.update(status='interrupted',message='Runner stopped; artifacts retained. Start a new immutable run.')
                     project.write_json(path,value)
         finally:lease.close()
 
     def lease(self):
-        handle=(self.folder/'runner.lock').open('a+')
-        try:fcntl.flock(handle,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        except BlockingIOError:
-            handle.close();raise ValueError('A Blender pipeline is already running for this project')
-        return handle
+        # Locking is only required here, for Blender jobs; `serve` without --blender works without it.
+        try:return project.lock(self.folder/'runner.lock',wait=False,required=True)
+        except BlockingIOError:raise ValueError('A Blender pipeline is already running for this project') from None
 
     def states(self):
         revision=project.read(self.root)['revision'];values=[]
         for path in sorted(self.folder.glob('*/state.json'),key=lambda p:p.stat().st_mtime,reverse=True):
-            value=json.loads(path.read_text());value['current']=value['source_revision']==revision
+            try:value=json.loads(path.read_text());value['current']=value['source_revision']==revision
+            except (OSError,ValueError,KeyError,TypeError) as error:
+                # One damaged job record must not hide every other job.
+                value={'id':path.parent.name,'status':'unreadable','stage':'unknown','current':False,
+                       'message':f'Job state unreadable ({type(error).__name__}); artifacts retained in pipeline/{path.parent.name}'}
             if not value['current']:value.pop('candidate',None)
             values.append(value)
         return values
@@ -123,7 +125,8 @@ class Jobs:
             if p['revision']!=payload.get('revision'):raise ValueError('Revision conflict; reload the project')
             if not p.get('blender_source'):raise ValueError('Bind a static face source with bind-blender first')
             if payload.get('view') not in p['views']:raise ValueError('Select a reference view')
-            lease=self.lease();self.cancel_event=threading.Event()
+            # cancel() also takes the guard, so a request cannot slip between the lease and the new event.
+            lease=self.lease();self.cancel_event=threading.Event();self.active=True
             try:
                 out=self.folder/uuid.uuid4().hex[:12];out.mkdir()
                 state={'id':out.name,'schema':'polpal.blender-pipeline/1','status':'queued','stage':'queued',
@@ -134,13 +137,16 @@ class Jobs:
                 args=(out,copy.deepcopy(p),copy.deepcopy(payload),state,lease)
                 if background:
                     self.thread=threading.Thread(target=self.run,args=args,daemon=True);self.thread.start()
-                else:self.run(*args)
-                return json.loads((out/'state.json').read_text())
             except BaseException:
-                lease.close();raise
+                self.active=False;lease.close();raise
+        if not background:self.run(*args)  # outside the guard, so cancel() is not blocked by a foreground run
+        return json.loads((out/'state.json').read_text())
 
     def cancel(self):
-        if self.thread and self.thread.is_alive():self.cancel_event.set()
+        """Request cancellation of the active job; returns False when no job is active."""
+        with self.guard:
+            if self.active:self.cancel_event.set()
+            return self.active
 
     def check_cancel(self):
         if self.cancel_event.is_set():raise InterruptedError('Cancelled; partial artifacts retained')
@@ -209,7 +215,10 @@ class Jobs:
             if (v['camera'].get('frame_id'),v['camera'].get('world_unit'))!=(binding['frame_id'],'mm'):
                 raise Blocked('frame_mismatch','Camera and Blender binding must share a millimetre world frame')
             stage('fit')
+            # Cancellation is honoured at the fit boundaries only; autopilot/mesh_fit
+            # optimisation itself is not interruptible, so a cancel waits for it to return.
             report=fit(snapshot,scan,v['camera'],out/'autopilot',payload.get('config'))
+            self.check_cancel()
             state['fit_report']=str((out/'autopilot/autopilot-report.json').relative_to(self.root))
             state['fit_status']=report['status']
             state['coverage']=report.get('coverage')
@@ -250,4 +259,4 @@ class Jobs:
             finally:
                 state['finished_at']=time.time()
                 try:project.write_json(out/'state.json',state)
-                finally:lease.close()
+                finally:self.active=False;lease.close()
