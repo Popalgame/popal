@@ -130,8 +130,18 @@ rzeźby bazy (tak powstała v16: etapy `output/aiko-sculpt/production-v16`).
 ### Dalsze kroki silnika
 
 - [ ] Budżet trójkątów parametrycznej wersji: 15,3 tys. wobec 12 tys. z opisu.
-- [ ] Baza mobile: 18,2 tys. wobec celu 12 tys. (minimum 60 trójkątów na każdą
-  z 36 części) i kanciaste włosy — rozważyć wypalanie normal map z rzeźby.
+- [x] **Baza mobile w budżecie** (1 listopada): Aiko v16 → mobile **12 284**
+  trójkąty / 1,41 MB (cel 12 tys., tolerancja 5%), desktop 40 022 / 2,46 MB.
+  Budżet dzielony według ważności × √(widocznej powierzchni) zamiast liczby
+  trójkątów — gęsty kołnierz nie zabiera już budżetu plecakowi i butom.
+  Przed decymacją silnik mierzy (bez zmiany siatki), do ilu trójkątów każda część
+  realnie da się zredukować (otwarte rurki szwów kurtki: 1 982, pierścienie kul: 456),
+  i dzieli resztę budżetu między pozostałe części („water-filling”). Części z wielu
+  wysepek: włókna kołnierza tracą równomiernie rozłożone pasma (min. 1/3),
+  okucia i ściegi — najpierw najmniejsze wysepki (min. 1/2). Oględziny EEVEE:
+  plecak, buty i kurtka zachowane, twarz bez różnic, włosy nieco rzadsze;
+  run/hit/throw bez rozdarć. Pozostaje: rurki szwów zajmują 16% budżetu mobile —
+  kandydat do zastąpienia teksturą/normal mapą.
 - [x] **Warianty z bazy** (1 listopada): nowi bohaterowie na jakości v16 bez
   nowej rzeźby. `engine_profile.py` czyta materiały bazy (kolor materiału,
   kolor wierzchołków, gradient, tekstury); mapa materiał → slot palety po całych
@@ -141,8 +151,22 @@ rzeźby bazy (tak powstała v16: etapy `output/aiko-sculpt/production-v16`).
   „Wariant z rzeźby” w zakładce 05 (kolory, części, jakość, „Zbuduj wariant”).
   Próby: „Mira” (fiolet/złoto, czerwona kurtka) i „Kiko” (czarne/różowe włosy,
   żółta kurtka, bez młota) — ok. 40 tys. trójkątów, 22 kości, 7 klipów.
-- [ ] Skóra w wariantach: dziś bez zmian (tekstura twarzy z piegami + kolory
-  materiałów); wymaga spójnego przebarwienia tekstury i materiałów skóry.
+- [x] **Skóra w wariantach** (1 listopada): wszystkie materiały skóry (ciało,
+  tekstura twarzy z piegami, szyja, kolana, rumieniec uszu, fałd powieki) dostają
+  to samo przesunięcie kanałów: nowy kolor ÷ rzeczywisty kolor największego
+  materiału skóry. Ciało ma dokładnie wybrany kolor, piegi i rumieniec zachowują
+  relację do skóry. Próba „Nadia” (skóra #8D5A3B, czarno-fioletowe włosy, żółta
+  kurtka, mobile) — 12,3 tys. trójkątów, oczy i piegi bez uszkodzeń.
+  Regiony baz liczone są przy każdym odczycie z `profile.json`, więc nowe reguły
+  nie wymagają ponownej rejestracji bazy.
+- [x] **Pomiar wydajności w podglądzie**: trójkąty, wywołania rysowania,
+  materiały/tekstury, kości, rozmiar pliku, czas wczytania, FPS i ocena budżetu
+  (mobile/desktop). Podgląd zwalnia pamięć GPU poprzedniego modelu (wcześniej
+  każda zmiana modelu dokładała ok. 40 tekstur).
+- [ ] Wywołania rysowania: model ma 36 materiałów → 37 wywołań i (w loaderze
+  three.js r128) osobna tekstura kości na każdy prymityw. Dla telefonów warto
+  złączyć materiały w atlas i współdzielić szkielet — dotyczy też ładowania
+  w grze, więc wymaga decyzji o integracji.
 - [ ] Wymiana części na inne kształty (np. inna fryzura, płaszcz zamiast kurtki)
   — potrzebna biblioteka rzeźbionych części zgodnych ze szkieletem.
 - [ ] Półautomatyczny warsztat rzeźby nowej bazy w Studio (etapy jak przy v16).
@@ -152,7 +176,7 @@ rzeźby bazy (tak powstała v16: etapy `output/aiko-sculpt/production-v16`).
 - [ ] Kości kucyka (3) — wymaga rozszerzenia kontraktu gry (dziś dokładnie 22 kości).
 - [ ] Pozy z obrazów (bieg, atak, rzut) jako wzorzec do strojenia klipów;
   porównanie sylwetek pozy z referencją.
-- [ ] Wariant mobilny i budżet trójkątów z opisu; tekstury zamiast samych kolorów.
+- [ ] Tekstury zamiast samych kolorów (wariant mobilny bazy jest już w budżecie).
 - [ ] Edycja recepty w oknie (suwaki, kolory) z ponowną budową — punkt
   `/api/runs/<id>/build` już przyjmuje poprawioną receptę.
 - [ ] Porównanie renderu frontu z referencją (sylwetka) jako automatyczna miara

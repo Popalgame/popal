@@ -48,19 +48,66 @@
   canvas.addEventListener('pointerup', () => { drag = null; });
   canvas.addEventListener('wheel', (e) => { e.preventDefault(); distance = Math.max(1.5, Math.min(9, distance * (e.deltaY > 0 ? 1.1 : 0.9))); }, { passive: false });
   window.addEventListener('resize', resize);
+  // Performance readout: what the game will pay for this model on this machine.
+  const BUDGETS = [['mobile', 12000], ['desktop', 40000]];
+  let stats = null, frames = 0, since = performance.now();
+  function showStats(fps) {
+    const box = $('perf'); if (!box) return;
+    box.textContent = '';
+    if (!stats) return;
+    const info = renderer.info;
+    const fits = BUDGETS.filter(([, n]) => stats.triangles <= n * 1.05).map(([name]) => name);
+    const rows = [
+      ['trójkąty', stats.triangles.toLocaleString('pl-PL')],
+      ['wywołania rysowania', String(info.render.calls)],
+      ['materiały / tekstury', `${stats.materials} / ${info.memory.textures}`],
+      ['kości', String(stats.bones)],
+      ['plik', stats.bytes ? `${(stats.bytes / 1e6).toFixed(2)} MB` : '—'],
+      ['wczytanie', `${Math.round(stats.loadMs)} ms`],
+      ['FPS podglądu', fps ? String(Math.round(fps)) : '…'],
+      ['budżet', fits.length ? `mieści się: ${fits.join(', ')}` : 'ponad budżet gry'],
+    ];
+    rows.forEach(([k, v]) => box.appendChild(el('div', {}, [el('span', { text: k }), el('b', { text: v, class: k === 'budżet' && !fits.length ? 'over' : '' })])));
+  }
   (function loop() {
     requestAnimationFrame(loop); placeCamera(); if (mixer) mixer.update(clock.getDelta()); else clock.getDelta();
     renderer.render(scene, camera);
+    frames += 1;
+    const now = performance.now();
+    if (now - since > 1000) { showStats(frames * 1000 / (now - since)); frames = 0; since = now; }
   })();
   resize();
 
   const loader = new THREE.GLTFLoader();
+  function release(root) {  // free GPU memory of a model that is no longer shown
+    if (mixer) mixer.stopAllAction();
+    root.traverse((o) => {
+      if (o.geometry) o.geometry.dispose();
+      if (o.isSkinnedMesh && o.skeleton && o.skeleton.boneTexture) { o.skeleton.boneTexture.dispose(); o.skeleton.boneTexture = null; }
+      (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach((m) => {
+        Object.values(m).forEach((v) => { if (v && v.isTexture) v.dispose(); });
+        m.dispose();
+      });
+    });
+  }
   function showModel(url, label, animated) {
     if (url === shown) return;
     shown = url;
+    const started = performance.now();
+    let bytes = 0;
     loader.load(url, (gltf) => {
-      if (model) pivot.remove(model);
+      if (model) { pivot.remove(model); release(model); }
       model = gltf.scene; pivot.add(model);
+      const materials = new Set(); let triangles = 0, bones = 0;
+      model.traverse((o) => {
+        if (o.isBone) bones += 1;
+        if (!o.isMesh) return;
+        const g = o.geometry;
+        triangles += (g.index ? g.index.count : g.attributes.position.count) / 3;
+        (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => materials.add(m));
+      });
+      stats = { triangles: Math.round(triangles), materials: materials.size, bones, bytes, loadMs: performance.now() - started };
+      showStats(0);
       mixer = null; clips = gltf.animations || [];
       const bar = $('clips'); bar.textContent = '';
       if (animated && clips.length) {
@@ -76,7 +123,7 @@
       }
       const tags = $('overlay'); tags.textContent = '';
       tags.appendChild(el('span', { class: 'tag', text: label }));
-    }, undefined, () => { shown = null; });
+    }, (e) => { if (e && e.total) bytes = e.total; else if (e && e.loaded) bytes = e.loaded; }, () => { shown = null; });
   }
 
   // ---------------------------------------------------------------- data
@@ -166,7 +213,7 @@
     (s.renders || []).forEach((p) => renders.appendChild(el('img', { src: base + p, alt: p })));
   }
   // ---------------------------------------------------------------- variants of a sculpted base
-  const VARIANT_SLOTS = { hair_root: 'Włosy – nasada', hair_tip: 'Włosy – końcówki', eyes: 'Oczy', brows: 'Brwi',
+  const VARIANT_SLOTS = { skin: 'Skóra', hair_root: 'Włosy – nasada', hair_tip: 'Włosy – końcówki', eyes: 'Oczy', brows: 'Brwi',
     jacket: 'Kurtka', fur: 'Futro', top: 'Top', shorts: 'Szorty', socks: 'Skarpety', boots: 'Buty i skóra',
     sphere_primary: 'Kule – kolor', sphere_secondary: 'Kule – druga barwa', hammer_wood: 'Młot – drewno', rune_glow: 'Runy' };
   let variantFor = null, variantRecipe = null;

@@ -23,6 +23,8 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute
 #viewer canvas{display:block;width:100%;height:100%}
 #overlay{position:absolute;left:10px;top:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
 #overlay .tag{background:#000a;padding:3px 8px;border-radius:4px;font-size:12px}
+#perf{position:absolute;right:10px;bottom:10px;background:#000b;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:11px Menlo,monospace;min-width:210px;pointer-events:none}
+#perf:empty{display:none}#perf div{display:flex;justify-content:space-between;gap:12px}#perf span{color:var(--muted)}#perf b{font-weight:500}#perf b.over{color:var(--bad)}
 #clips{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:6px}
 #clips button{background:#000b;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:4px 8px;cursor:pointer}
 #clips button.on{border-color:var(--accent);color:var(--accent)}
@@ -52,7 +54,7 @@ table{border-collapse:collapse;width:100%;font-size:12px}td{padding:2px 4px;bord
 </header>
 <main>
   <section id="refs"><h2>Referencje</h2><div id="refList"></div></section>
-  <section id="viewer"><canvas id="canvas"></canvas><div id="overlay"></div><div id="clips"></div></section>
+  <section id="viewer"><canvas id="canvas"></canvas><div id="overlay"></div><div id="perf" aria-live="off"></div><div id="clips"></div></section>
   <section id="side">
     <h2>Baza</h2><div id="base" class="src">—</div>
     <h2>Etapy budowy</h2><ol id="events"></ol>

@@ -214,7 +214,12 @@ PROFILE = {'materials': [
     {'name': 'Aiko v14 • fibrous teal iris L', 'triangles': 5, 'images': ['iris.png'], 'factor': [1, 1, 1], 'factor_linked': True},
     {'name': 'Hammer • walnut grain', 'triangles': 5, 'images': [], 'factor': [1, 1, 1], 'factor_linked': True, 'median': [.1, .03, .01]},
     {'name': 'Capsule • ivory ceramic', 'triangles': 5, 'images': [], 'factor': [.5, .47, .3], 'factor_linked': False},
-    {'name': 'Warm porcelain skin', 'triangles': 90, 'images': [], 'factor': [.9, .6, .5], 'factor_linked': False}]}
+    {'name': 'Warm porcelain skin', 'triangles': 90, 'images': [], 'factor': [.9, .6, .5], 'factor_linked': False},
+    {'name': 'Aiko v16 • warmer skin and freckles', 'triangles': 30, 'images': ['skin.png'], 'factor': [1, 1, 1],
+     'factor_linked': True},
+    {'name': 'Leg L • warm knee tones', 'triangles': 20, 'images': [], 'factor': [.89, .57, .38], 'factor_linked': True,
+     'median': [.89, .57, .38]},
+    {'name': 'Ear blush 1', 'triangles': 4, 'images': [], 'factor': [.64, .2, .13], 'factor_linked': False}]}
 
 
 class VariantTests(unittest.TestCase):
@@ -230,7 +235,10 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(self.slots['Pink hair with blue tips'], ('hair_root', 'gradient'))
         self.assertEqual(self.slots['Collar • warm ivory fibres'], ('fur', 'factor'))
         self.assertEqual(self.slots['Aiko v14 • fibrous teal iris L'], ('eyes', 'texture'))
-        self.assertNotIn('Warm porcelain skin', self.slots)  # skin is not recoloured by variants
+        self.assertEqual(self.slots['Warm porcelain skin'], ('skin', 'factor'))
+        self.assertEqual(self.slots['Aiko v16 • warmer skin and freckles'], ('skin', 'texture'))
+        self.assertEqual(self.slots['Leg L • warm knee tones'], ('skin', 'vertex'))
+        self.assertEqual(self.slots['Ear blush 1'], ('skin', 'factor'))
 
     def test_unchanged_recipe_gives_empty_variant(self):
         self.assertEqual(engine.variant_spec(self.entry, recipe_lib.default()), {'remove': [], 'recolor': []})
@@ -248,6 +256,28 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(hair['from'], [.75, .25, .33])  # the pink end is the root
         self.assertLess(engine.lum(hair['to']), .05)
         self.assertNotIn('Shorts • saddle brown canvas', items)
+
+    def test_skin_shifts_every_skin_material_by_the_same_ratio(self):
+        recipe = recipe_lib.merge(recipe_lib.default(), {'palette': {'skin': '#8D5A3B'}})
+        items = {i['material']: i for i in engine.variant_spec(self.entry, recipe)['recolor']}
+        # Measured against the largest skin material (the body), not the palette's nominal colour.
+        ratio = [t/b for t, b in zip(engine.srgb_hex_to_linear('#8D5A3B'), [.9, .6, .5])]
+        for name in ('Warm porcelain skin', 'Aiko v16 • warmer skin and freckles', 'Leg L • warm knee tones', 'Ear blush 1'):
+            for got, want in zip(items[name]['ratio'], ratio):
+                self.assertAlmostEqual(got, want, places=6)
+        body, blush = items['Warm porcelain skin']['to'], items['Ear blush 1']['to']
+        for got, want in zip(body, engine.srgb_hex_to_linear('#8D5A3B')):
+            self.assertAlmostEqual(got, want, places=6)  # the body is exactly the chosen colour
+        # The blush stays redder than the skin around it.
+        self.assertGreater(blush[0]/max(blush[1], 1e-6), body[0]/body[1])
+
+    def test_registered_base_follows_current_region_rules(self):
+        with tempfile.TemporaryDirectory() as root:
+            folder = Path(root)
+            (folder/'base.json').write_text(json.dumps({'id': 'b', 'regions': []}))
+            (folder/'profile.json').write_text(json.dumps(PROFILE))
+            slots = {r['material']: r['slot'] for r in engine.read_base(folder)['regions']}
+        self.assertEqual(slots['Warm porcelain skin'], 'skin')
 
     def test_parts_removed_by_material_name(self):
         recipe = recipe_lib.merge(recipe_lib.default(), {'parts': {'weapon': {'style': 'none'}, 'top': {'collar': 'none'},

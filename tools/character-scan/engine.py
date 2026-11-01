@@ -126,7 +126,8 @@ def profile_base(bases, base_id, blender, palette=None):
 
 
 # Material name (lower case) -> palette slot of a sculpted base; first match wins.
-REGION_RULES = (('hair', 'hair_root'), ('brow', 'brows'), ('iris', 'eyes'), ('jacket', 'jacket'), ('collar', 'fur'),
+REGION_RULES = (('hair', 'hair_root'), ('brow', 'brows'), ('iris', 'eyes'), ('skin', 'skin'), ('neck transition', 'skin'),
+                ('knee tones', 'skin'), ('ear blush', 'skin'), ('eyelid crease', 'skin'), ('jacket', 'jacket'), ('collar', 'fur'),
                 ('top', 'top'), ('shorts • saddle', 'shorts'), ('recessed seam', 'shorts'), ('chestnut leather', 'boots'),
                 ('linen stitching', 'socks'), ('midnight blue enamel', 'sphere_primary'), ('ivory ceramic', 'sphere_secondary'),
                 ('walnut', 'hammer_wood'), ('rune', 'rune_glow'))
@@ -157,7 +158,7 @@ def regions_from_profile(profile):
         slot = next((s for stem, s in REGION_RULES if re.search(r'\b'+re.escape(stem)+r'\b', name)), None)
         if slot is None or not m['triangles']:
             continue
-        if m['images'] and slot == 'eyes':
+        if m['images'] and slot in ('eyes', 'skin'):
             mode = 'texture'
         elif slot == 'hair_root' and m.get('spread', 0) > .2:
             mode = 'gradient'
@@ -165,7 +166,7 @@ def regions_from_profile(profile):
             mode = 'factor'
         else:
             mode = 'vertex'
-        regions.append({'material': m['name'], 'slot': slot, 'mode': mode, 'factor': m['factor'],
+        regions.append({'material': m['name'], 'slot': slot, 'mode': mode, 'factor': m['factor'], 'triangles': m['triangles'],
                         'median': m.get('median'), 'ends': m.get('ends')})
     return regions
 
@@ -186,6 +187,12 @@ def variant_spec(entry, recipe):
         drop.append('spheres')
     for part in drop:
         spec['remove'] += [n for n in names if any(stem in n.lower() for stem in PART_RULES[part])]
+    # Skin reference: the largest skin material as it really is, so the body lands on the chosen colour.
+    skin = [r for r in entry.get('regions', []) if r['slot'] == 'skin' and r['mode'] in ('factor', 'vertex')]
+    skin_ref = None
+    if skin:
+        main = max(skin, key=lambda r: r.get('triangles', 0))
+        skin_ref = main['factor'] if main['mode'] == 'factor' else main.get('median') or main['factor']
     for region in entry.get('regions', []):
         slot = region['slot']
         if slot not in base_palette or region['material'] in spec['remove']:
@@ -198,6 +205,14 @@ def variant_spec(entry, recipe):
         target = srgb_hex_to_linear(palette[slot])
         base = srgb_hex_to_linear(base_palette[slot])
         item = {'material': region['material'], 'mode': region['mode'], 'slot': slot}
+        if slot == 'skin':
+            # Skin shifts every channel by new/old, so freckles, blush, knees and the
+            # eyelid crease keep their relation to the skin instead of becoming flat.
+            ratio = [t/max(b, 1e-4) for t, b in zip(target, skin_ref or base)]
+            item['ratio'] = ratio
+            item['to'] = [min(1.0, c*r) for c, r in zip(region['factor'], ratio)] if region['mode'] == 'factor' else target
+            spec['recolor'].append(item)
+            continue
         # New hue from the palette; brightness relation of this material to its slot kept,
         # per-corner shading kept by the optimiser (colour x luminance ratio).
         if region['mode'] == 'factor':
@@ -220,11 +235,20 @@ def variant_spec(entry, recipe):
     return spec
 
 
+def read_base(folder):
+    """A registered base; its regions follow the current rules (the measured profile does not change)."""
+    entry = json.loads((folder/'base.json').read_text())
+    profile = folder/'profile.json'
+    if profile.exists():
+        entry['regions'] = regions_from_profile(json.loads(profile.read_text()))
+    return entry
+
+
 def load_bases(bases):
     import numpy as np
     out = []
     for path in sorted(Path(bases).glob('*/base.json')) if Path(bases).is_dir() else []:
-        entry = json.loads(path.read_text())
+        entry = read_base(path.parent)
         thumb = np.load(path.parent/'thumbnail.npy')
         out.append((entry, (thumb[..., :3], thumb[..., 3] > .5)))
     return out
@@ -374,7 +398,7 @@ class Engine:
 
     def build_sculpted(self, folder, build, recipe):
         """Reduce a registered sculpted base to the game budget; the base file is never changed."""
-        entry = json.loads(safe(self.bases, recipe['base']['id']).joinpath('base.json').read_text())
+        entry = read_base(safe(self.bases, recipe['base']['id']))
         blend = Path(entry['blend'])
         if hashlib.sha256(blend.read_bytes()).hexdigest() != entry['blend_sha256']:
             raise ValueError('Registered base file changed; register it again')
