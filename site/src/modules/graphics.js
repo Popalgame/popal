@@ -1,4 +1,4 @@
-/* 0.0.11: налаштування графіки — обмеження FPS, дальність прорисовки, лічильник FPS */
+/* 0.0.11: налаштування графіки — обмеження FPS, дальність прорисовки, лічильник FPS (0.2.8: FPS і дальність виставляє режим якості з perf.js) */
 (function(){try{
 const KEY='zi_gfx';let G={fps:0,dist:1,show:0};
 try{Object.assign(G,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
@@ -24,15 +24,11 @@ function apply(){window.gfxFps=G.fps;const d=DIST[G.dist]||DIST[1];
  try{if(typeof cam!=='undefined'&&cam){cam.far=d[1];cam.updateProjectionMatrix()}}catch(e){}
  try{if(typeof sc!=='undefined'&&sc&&sc.fog){sc.fog.near=d[2];sc.fog.far=d[3]}}catch(e){}}
 apply();
-window.plGfx={set:next=>{if(next.fps!==undefined&&[0,30,60].includes(next.fps))G.fps=next.fps;if(next.dist!==undefined&&Number.isInteger(next.dist)&&next.dist>=0&&next.dist<DIST.length)G.dist=next.dist;sv();apply();document.querySelectorAll('#gfps button').forEach(b=>b.classList.toggle('on',FPS[+b.dataset.i][0]===G.fps));document.querySelectorAll('#gdst button').forEach(b=>b.classList.toggle('on',+b.dataset.i===G.dist))},state:()=>({...G})};
-/* --- вкладка Опції --- */
-const seg=(id,arr,cur,lab)=>`<div class='gseg' id='${id}'>`+arr.map((a,i)=>`<button data-i='${i}' class='${i==cur?'on':''}'>${lab(a)}</button>`).join('')+`</div>`;
+window.plGfx={set:next=>{if(next.fps!==undefined&&[0,30,60].includes(next.fps))G.fps=next.fps;if(next.dist!==undefined&&Number.isInteger(next.dist)&&next.dist>=0&&next.dist<DIST.length)G.dist=next.dist;sv();apply()},state:()=>({...G})};
+/* --- вкладка «Графіка»: контейнер #gfxp; режими якості й деталі додає perf.js, тут — лише лічильник FPS --- */
 const _pf=pfTab;pfTab=function(t){_pf(t);if(t!='o')return;const c=document.getElementById('pfc');if(!c||document.getElementById('gfxp'))return;
  const d=document.createElement('div');d.id='gfxp';const host=c.querySelector('.pcol')||c;
- d.innerHTML=`<h4>Обмеження FPS</h4>${seg('gfps',FPS,FPS.findIndex(f=>f[0]==G.fps),a=>a[1])}<small class='gnote'>30 — економить батарею, менше гріється телефон</small>
- <h4>Дальність прорисовки</h4>${seg('gdst',DIST,G.dist,a=>a[0])}<small class='gnote'>Далі — красивіше, але важче для телефона</small>
- <h4>Лічильник FPS</h4>${seg('gshw',[['Вимкнено'],['Показувати']],G.show,a=>a[0])}`;
+ d.innerHTML=`<h4>Лічильник FPS</h4><div class='gseg' id='gshw'>${['Вимкнено','Показувати'].map((a,i)=>`<button data-i='${i}' class='${i==G.show?'on':''}'>${a}</button>`).join('')}</div>`;
  host.appendChild(d);
- const bind=(id,f)=>d.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{f(+b.dataset.i);sv();apply();d.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b))});
- bind('gfps',i=>G.fps=FPS[i][0]);bind('gdst',i=>G.dist=i);bind('gshw',i=>G.show=i)};
+ d.querySelectorAll('#gshw button').forEach(b=>b.onclick=()=>{G.show=+b.dataset.i;sv();d.querySelectorAll('#gshw button').forEach(x=>x.classList.toggle('on',x===b))})};
 }catch(e){console.warn('graphics',e)}})();

@@ -1,27 +1,51 @@
-/* 0.3.0: адаптивна роздільність, пакетування світу та бюджет кадру. */
+/* 0.3.0: адаптивна роздільність, пакетування світу та бюджет кадру.
+   0.2.8: якість графіки — 4 режими (Слабкі / Середні / Високі / Ультра). Режим виставляє ВСІ параметри разом:
+   роздільність, обмеження FPS, дальність, траву, тіні й ефекти. Будь-який параметр можна змінити окремо — тоді режим «Свої».
+   Слабкі — для телефонів, що гріються: 30 FPS, 1× роздільність, без тіней і без постобробки (кадр малюється одразу на екран).
+   Адаптивна роздільність (крім Ультра): якщо кадр не встигає, роздільність тимчасово знижується до 60%. */
 (function(){try{
 const read=n=>{try{return eval(n)}catch(_){return undefined}};
 const worldScene=read('sc'),renderer=read('R');if(!worldScene||!renderer)return;
-const coarse=matchMedia('(pointer:coarse)').matches,KEY='zi_quality';
-const profiles={battery:{name:'Економія',dpr:1,fps:30,dist:0,grass:6500,hq:0},balanced:{name:'Збалансована',dpr:1.25,fps:60,dist:1,grass:12000,hq:0},high:{name:'Кінематографічна',dpr:2,fps:60,dist:2,grass:20000,hq:1},k2:{name:'2K (2560)',res:2560,fps:60,dist:2,grass:20000,hq:1},k3:{name:'3K (3200)',res:3200,fps:60,dist:3,grass:20000,hq:1,shadow:4096}};
-let mode='auto',scale=1,averageMs=16.7,slowWindows=0,fastWindows=0,qualityAt=0;
-try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved&&['auto',...Object.keys(profiles)].includes(saved.mode))mode=saved.mode}catch(_){}
-const profile=()=>profiles[mode==='auto'?(coarse?'balanced':'high'):mode];
-/* 2K/3K target the long edge of the drawing buffer regardless of devicePixelRatio,
-   so even a 1x display renders a supersampled 2560/3200 px frame. */
+let coarse=false;try{coarse=matchMedia('(pointer:coarse)').matches}catch(_){}
+const KEY='zi_quality',KEYS=['res','fps','dist','grass','shadow','fx'];
+const PRESETS={low:{name:'Слабкі',res:0,fps:30,dist:0,grass:0,shadow:0,fx:0},med:{name:'Середні',res:1,fps:60,dist:1,grass:1,shadow:1,fx:1},
+ high:{name:'Високі',res:2,fps:60,dist:2,grass:2,shadow:2,fx:2},ultra:{name:'Ультра',res:3,fps:0,dist:3,grass:3,shadow:3,fx:3}};
+const OPT={res:{n:'Роздільність',l:['Низька','Середня','Висока','Ультра'],note:'Найбільше впливає на нагрів телефона'},
+ fps:{n:'Обмеження FPS',v:[30,60,0],l:['30','60','Без обмеження'],note:'30 — економить батарею, телефон менше гріється'},
+ dist:{n:'Дальність прорисовки',l:['Близько','Середня','Далеко','Максимум']},
+ grass:{n:'Трава',l:['Мало','Середньо','Густо','Ультра']},
+ shadow:{n:'Тіні',l:['Вимкнено','Низькі','Високі','Ультра']},
+ fx:{n:'Ефекти',l:['Вимкнено','Звичайні','Світіння','Ультра'],note:'Звичайні — кольорокорекція й згладжування; Світіння — ще й сяйво вогню та ліхтарів'}};
+const RES_CAP=[1,1.25,2,3],GRASS_N=[4000,9000,15000,1e9],GRASS_GEO=[0,1,2,2],SHADOW=[0,1024,2048,4096];
+const weak=()=>{try{return (navigator.deviceMemory&&navigator.deviceMemory<=3)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)}catch(_){return false}};
+const defPreset=()=>coarse?(weak()?'low':'med'):'high';
+let preset=defPreset(),S={...PRESETS[preset]},scale=1,averageMs=16.7,slowWindows=0,fastWindows=0,qualityAt=0;delete S.name;
+try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved){
+ const OLD={battery:'low',balanced:'med',high:'high',k2:'ultra',k3:'ultra'};/* старі режими до 0.2.8 */
+ const p=PRESETS[saved.preset]?saved.preset:OLD[saved.mode];if(p){preset=p;S={...PRESETS[p]};delete S.name}
+ if(saved.preset==='custom'&&saved.s){preset='custom';for(const k of KEYS)if(saved.s[k]!=null)S[k]=saved.s[k]}}}catch(_){}
+const valid=(k,v)=>k==='fps'?OPT.fps.v.includes(v):Number.isInteger(v)&&v>=0&&v<OPT[k].l.length;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({preset,s:S}))}catch(_){}};
 const longEdge=()=>{const el=renderer.domElement||{};return Math.max(1,el.clientWidth||(typeof innerWidth==='number'?innerWidth:1280),el.clientHeight||(typeof innerHeight==='number'?innerHeight:720))};
-function ratioFor(cfg){if(cfg.res)return Math.max(1,Math.min(4,cfg.res/longEdge()));return Math.max(.7,Math.min(devicePixelRatio||1,cfg.dpr)*scale)}
-function setShadow(size){if(!size)return;try{const sun=read('sun');if(!sun||!sun.shadow)return;if(sun.shadow.mapSize.x!==size){sun.shadow.mapSize.set(size,size);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}}catch(_){}}
-function applyQuality(reset){const cfg=profile(),ratio=ratioFor(cfg);
- if(Math.abs(renderer.getPixelRatio()-ratio)>.02){renderer.setPixelRatio(ratio);try{read('rs')()}catch(_){}}
- const grassMesh=read('gm');if(grassMesh)grassMesh.count=Math.min(grassMesh.instanceMatrix.count,Math.round(cfg.grass*(mode==='auto'?Math.max(.65,scale):1)*(window.plGrassK?window.plGrassK():1)));/* plGrassK — пункт «Трава», grass-quality.js */
- if(reset&&window.plGfx)window.plGfx.set({fps:cfg.fps,dist:mode==='auto'?1:cfg.dist});
- if(window.plVis)window.plVis.setHQ(cfg.hq&&(mode!=='auto'||scale>.78));
- setShadow(cfg.shadow);qualityAt=performance.now();
-}
-function setMode(next){if(!['auto',...Object.keys(profiles)].includes(next))return;mode=next;scale=1;slowWindows=fastWindows=0;try{localStorage.setItem(KEY,JSON.stringify({mode}))}catch(_){}applyQuality(true)}
-window.plQuality={set:setMode,apply:()=>applyQuality(false),state:()=>({mode,scale,pixelRatio:renderer.getPixelRatio(),buffer:(()=>{const el=renderer.domElement||{};return [el.width||0,el.height||0]})(),target:profile().res||null,averageMs,profile:profile().name,...window.plFrameStats})};
-setTimeout(()=>applyQuality(true),0);
+/* Ультра на екрані з малою щільністю пікселів (ПК) — суперсемплінг до 2560 px по довшій стороні */
+function ratio(){const dpr=devicePixelRatio||1;if(S.res===3)return Math.max(Math.min(dpr,RES_CAP[3]),Math.min(2.5,2560/longEdge()),1);
+ return Math.max(.6,Math.min(dpr,RES_CAP[S.res])*scale)}
+function setShadow(lv){try{const sun=read('sun');if(!sun||!sun.shadow)return;const on=lv>0;if(sun.castShadow!==on)sun.castShadow=on;if(!on)return;const size=SHADOW[lv];
+ if(sun.shadow.mapSize.x!==size){sun.shadow.mapSize.set(size,size);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}}catch(_){}}
+function applyQuality(reset){const r=ratio();
+ if(Math.abs(renderer.getPixelRatio()-r)>.02){renderer.setPixelRatio(r);try{read('rs')()}catch(_){}}
+ if(window.plGrass&&window.plGrass.get()!==GRASS_GEO[S.grass])window.plGrass.set(GRASS_GEO[S.grass]);
+ const grassMesh=read('gm');if(grassMesh)grassMesh.count=Math.min(grassMesh.instanceMatrix.count,Math.round(GRASS_N[S.grass]*(S.res<3?Math.max(.65,scale):1)));
+ if(reset&&window.plGfx)window.plGfx.set({fps:S.fps,dist:S.dist});
+ window.plFxLevel=S.fx;if(window.plVis)window.plVis.setHQ(S.fx>=2);
+ setShadow(S.shadow);qualityAt=performance.now()}
+function setPreset(next){if(!PRESETS[next])return;preset=next;S={...PRESETS[next]};delete S.name;scale=1;slowWindows=fastWindows=0;save();applyQuality(true);syncUI()}
+function setOne(k,v){if(!KEYS.includes(k)||!valid(k,v))return;S[k]=v;const m=Object.keys(PRESETS).find(p=>KEYS.every(q=>PRESETS[p][q]===S[q]));preset=m||'custom';if(k==='res')scale=1;save();applyQuality(true);syncUI()}
+/* сумісність: старі назви режимів */
+const ALIAS={battery:'low',balanced:'med',cinematic:'high',k2:'ultra',k3:'ultra',auto:null};
+window.plQuality={set:m=>{if(m in ALIAS)m=ALIAS[m]||defPreset();setPreset(m)},setOne,apply:()=>applyQuality(false),presets:PRESETS,
+ state:()=>({mode:preset,preset,settings:{...S},scale,pixelRatio:renderer.getPixelRatio(),buffer:(()=>{const el=renderer.domElement||{};return [el.width||0,el.height||0]})(),averageMs,profile:(PRESETS[preset]||{name:'Свої'}).name,...window.plFrameStats})};
+setTimeout(()=>applyQuality(true),0);try{addEventListener('load',()=>applyQuality(true))}catch(_){}
 try{let resizeT=0;addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(()=>applyQuality(false),180)})}catch(_){}
 
 /* Пакетуємо лише нерухомі меші з однаковим матеріалом. Спільні вихідні
@@ -77,14 +101,25 @@ let last=performance.now(),elapsed=0,samples=[];
 function monitor(now){requestAnimationFrame(monitor);const dt=now-last;last=now;
  if(document.hidden||read('menuO')||read('ccO')||read('ivO')||read('pfO')){samples=[];elapsed=0;return}
  if(dt<=0||dt>150)return;samples.push(dt);elapsed+=dt;if(elapsed<2500)return;
- averageMs=samples.reduce((a,b)=>a+b,0)/samples.length;samples=[];elapsed=0;if(mode!=='auto'||performance.now()-qualityAt<5000)return;
+ averageMs=samples.reduce((a,b)=>a+b,0)/samples.length;samples=[];elapsed=0;if(S.res===3||performance.now()-qualityAt<5000)return;
  const target=1000/(window.gfxFps||60);slowWindows=averageMs>target*1.25?slowWindows+1:0;fastWindows=averageMs<target*1.08?fastWindows+1:0;
  if(slowWindows>=2&&scale>.6){scale=Math.max(.6,scale-.12);slowWindows=fastWindows=0;applyQuality(false)}
  else if(fastWindows>=8&&scale<1){scale=Math.min(1,scale+.08);slowWindows=fastWindows=0;applyQuality(false)}
 }
 requestAnimationFrame(monitor);
-const oldTab=pfTab;pfTab=function(tab){oldTab.apply(this,arguments);if(tab!=='g'&&tab!=='o')return;const host=document.getElementById('gfxp');if(!host||document.getElementById('quality-presets'))return;
- const panel=document.createElement('div');panel.id='quality-presets';panel.innerHTML='<h4>Якість і плавність</h4><div class="gseg">'+[['auto','Авто'],...Object.entries(profiles).map(([k,v])=>[k,v.name])].map(([key,label])=>'<button data-quality="'+key+'" class="'+(mode===key?'on':'')+'">'+label+'</button>').join('')+'</div><small class="gnote">Авто адаптує роздільність та ефекти для плавної гри. 2K/3K рендерять кадр у 2560/3200 px по довшій стороні (суперсемплінг) — найчіткіша картинка, найважче для GPU.</small>';
- host.prepend(panel);panel.querySelectorAll('button').forEach(button=>button.onclick=()=>{setMode(button.dataset.quality);panel.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===button))});
-};
+/* ---------- вкладка «Графіка»: режими + детальні налаштування ---------- */
+function syncUI(){const p=document.getElementById&&document.getElementById('gq-presets');if(!p)return;
+ p.querySelectorAll('[data-preset]').forEach(b=>b.classList.toggle('on',b.dataset.preset===preset));
+ const n=document.getElementById('gq-note');if(n)n.textContent=preset==='custom'?'Свої налаштування — оберіть режим, щоб повернути збалансовані значення':
+  {low:'Для слабких телефонів: менше нагрівається й довше тримає батарея',med:'Баланс якості й плавності — рекомендовано для більшості телефонів',high:'Тіні, світіння й густа трава — для потужних телефонів і ПК',ultra:'Усе на максимум: найвища роздільність, тіні й ефекти, без обмеження FPS'}[preset];
+ for(const k of KEYS)document.querySelectorAll('#gq-'+k+' button').forEach(b=>b.classList.toggle('on',(k==='fps'?OPT.fps.v[+b.dataset.i]:+b.dataset.i)===S[k]))}
+if(document.createElement){const css=document.createElement('style');css.textContent=`#gq-presets .gseg.big button{flex:1;padding:10px 4px;font-size:15px;font-weight:800}#gq-presets details{margin-top:10px}#gq-presets summary{cursor:pointer;font-weight:700;color:#ffe7a8;padding:6px 0}`;document.head.appendChild(css)}
+const oldTab=pfTab;pfTab=function(tab){oldTab.apply(this,arguments);if(tab!=='g'&&tab!=='o')return;const host=document.getElementById('gfxp');if(!host||document.getElementById('gq-presets'))return;
+ const panel=document.createElement('div');panel.id='gq-presets';
+ panel.innerHTML='<h4>Якість графіки</h4><div class="gseg big">'+Object.entries(PRESETS).map(([k,v])=>`<button data-preset="${k}">${v.name}</button>`).join('')+'</div><small class="gnote" id="gq-note"></small>'+
+  '<details'+(preset==='custom'?' open':'')+'><summary>Детальні налаштування</summary>'+KEYS.map(k=>`<h4>${OPT[k].n}</h4><div class="gseg" id="gq-${k}">${OPT[k].l.map((l,i)=>`<button data-i="${i}">${l}</button>`).join('')}</div>`+(OPT[k].note?`<small class="gnote">${OPT[k].note}</small>`:'')).join('')+'</details>';
+ host.prepend(panel);
+ panel.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>setPreset(b.dataset.preset));
+ for(const k of KEYS)panel.querySelectorAll('#gq-'+k+' button').forEach(b=>b.onclick=()=>setOne(k,k==='fps'?OPT.fps.v[+b.dataset.i]:+b.dataset.i));
+ syncUI()};
 }catch(error){console.warn('perf',error)}})();
