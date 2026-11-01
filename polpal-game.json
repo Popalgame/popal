@@ -1,0 +1,41 @@
+{
+  "schema": "polpal.game/1",
+  "name": "Popal",
+  "runtime": "three.js r128 (przeglądarkowa PWA)",
+  "contract": {
+    "doc": "docs/blender-project-contract.md",
+    "bones": 22,
+    "bonePrefix": "mixamorig:",
+    "clips": ["idle", "walk", "run", "swim", "hit", "throw"],
+    "height": 1.8,
+    "maxInfluences": 4
+  },
+  "heroes": [
+    {
+      "id": "aiko",
+      "label": "Ajko",
+      "model": "site/assets/models/hero-aiko.glb",
+      "packs": ["site/assets/models/hero-aiko-locomotion.glb", "site/assets/models/hero-aiko-combat.glb"],
+      "build": [
+        ["blender", "-b", "--factory-startup", "--python-exit-code", "1", "--python", "scripts/build-aiko-locomotion.py"],
+        ["blender", "-b", "--factory-startup", "--python-exit-code", "1", "--python", "scripts/build-aiko-combat.py"]
+      ]
+    },
+    {
+      "id": "classic",
+      "label": "Klasyczny",
+      "model": "site/assets/models/hero-rigged.glb",
+      "packs": ["site/assets/models/hero-locomotion.glb", "site/assets/models/hero-combat.glb"],
+      "build": [
+        ["blender", "-b", "--factory-startup", "--python-exit-code", "1", "--python", "scripts/build-hero-locomotion.py"],
+        ["blender", "-b", "--factory-startup", "--python-exit-code", "1", "--python", "scripts/build-hero-combat.py"]
+      ]
+    }
+  ],
+  "steps": {
+    "afterAssets": [["npm", "run", "bump"]],
+    "checks": [["npm", "test"], ["npm", "run", "lint"]]
+  },
+  "preview": {"command": ["node", "scripts/serve.mjs", "{port}"], "path": "/game.html"},
+  "deploy": {"branch": "main", "note": "scalenie do main uruchamia GitHub Actions → Firebase (popalgame.pl)"}
+}

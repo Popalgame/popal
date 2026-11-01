@@ -1,8 +1,0 @@
-{
-  "registration": {
-    "axis_x_px": 580,
-    "ground_y_px": 1973,
-    "units_per_px": 0.0010152284263959391
-  },
-  "notes": "Registration inherited from the existing unrigged Aiko study. Region and palette labels are automatic Aiko-profile hypotheses, not user-confirmed semantic annotations."
-}
