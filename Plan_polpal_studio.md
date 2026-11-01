@@ -180,6 +180,18 @@ rzeźby bazy (tak powstała v16: etapy `output/aiko-sculpt/production-v16`).
   nos wygładzał się w wersji do gry. Baza `aiko-v16-nose` zastąpiła `aiko-v16`
   (stara przeniesiona do `bases/_retired/`); bohaterka zbudowana w Studio:
   40 038 trójkątów, 22 kości, 7 klipów, nos widoczny w podglądzie Three.js.
+- [x] **Bohaterka w grze** (1 listopada, decyzja użytkownika: „podmień teraz”).
+  Wariant „Ajko” w grze (`site/assets/models/hero-aiko.glb`) to teraz rzeźba
+  z Polpal Studio zamiast bryłowej wersji. Po uwadze „ręce w boki, mają być w dół”
+  baza `aiko-v16-hero` ma ramiona opuszczone o 27° w idle/walk/run/swim/jump
+  (`arms_down.py`; klucze obracane wokół osi przód–tył, ruch klipów zachowany).
+  Pakiety chodu i walki wygenerowane na nowo pod szkielet v16: generator mierzy
+  kostkę (0,166) i długość nogi (0,482 → krok ×1,07), ramiona startują z pozy
+  idle; młot to zamach znad głowy i cios w dół (ręka 0,52 m, 0,26 m od głowy).
+  Telefon ładuje ten sam pełny model (bez `hero-aiko-mobile.glb`). Sprawdzone
+  w grze lokalnie: loader przyjmuje model i oba pakiety, ekran tworzenia postaci,
+  chód/bieg i `hammer_hit` prawą ręką; pozy obejrzane w three.js r128.
+  Wdrożenie produkcyjne następuje dopiero po scaleniu do `main`.
 - [ ] Wymiana części na inne kształty (np. inna fryzura, płaszcz zamiast kurtki)
   — potrzebna biblioteka rzeźbionych części zgodnych ze szkieletem.
 - [ ] Półautomatyczny warsztat rzeźby nowej bazy w Studio (etapy jak przy v16).

@@ -209,11 +209,11 @@ test('selecting Aiko in the saved look loads her packs and routes melee to the r
  const names=[];env.pl.userData.importedHero.model.traverse(n=>{if(n.name==='equippedTool')names.push(n.name)});
  assert.deepEqual(names,[],'Aiko keeps her baked hammer instead of stacking an equipped tool');
 });
-test('Aiko mobile variant loads on coarse pointers and setModel switches back to classic',async()=>{
+test('Aiko loads the full model on coarse pointers and setModel switches back to classic',async()=>{
  const rt=setup({coarse:true,look:{model:'aiko'}}),{env}=rt;
- assert.deepEqual(rt.requests.map(r=>r.url),['assets/models/hero-aiko-mobile.glb']);
+ assert.deepEqual(rt.requests.map(r=>r.url),['assets/models/hero-aiko.glb'],'no reduced phone copy of Aiko');
  rt.resolve(rt.asset());assert.equal(await env.importedHero.ready,true);
- assert.equal(env.importedHero.url,'assets/models/hero-aiko-mobile.glb');
+ assert.equal(env.importedHero.url,'assets/models/hero-aiko.glb');
  assert.equal(await env.importedHero.setModel('aiko'),true,'setModel no-ops for the active model');
  assert.equal(rt.loads(),3,'no extra fetch for the already active model');
  const before=rt.loads();

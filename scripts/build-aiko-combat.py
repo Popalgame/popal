@@ -23,26 +23,29 @@ REPORT = ROOT / "docs/assets/hero-aiko-combat-report.json"
 FPS = 96
 END = 72
 
-# World-axis poses in Blender (+X = character left, -Y = forward), XYZ euler radians.
-# hammer_hit: wind-up with both shoulders back, overhead two-handed-feel chop with
-# the RIGHT arm, follow-through down-left, return to rest.
+# World-axis poses in Blender (+X = character left, -Y = forward), XYZ euler radians,
+# applied on top of the model's idle pose (arms hanging along the body).
+# Signs: +X on a spine bone leans forward; -X on an arm hanging down raises it
+# forward and, past -pi/2, up over the head.
+# hammer_hit: the RIGHT arm lifts the hammer over and behind the head while the
+# chest leans back, then chops down and forward with the chest following, and
+# returns to rest. The left arm swings back as a counterweight.
 HAMMER_POSES = [
     (0, {}),
-    (9, {"Spine": (0, 0, .04), "Spine2": (0, 0, .10),
-         "RightShoulder": (0, .08, -.04), "RightArm": (0, -.16, -.23),
-         "RightForeArm": (0, -.10, -.10), "RightHand": (0, -.12, 0),
-         "LeftArm": (0, .10, -.15)}),
-    (20, {"Spine": (0, 0, .075), "Spine2": (0, 0, .18),
-          "RightShoulder": (0, .15, .09), "RightArm": (0, -.75, .55),
-          "RightForeArm": (0, -.48, .16), "RightHand": (0, -.40, .10)}),
-    (28, {"Spine": (0, .06, -.015), "Spine2": (0, .12, -.10),
-          "RightShoulder": (0, .08, .20), "RightArm": (0, -1.12, 1.35),
-          "RightForeArm": (0, -.58, .34), "RightHand": (0, -.55, .18)}),
-    (37, {"Spine": (0, -.05, -.07), "Spine2": (0, -.10, -.16),
-          "RightShoulder": (0, -.02, .16), "RightArm": (0, -.06, 1.16),
-          "RightForeArm": (0, -.20, .38), "RightHand": (0, .25, .14)}),
-    (49, {"Spine": (0, 0, -.035), "Spine2": (0, 0, -.08),
-          "RightArm": (0, .08, .34), "RightForeArm": (0, -.08, .10), "RightHand": (0, .08, 0)}),
+    (10, {"Spine": (-.04, 0, .03), "Spine2": (-.08, 0, .06),
+          "RightArm": (-1.5, 0, 0), "RightForeArm": (-.5, 0, 0), "RightHand": (-.2, 0, 0),
+          "LeftArm": (.15, 0, 0)}),
+    (21, {"Spine": (-.08, 0, .05), "Spine2": (-.16, 0, .10),
+          "RightArm": (-2.85, .12, 0), "RightForeArm": (-.95, 0, 0), "RightHand": (-.45, 0, 0),
+          "LeftArm": (.25, 0, 0)}),
+    (28, {"Spine": (.10, 0, -.03), "Spine2": (.20, 0, -.08),
+          "RightArm": (-1.25, 0, 0), "RightForeArm": (-.12, 0, 0), "RightHand": (.15, 0, 0),
+          "LeftArm": (.35, 0, 0)}),
+    (36, {"Spine": (.13, 0, -.04), "Spine2": (.24, 0, -.10),
+          "RightArm": (-.75, 0, 0), "RightForeArm": (-.08, 0, 0), "RightHand": (.30, 0, 0),
+          "LeftArm": (.30, 0, 0)}),
+    (50, {"Spine": (.05, 0, -.02), "Spine2": (.08, 0, -.04),
+          "RightArm": (-.25, 0, 0), "RightForeArm": (-.05, 0, 0), "LeftArm": (.10, 0, 0)}),
     (72, {}),
 ]
 # throw_right: step-back wind, right arm whips forward to release the pal sphere.
@@ -126,9 +129,13 @@ def report_motion(arm):
 def main():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=str(SOURCE))
-    arm = bpy.data.objects["AikoRig"]
+    arms = [o for o in bpy.context.scene.objects if o.type == "ARMATURE"]
+    assert len(arms) == 1, f"expected one armature, found {len(arms)}"
+    arm = arms[0]
     scene = bpy.context.scene
     scene.render.fps = FPS
+    for track in arm.animation_data.nla_tracks:  # only the chosen action drives the pose
+        track.mute = True
     idle = bpy.data.actions["idle"]
     arm.animation_data.action = idle
     arm.animation_data.action_slot = idle.slots[0]
@@ -153,7 +160,7 @@ def main():
         clips[name] = {"action": action, "poses": poses, "motion": report_motion(arm)}
     hit = clips["hammer_hit"]["motion"]
     assert len(arm.pose.bones) == 22
-    assert hit["rightHandExcursionMeters"] > .2, "hammer hand must swing"
+    assert hit["rightHandExcursionMeters"] > .35, "hammer hand must swing over the head"
     assert hit["minimumRightHandToHeadMeters"] > .12, "hammer must not pass through the head"
     assert clips["throw_right"]["motion"]["rightHandExcursionMeters"] > .15
     report = {"source": str(SOURCE.relative_to(ROOT)), "fps": FPS,

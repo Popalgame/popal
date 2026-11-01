@@ -6,6 +6,11 @@ site/assets/models/hero-aiko-locomotion.glb with scene extras
 ("locomotion": {version: 1, profiles: {...}}), the same contract the runtime
 validates in site/src/modules/imported-hero.js. Chibi legs are short, so strides
 are smaller, stance longer and the hip drop deeper than the adult hero's.
+
+Rig-relative (2026-11-01, Aiko v16 from Polpal Studio): the armature is found by
+type, the ankle height and leg length are measured from the rest skeleton and the
+stride profile is scaled by leg length. Arms start from the model's own idle pose
+and swing around world axes, so the bone roll of the rig does not matter.
 """
 
 import json
@@ -18,12 +23,14 @@ from mathutils import Matrix, Quaternion, Vector
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "site/assets/models/hero-aiko.glb"
-MOBILE = ROOT / "site/assets/models/hero-aiko-mobile.glb"
 MODEL = ROOT / "site/assets/models/hero-aiko-locomotion.glb"
 REPORT = ROOT / "docs/assets/hero-aiko-locomotion-report.json"
 FPS = 96
-# Rig metrics of hero-aiko.glb: thigh .25, shin .20, hip rest z .52, ankle rest z .07.
+# Profiles below were tuned on a chibi leg of .45 m (thigh .25 + shin .20); main()
+# measures the real rig and scales the distances. ANKLE_Z is set from the rig.
+DESIGN_LEG = .45
 ANKLE_Z = .07
+SCALED = ("stride", "lift", "bob", "hip_drop", "sway")
 PROFILES = {
     "walk": dict(frames=72, stride=.32, stance=.56, lift=.058, bob=.010, hip_drop=.032, pitch=.13, game_speed=1.8,
                  pelvis_yaw=4.0, pelvis_roll=2.5, sway=.016, chest_yaw=4.0, chest_roll=1.0, lean=1.0,
@@ -152,19 +159,18 @@ def pose(arm, phase, profile, base):
         world_rotation(bone(arm, name), (0, 1, 0), -chest_roll * weight)
         world_rotation(bone(arm, name), (1, 0, 0), nod * weight)
     for side, sign in (("Left", 1), ("Right", -1)):
+        # The arms keep the model's idle pose and swing around world axes.
         p = bone(arm, side + "Arm")
-        p.rotation_quaternion = Quaternion((1, 0, 0), math.radians(-70 if sign > 0 else -68))
         world_rotation(p, (1, 0, 0), sign * math.radians(profile["arm_left" if sign > 0 else "arm_right"]) * math.cos(cycle - .35))
         world_rotation(p, (0, 0, 1), sign * .02 * math.sin(cycle - .35))
         fore = bone(arm, side + "ForeArm")
         swing = .5 - sign * .5 * math.cos(cycle - .35)
         extra = profile["elbow_left" if sign > 0 else "elbow_right"] + profile["elbow_var_left" if sign > 0 else "elbow_var_right"] * swing
-        fore.rotation_quaternion = fore.rotation_quaternion @ Quaternion((0, 0, 1), math.radians(extra) * (-1 if sign > 0 else 1))
+        world_rotation(fore, (1, 0, 0), -math.radians(extra))  # elbow bends the hand forward
         if sign < 0:
-            # Aiko carries the hammer in the RIGHT hand; dangle the wrist.
+            # Aiko carries the hammer in the RIGHT hand; the wrist trails a little.
             hand = bone(arm, side + "Hand")
-            trail = profile["hand"] + profile["hand_sway"] * math.sin(cycle - 1.0)
-            hand.rotation_quaternion = Quaternion((1, 0, 0), math.radians(trail)) @ hand.rotation_quaternion
+            world_rotation(hand, (1, 0, 0), math.radians(profile["hand_sway"]) * math.sin(cycle - 1.0))
         world_rotation(bone(arm, side + "Shoulder"), (0, 0, 1), sign * math.radians(profile["shoulder"]) * math.cos(cycle))
     bpy.context.view_layer.update()
 
@@ -218,16 +224,31 @@ def set_linear(action):
 
 
 def main():
+    global ANKLE_Z
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=str(SOURCE))
-    arm = bpy.data.objects["AikoRig"]
+    arms = [o for o in bpy.context.scene.objects if o.type == "ARMATURE"]
+    assert len(arms) == 1, f"expected one armature, found {len(arms)}"
+    arm = arms[0]
     scene = bpy.context.scene
     scene.render.fps = FPS
-    source_pose = bpy.data.actions["walk"]
+    # Only the chosen action may drive the pose: the importer also adds NLA tracks.
+    for track in arm.animation_data.nla_tracks:
+        track.mute = True
+    source_pose = bpy.data.actions["idle"]
     arm.animation_data.action = source_pose
     arm.animation_data.action_slot = source_pose.slots[0]
     scene.frame_set(0)
     base = {p.name: p.rotation_quaternion.copy() for p in arm.pose.bones}
+    # Measure the rig and scale the stride profile to its legs.
+    up, shin = arm.data.bones["mixamorig:LeftUpLeg"], arm.data.bones["mixamorig:LeftLeg"]
+    leg = (up.tail_local - up.head_local).length + (shin.tail_local - shin.head_local).length
+    ANKLE_Z = arm.data.bones["mixamorig:LeftFoot"].head_local.z
+    k = leg / DESIGN_LEG
+    for profile in PROFILES.values():
+        for key in SCALED:
+            profile[key] *= k
+    print("RIG", json.dumps({"armature": arm.name, "legMeters": round(leg, 4), "ankleZ": round(ANKLE_Z, 4), "profileScale": round(k, 4)}))
     for a in list(bpy.data.actions):
         bpy.data.actions.remove(a)
     actions, metrics = {}, {}

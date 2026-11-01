@@ -3,10 +3,11 @@
 'use strict';
 const T=window.THREE,previous=window.buildHero,previousAct=window.heroAct,previousShow=window.ccShow,previousDraw=window.drawAv;
 /* Hero model registry: each entry ships rig + locomotion + combat packs and the
-   melee clip/hand of its signature weapon (classic slashes left, Aiko chops right). */
+   melee clip/hand of its signature weapon (classic slashes left, Aiko chops right).
+   Aiko (Polpal Studio, sculpted v16) has no reduced phone copy: full quality everywhere. */
 const MODELS={
  classic:{full:'assets/models/hero-rigged.glb',mobile:'assets/models/hero-mobile.glb',locomotion:'assets/models/hero-locomotion.glb',combat:'assets/models/hero-combat.glb',hitClip:'sword_hit',hitHand:'left'},
- aiko:{full:'assets/models/hero-aiko.glb',mobile:'assets/models/hero-aiko-mobile.glb',locomotion:'assets/models/hero-aiko-locomotion.glb',combat:'assets/models/hero-aiko-combat.glb',hitClip:'hammer_hit',hitHand:'right'}
+ aiko:{full:'assets/models/hero-aiko.glb',mobile:'assets/models/hero-aiko.glb',locomotion:'assets/models/hero-aiko-locomotion.glb',combat:'assets/models/hero-aiko-combat.glb',hitClip:'hammer_hit',hitHand:'right'}
 };
 let coarse=false;try{coarse=!!(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches)}catch(_){}
 const get=name=>{try{return eval(name)}catch(_){return undefined}};
@@ -261,7 +262,7 @@ function loadCombat(){
  });
 }
 api.ready=new Promise(resolve=>{
- const urls=coarse?[active.def.mobile,active.def.full]:[active.def.full],loader=new T.GLTFLoader();
+ const urls=coarse?[...new Set([active.def.mobile,active.def.full])]:[active.def.full],loader=new T.GLTFLoader();
  function fail(error,index){
   if(index+1<urls.length){load(index+1);return}
   api.status='failed';api.error=String(error&&error.message||error);console.warn('imported hero',error);resolve(false);
@@ -292,7 +293,7 @@ api.ready=new Promise(resolve=>{
 api.setModel=function(id){
  if(!MODELS[id]||id===active.id)return Promise.resolve(api.status==='ready');
  const model={id,def:MODELS[id]};
- const urls=coarse?[model.def.mobile,model.def.full]:[model.def.full];
+ const urls=coarse?[...new Set([model.def.mobile,model.def.full])]:[model.def.full];
  return new Promise(resolve=>{
   const loader=new T.GLTFLoader();
   function fail(error,index){
