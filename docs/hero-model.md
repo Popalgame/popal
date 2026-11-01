@@ -93,7 +93,7 @@ lokomocji/walki. Zestawy Ajko:
   `output/aiko-sculpt/production-v16-nose/aiko-v16-hero-arms27.blend`
   (v16 + nos 10 mm + ramiona opuszczone o 27° w idle/walk/run/swim/jump,
   skrypty `nose_candidate.py` i `arms_down.py` obok pliku), uproszczona przez
-  `tools/character-scan/engine_optimize.py` do 40 tys. Na decyzję użytkownika
+  `studio/engine_optimize.py` w Polpal Studio ([osobna aplikacja](polpal-studio.md)) do 40 tys. Na decyzję użytkownika
   nie ma osobnej, uboższej wersji na telefon: przy wskaźniku zgrubnym ładowany
   jest ten sam pełny model (`hero-aiko-mobile.glb` usunięto),
 - [`hero-aiko-locomotion.glb`](../site/assets/models/hero-aiko-locomotion.glb)
