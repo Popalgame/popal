@@ -101,6 +101,9 @@ DEFAULT = {
         'back': {'style': 'backpack', 'spheres': 3},
         'weapon': {'style': 'hammer', 'glow': True},
     },
+    # 'parametric': built from the parts library; 'sculpted': a registered sculpted
+    # base (e.g. Aiko v16) reduced to the game budget by engine_optimize.py.
+    'base': {'kind': 'parametric'},
     'provenance': {},
     'references': [],
 }
@@ -168,6 +171,11 @@ def validate(recipe):
             raise ValueError(f'face.{key} must be in {lo}..{hi}')
     if face['eye_spacing'] < face['eye_width']*.9:
         raise ValueError('Eyes would overlap: eye_spacing must be at least 0.9 x eye_width')
+    base = recipe.get('base', {'kind': 'parametric'})
+    if base.get('kind') not in ('parametric', 'sculpted'):
+        raise ValueError('base.kind must be parametric or sculpted')
+    if base['kind'] == 'sculpted' and not re.match(r'^[a-z0-9][a-z0-9-]{1,40}$', str(base.get('id', ''))):
+        raise ValueError('A sculpted base needs a registered base id')
     palette = recipe.get('palette', {})
     for slot in PALETTE_SLOTS:
         if not HEX.match(str(palette.get(slot, ''))):

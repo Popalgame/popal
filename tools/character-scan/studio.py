@@ -96,6 +96,7 @@ if __name__=='__main__':
         s.add_argument('--report',type=Path);s.add_argument('--id',default='front');s.add_argument('--label',default='Reference / front')
     s=sub.add_parser('serve');s.add_argument('--project',type=Path,required=True);s.add_argument('--model',type=Path);s.add_argument('--port',type=int,default=8765)
     s.add_argument('--blender',type=Path,help='Local Blender executable for isolated pipeline jobs')
+    s.add_argument('--engine-bases',type=Path,help='Sculpted base library for the character engine (tab 05)')
     s=sub.add_parser('bind-blender',help='Bind an immutable static face source once')
     s.add_argument('--project',type=Path,required=True);s.add_argument('--blend',type=Path,required=True)
     s.add_argument('--object',required=True);s.add_argument('--frame-id',required=True)
@@ -128,5 +129,7 @@ if __name__=='__main__':
     else:
         project.read(a.project)
         if a.model and not a.model.is_file():p.error('Model not found')
-        server=Server(('127.0.0.1',a.port),a.project,a.model,a.blender);print(f'Scan Studio: http://127.0.0.1:{server.server_port}',flush=True)
+        server=Server(('127.0.0.1',a.port),a.project,a.model,a.blender)
+        if a.engine_bases:server.engine.bases=a.engine_bases.resolve()
+        print(f'Scan Studio: http://127.0.0.1:{server.server_port}',flush=True)
         server.serve_forever()

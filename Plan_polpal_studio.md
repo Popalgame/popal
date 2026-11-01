@@ -98,10 +98,54 @@ kule Pal Sphere z guzikiem; młot ze świecącymi panelami run. Kolory palety
 konwertowane z sRGB do liniowych (wcześniej wszystko było wyprane).
 Wynik: 15 308 trójkątów, 22 kości, 7 klipów, wysokość 1,8, skala normalizacji 0,99.
 
+### Biblioteka baz rzeźbionych (1 listopada 2026 r.)
+
+Ocena użytkownika: wynik parametryczny to „klocki”, niepodobne do referencji.
+Przyczyna: skan daje liczby (kolory, proporcje, układ twarzy), a kształty
+pochodziły z biblioteki prostych brył. Tej jakości nie da się osiągnąć
+dopracowywaniem brył.
+
+Rozwiązanie wdrożone: **silnik korzysta z wyrzeźbionych, wyrigowanych baz**
+(pierwsza: Aiko v16, 1,66 mln trójkątów, 22 kości, 7 klipów).
+
+- `engine.py add-base` rejestruje bazę (plik `.blend` tylko przez ścieżkę
+  i sumę kontrolną — nigdy nie jest zmieniany) z miniaturą sylwetki referencji.
+- Przy analizie paczki główna referencja jest porównywana z bazami
+  (pokrycie sylwetki × zgodność koloru). Próg 0,90; T-pose bohaterki = 1,00,
+  inne pozy tej postaci 0,35–0,42, obca postać 0,30. Wynik i kandydaci są w recepcie.
+- `engine_optimize.py`: podział siatki według materiałów, budżet według
+  ważności (twarz/oczy więcej), decymacja przed modyfikatorem szkieletu,
+  ≤ 4 wpływy i normalizacja wag, eksport z ustawieniami v16, reimport.
+- Aiko v16 → desktop **42 843** trójkąty / 2,7 MB, mobile 18 244 / 1,8 MB;
+  22 kości, 7 klipów, wysokość 1,80. Oględziny EEVEE: sylwetka praktycznie
+  bez różnic, twarz w desktop bez różnic, w mobile kanciaste pasma włosów;
+  animacje run/hit/throw działają bez widocznych rozdarć.
+- Przebieg w Studio (zakładka 05): paczka → rozpoznanie bazy → wersja do gry
+  w ~24 s → podgląd Three.js r128 bez błędów → rendery EEVEE.
+
+**Ograniczenie:** dla zupełnie nowej postaci, bez rzeźby w bibliotece, silnik
+nadal tworzy wersję parametryczną. Jakość jak Aiko v16 wymaga raz wykonanej
+rzeźby bazy (tak powstała v16: etapy `output/aiko-sculpt/production-v16`).
+
 ### Dalsze kroki silnika
 
-- [ ] Budżet trójkątów: 15,3 tys. wobec 12 tys. z opisu — redukcja lub wariant
-  mobilny z limitem z opisu.
+- [ ] Budżet trójkątów parametrycznej wersji: 15,3 tys. wobec 12 tys. z opisu.
+- [ ] Baza mobile: 18,2 tys. wobec celu 12 tys. (minimum 60 trójkątów na każdą
+  z 36 części) i kanciaste włosy — rozważyć wypalanie normal map z rzeźby.
+- [x] **Warianty z bazy** (1 listopada): nowi bohaterowie na jakości v16 bez
+  nowej rzeźby. `engine_profile.py` czyta materiały bazy (kolor materiału,
+  kolor wierzchołków, gradient, tekstury); mapa materiał → slot palety po całych
+  słowach nazw; przekolorowanie zachowuje cieniowanie (nowy kolor × jasność bazy),
+  gradient włosów nasada → końcówki, tekstury tęczówek, połysk włosów; usuwanie
+  młota, futrzanego kołnierza i kul razem z ich drobnymi okuciami. Panel
+  „Wariant z rzeźby” w zakładce 05 (kolory, części, jakość, „Zbuduj wariant”).
+  Próby: „Mira” (fiolet/złoto, czerwona kurtka) i „Kiko” (czarne/różowe włosy,
+  żółta kurtka, bez młota) — ok. 40 tys. trójkątów, 22 kości, 7 klipów.
+- [ ] Skóra w wariantach: dziś bez zmian (tekstura twarzy z piegami + kolory
+  materiałów); wymaga spójnego przebarwienia tekstury i materiałów skóry.
+- [ ] Wymiana części na inne kształty (np. inna fryzura, płaszcz zamiast kurtki)
+  — potrzebna biblioteka rzeźbionych części zgodnych ze szkieletem.
+- [ ] Półautomatyczny warsztat rzeźby nowej bazy w Studio (etapy jak przy v16).
 - [ ] Dalsza jakość części: włosy jako karty z teksturą zamiast rurek, pikowanie
   kurtki szwami, kształt dłoni, ciało pod ubraniem (szyja, ramiona), uszy.
 - [x] Twarz z obrazu ze skanerów Studio (`face_scan`).

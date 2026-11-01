@@ -11,7 +11,9 @@ The preview server listens on 127.0.0.1 only and follows the Studio server's
 rules: Host/Origin checks, safe paths, size limits, no execution of pack files.
 """
 import argparse
+import hashlib
 import json
+import os
 import mimetypes
 import re
 import shutil
@@ -35,6 +37,9 @@ RUN_ID = re.compile(r'^[a-z0-9][a-z0-9-]{2,63}$')
 UPLOAD_TYPES = {'application/zip': '.zip', 'application/x-zip-compressed': '.zip', 'image/png': '.png',
                 'image/jpeg': '.jpg', 'image/webp': '.webp'}
 MAX_UPLOAD = 300*1024*1024
+DEFAULT_BASES = Path(os.environ.get('POLPAL_ENGINE_BASES', str(REPO/'output/character-engine/bases')))
+BUDGET = {'desktop': 40000, 'mobile': 12000}
+MATCH_THRESHOLD = .90
 DISCONNECT = (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)
 
 
@@ -63,10 +68,173 @@ def read_events(path):
     return events
 
 
+def thumbnail(path):
+    """Figure crop on its own background, 48x96 RGB in 0..1 — for base matching."""
+    import numpy as np
+    from PIL import Image
+    with Image.open(path) as im:
+        m, fg = reference_pack.measure(im)
+        ys, xs = np.nonzero(fg)
+        box = (int(xs.min()), int(ys.min()), int(xs.max())+1, int(ys.max())+1)
+        rgb = np.asarray(im.convert('RGB').crop(box).resize((48, 96)), float)/255
+        mask = np.asarray(Image.fromarray(fg[box[1]:box[3], box[0]:box[2]].astype('uint8')*255).resize((48, 96))) > 127
+    return rgb*mask[..., None], mask
+
+
+def similarity(a, b):
+    """1 = identical figure; silhouette overlap times colour agreement."""
+    import numpy as np
+    (ra, ma), (rb, mb) = a, b
+    overlap = (ma & mb).sum()/max(1, (ma | mb).sum())
+    colour = 1-np.abs(ra-rb)[ma & mb].mean() if (ma & mb).any() else 0
+    return float(overlap*colour)
+
+
+def register_base(bases, base_id, blend, reference, label, colour=None):
+    """Add a sculpted, rigged base to the library (files are referenced, never copied or changed)."""
+    import numpy as np
+    if not RUN_ID.match(base_id):
+        raise ValueError('Invalid base id')
+    folder = safe(Path(bases), base_id)
+    folder.mkdir(parents=True, exist_ok=False)
+    rgb, mask = thumbnail(reference)
+    np.save(folder/'thumbnail.npy', np.concatenate([rgb, mask[..., None]], axis=2))
+    entry = {'schema': 'polpal.engine-base/1', 'id': base_id, 'label': label, 'blend': str(Path(blend).resolve()),
+             'blend_sha256': hashlib.sha256(Path(blend).read_bytes()).hexdigest(),
+             'reference': str(Path(reference).resolve()), 'colour_attribute': colour, 'budgets': BUDGET,
+             'palette': recipe_lib.default()['palette']}
+    write_json(folder/'base.json', entry)
+    return entry
+
+
+def profile_base(bases, base_id, blender, palette=None):
+    """Read the base's materials in Blender and store the region map used for variants."""
+    folder = safe(Path(bases), base_id)
+    entry = json.loads((folder/'base.json').read_text())
+    out = folder/'profile.json'
+    command = [str(blender), '--background', '--factory-startup', '--disable-autoexec', entry['blend'],
+               '--python-exit-code', '1', '--python', str(HERE/'engine_profile.py'), '--', str(out)]
+    if entry.get('colour_attribute'):
+        command.append(entry['colour_attribute'])
+    subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1800)
+    profile = json.loads(out.read_text())
+    entry['regions'] = regions_from_profile(profile)
+    entry['profile_materials'] = [{'material': m['name'], 'triangles': m['triangles']} for m in profile['materials']]
+    entry['palette'] = palette or entry.get('palette') or recipe_lib.default()['palette']
+    write_json(folder/'base.json', entry)
+    return entry
+
+
+# Material name (lower case) -> palette slot of a sculpted base; first match wins.
+REGION_RULES = (('hair', 'hair_root'), ('brow', 'brows'), ('iris', 'eyes'), ('jacket', 'jacket'), ('collar', 'fur'),
+                ('top', 'top'), ('shorts • saddle', 'shorts'), ('recessed seam', 'shorts'), ('chestnut leather', 'boots'),
+                ('linen stitching', 'socks'), ('midnight blue enamel', 'sphere_primary'), ('ivory ceramic', 'sphere_secondary'),
+                ('walnut', 'hammer_wood'), ('rune', 'rune_glow'))
+# Optional parts a variant may drop, by material name stems.
+PART_RULES = {'weapon': ('hammer',), 'collar': ('collar',), 'spheres': ('capsule',)}
+
+
+def srgb_hex_to_linear(value):
+    return [c/12.92 if c <= .04045 else ((c+.055)/1.055)**2.4 for c in recipe_lib.hex_to_rgb(value)]
+
+
+def lum(rgb):
+    return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2]
+
+
+def scaled(rgb, k):
+    """Colour times k, kept within 0..1 by lowering brightness rather than clipping hue."""
+    out = [c*k for c in rgb]
+    peak = max(out)
+    return [c/peak for c in out] if peak > 1 else out
+
+
+def regions_from_profile(profile):
+    """Which palette slot each material carries, and how its colour is stored."""
+    regions = []
+    for m in profile['materials']:
+        name = (m['name'] or '').lower()
+        slot = next((s for stem, s in REGION_RULES if re.search(r'\b'+re.escape(stem)+r'\b', name)), None)
+        if slot is None or not m['triangles']:
+            continue
+        if m['images'] and slot == 'eyes':
+            mode = 'texture'
+        elif slot == 'hair_root' and m.get('spread', 0) > .2:
+            mode = 'gradient'
+        elif not m['factor_linked']:
+            mode = 'factor'
+        else:
+            mode = 'vertex'
+        regions.append({'material': m['name'], 'slot': slot, 'mode': mode, 'factor': m['factor'],
+                        'median': m.get('median'), 'ends': m.get('ends')})
+    return regions
+
+
+def variant_spec(entry, recipe):
+    """Recolour and part-removal instructions for engine_optimize.py (linear RGB)."""
+    # Bases registered without a palette are described by the default recipe (Aiko).
+    base_palette, palette = entry.get('palette') or recipe_lib.default()['palette'], recipe['palette']
+    spec = {'remove': [], 'recolor': []}
+    names = [r['material'] for r in entry.get('profile_materials', [])]
+    parts = recipe['parts']
+    drop = []
+    if parts['weapon']['style'] == 'none':
+        drop.append('weapon')
+    if parts['top'].get('collar') != 'fur':
+        drop.append('collar')
+    if parts['back'].get('spheres', 0) == 0:
+        drop.append('spheres')
+    for part in drop:
+        spec['remove'] += [n for n in names if any(stem in n.lower() for stem in PART_RULES[part])]
+    for region in entry.get('regions', []):
+        slot = region['slot']
+        if slot not in base_palette or region['material'] in spec['remove']:
+            continue
+        changed = palette[slot].upper() != base_palette[slot].upper()
+        if region['mode'] == 'gradient' and slot == 'hair_root':
+            changed = changed or palette['hair_tip'].upper() != base_palette['hair_tip'].upper()
+        if not changed:
+            continue
+        target = srgb_hex_to_linear(palette[slot])
+        base = srgb_hex_to_linear(base_palette[slot])
+        item = {'material': region['material'], 'mode': region['mode'], 'slot': slot}
+        # New hue from the palette; brightness relation of this material to its slot kept,
+        # per-corner shading kept by the optimiser (colour x luminance ratio).
+        if region['mode'] == 'factor':
+            item['to'] = scaled(target, lum(region['factor'])/max(lum(base), 1e-4))
+            item['emission'] = slot == 'rune_glow'
+        elif region['mode'] == 'gradient':
+            ends = region['ends']
+            root_ref, tip_ref = srgb_hex_to_linear(base_palette['hair_root']), srgb_hex_to_linear(base_palette['hair_tip'])
+            d = [sum((a-b)**2 for a, b in zip(e, root_ref)) for e in ends]
+            root, tip = (ends[0], ends[1]) if d[0] <= d[1] else (ends[1], ends[0])
+            item.update(**{'from': root, 'from2': tip,
+                           'to': scaled(target, lum(root)/max(lum(root_ref), 1e-4)),
+                           'to2': scaled(srgb_hex_to_linear(palette['hair_tip']), lum(tip)/max(lum(tip_ref), 1e-4))})
+        elif region['mode'] == 'vertex':
+            median = region['median']
+            item.update(**{'from': median, 'to': scaled(target, lum(median)/max(lum(base), 1e-4))})
+        else:  # texture: same rule, the optimiser measures the texture's own median
+            item.update(to=target, slot_base=base)
+        spec['recolor'].append(item)
+    return spec
+
+
+def load_bases(bases):
+    import numpy as np
+    out = []
+    for path in sorted(Path(bases).glob('*/base.json')) if Path(bases).is_dir() else []:
+        entry = json.loads(path.read_text())
+        thumb = np.load(path.parent/'thumbnail.npy')
+        out.append((entry, (thumb[..., :3], thumb[..., 3] > .5)))
+    return out
+
+
 class Engine:
     """One build at a time; each run lives in its own folder under runs/."""
 
-    def __init__(self, runs, blender=None, bridge_check=True):
+    def __init__(self, runs, blender=None, bridge_check=True, bases=None):
+        self.bases = Path(bases or DEFAULT_BASES)
         self.runs = Path(runs).resolve()
         self.runs.mkdir(parents=True, exist_ok=True)
         self.blender = Path(blender) if blender else (DEFAULT_BLENDER if DEFAULT_BLENDER.exists() else None)
@@ -123,8 +291,31 @@ class Engine:
         except Exception as error:
             self.set_state(folder, status='failed', stage='analyse', message=str(error)[:400])
             raise
-        self.set_state(folder, status='analysed', message=f'{len(report["warnings"])} warnings')
+        recipe = self.match_base(folder, recipe)
+        base = recipe['base']
+        note = f'baza {base["id"]} ({base["score"]:.2f})' if base['kind'] == 'sculpted' else 'baza parametryczna'
+        self.set_state(folder, status='analysed', message=f'{len(report["warnings"])} warnings · {note}')
         return recipe, report
+
+    def match_base(self, folder, recipe):
+        """Use a registered sculpted base when the primary reference shows that character."""
+        primary = next((r for r in recipe['references'] if r.get('primary')), None)
+        bases = load_bases(self.bases)
+        if not primary or not bases:
+            return recipe
+        try:
+            thumb = thumbnail(folder/'reference'/primary['file'])
+        except ValueError:
+            return recipe
+        scores = sorted(((similarity(thumb, t), e) for e, t in bases), key=lambda x: -x[0])
+        recipe['base_candidates'] = [{'id': e['id'], 'label': e['label'], 'score': round(sc, 4)} for sc, e in scores]
+        best, entry = scores[0]
+        if best >= MATCH_THRESHOLD:
+            recipe['base'] = {'kind': 'sculpted', 'id': entry['id'], 'label': entry['label'], 'score': round(best, 4)}
+            recipe['provenance']['base'] = {'source': 'image', 'file': primary['file'],
+                                            'detail': f'figure similarity {best:.3f} >= {MATCH_THRESHOLD}'}
+        recipe_lib.dump(recipe, folder/'recipe.json')
+        return recipe
 
     def build(self, run_id, recipe=None):
         """Blender build into a new build-N folder, then review renders."""
@@ -152,6 +343,9 @@ class Engine:
             else:
                 recipe_lib.dump(recipe, recipe_path)
             self.set_state(folder, status='building', builds=number, build=build.name, message=None)
+            used = recipe_lib.load(recipe_path)
+            if used['base']['kind'] == 'sculpted':
+                return self.build_sculpted(folder, build, used)
             for script, args, log in (('engine_blender.py', [recipe_path, build], 'build.log'),
                                       ('engine_render.py', [build/'character.glb', build/'renders'], 'render.log')):
                 command = [str(self.blender), '--background', '--factory-startup', '--disable-autoexec',
@@ -168,6 +362,49 @@ class Engine:
             raise
         finally:
             self.busy = False
+
+    def blender_run(self, blend, script, args, log):
+        command = [str(self.blender), '--background', '--factory-startup', '--disable-autoexec']
+        command += [str(blend)] if blend else []
+        command += ['--python-exit-code', '1', '--python', str(HERE/script), '--', *map(str, args)]
+        with log.open('w') as handle:
+            code = subprocess.run(command, stdout=handle, stderr=subprocess.STDOUT, timeout=3600).returncode
+        if code:
+            raise RuntimeError(f'{script} failed ({code}); see {log.parent.name}/{log.name}')
+
+    def build_sculpted(self, folder, build, recipe):
+        """Reduce a registered sculpted base to the game budget; the base file is never changed."""
+        entry = json.loads(safe(self.bases, recipe['base']['id']).joinpath('base.json').read_text())
+        blend = Path(entry['blend'])
+        if hashlib.sha256(blend.read_bytes()).hexdigest() != entry['blend_sha256']:
+            raise ValueError('Registered base file changed; register it again')
+        started = time.time()
+
+        def event(stage, status='done', **extra):
+            with (build/'events.jsonl').open('a') as handle:
+                handle.write(json.dumps({'stage': stage, 'status': status, 't': round(time.time()-started, 2), **extra})+'\n')
+        event('start', base=entry['id'])
+        event('base', label=entry['label'])
+        target = BUDGET[recipe['quality']]
+        spec = variant_spec(entry, recipe)
+        write_json(build/'variant.json', spec)
+        if spec['remove'] or spec['recolor']:
+            event('variant', recoloured=len(spec['recolor']), removed=len(spec['remove']))
+        args = [build, target, 'character', entry.get('colour_attribute') or '', build/'variant.json']
+        self.blender_run(blend, 'engine_optimize.py', args, build/'optimize.log')
+        opt = json.loads((build/'character-report.json').read_text())
+        event('optimize', triangles=opt['triangles'], source_triangles=opt['source_triangles'])
+        event('reimport', bones=opt['reimport']['bones'], clips=opt['reimport']['clips'])
+        report = {'schema': 'polpal.engine-build/1', 'status': opt['status'], 'base': entry['id'],
+                  'blender_version': opt['blender_version'], 'glb': 'character.glb', 'glb_sha256': opt['glb_sha256'],
+                  'triangles': opt['triangles'], 'source_triangles': opt['source_triangles'], 'bones': opt['reimport']['bones'],
+                  'clips': opt['reimport']['clips'], 'height': opt['reimport']['height'], 'likeness_approved': False,
+                  'game_integration': False, 'scope': 'Game-budget copy of a registered sculpted base; review renders before use.'}
+        write_json(build/'build-report.json', report)
+        event('done', glb='character.glb', triangles=opt['triangles'])
+        self.blender_run(None, 'engine_compare.py', [build/'character.glb', build/'renders', 'view'], build/'render.log')
+        self.set_state(folder, status=report['status'], message=f'Baza {entry["label"]}; appearance not yet approved')
+        return report
 
     def start(self, source, name=None):
         run_id = re.sub(r'[^a-z0-9-]+', '-', (name or 'character').lower()).strip('-')[:40] or 'character'
@@ -247,6 +484,10 @@ def route_post(handler, engine, path):
         recipe = recipe_lib.validate(payload['recipe'])
         run_id = m.group(1)
         engine.state(run_id)
+        if engine.busy:
+            raise ValueError('Another build is running')
+        # Visible at once, so the preview keeps polling until the new build is done.
+        engine.set_state(engine.run_dir(run_id), status='queued', message=None)
         threading.Thread(target=lambda: _quiet(engine.build, run_id, recipe), daemon=True).start()
         return handler.respond({'id': run_id, 'status': 'building'}, 202)
     raise FileNotFoundError(path)
@@ -326,15 +567,33 @@ def main():
     a.add_argument('--name')
     b = sub.add_parser('build')
     b.add_argument('run', type=Path)
+    ab = sub.add_parser('add-base', help='register a sculpted, rigged base character')
+    ab.add_argument('--id', required=True)
+    ab.add_argument('--blend', type=Path, required=True)
+    ab.add_argument('--reference', type=Path, required=True)
+    ab.add_argument('--label', required=True)
+    ab.add_argument('--colour-attribute')
+    ab.add_argument('--bases', type=Path)
+    pb = sub.add_parser('profile-base', help='read a registered base\'s materials for variants (Blender)')
+    pb.add_argument('--id', required=True)
+    pb.add_argument('--bases', type=Path)
+    pb.add_argument('--blender', type=Path, default=DEFAULT_BLENDER)
     s = sub.add_parser('serve')
     s.add_argument('--runs', type=Path, required=True)
     s.add_argument('--port', type=int, default=8790)
+    s.add_argument('--bases', type=Path)
     for p in (b, s):
         p.add_argument('--blender', type=Path)
         p.add_argument('--skip-bridge-check', action='store_true',
                        help='do not ask the Blender AI Bridge whether Python is enabled')
     args = parser.parse_args()
-    if args.command == 'analyze':
+    if args.command == 'add-base':
+        print(json.dumps(register_base(args.bases or DEFAULT_BASES, args.id, args.blend, args.reference, args.label,
+                                       args.colour_attribute), indent=2))
+    elif args.command == 'profile-base':
+        entry = profile_base(args.bases or DEFAULT_BASES, args.id, args.blender)
+        print(json.dumps({'regions': [(r['material'], r['slot'], r['mode']) for r in entry['regions']]}, ensure_ascii=False, indent=1))
+    elif args.command == 'analyze':
         recipe, report = reference_pack.analyse(args.pack, args.run, name=args.name)
         print(json.dumps({'recipe': str(args.run/'recipe.json'), 'warnings': report['warnings']}, ensure_ascii=False, indent=2))
     elif args.command == 'build':
@@ -343,7 +602,7 @@ def main():
             engine.set_state(args.run.resolve(), id=args.run.name, name=args.run.name, status='analysed', builds=0)
         print(json.dumps(engine.build(args.run.name), indent=2))
     else:
-        engine = Engine(args.runs, args.blender, not args.skip_bridge_check)
+        engine = Engine(args.runs, args.blender, not args.skip_bridge_check, args.bases)
         server = Server(('127.0.0.1', args.port), engine)
         print(f'Polpal engine preview: http://127.0.0.1:{args.port}/  (runs: {engine.runs})')
         server.serve_forever()

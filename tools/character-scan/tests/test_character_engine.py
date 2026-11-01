@@ -147,6 +147,118 @@ class PackTests(unittest.TestCase):
             self.assertEqual(recipe['proportions'], recipe_lib.default()['proportions'])
 
 
+class BaseLibraryTests(unittest.TestCase):
+    def test_matching_base_is_selected_only_for_the_same_character(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            tpose(root/'ref_tpose.png')
+            blend = root/'base.blend'
+            blend.write_bytes(b'not really a blend')
+            entry = engine.register_base(root/'bases', 'hero-base', blend, root/'ref_tpose.png', 'Hero base')
+            self.assertEqual(entry['blend_sha256'], __import__('hashlib').sha256(b'not really a blend').hexdigest())
+            with self.assertRaises(FileExistsError):
+                engine.register_base(root/'bases', 'hero-base', blend, root/'ref_tpose.png', 'Hero base')
+            eng = engine.Engine(root/'runs', blender=root/'missing', bridge_check=False, bases=root/'bases')
+            same = root/'same'
+            same.mkdir()
+            tpose(same/'again_tpose.png')
+            recipe, _ = eng.analyse(same, 'same-run')
+            self.assertEqual(recipe['base']['kind'], 'sculpted')
+            self.assertEqual(recipe['base']['id'], 'hero-base')
+            self.assertGreaterEqual(recipe['base']['score'], engine.MATCH_THRESHOLD)
+            other = root/'other'
+            other.mkdir()
+            im = Image.new('RGB', (600, 1200), (248, 1, 246))
+            ImageDraw.Draw(im).rectangle([220, 150, 380, 1100], fill=(200, 50, 50))
+            im.save(other/'someone_tpose.png')
+            recipe, _ = eng.analyse(other, 'other-run')
+            self.assertEqual(recipe['base']['kind'], 'parametric')
+            self.assertLess(recipe['base_candidates'][0]['score'], engine.MATCH_THRESHOLD)
+            with self.assertRaises(ValueError):
+                eng.build('same-run')  # no Blender here: the run must say so
+            self.assertEqual(json.loads((root/'runs/same-run/state.json').read_text())['status'], 'failed')
+
+    def test_changed_base_file_is_refused(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            tpose(root/'ref_tpose.png')
+            blend = root/'base.blend'
+            blend.write_bytes(b'v1')
+            engine.register_base(root/'bases', 'hero-base', blend, root/'ref_tpose.png', 'Hero base')
+            blend.write_bytes(b'v2')
+            eng = engine.Engine(root/'runs', blender=Path(sys.executable), bridge_check=False, bases=root/'bases')
+            src = root/'src'
+            src.mkdir()
+            tpose(src/'x_tpose.png')
+            eng.analyse(src, 'run-a')
+            with self.assertRaisesRegex(ValueError, 'changed'):
+                eng.build('run-a')
+
+    def test_recipe_base_validation(self):
+        recipe = recipe_lib.default()
+        recipe_lib.validate(recipe_lib.merge(recipe, {'base': {'kind': 'sculpted', 'id': 'aiko-v16'}}))
+        for bad in ({'kind': 'magic'}, {'kind': 'sculpted'}, {'kind': 'sculpted', 'id': '../x'}):
+            with self.assertRaises(ValueError):
+                recipe_lib.validate(recipe_lib.merge(recipe, {'base': bad}))
+
+
+PROFILE = {'materials': [
+    {'name': 'Pink hair with blue tips', 'triangles': 100, 'images': [], 'factor': [1, 1, 1], 'factor_linked': True,
+     'median': [.6, .2, .3], 'ends': [[.2, .45, .5], [.75, .25, .33]], 'spread': .6},
+    {'name': 'Rose pink brow', 'triangles': 10, 'images': [], 'factor': [1, 1, 1], 'factor_linked': True, 'median': [.57, .1, .18]},
+    {'name': 'Shorts • saddle brown canvas', 'triangles': 50, 'images': [], 'factor': [1, 1, 1], 'factor_linked': True,
+     'median': [.17, .085, .04]},
+    {'name': 'Jacket • deep petrol nylon', 'triangles': 80, 'images': [], 'factor': [1, 1, 1], 'factor_linked': True,
+     'median': [.006, .17, .195]},
+    {'name': 'Collar • warm ivory fibres', 'triangles': 40, 'images': [], 'factor': [.8, .77, .66], 'factor_linked': False},
+    {'name': 'Aiko v14 • fibrous teal iris L', 'triangles': 5, 'images': ['iris.png'], 'factor': [1, 1, 1], 'factor_linked': True},
+    {'name': 'Hammer • walnut grain', 'triangles': 5, 'images': [], 'factor': [1, 1, 1], 'factor_linked': True, 'median': [.1, .03, .01]},
+    {'name': 'Capsule • ivory ceramic', 'triangles': 5, 'images': [], 'factor': [.5, .47, .3], 'factor_linked': False},
+    {'name': 'Warm porcelain skin', 'triangles': 90, 'images': [], 'factor': [.9, .6, .5], 'factor_linked': False}]}
+
+
+class VariantTests(unittest.TestCase):
+    def setUp(self):
+        regions = engine.regions_from_profile(PROFILE)
+        self.slots = {r['material']: (r['slot'], r['mode']) for r in regions}
+        self.entry = {'regions': regions, 'palette': recipe_lib.default()['palette'],
+                      'profile_materials': [{'material': m['name']} for m in PROFILE['materials']]}
+
+    def test_region_map_uses_whole_words_and_modes(self):
+        self.assertEqual(self.slots['Shorts • saddle brown canvas'], ('shorts', 'vertex'))  # "brown" is not "brow"
+        self.assertEqual(self.slots['Rose pink brow'], ('brows', 'vertex'))
+        self.assertEqual(self.slots['Pink hair with blue tips'], ('hair_root', 'gradient'))
+        self.assertEqual(self.slots['Collar • warm ivory fibres'], ('fur', 'factor'))
+        self.assertEqual(self.slots['Aiko v14 • fibrous teal iris L'], ('eyes', 'texture'))
+        self.assertNotIn('Warm porcelain skin', self.slots)  # skin is not recoloured by variants
+
+    def test_unchanged_recipe_gives_empty_variant(self):
+        self.assertEqual(engine.variant_spec(self.entry, recipe_lib.default()), {'remove': [], 'recolor': []})
+
+    def test_recolour_keeps_brightness_relation_and_hair_gradient_order(self):
+        recipe = recipe_lib.merge(recipe_lib.default(), {'palette': {'jacket': '#F2B134', 'hair_root': '#2C2C34'}})
+        spec = engine.variant_spec(self.entry, recipe)
+        items = {i['material']: i for i in spec['recolor']}
+        jacket = items['Jacket • deep petrol nylon']
+        expected = engine.lum(jacket['from'])*engine.lum(engine.srgb_hex_to_linear('#F2B134'))/engine.lum(engine.srgb_hex_to_linear('#2E9CA6'))
+        self.assertAlmostEqual(engine.lum(jacket['to']), expected, places=4)
+        self.assertGreater(jacket['to'][0], jacket['to'][2])  # now warm, not teal
+        hair = items['Pink hair with blue tips']
+        self.assertEqual(hair['mode'], 'gradient')
+        self.assertEqual(hair['from'], [.75, .25, .33])  # the pink end is the root
+        self.assertLess(engine.lum(hair['to']), .05)
+        self.assertNotIn('Shorts • saddle brown canvas', items)
+
+    def test_parts_removed_by_material_name(self):
+        recipe = recipe_lib.merge(recipe_lib.default(), {'parts': {'weapon': {'style': 'none'}, 'top': {'collar': 'none'},
+                                                                   'back': {'spheres': 0}}})
+        spec = engine.variant_spec(self.entry, recipe)
+        self.assertEqual(sorted(spec['remove']), ['Capsule • ivory ceramic', 'Collar • warm ivory fibres', 'Hammer • walnut grain'])
+
+    def test_scaled_never_exceeds_one(self):
+        self.assertEqual(max(engine.scaled([.6, .3, .1], 3)), 1.0)
+
+
 class StudioMountTests(unittest.TestCase):
     def test_engine_is_tab_05_of_the_studio_server(self):
         import studio

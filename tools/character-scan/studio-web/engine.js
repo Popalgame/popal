@@ -13,7 +13,7 @@
     kids.forEach((kid) => node.appendChild(kid));
     return node;
   };
-  const STAGES = { start: 'Start', body: 'Ciało', face: 'Twarz', hair: 'Włosy', clothing: 'Ubranie', accessories: 'Akcesoria',
+  const STAGES = { base: 'Rzeźba bazowa', optimize: 'Uproszczenie do budżetu gry', start: 'Start', body: 'Ciało', face: 'Twarz', hair: 'Włosy', clothing: 'Ubranie', accessories: 'Akcesoria',
     normalise: 'Wysokość 1,8', rig: 'Szkielet 22 kości', animation: 'Animacje', validate: 'Kontrola', export: 'Eksport GLB',
     reimport: 'Ponowny import', done: 'Gotowe', error: 'Błąd' };
 
@@ -118,7 +118,7 @@
     try { s = await api('/api/runs/' + encodeURIComponent(id)); } catch (e) { $('status').textContent = e.message; return; }
     if (id !== current) return;
     $('status').textContent = `${s.name}: ${s.status}${s.message ? ' – ' + s.message : ''}`;
-    if (!['analysing', 'building'].includes(s.status)) clearInterval(timer);
+    if (!['analysing', 'building', 'queued'].includes(s.status)) clearInterval(timer);
     const base = BASE + '/runs/' + encodeURIComponent(id) + '/';
     // references
     const refs = $('refList'); refs.textContent = '';
@@ -133,13 +133,18 @@
       list.appendChild(el('li', {}, [el('span', { class: ev.status, text: STAGES[ev.stage] || ev.stage }), el('span', { class: 'src', text: `${info} · ${ev.t}s` })]));
       if (ev.glb) latest = ev;
     });
-    if (s.status === 'building') list.appendChild(el('li', {}, [el('span', { class: 'running', text: 'w toku…' })]));
+    if (s.status === 'building' || s.status === 'queued') list.appendChild(el('li', {}, [el('span', { class: 'running', text: 'w toku…' })]));
     if (latest && s.build) {
       const final = latest.glb === 'character.glb';
       showModel(base + s.build + '/' + latest.glb, final ? 'Gotowy model z animacjami' : 'Etap: ' + (STAGES[latest.stage] || latest.stage), final);
     }
     // recipe panels
     const r = s.recipe; if (!r) return;
+    const b = r.base || { kind: 'parametric' };
+    $('base').textContent = b.kind === 'sculpted'
+      ? `Rzeźba: ${b.label || b.id} · dopasowanie ${Number(b.score).toFixed(2)}`
+      : 'Parametryczna (bryły) – brak pasującej rzeźby' + ((r.base_candidates || []).length
+        ? ` · najbliższa: ${r.base_candidates[0].label} ${Number(r.base_candidates[0].score).toFixed(2)}` : '');
     const prov = r.provenance || {};
     const pal = $('palette'); pal.textContent = '';
     Object.entries(r.palette).forEach(([slot, hex]) => {
@@ -156,8 +161,47 @@
     ((s.reference_report && s.reference_report.warnings) || []).concat(s.status === 'failed' && s.message ? [s.message] : [])
       .forEach((w) => warn.appendChild(el('div', { class: 'warn', text: w })));
     if (!warn.children.length) warn.appendChild(el('div', { class: 'src', text: 'brak' }));
+    showVariant(id, r, s.status);
     const renders = $('renders'); renders.textContent = '';
     (s.renders || []).forEach((p) => renders.appendChild(el('img', { src: base + p, alt: p })));
   }
+  // ---------------------------------------------------------------- variants of a sculpted base
+  const VARIANT_SLOTS = { hair_root: 'Włosy – nasada', hair_tip: 'Włosy – końcówki', eyes: 'Oczy', brows: 'Brwi',
+    jacket: 'Kurtka', fur: 'Futro', top: 'Top', shorts: 'Szorty', socks: 'Skarpety', boots: 'Buty i skóra',
+    sphere_primary: 'Kule – kolor', sphere_secondary: 'Kule – druga barwa', hammer_wood: 'Młot – drewno', rune_glow: 'Runy' };
+  let variantFor = null, variantRecipe = null;
+  function showVariant(id, r, status) {
+    const box = $('variant');
+    box.hidden = !(r.base && r.base.kind === 'sculpted');
+    if (box.hidden || variantFor === id + ':' + (r.name || '')) return;
+    variantFor = id + ':' + (r.name || ''); variantRecipe = r;
+    $('variantName').value = r.name || '';
+    const list = $('variantColours'); list.textContent = '';
+    Object.entries(VARIANT_SLOTS).forEach(([slot, label]) => {
+      const input = el('input', { type: 'color', 'data-slot': slot, value: (r.palette[slot] || '#ffffff').toLowerCase() });
+      list.appendChild(el('label', { class: 'swatch' }, [input, el('span', { text: label })]));
+    });
+    $('partWeapon').checked = r.parts.weapon.style !== 'none';
+    $('partCollar').checked = r.parts.top.collar === 'fur';
+    $('partSpheres').checked = (r.parts.back.spheres || 0) > 0;
+    $('variantQuality').value = r.quality;
+  }
+  $('buildVariant').onclick = async () => {
+    if (!variantRecipe || !current) return;
+    const recipe = JSON.parse(JSON.stringify(variantRecipe));
+    recipe.name = $('variantName').value.trim() || recipe.name;
+    document.querySelectorAll('#variantColours input[type=color]').forEach((i) => { recipe.palette[i.dataset.slot] = i.value.toUpperCase(); });
+    recipe.parts.weapon.style = $('partWeapon').checked ? 'hammer' : 'none';
+    recipe.parts.top.collar = $('partCollar').checked ? 'fur' : 'none';
+    recipe.parts.back.spheres = $('partSpheres').checked ? Math.max(1, variantRecipe.parts.back.spheres || 5) : 0;
+    recipe.quality = $('variantQuality').value;
+    $('status').textContent = 'Budowa wariantu…';
+    try {
+      await api('/api/runs/' + encodeURIComponent(current) + '/build', { method: 'POST', body: JSON.stringify({ recipe }),
+        headers: { 'Content-Type': 'application/json', 'X-Polpal-Engine': '1' } });
+      variantFor = null; open(current);
+    } catch (e) { $('status').textContent = 'Błąd: ' + e.message; }
+  };
+
   refreshList();
 })();
