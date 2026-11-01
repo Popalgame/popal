@@ -200,7 +200,11 @@ function planFor(){const P=GC('P'),it=ITEMS[cur],y0=py==null?H(P.x,P.z):py,fd=(f
  return{p,ok,why,c}}
 function delTarget(){const P=GC('P'),[dx,dz]=DIRS[facing()],y0=py==null?H(P.x,P.z):py,tx=P.x+dx*1.6,tz=P.z+dz*1.6;let best=null,bd=2.8;
  for(const p of pieces){const[cx,cz]=cxz(p.cx,p.cz);let x=cx,z=cz,y=p.t==1||p.t==5?p.y+1.5:p.y;if(p.t==6){const T=triPts(p);x=(T[0][0]+T[1][0]+T[2][0])/3;z=(T[0][1]+T[1][1]+T[2][1])/3}if(p.t==1||p.t==5){const[a,b]=DIRS[p.s];x+=a*C/2;z+=b*C/2}
-  if(y<y0-1.5||y>y0+3.6)continue;const d=Math.hypot(x-tx,z-tz)+Math.abs(y-(y0+1))*.3;if(d<bd){bd=d;best=p}}return best}
+  if(y<y0-1.5||y>y0+3.6)continue;const d=Math.hypot(x-tx,z-tz)+Math.abs(y-(y0+1))*.3;if(d<bd){bd=d;best=p}}
+ /* 0.2.8: будівлі бази й скрині теж розбираються (world-007.js, chests.js) */
+ for(const o of[...(window.baseDelList?window.baseDelList():[]),...(window.chDelList?window.chDelList():[])]){if(o.y<y0-1.5||o.y>y0+3.6)continue;const d=Math.hypot(o.x-tx,o.z-tz)+Math.abs(o.y-y0)*.3;if(d<bd){bd=d;best={base:o}}}
+ return best}
+function delGhost(o){const g=o.g.clone(true);g.traverse(m=>{if(m.isMesh){m.material=DEL;m.castShadow=m.receiveShadow=false}else if(m.isLight)m.visible=false;else if(m.isSprite)m.visible=false});g.userData={};return g}
 /* ---------- інтерфейс ---------- */
 const bt=document.createElement('button');bt.id='bld';bt.innerHTML='🏗️<small>Будова</small>';
 document.body.appendChild(bt);
@@ -216,7 +220,7 @@ function costTxt(c){return Object.entries(c).filter(([,n])=>n).map(([k,n])=>`<sp
 function drawBar(){bar.innerHTML=`<div class='bmat'>${CATS.map((c,i)=>`<button data-bc='${i}' class='btab ${i==tab?'on':''}'>${catLbl(i,c,mat)}</button>`).join('')}<span class='bsep'></span><button data-bm='0' class='bmt ${mat?'':'on'}' title='Дерево'>🪵</button><button data-bm='1' class='bmt ${mat?'on':''}' title='Камінь'>🪨</button></div><div class='bitems'>`+
  ITEMS.map((it,i)=>it.cat!=tab?'':`<button data-bi='${i}' class='${i==cur&&!del?'on':''} ${it.fix?'fix':mat?'stone':'wood'}'><b>${bIco(it,mat)}</b><i>${it.n}${it.fix?'':`<u>${mat?'камінь':'дерево'}</u>`}</i><em>${costTxt(cost(it,mat))}</em></button>`).join('')+'</div>';
  document.getElementById('bdel').classList.toggle('on',!!del);document.getElementById('bok').innerHTML=del?'🔨<small>Розібрати</small>':'✔<small>Поставити</small>'}
-function dropGhost(){if(ghost){SCN.remove(ghost);disposeGroup(ghost);ghost=null}}
+function dropGhost(){if(ghost){SCN.remove(ghost);if(!ghost.userData.baseGhost)disposeGroup(ghost);/* копія будівлі бази ділить геометрію з оригіналом */ghost=null}}
 function setOn(v){on=v;document.body.classList.toggle('bmode',!!on);if(!on){dropGhost();ghostKey='';tip.textContent='';del=0}else{drawBar()}}
 bt.onclick=()=>{if(G('menuO'))return;setOn(on?0:1)};
 document.getElementById('bx').onclick=()=>setOn(0);
@@ -225,7 +229,9 @@ document.getElementById('bdel').onclick=()=>{del=del?0:1;drawBar();ghostKey=''};
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.bc!=null){tab=+b.dataset.bc;cur=ITEMS.findIndex(i=>i.cat==tab);del=0;rot=0;ghostKey=''}if(b.dataset.bm!=null){mat=+b.dataset.bm;ghostKey=''}if(b.dataset.bi!=null){cur=+b.dataset.bi;del=0;rot=0;ghostKey=''}drawBar()});
 const SFX=k=>{try{PSFX.sfx(k)}catch(e){}};
 document.getElementById('bok').onclick=()=>{const msg=G('msg');
- if(del){const p=delTarget();if(!p){msg('🔨 Поруч нічого розбирати');SFX('error');return}const it=itemOf(p);const half=c=>pay(Object.fromEntries(Object.entries(c).map(([k,n])=>[k,Math.floor(n/2)])),1);half(cost(it,p.m));if(p.t==1){const q=insAt(p.cx,p.cz,p.s,p.y);if(q){half(cost(itemOf(q),0));remove(q)}}remove(p);msg('🔨 Розібрано: '+it.n+' (повернуто половину)');SFX('mine');try{G('hud')()}catch(e){}ghostKey='';return}
+ if(del){const p=delTarget();if(!p){msg('🔨 Поруч нічого розбирати');SFX('error');return}
+  if(p.base){const r=p.base.del();if(r&&r.err){msg('⚠️ '+r.err);SFX('error');return}if(r)msg('🔨 Розібрано: '+r);SFX('mine');ghostKey='';return}
+  const it=itemOf(p);const half=c=>pay(Object.fromEntries(Object.entries(c).map(([k,n])=>[k,Math.floor(n/2)])),1);half(cost(it,p.m));if(p.t==1){const q=insAt(p.cx,p.cz,p.s,p.y);if(q){half(cost(itemOf(q),0));remove(q)}}remove(p);msg('🔨 Розібрано: '+it.n+' (повернуто половину)');SFX('mine');try{G('hud')()}catch(e){}ghostKey='';return}
  if(!plan)return;if(!plan.ok){msg('⚠️ '+plan.why);SFX('error');return}
  pay(plan.c,-1);add(Object.assign({},plan.p));SFX('build');try{G('hud')()}catch(e){};drawBar();ghostKey=''};
 /* ---------- цикл ---------- */
@@ -234,8 +240,8 @@ let lt=performance.now();
  /* двері відчиняються, коли гравець поруч */
  for(const p of pieces){const d=p.g&&p.g.userData.door;if(!d)continue;const[cx,cz]=cxz(p.cx,p.cz),[a,b]=DIRS[p.s],x=cx+a*C/2,z=cz+b*C/2;const o=Math.hypot(P.x-x,P.z-z)<2&&Math.abs((py||0)-p.y)<2;d.rotation.y+=((o?-1.45:0)-d.rotation.y)*Math.min(1,dt*8)}
  if(!on||G('menuO')||G('ivO')){if(ghost){ghost.visible=false}return}
- if(del){const p=delTarget();const k='del'+(p?pieces.indexOf(p):'-');if(k!==ghostKey){ghostKey=k;dropGhost();ghost=p?mkPiece(p,DEL):null;if(ghost){ghost.scale.setScalar(1.02);SCN.add(ghost)}}
-  tip.textContent=p?'Торкніться 🔨, щоб розібрати (повернеться половина ресурсів)':'Підійдіть до деталі, яку хочете розібрати';return}
+ if(del){const p=delTarget();const k='del'+(p?(p.base?'b'+p.base.g.uuid:pieces.indexOf(p)):'-');if(k!==ghostKey){ghostKey=k;dropGhost();ghost=p?(p.base?delGhost(p.base):mkPiece(p,DEL)):null;if(ghost){if(p.base)ghost.userData.baseGhost=1;ghost.scale.multiplyScalar(1.03);SCN.add(ghost)}}
+  tip.textContent=p?(p.base?'Торкніться 🔨, щоб розібрати «'+p.base.n+'» (повернеться в рюкзак)':'Торкніться 🔨, щоб розібрати (повернеться половина ресурсів)'):'Підійдіть до деталі чи будівлі, яку хочете розібрати';return}
  plan=planFor();const k=JSON.stringify([plan.p,plan.ok]);if(k!==ghostKey){ghostKey=k;dropGhost();ghost=mkPiece(plan.p,plan.ok?GOOD:BAD);SCN.add(ghost)}ghost.visible=true;
  tip.innerHTML=plan.ok?`${ITEMS[cur].e} ${ITEMS[cur].n}: ${costTxt(plan.c)} — натисніть ✔`:'⚠️ '+plan.why;
 })();

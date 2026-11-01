@@ -10,7 +10,7 @@
 const G=n=>{try{return eval(n)}catch(e){return undefined}};
 const oR=G('R'),oSc=G('sc'),oCam=G('cam'),oSun=G('sun'),oAni=G('ANI');
 if(!oR||!oSc||!oCam||!oSun||!oAni)return;
-const player=()=>G('P'),HQ=()=>{try{return window.plVis&&window.plVis.Q?window.plVis.Q.hq:0}catch(e){return 0}};
+const player=()=>G('P'),HQ=()=>{try{if(window.plFxLevel!=null)return window.plFxLevel>=2?1:0;return window.plVis&&window.plVis.Q?window.plVis.Q.hq:0}catch(e){return 0}};/* 0.2.8: plFxLevel з perf.js — 0 без постобробки, 1 FXAA+колір, 2 світіння, 3 світіння + MSAA×4 */
 const N0=G('N0')||.22,N1=G('N1')||.78;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
 const C=h=>new THREE.Color(h);
@@ -165,16 +165,16 @@ const GRADE=sh([
   uVig:{value:.19},uNight:{value:0},uDusk:{value:0},uGrain:{value:0}});
 
 let RT=null,RT2=null,T0=null,T1=null,T2=null,T3=null,BW=0,BH=0,hqL=-1;
-const dbs=new THREE.Vector2();
+const dbs=new THREE.Vector2();let fxL=-1;
 function ensure(){
  oR.getDrawingBufferSize(dbs);const w=dbs.x|0,h=dbs.y|0,hq=HQ();
- if(RT&&w===BW&&h===BH&&hq===hqL)return;BW=w;BH=h;hqL=hq;
+ const fl=window.plFxLevel|0;if(RT&&w===BW&&h===BH&&hq===hqL&&fl===fxL)return;fxL=fl;BW=w;BH=h;hqL=hq;
  [RT,RT2,T0,T1,T2,T3].forEach(r=>r&&r.dispose());
  const o={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,depthBuffer:true};
  const plain={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,depthBuffer:false};
  const ms=HQ()&&oR.capabilities.isWebGL2&&THREE.WebGLMultisampleRenderTarget;
  RT=ms?new THREE.WebGLMultisampleRenderTarget(BW,BH,o):new THREE.WebGLRenderTarget(BW,BH,o);
- if(RT.samples!==undefined&&ms)RT.samples=2;
+ if(RT.samples!==undefined&&ms)RT.samples=window.plFxLevel>=3?4:2;
  RT.texture.encoding=THREE.sRGBEncoding;RT.texture.generateMipmaps=false;
  RT2=new THREE.WebGLRenderTarget(BW,BH,plain);RT2.texture.encoding=THREE.sRGBEncoding;RT2.texture.generateMipmaps=false;
  const mk=d=>new THREE.WebGLRenderTarget(Math.max(1,BW/d|0),Math.max(1,BH/d|0),plain);
@@ -182,7 +182,7 @@ function ensure(){
 }
 let nf=0;
 oR.render=function(s,c){
- if(s!==oSc||oR.getRenderTarget()!==null)return proto.call(oR,s,c);
+ if(s!==oSc||oR.getRenderTarget()!==null||window.plFxLevel===0)return proto.call(oR,s,c);/* «Ефекти: вимкнено» — кадр одразу на екран, без повноекранних проходів */
  try{
   ensure();oR.info.autoReset=false;oR.info.reset();
   oR.setRenderTarget(RT);proto.call(oR,s,c);         /* сцена → RT */
@@ -239,7 +239,7 @@ function pullHit(hx,hy,hz,cx,cy,cz){
  for(const w0 of oT){if(window.plTreeFade)break;/* дерева не відводять камеру — вони стають напівпрозорими (tree-fade.js) */if(!w0||!w0.m)continue;const s0=w0.m.scale.x||1;
   const ddx=w0.x-hx,ddz=w0.z-hz;if(ddx*ddx+ddz*ddz>400)continue;
   test(w0.x,w0.z,1.4*s0,w0.m.position.y+1.35*s0,w0.m.position.y+3.7*s0)}
- for(const w1 of oRk){if(!w1||!w1.m)continue;const s1=w1.m.scale.x||1;
+ for(const w1 of oRk){if(window.plRockFade)break;/* 0.2.8: камінь і рудні жили не відводять камеру — стають напівпрозорими (tree-fade.js) */if(!w1||!w1.m)continue;const s1=w1.m.scale.x||1;
   const ddx=w1.x-hx,ddz=w1.z-hz;if(ddx*ddx+ddz*ddz>400)continue;
   test(w1.x,w1.z,1.15*s1,w1.m.position.y,w1.m.position.y+1.35*s1)}
  try{if(typeof colList==='function'){const lc=window.plBaseFade?(window.plSceneryObstacles||[]):colList();/* 0.2.7: Попал-центр, скрині й будівлі бази не відводять камеру — стають напівпрозорими (tree-fade.js) */for(let qi=0;qi<lc.length;qi++){const w2=lc[qi];if(!w2)continue;

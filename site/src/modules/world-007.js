@@ -50,9 +50,9 @@ return g}
 const placed=[];window.BPLACED=placed;
 /* 0.1.27: будівлю ставлять вільно (x,z,ry у сейві); старі записи без координат — на місці слота в кільці */
 function spawnB(id,si,X,Z,RY){const[x,z]=X!=null?[X,Z]:spos(si),g=mkB(id);const C=inv._cen||[0,0];g.position.set(x,H(x,z),z);g.rotation.y=RY!=null?RY:Math.atan2(C[0]-x,C[1]-z);sc.add(g);placed.push({id,g,x,z});for(let i=trees.length-1;i>=0;i--){const t=trees[i];if(Math.hypot(t.x-x,t.z-z)<2.2){sc.remove(t.m);trees.splice(i,1)}}}
-if(inv._cen||window.REALM==='isle')inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)});
+if(inv._cen||window.REALM==='isle')inv._b.forEach(rec=>{const[id,si,x,z,ry]=rec;if(BI[id]){spawnB(id,si,x,z,ry);placed[placed.length-1].rec=rec}});
 const isleBase=()=>{if(window.REALM==='isle'&&window.ISLE&&window.ISLE.BASE)for(const[id,x,z,ry]of window.ISLE.BASE)if(BI[id]){spawnB(id,-1,x,z,ry);placed[placed.length-1].fixed=1}};isleBase();
-window.respawnB=()=>{placed.forEach(b=>sc.remove(b.g));placed.length=0;if(inv._cen||window.REALM==='isle')inv._b.forEach(([id,si,x,z,ry])=>{if(BI[id])spawnB(id,si,x,z,ry)});isleBase()};
+window.respawnB=()=>{placed.forEach(b=>sc.remove(b.g));placed.length=0;if(inv._cen||window.REALM==='isle')inv._b.forEach(rec=>{const[id,si,x,z,ry]=rec;if(BI[id]){spawnB(id,si,x,z,ry);placed[placed.length-1].rec=rec}});isleBase()};
 function placeB(id){if(!inv._cen&&window.REALM!=='isle'){msg('🏠 Спершу збудуйте й поставте Попал-центр');return}/* на острові база без центру */if(!(inv[id]>0))return;if(BI[id].u&&built(id)){msg('Це вже збудовано');return}
  const r=(window.colR&&colR[id])||.8;
  const gd=id=='B_garden';
@@ -68,7 +68,13 @@ function gSnap(x,z){let best=null,bd=GSNAP;for(const b of gBeds()){const[lx,lz]=
    if(gBeds().some(o=>Math.hypot(o.x-wx,o.z-wz)<.5))continue;/* цей бік уже зайнятий */bd=d;best={x:wx,z:wz,ry:b.g.rotation.y,why:'🧲 Впритул до сусідньої грядки'}}}return best}
 function gFree(x,z){for(const b of gBeds()){const[lx,lz]=gLoc(b,x,z);if(Math.hypot(lx,lz)<GS-.05&&Math.max(Math.abs(lx),Math.abs(lz))<GS-.05)return 'Заважає інша грядка'}return ''}
 function doPlaceB(id,x,z,ry){if(!(inv[id]>0)||(BI[id].u&&built(id)))return;
-const l0=campLv();inv[id]--;inv._b.push([id,-1,+x.toFixed(2),+z.toFixed(2),+(+ry).toFixed(2)]);spawnB(id,-1,x,z,ry);msg('🏗️ Збудовано: '+BI[id].n);const l1=campLv();if(l1>l0)setTimeout(()=>msg('🏠 Рівень бази '+l1+'! Тепер з вами може бути до '+palCap()+' попалів'),1500);try{hud();save()}catch(_){}}
+const l0=campLv();inv[id]--;const rec=[id,-1,+x.toFixed(2),+z.toFixed(2),+(+ry).toFixed(2)];inv._b.push(rec);spawnB(id,-1,x,z,ry);placed[placed.length-1].rec=rec;msg('🏗️ Збудовано: '+BI[id].n);const l1=campLv();if(l1>l0)setTimeout(()=>msg('🏠 Рівень бази '+l1+'! Тепер з вами може бути до '+palCap()+' попалів'),1500);try{hud();save()}catch(_){}}
+/* 0.2.8: «Розібрати» в режимі «Будова» (building.js) — будівля бази повертається в рюкзак; стоять на місці лише будівлі табору острова (fixed) */
+function delB(b){const i=placed.indexOf(b);if(i<0)return'';sc.remove(b.g);placed.splice(i,1);
+ const k=b.rec?inv._b.indexOf(b.rec):-1;if(k>=0)inv._b.splice(k,1);inv[b.id]=(inv[b.id]||0)+1;let extra='';
+ if(b.id=='B_garden'&&inv._gdn){const gk=Math.round(b.x*10)+','+Math.round(b.z*10),a=inv._gdn[gk];if(Array.isArray(a)){const n=a.filter(t=>t).length;if(n){inv.sd=(inv.sd||0)+n;extra=' · 🌰 +'+n}}delete inv._gdn[gk]}/* посаджене повертається насінням */
+ try{hud();save()}catch(_){}return BI[b.id].n+' — у рюкзаку'+extra}
+window.baseDelList=()=>placed.filter(b=>!b.fixed&&b.g.parent&&b.g.visible).map(b=>({x:b.x,z:b.z,y:b.g.position.y,n:BI[b.id].n,g:b.g,del:()=>delB(b)}));
 document.addEventListener('click',e=>{const t=e.target.closest('[data-place]');if(!t)return;placeB(t.dataset.place);ivR()});
 const _r=ivR;ivR=function(){_r();const c=$('ivc');if(!c)return;
 if(ivTab=='i'){const on=c.querySelector('.i2g .i2s.on'),d=c.querySelector('.i2d');if(on&&BI[on.dataset.sl]&&d){const b=document.createElement('button');b.dataset.place=on.dataset.sl;b.textContent='🏗️ Поставити';d.appendChild(b)}}

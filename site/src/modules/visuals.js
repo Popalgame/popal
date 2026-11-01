@@ -132,14 +132,6 @@ if(PTS&&PTS.material){const pm=PTS.material;ANI.push(()=>{const n=window.isNight
 const KEY='zi_gfx2';let Q={hq:matchMedia&&matchMedia('(pointer:fine)').matches?1:0};
 try{Object.assign(Q,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(_){}
 const sv=()=>{try{localStorage.setItem(KEY,JSON.stringify(Q))}catch(_){}};
-const SUN=G('sun');
-function applyShadow(){if(!SUN)return;const n=Q.hq?2048:1024;if(SUN.shadow.mapSize.x!==n){SUN.shadow.mapSize.set(n,n);if(SUN.shadow.map){SUN.shadow.map.dispose();SUN.shadow.map=null}}}
-applyShadow();
-/* Один конвеєр постобробки — premium-fx.js. Налаштування якості спільні. */
-/* вкладка «Графіка» (раніше «Опції»): перемикач якості ефектів поруч з іншими налаштуваннями графіки */
-const _pf=pfTab;pfTab=function(t){_pf.apply(this,arguments);if(t!='o'&&t!='g')return;const host=document.getElementById('gfxp');if(!host||document.getElementById('gfxq'))return;
- const d=document.createElement('div');d.id='gfxq';
- d.innerHTML=`<h4>Ефекти</h4><div class='gseg' id='gq'>${['Звичайні','Висока якість'].map((a,i)=>`<button data-i='${i}' class='${i==Q.hq?'on':''}'>${a}</button>`).join('')}</div><small class='gnote'>Висока — світіння вогню й ліхтарів, чіткіші тіні. Для потужних телефонів і ПК</small>`;
- host.appendChild(d);d.querySelectorAll('#gq button').forEach(b=>b.onclick=()=>{Q.hq=+b.dataset.i;sv();applyShadow();d.querySelectorAll('#gq button').forEach(x=>x.classList.toggle('on',x===b))})};
-window.plVis={U,Q,setHQ:v=>{Q.hq=v?1:0;applyShadow();document.querySelectorAll('#gq button').forEach(b=>b.classList.toggle('on',+b.dataset.i===Q.hq))}};
+/* 0.2.8: розмір тіней і кнопки якості — у perf.js (режими Слабкі / Середні / Високі / Ультра) */
+window.plVis={U,Q,setHQ:v=>{Q.hq=v?1:0;sv()}};
 }catch(e){console.warn('visuals',e)}})();

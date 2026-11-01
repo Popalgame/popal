@@ -61,7 +61,7 @@ window.GARDEN={
   for(const b of gardens()){const a=plots(b);for(let i=0;i<NS;i++){const k=gkey(b)+':'+i,c=claimed.get(k);if(c&&c!==p&&c.ai&&c.ai.s=='farm')continue;
    const job=ripe(a[i])?'pick':(!a[i]&&seeds>0?'sow':null);if(!job)continue;const[x,z]=toW(b,SLOTS[i][0],SLOTS[i][1]),d=Math.hypot(x-p.x,z-p.z)+(job=='sow'?1000:0);/* спершу збирає стиглі, потім садить */if(d<bd){bd=d;best={b,i,x,z,job,k}}}}
   if(best)claimed.set(best.k,p);return best},
- done(t,p){claimed.delete(t.k);if(t.job=='pick')return harvest(t.b,t.i);if(window.chTake&&chTake('sd',1)){sow(t.b,t.i);return{sown:1}}return null},
+ done(t,p){claimed.delete(t.k);if(!gardens().includes(t.b))return null;/* грядку розібрали */if(t.job=='pick')return harvest(t.b,t.i);if(window.chTake&&chTake('sd',1)){sow(t.b,t.i);return{sown:1}}return null},
  release(t){if(t)claimed.delete(t.k)}};
 const seats=new Map();/* "лежанка:місце" → попал */
 function nestSlots(){const L=[];for(const b of placed()){if(b.id=='B_nest2')for(const lx of[-.3,.3])L.push([b,lx,0]);else if(b.id=='B_nest5'){L.push([b,0,0]);for(let i=0;i<4;i++){const a=i/4*6.28+.4;L.push([b,Math.cos(a)*.6,Math.sin(a)*.6])}}}return L}

@@ -15,14 +15,32 @@ function runtime(){
  env.gm={instanceMatrix:{count:20000},count:20000};vm.runInContext(perfSource,env);
  return {env,saved,settings,effects};
 }
-test('quality presets respect resolution and vegetation budgets and persist the choice',()=>{
- const {env,saved,settings,effects}=runtime();env.plQuality.set('battery');
- assert.equal(env.R.ratio,1);assert.equal(env.gm.count,6500);assert.equal(settings.at(-1).fps,30);assert.equal(effects.at(-1),0);
- env.plQuality.set('high');assert.equal(env.R.ratio,2);assert.equal(env.gm.count,20000);assert.equal(settings.at(-1).fps,60);assert.equal(effects.at(-1),true);
- /* 2K/3K ignore devicePixelRatio and target the long edge of the drawing buffer */
- env.plQuality.set('k2');assert.equal(env.R.ratio,2);assert.equal(env.plQuality.state().target,2560);
- env.plQuality.set('k3');assert.equal(env.R.ratio,2.5);assert.equal(env.plQuality.state().target,3200);assert.equal(env.gm.count,20000);
- assert.equal(JSON.parse(saved.get('zi_quality')).mode,'k3');env.plQuality.set('invalid');assert.equal(env.plQuality.state().mode,'k3');
+test('quality presets drive every graphics setting, custom tweaks and persist the choice',()=>{
+ const {env,saved,settings,effects}=runtime();const sun=env.sun=new env.THREE.DirectionalLight();sun.castShadow=true;
+ env.plQuality.set('low');
+ assert.equal(env.R.ratio,1);assert.equal(env.gm.count,4000);assert.equal(settings.at(-1).fps,30);assert.equal(settings.at(-1).dist,0);
+ assert.equal(effects.at(-1),false);assert.equal(env.plFxLevel,0);assert.equal(sun.castShadow,false);
+ env.plQuality.set('med');assert.equal(env.R.ratio,1.25);assert.equal(env.gm.count,9000);assert.equal(settings.at(-1).fps,60);assert.equal(env.plFxLevel,1);
+ assert.equal(sun.castShadow,true);assert.equal(sun.shadow.mapSize.x,1024);
+ env.plQuality.set('high');assert.equal(env.R.ratio,2);assert.equal(env.gm.count,15000);assert.equal(effects.at(-1),true);assert.equal(sun.shadow.mapSize.x,2048);
+ env.plQuality.set('ultra');assert.equal(env.gm.count,20000);assert.equal(settings.at(-1).fps,0);assert.equal(settings.at(-1).dist,3);assert.equal(env.plFxLevel,3);
+ assert.equal(sun.shadow.mapSize.x,4096);assert.ok(env.R.ratio>=2);
+ /* one tweak turns the preset into custom; matching a preset again selects it */
+ env.plQuality.setOne('shadow',0);assert.equal(env.plQuality.state().preset,'custom');assert.equal(sun.castShadow,false);
+ assert.equal(JSON.parse(saved.get('zi_quality')).preset,'custom');
+ env.plQuality.setOne('shadow',3);assert.equal(env.plQuality.state().preset,'ultra');
+ env.plQuality.setOne('fps',45);assert.equal(env.plQuality.state().settings.fps,0);
+ /* old mode names still work */
+ env.plQuality.set('battery');assert.equal(env.plQuality.state().preset,'low');env.plQuality.set('invalid');assert.equal(env.plQuality.state().preset,'low');
+});
+test('old saved quality modes migrate to the new presets',()=>{
+ const saved=new Map([['zi_quality',JSON.stringify({mode:'k3'})]]);
+ const env={console,performance:{now:()=>0},setTimeout(){},setInterval(){},requestAnimationFrame(){},matchMedia:()=>({matches:true}),devicePixelRatio:2,
+  localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,v)},pfTab(){},document:{hidden:false},plGfx:{set(){}},plVis:{setHQ(){}}};
+ env.window=env;env.self=env;vm.createContext(env);vm.runInContext(threeSource,env);
+ env.sc=new env.THREE.Scene();env.R={ratio:1,getPixelRatio(){return this.ratio},setPixelRatio(v){this.ratio=v}};env.rs=()=>{};
+ env.gm={instanceMatrix:{count:20000},count:20000};vm.runInContext(perfSource,env);
+ assert.equal(env.plQuality.state().preset,'ultra');
 });
 test('batching preserves geometry transforms and animated parts without disposing shared geometry',()=>{
  const {env}=runtime(),T=env.THREE,root=new T.Group(),mat=new T.MeshStandardMaterial(),geo=new T.BoxGeometry(1,1,1);

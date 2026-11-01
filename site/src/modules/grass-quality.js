@@ -1,4 +1,4 @@
-/* 0.5.x: пункт «Трава» у вкладці «Графіка» — Слабо / Середньо / Високо, щоб на слабких пристроях гра не лагала.
+/* 0.5.x: форма кущиків трави за рівнем (0.2.8: рівень і кількість кущиків задає perf.js, пункт «Трава»).
    Слабо: 3 простіші травинки в кущику й 35% кущиків; Середньо: 5 травинок і 70%; Високо: 9 травинок і всі кущики (як було).
    Кількість кущиків бере profile з perf.js і множить на plGrassK. За замовчуванням: телефон — Середньо, ПК — Високо. */
 (function(){try{
@@ -18,12 +18,8 @@ function tuft(leaves,rows){const g=new THREE.BufferGeometry(),pos=[],uv=[],col=[
  g.setIndex(idx);g.computeVertexNormals();g.computeBoundingSphere();return g}
 const GEO=[];
 function apply(){const old=grass.geometry;if(!GEO[L])GEO[L]=tuft(LEAVES[L],ROWS[L]);if(old!==GEO[L]){grass.geometry=GEO[L];if(!GEO.includes(old))old.dispose()}
- if(window.plQuality&&window.plQuality.apply)window.plQuality.apply();else grass.count=Math.min(grass.instanceMatrix.count,Math.round(grass.count*K[L]))}
+ }/* 0.2.8: кількість кущиків задає perf.js (пункт «Трава» в режимах якості) */
 window.plGrassK=()=>K[L];
 window.plGrass={get:()=>L,set:v=>{L=Math.max(0,Math.min(2,v|0));try{localStorage.setItem(KEY,String(L))}catch(_){}apply()}};
 apply();
-const _pf=pfTab;pfTab=function(t){_pf.apply(this,arguments);if(t!='g'&&t!='o')return;const host=document.getElementById('gfxp');if(!host||document.getElementById('grassq'))return;
- const d=document.createElement('div');d.id='grassq';
- d.innerHTML=`<h4>Трава</h4><div class='gseg'>${NAMES.map((n,i)=>`<button data-i='${i}' class='${i==L?'on':''}'>${n}</button>`).join('')}</div><small class='gnote'>Трава — найважча частина світу. «Слабо» — для слабких телефонів, «Високо» — густа трава для потужних пристроїв</small>`;
- host.appendChild(d);d.querySelectorAll('button').forEach(b=>b.onclick=()=>{window.plGrass.set(+b.dataset.i);d.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))})};
 }catch(e){console.warn('grass-quality:',e)}})();
