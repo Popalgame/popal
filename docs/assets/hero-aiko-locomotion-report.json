@@ -4,56 +4,56 @@
   "profiles": {
     "walk": {
       "cycleSeconds": 0.75,
-      "strideMeters": 0.5714285714285714,
-      "footExcursionMeters": 0.32,
-      "speed": 0.7619047619047619,
-      "nominalSpeed": 0.7619047619047619,
+      "strideMeters": 0.6123145016700106,
+      "footExcursionMeters": 0.34289612093520594,
+      "speed": 0.8164193355600141,
+      "nominalSpeed": 0.8164193355600141,
       "gameTargetSpeed": 1.8,
       "stance": 0.56,
-      "minForwardKnee": -0.03379436396062374,
+      "minForwardKnee": -0.03363347239792347,
       "maxLaneCross": 0,
-      "maxBoneLengthError": 2.1272001279881714e-07,
-      "minFootJointZ": 0.06999994069337845,
-      "minToeJointZ": 0.028614241629838943,
+      "maxBoneLengthError": 1.6302758126807149e-07,
+      "minFootJointZ": 0.1659998744726181,
+      "minToeJointZ": 0.043388284742832184,
       "kneeFlexDegrees": [
-        28.894481897378967,
-        72.00320035334694
+        27.075015125135963,
+        71.29258064190964
       ]
     },
     "jog": {
       "cycleSeconds": 0.5208333333333334,
-      "strideMeters": 1.3846153846153844,
-      "footExcursionMeters": 0.36,
-      "speed": 2.658461538461538,
-      "nominalSpeed": 2.658461538461538,
+      "strideMeters": 1.4836851386619487,
+      "footExcursionMeters": 0.3857581360521067,
+      "speed": 2.8486754662309415,
+      "nominalSpeed": 2.8486754662309415,
       "gameTargetSpeed": 5.0,
       "stance": 0.26,
-      "minForwardKnee": -0.05850717460270971,
+      "minForwardKnee": -0.0592128811404109,
       "maxLaneCross": 0,
-      "maxBoneLengthError": 1.297303735270372e-07,
-      "minFootJointZ": 0.06999994814395905,
-      "minToeJointZ": 0.028035033494234085,
+      "maxBoneLengthError": 1.6684293674407158e-07,
+      "minFootJointZ": 0.1659999042749405,
+      "minToeJointZ": 0.04299257695674896,
       "kneeFlexDegrees": [
-        23.10168917926444,
-        103.73013938772985
+        23.520789586736413,
+        103.25867875008055
       ]
     },
     "run": {
       "cycleSeconds": 0.4166666666666667,
-      "strideMeters": 1.7272727272727273,
-      "footExcursionMeters": 0.38,
-      "speed": 4.1454545454545455,
-      "nominalSpeed": 4.1454545454545455,
+      "strideMeters": 1.8508597436843504,
+      "footExcursionMeters": 0.4071891436105571,
+      "speed": 4.442063384842441,
+      "nominalSpeed": 4.442063384842441,
       "gameTargetSpeed": 8.0,
       "stance": 0.22,
-      "minForwardKnee": -0.06451415654737502,
+      "minForwardKnee": -0.06628364603966475,
       "maxLaneCross": 0,
-      "maxBoneLengthError": 1.3547838376148924e-07,
-      "minFootJointZ": 0.06999995559453964,
-      "minToeJointZ": 0.025878790766000748,
+      "maxBoneLengthError": 1.3706813706271248e-07,
+      "minFootJointZ": 0.16599999368190765,
+      "minToeJointZ": 0.04155847430229187,
       "kneeFlexDegrees": [
-        23.10162087737274,
-        115.64786326291829
+        23.07257891302183,
+        115.16742092651043
       ]
     }
   }

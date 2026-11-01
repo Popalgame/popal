@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polpal Studio – silnik postaci</title>
+<style>
+:root{--bg:#171b1b;--panel:#1e2322;--line:#343b37;--text:#eceee2;--muted:#9ca79c;--accent:#d2df87;--ok:#b7d36b;--bad:#ffb99b;--run:#e8ab75}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:16px;margin:0 12px 0 0}
+label.upload{background:var(--accent);color:#1e2516;font-weight:600;padding:7px 12px;border-radius:6px;cursor:pointer}
+label.upload input{display:none}
+select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px}
+#status{color:var(--muted)}
+main{display:grid;grid-template-columns:260px minmax(0,1fr) 320px;gap:12px;padding:12px;height:calc(100vh - 56px)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:auto;padding:10px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:4px 0 8px}
+#refs img{width:100%;border-radius:6px;margin-bottom:6px;background:#000}
+#refs figure{margin:0 0 8px}#refs figcaption{color:var(--muted);font-size:12px}
+#viewer{position:relative;padding:0;overflow:hidden}
+#viewer canvas{display:block;width:100%;height:100%}
+#overlay{position:absolute;left:10px;top:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+#overlay .tag{background:#000a;padding:3px 8px;border-radius:4px;font-size:12px}
+#perf{position:absolute;right:10px;bottom:10px;background:#000b;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:11px Menlo,monospace;min-width:210px;pointer-events:none}
+#perf:empty{display:none}#perf div{display:flex;justify-content:space-between;gap:12px}#perf span{color:var(--muted)}#perf b{font-weight:500}#perf b.over{color:var(--bad)}
+#clips{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:6px}
+#clips button{background:#000b;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:4px 8px;cursor:pointer}
+#clips button.on{border-color:var(--accent);color:var(--accent)}
+ol#events{list-style:none;padding:0;margin:0}
+ol#events li{padding:4px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+.done{color:var(--ok)}.failed{color:var(--bad)}.running{color:var(--run)}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:4px}
+.swatch{display:flex;align-items:center;gap:6px;font-size:12px}
+.swatch i{width:18px;height:18px;border-radius:4px;border:1px solid #0006;flex:none}
+.src{color:var(--muted);font-size:11px}
+table{border-collapse:collapse;width:100%;font-size:12px}td{padding:2px 4px;border-bottom:1px solid var(--line)}
+.warn{color:var(--run);font-size:12px}
+#renders img{width:48%;margin:1%;border-radius:4px}
+.field{display:block;font-size:12px;color:var(--muted);margin:6px 0}.field input,.field select{display:block;width:100%;margin-top:3px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:5px}
+.check{display:flex;gap:6px;align-items:center;font-size:12px;margin:4px 0}
+.swatch input[type=color]{width:26px;height:20px;padding:0;border:1px solid #0006;background:none}
+#buildVariant{margin-top:8px;width:100%;background:var(--accent);color:#1e2516;border:0;border-radius:6px;padding:8px;font-weight:600;cursor:pointer}
+@media (max-width:1000px){main{grid-template-columns:1fr;height:auto}#viewer{height:60vh}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Polpal Studio · silnik postaci</h1>
+  <label class="upload">Wrzuć zip lub obraz<input id="file" type="file" accept=".zip,image/png,image/jpeg,image/webp"></label>
+  <select id="runs"></select>
+  <span id="status">Lokalnie · bez limitów</span>
+</header>
+<main>
+  <section id="refs"><h2>Referencje</h2><div id="refList"></div></section>
+  <section id="viewer"><canvas id="canvas"></canvas><div id="overlay"></div><div id="perf" aria-live="off"></div><div id="clips"></div></section>
+  <section id="side">
+    <h2>Baza</h2><div id="base" class="src">—</div>
+    <h2>Etapy budowy</h2><ol id="events"></ol>
+    <h2>Paleta</h2><div id="palette" class="swatches"></div>
+    <div id="variant" hidden>
+      <h2>Wariant z rzeźby</h2>
+      <label class="field">Imię <input id="variantName" maxlength="40"></label>
+      <div id="variantColours" class="swatches"></div>
+      <label class="check"><input type="checkbox" id="partWeapon"> Młot w dłoni</label>
+      <label class="check"><input type="checkbox" id="partCollar"> Futrzany kołnierz</label>
+      <label class="check"><input type="checkbox" id="partSpheres"> Kule Pal Sphere</label>
+      <label class="field">Jakość <select id="variantQuality"><option value="desktop">desktop (~40 tys. tr.)</option><option value="mobile">mobile (~12 tys. tr.)</option></select></label>
+      <button id="buildVariant" type="button">Zbuduj wariant</button>
+    </div>
+    <h2>Proporcje</h2><table id="props"></table>
+    <h2>Uwagi</h2><div id="warnings"></div>
+    <h2>Rendery kontrolne</h2><div id="renders"></div>
+  </section>
+</main>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script src="engine.js"></script>
+</body>
+</html>

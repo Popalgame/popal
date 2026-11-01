@@ -84,29 +84,41 @@ Panel dostosowywania postaci (`character-customization.js`, wiersz
 Moduł `imported-hero.js` trzyma oba zestawy w rejestrze `MODELS` i wybiera
 aktywny przez `activeModel()`; `api.setModel(id)` ładuje pakiet wybranego
 wariantu, przebudowuje wszystkie żywe instancje i podmienia pakiety
-lokomocji/walki. Przy wskaźniku zgrubnym ładowany jest wariant mobilny
-Ajko. Zestawy Ajko:
+lokomocji/walki. Zestawy Ajko:
 
 - [`hero-aiko.glb`](../site/assets/models/hero-aiko.glb) — pełny model
-  (około 533 KB; Blender: [`hero-aiko.blend`](assets/hero-aiko.blend)),
-- [`hero-aiko-mobile.glb`](../site/assets/models/hero-aiko-mobile.glb) —
-  wariant mobilny (około 269 KB),
+  (od 1 listopada 2026 r.: rzeźba Aiko v16 z Polpal Studio, ok. 40 tys.
+  trójkątów, 2,5 MB, 22 kości, 7 klipów; zastąpił prostą bryłową wersję).
+  Źródło: baza Studio `aiko-v16-hero` —
+  `output/aiko-sculpt/production-v16-nose/aiko-v16-hero-arms27.blend`
+  (v16 + nos 10 mm + ramiona opuszczone o 27° w idle/walk/run/swim/jump,
+  skrypty `nose_candidate.py` i `arms_down.py` obok pliku), uproszczona przez
+  `tools/character-scan/engine_optimize.py` do 40 tys. Na decyzję użytkownika
+  nie ma osobnej, uboższej wersji na telefon: przy wskaźniku zgrubnym ładowany
+  jest ten sam pełny model (`hero-aiko-mobile.glb` usunięto),
 - [`hero-aiko-locomotion.glb`](../site/assets/models/hero-aiko-locomotion.glb)
   — klipy `walk`/`jog`/`run` z profilami prędkości
-  ([`hero-aiko-locomotion-report.json`](assets/hero-aiko-locomotion-report.json)),
+  ([`hero-aiko-locomotion-report.json`](assets/hero-aiko-locomotion-report.json));
+  generator mierzy rig (kostka, długość nogi) i skaluje krok, ramiona
+  zaczynają od pozy idle modelu,
 - [`hero-aiko-combat.glb`](../site/assets/models/hero-aiko-combat.glb) — klipy
-  `hammer_hit` i `throw_right`
+  `hammer_hit` (zamach znad głowy i cios w dół) i `throw_right`
   ([`hero-aiko-combat-report.json`](assets/hero-aiko-combat-report.json)).
+
+Pakiety lokomocji i walki zapisują bezwzględne obroty i położenia kości,
+więc **po każdej podmianie `hero-aiko.glb` trzeba je wygenerować ponownie**
+(`build-aiko-locomotion.py`, `build-aiko-combat.py`).
 
 Ajko dzierży swój młotek w **prawej** dłoni (młotek jest wypalony w modelu i
 sztywno przypięty do kości `mixamorig:RightHand`), dlatego atak wręcz
 (`hit`) wykonuje prawą ręką — `meleeHand: 'right'`, klip `hammer_hit`.
 Zbieranie i rzut pozostają przy prawej ręce, a wyposażone siekiera/kilof są
-dla Ajko ukrywane (młotek już zajmuje dłoń). Skrypty budujące:
+dla Ajko ukrywane (młotek już zajmuje dłoń). Skrypty budujące
+(`build-aiko.py` tworzy dawną bryłową wersję i nie jest już źródłem modelu):
 [`build-aiko.py`](../scripts/build-aiko.py),
 [`build-aiko-locomotion.py`](../scripts/build-aiko-locomotion.py),
 [`build-aiko-combat.py`](../scripts/build-aiko-combat.py). Podgląd:
-[`hero-aiko-preview.png`](assets/hero-aiko-preview.png). Wszystkie cztery
+[`hero-aiko-preview.png`](assets/hero-aiko-preview.png). Wszystkie trzy
 pliki GLB Ajko są w pre-cache service workera.
 
 ## Kontrola działania

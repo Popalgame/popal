@@ -7,20 +7,20 @@
       "durationSeconds": 0.75,
       "keyPoses": [
         0,
-        9,
-        20,
+        10,
+        21,
         28,
-        37,
-        49,
+        36,
+        50,
         72
       ],
       "bones": 22,
       "tracks": 66,
       "motion": {
-        "rightHandPathMeters": 0.7768,
-        "rightHandExcursionMeters": 0.2141,
-        "leftHandExcursionMeters": 0.0822,
-        "minimumRightHandToHeadMeters": 0.3042
+        "rightHandPathMeters": 1.6806,
+        "rightHandExcursionMeters": 0.5201,
+        "leftHandExcursionMeters": 0.1023,
+        "minimumRightHandToHeadMeters": 0.2632
       }
     },
     "throw_right": {
@@ -37,10 +37,10 @@
       "bones": 22,
       "tracks": 66,
       "motion": {
-        "rightHandPathMeters": 0.814,
-        "rightHandExcursionMeters": 0.2837,
-        "leftHandExcursionMeters": 0.0709,
-        "minimumRightHandToHeadMeters": 0.3328
+        "rightHandPathMeters": 1.0118,
+        "rightHandExcursionMeters": 0.3347,
+        "leftHandExcursionMeters": 0.0515,
+        "minimumRightHandToHeadMeters": 0.3812
       }
     }
   }
