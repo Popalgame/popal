@@ -133,8 +133,10 @@ function ensure(r,ty,fm){if(!r||!r.root)return;fm=fm||1;if(r._pf===fm)return;
  (r.legs||[]).forEach((l,i)=>(l.g||l).scale.copy(z.legs[i]));(r.wings||[]).forEach((w,i)=>(w.g||w).scale.copy(z.wings[i]));deepen(r,fm>=3&&ty!==4);/* білу вовну Пухоклуба не темнимо */
  r._pf=fm;if(fm<2||!F[ty])return;const sc0=r.root.scale.clone(),pos0=r.root.position.clone(),rot0=r.root.rotation.clone();
  /* будуємо в просторі моделі без масштабу й повороту, тоді повертаємо як було */
+ /* модель тимчасово відчеплюємо від істоти у світі: інакше точки деталей рахувалися б від місця істоти, і далеко від центру світу, наприклад, спис Бамбузла розтягувався через усю сцену */
+ const par=r.root.parent;if(par)par.remove(r.root);
  r.root.scale.set(1,1,1);r.root.position.set(0,0,0);r.root.rotation.set(0,0,0);
  try{F[ty](ctx(r),fm)}catch(e){console.warn('pal-forms',ty,fm,e)}
- r.root.scale.copy(sc0);r.root.position.add(pos0);r.root.rotation.copy(rot0)}
+ r.root.scale.copy(sc0);r.root.position.add(pos0);r.root.rotation.copy(rot0);if(par)par.add(r.root)}
 window.PALFORM={ensure};
 }catch(e){console.warn('pal-forms',e)}})();
