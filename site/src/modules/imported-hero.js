@@ -116,7 +116,14 @@ function captureAvatar(){
  if(!renderer||!scene||!camera||!preview||!preview.userData.importedHero||!ctx||!renderer.domElement)return;
  const position=camera.position.clone(),quaternion=camera.quaternion.clone(),rotation=preview.rotation.clone(),zoom=camera.zoom;
  try{
-  preview.rotation.set(0,0,0);camera.position.set(0,1.56,1.35);camera.lookAt(0,1.5,0);camera.zoom=1.1;camera.updateProjectionMatrix();
+  preview.rotation.set(0,0,0);preview.updateMatrixWorld(true);
+  /* 0.2.9: кадр за головою саме цієї моделі (кістка Head), а не на сталій висоті — інакше в Айко видно лише волосся */
+  const T3=get('THREE')||window.THREE,box=new T3.Box3().setFromObject(preview),h=Math.max(.5,box.max.y-box.min.y);let head=null;
+  preview.traverse(o=>{if(!head&&o.isBone&&/head$/i.test(o.name))head=o});
+  const face=head?head.getWorldPosition(new T3.Vector3()).add(new T3.Vector3(0,h*.055,0)):new T3.Vector3(0,box.max.y-h*.14,0);
+  /* у квадрат 64×64 мають увійти голова з волоссям і плечі: ~36% зросту; кадр потім обрізається до квадрата з ширини перегляду */
+  const src0=renderer.domElement,ar=Math.max(.2,(src0.width||1)/(src0.height||1)),span=h*.4/Math.min(1,ar),dist=span/2/Math.tan((camera.fov||40)*Math.PI/360);
+  face.y+=h*.02;camera.position.set(face.x,face.y+h*.03,face.z+dist);camera.lookAt(face.x,face.y,face.z);camera.zoom=1;camera.updateProjectionMatrix();
   renderer.render(scene,camera);
   const source=renderer.domElement,width=source.width,height=source.height,size=Math.min(width,height);
   if(!size)throw Error('Empty preview canvas');
