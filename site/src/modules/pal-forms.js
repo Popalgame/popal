@@ -39,8 +39,8 @@ function slab(pts,d){const s=new THREE.Shape();pts.forEach(([x,y],i)=>i?s.lineTo
 function curveSlab(pts,d){const s=new THREE.Shape();s.moveTo(pts[0][0],pts[0][1]);for(let i=1;i+2<pts.length;i+=3)s.bezierCurveTo(pts[i][0],pts[i][1],pts[i+1][0],pts[i+1][1],pts[i+2][0],pts[i+2][1]);
  const g=new THREE.ExtrudeGeometry(s,{depth:d||.03,bevelEnabled:true,bevelThickness:.01,bevelSize:.01,bevelSegments:1,curveSegments:10});g.translate(0,0,-(d||.03)/2);return g}
 const FEATHER=[[0,0],[.08,.22],[.06,.62],[0,.9],[-.06,.62],[-.08,.22],[0,0]];
-function zig(node,a,b,n,amp,mat){const g=new THREE.Group(),d=b.clone().sub(a),side=V(-d.z,0,d.x).normalize().multiplyScalar(amp);let prev=a.clone();
- for(let i=1;i<=n;i++){const p=a.clone().add(d.clone().multiplyScalar(i/n)).add(i<n?side.clone().multiplyScalar(i%2?1:-1):V());const L=prev.distanceTo(p),s=M(cyl(.022,.022,L,6),mat);
+function zig(node,a,b,n,amp,mat,th){th=th||.022;const g=new THREE.Group(),d=b.clone().sub(a),side=V(-d.z,0,d.x).normalize().multiplyScalar(amp);let prev=a.clone();
+ for(let i=1;i<=n;i++){const p=a.clone().add(d.clone().multiplyScalar(i/n)).add(i<n?side.clone().multiplyScalar(i%2?1:-1):V());const L=prev.distanceTo(p),s=M(cyl(th,th,L,6),mat);
   s.position.copy(prev).add(p).multiplyScalar(.5);s.quaternion.setFromUnitVectors(V(0,1,0),p.clone().sub(prev).normalize());g.add(s);prev=p}
  g.userData[TAG]=1;const pv=V(0,0,0);node.worldToLocal(pv);g.position.copy(pv);node.add(g);return g}
 const legTips=c=>(c.r.legs||[]).map(l=>{const n=l.g||l,b=new THREE.Box3().setFromObject(n),m=b.getCenter(V());return{n,p:V(m.x,b.min.y+.05,m.z),b}});
@@ -57,7 +57,7 @@ function bambooStalk(node,a,b,r){const g=new THREE.Group(),d=b.clone().sub(a),L=
  g.children.forEach(s=>{if(s.geometry.type=='CylinderGeometry'){const o=new THREE.Mesh(s.geometry,olMat(0x1f4a2a));o.scale.set(1.12,1.01,1.12);s.add(o)}});return g}
 const F={
  0(c,fm){const{r,B,H,hc,bc}=c,t=r.torso||r.body,O=0x1f4a2a;
-  for(const s of[-1,1]){const x=s*(B.max.x-.08),y=B.max.y-.2;for(let i=0;i<3;i++)bambooStalk(t,V(x+s*.02*i,y-.02*i,bc.z+.2-i*.03).add(V(0,0,0)),V(x+s*.08,y-.12-.02*i,bc.z-.2-i*.03),.055)}
+  for(const s of[-1,1]){const y=H.min.y+.04;for(let i=0;i<3;i++){const x=s*(.27+.05*i);bambooStalk(t,V(x,y-.06*i,bc.z+.17),V(x+s*.03,y-.06*i-.03,bc.z-.17),.062)}}/* наплічники — на плечах під головою */
   bambooStalk(t,V(-.38,.35,B.min.z-.06),V(.42,2.0+(fm>2?.2:0),B.min.z-.12),.045);
   const tip=put(t,M(cone(.09,.42,6),LEAF),V(.47,2.2+(fm>2?.2:0),B.min.z-.13),[0,0,-.42],O);tip.scale.z=.35;
   if(fm>=3){const tb=new THREE.Box3().setFromObject(t),tc=tb.getCenter(V()),fz=tb.max.z-.06;for(let i=0;i<5;i++){const a=(i-2)*.36,x=tc.x+Math.sin(a)*.2,z=fz-(1-Math.cos(a))*.12;bambooStalk(t,V(x,tc.y-.2,z),V(x,tc.y+.18,z+.02),.042)}/* панцир на грудях */
@@ -88,7 +88,7 @@ const F={
  4(c,fm){const{r,B,H,hc,bc}=c,body=r.body||r.root,W=std(fm>=3?0xb8c4dc:0xffffff,{roughness:.95}),HN=std(0xe8c48a),O=fm>=3?0x4a5470:0xd8c9bd;
   for(let i=0;i<(fm>=3?9:6);i++){const a=i/6*Math.PI*2,p=V(bc.x+Math.cos(a)*.3,B.max.y-.05+(i%3)*.04,bc.z+Math.sin(a)*.42);put(body,M(sph(.2+(i%2)*.05,14,10),W),p,null,O)}
   for(const s of[-1,1]){const g=new THREE.TorusGeometry(fm>=3?.14:.1,fm>=3?.045:.035,8,18,Math.PI*1.5);const h=put(r.head,M(g,HN),V(hc.x+s*.2,H.max.y-.12,hc.z-.06),[0,Math.PI/2,s>0?-.6:Math.PI+.6],0x8a6a3a)}
-  if(fm>=3){const LT=glw(0xffe14a,0xffc000,1.6);zig(body,V(bc.x+.12,B.max.y+.35,bc.z-.1),V(bc.x+.02,B.min.y+.25,bc.z-.15),4,.08,LT);
+  if(fm>=3){const LT=glw(0xffe14a,0xffc000,1.6);zig(body,V(bc.x+.1,B.max.y+.75,bc.z-.05),V(bc.x+.02,B.max.y+.28,bc.z-.08),4,.09,LT,.045);
    const CL=std(0x6a7898,{roughness:.95});for(let i=0;i<4;i++)put(body,M(sph(.16,12,9),CL),V(bc.x+(i-1.5)*.18,B.max.y+.22,bc.z-.05+(i%2)*.1),null,0x3a4058);
    if(r.hover!=null)r.hover=Math.max(r.hover||0,.25);else r.root.position.y+=.2}},
  5(c,fm){const{r,H,hc,B}=c,t=r.torso||r.body,AN=std(0x7a3a14),PO=glw(0xffe08a,0xffc84a,.9),O=0x7a3a14;
@@ -102,7 +102,7 @@ const F={
   for(const s of[-1,1]){const n=fm>=3?4:2;for(let i=0;i<n;i++){const y=H.max.y+.1+i*.12,m=put(r.head,M(cone(.04,.22+i*.04,6),IC),V(hc.x+s*(.2+i*.07),y,hc.z-.05-i*.03),[-.2,0,-s*(.7+i*.15)],0);}
    if(fm>=3)put(r.head,M(cone(.07,.55,6),IC),V(hc.x+s*.18,H.max.y+.32,hc.z-.12),[-.15,0,-s*.25],0)}
   for(let i=0;i<5;i++)put(r.head,M(sph(.1-.01*i,12,9),MN),V(hc.x+(i%2?.06:-.06),H.min.y+.05+i*.04,H.min.z-.02-i*.05),null,0xa9d4ea);
-  if(fm>=3){const PL=put(r.torso||r.body,M(new THREE.SphereGeometry(.26,16,10,0,Math.PI*2,0,Math.PI/2),IC),V(bc.x,bc.y+.05,B.max.z-.05),[Math.PI/2,0,0],0);PL.scale.set(1,.5,1.15);
+  if(fm>=3){const tb=new THREE.Box3().setFromObject(r.body||r.torso),tc=tb.getCenter(V()),cz=Math.min(tb.max.z,H.min.z+.05);const PL=put(r.torso||r.body,M(new THREE.SphereGeometry(.22,16,10,0,Math.PI*2,0,Math.PI/2),IC),V(tc.x,tc.y-.04,cz-.02),[Math.PI/2,0,0],0);PL.scale.set(1,.42,1);/* крижаний нагрудник на грудях */
    for(let i=0;i<5;i++){const a=(i-2)*.4;put(r.head,M(oct(.06),IC),V(hc.x+Math.sin(a)*.12,H.max.y+.06+Math.cos(a)*.04,hc.z+.06),[0,0,a],0).scale.y=2.2}}},
  7(c,fm){const{r,B,H,hc,bc}=c,t=r.torso||r.body,DK=std(0x34344e),NE=glw(0x6ae8ff,0x1a9fff,1.6),O=0x14142a;
   const n=fm>=3?11:8;for(let i=0;i<n;i++){const a=(i/(n-1)-.5)*Math.PI*1.3,p=V(hc.x+Math.sin(a)*.24,H.min.y+.12+Math.cos(a)*.18,H.min.z-.02);put(r.head,M(cone(.06,.3,6),DK),p,[-.9,0,-Math.sin(a)*1.1],O)}
