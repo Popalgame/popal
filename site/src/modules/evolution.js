@@ -27,8 +27,10 @@ try{const w0=window.itemW;if(w0)window.itemW=k=>k=='cr2'||k=='cr3'?0:w0(k)}catch
 /* опис у рюкзаку */
 try{if(window.DS)Object.assign(window.DS,{cr2:'Друга форма попала з 25 рівня. Випадає з боса. Використовується в Колбі поліпшень. Не має ваги',cr3:'Третя форма попала з 50 рівня. Рідкісний — із сильнішого боса. Використовується в Колбі поліпшень. Не має ваги'})}catch(_){}
 /* тестові кристали для гравця ID 0001 (поки немає босів) */
-const gift=setInterval(()=>{if(inv._crg){clearInterval(gift);return}if(window.myPid!=='0001')return;inv.cr2=(inv.cr2||0)+20;inv.cr3=(inv.cr3||0)+20;inv._crg=1;clearInterval(gift);
- try{msg('💎 Для тестів: +20 Кристалів еволюції й +20 Кристалів вознесіння');hud();save()}catch(_){}},2000);
+/* приходять листом у пошту (mail.js) */
+const gift=setInterval(()=>{if(inv._crg){clearInterval(gift);return}if(window.myPid!=='0001'||!window.plMail)return;inv._crg=1;clearInterval(gift);
+ window.plMail.send({from:'Розробник Popal',title:'💎 Кристали для тестів',text:'Поки боси ще в роботі — ось кристали, щоб випробувати Колбу поліпшень.',items:{cr2:20,cr3:20}});
+ try{msg('📬 Нова пошта: кристали для тестів')}catch(_){}},2000);
 
 /* ---------- вигляд форм ---------- */
 const ECOL={gr:0x5fdc7a,ea:0xd9a25a,fi:0xff7a2a,da:0xa77ae6,ne:0xffb8d8,ai:0xbfe8ff,wa:0x3ad0ff};
