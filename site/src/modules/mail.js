@@ -87,6 +87,7 @@ function render(){const c=document.getElementById('pfc');if(!c||!open)return;con
 {const pfs=document.getElementById('pfs');if(pfs&&!pfs.querySelector("[data-t='m']")){const mk=(t,h)=>{const b=document.createElement('button');b.dataset.t=t;b.innerHTML=h;b.onclick=()=>pfTab(t);return b};
  const bm=mk('m',"📬 Пошта <span id='mtb'></span>"),bp=mk('pr','🎟️ Промокод'),p0=pfs.querySelector("[data-t='p']");if(p0)p0.after(bm,bp);else pfs.prepend(bm,bp)}}
 const _pf=pfTab;pfTab=function(t){if(t!=='m'&&t!=='pr'){open=0;return _pf.apply(this,arguments)}
+ {const pf=document.getElementById('pf'),tl=pf&&pf.querySelector('#pfh b');if(pf)pf.classList.add('pfme');if(tl)tl.textContent='Профіль'}/* меню гравця, не налаштування (profile-split.js) */
  document.querySelectorAll('#pfs button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));open=t;sayTxt='';render();if(t=='m')refresh()};
 /* значок непрочитаних на аватарці й на вкладці */
 function badge(){const n=unclaimed(),av=document.getElementById('av');if(av&&av.parentElement){let b=document.getElementById('avmb');if(!b){b=document.createElement('div');b.id='avmb';av.parentElement.appendChild(b)}
