@@ -39,21 +39,12 @@ const FS=[1,1,1.15,1.3];
 const glowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);
  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.4,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
 const add_=(o,c)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
-const gemM=c=>new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.85,roughness:.15,metalness:.3,flatShading:true});
-function wingGeo(){const s=new THREE.Shape();s.moveTo(0,0);s.bezierCurveTo(.25,.45,.75,.62,1,.5);s.bezierCurveTo(.82,.32,.9,.12,.7,.02);s.bezierCurveTo(.55,.12,.45,-.02,.3,-.08);s.bezierCurveTo(.2,-.02,.1,-.04,0,0);return new THREE.ShapeGeometry(s,12)}
-/* аксесуари форми: h — висота моделі (без масштабу форми), c — колір стихії */
+/* загальні ознаки форми (аура під ногами, іскри); особливі частини тіла кожного виду — pal-forms.js. h — висота моделі, c — колір стихії */
 function formFx(fm,h,c){const g=new THREE.Group();g.name='formFx';const u={spin:[],orbit:[],bob:[]};
  const aura=new THREE.Mesh(new THREE.RingGeometry(.45,.62,40),add_(.55,c));aura.rotation.x=-Math.PI/2;aura.position.y=.04;g.add(aura);u.spin.push(aura);
  const disc=new THREE.Mesh(new THREE.CircleGeometry(.62,40),add_(.16,c));disc.rotation.x=-Math.PI/2;disc.position.y=.03;g.add(disc);
- /* гребінь із кристалів */
- const crest=new THREE.Group();crest.position.y=h*.98;const n=fm>=3?5:3;
- for(let i=0;i<n;i++){const k=(i-(n-1)/2),cr=new THREE.Mesh(new THREE.OctahedronGeometry(.07+(.04*(1-Math.abs(k)/n)),0),gemM(c));cr.scale.y=2.4;cr.position.set(k*.09,.06-Math.abs(k)*.025,-.05);cr.rotation.z=-k*.25;crest.add(cr)}
- g.add(crest);u.bob.push(crest);
  /* іскри навколо */
  const no=fm>=3?4:2;for(let i=0;i<no;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:c,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));s.scale.setScalar(.22);s.userData.ph=i/no*Math.PI*2;s.userData.r=.55;s.userData.y=h*.55;g.add(s);u.orbit.push(s)}
- if(fm>=3){/* німб і крила */
-  const halo=new THREE.Mesh(new THREE.TorusGeometry(.2,.022,8,32),new THREE.MeshStandardMaterial({color:0xfff2b0,emissive:0xffd34e,emissiveIntensity:1.3,roughness:.3}));halo.rotation.x=Math.PI/2;halo.position.y=h*1.12+.12;g.add(halo);u.bob.push(halo);
-  const wg=wingGeo();for(const sd of[-1,1]){const w=new THREE.Mesh(wg,add_(.55,c));w.scale.set(.55*sd,.55,.55);w.position.set(.08*sd,h*.62,-.22);w.rotation.y=sd*.35;w.userData.sd=sd;g.add(w);u.wing=(u.wing||[]).concat(w)}}
  g.userData.u=u;return g}
 /* висота моделі попала: габарити (раз на зміну моделі) */
 const _b=new THREE.Box3(),_v=new THREE.Vector3();
@@ -63,14 +54,15 @@ function applyForm(o,fm,ty){const m=o.m||o;let fx=m.getObjectByName('formFx');co
  const key=fm+':'+m.children.length;if(fx&&m.userData.fmKey===key)return;if(fx){m.remove(fx);fx.traverse(q=>{if(q.geometry)q.geometry.dispose();if(q.material)q.material.dispose()})}
  const tmp=new THREE.Group();m.add(tmp);const h=modelH(m,tmp);m.remove(tmp);fx=formFx(fm,h,elC(ty));m.add(fx);m.userData.fmKey=key;m.userData.fmApplied=fm}
 /* попали гравця: аксесуари й масштаб форми */
-setInterval(()=>{for(const p of pals){if(!p.m)continue;const fm=p.fm||1,fs=FS[fm]||1;applyForm(p,fm,p.ty);
+setInterval(()=>{const PF=window.PALFORM;if(PF){for(const p of pals)if(p._hi)PF.ensure(p._hi,p.ty,p.fm||1);for(const w of(typeof wild!='undefined'?wild:[]))if(w._hi)PF.ensure(w._hi,w.ty,1)}/* моделі з пулу — потрібна форма; дикі завжди форма 1 */
+ for(const p of pals){if(!p.m)continue;const fm=p.fm||1,fs=FS[fm]||1;applyForm(p,fm,p.ty);
  if(p._s0!==fs){const was=p._s0||1;p._s0=fs;if(Math.abs(p.m.scale.x-was)<.01)p.m.scale.setScalar(fs)}}},600);
 /* анімація аксесуарів */
 ANI.push(()=>{const t=performance.now()/1000;
  const run=m=>{const fx=m&&m.getObjectByName('formFx');if(!fx||!fx.visible)return;const u=fx.userData.u;
   for(const a of u.spin)a.rotation.z=t*1.2;for(const b of u.bob)b.position.y+=Math.sin(t*2.4)*.0015;
   for(const s of u.orbit){const a=t*1.6+s.userData.ph;s.position.set(Math.cos(a)*s.userData.r,s.userData.y+Math.sin(t*3+s.userData.ph)*.12,Math.sin(a)*s.userData.r)}
-  if(u.wing)for(const w of u.wing)w.rotation.y=w.userData.sd*(.35+Math.sin(t*5)*.25)};
+};
  for(const p of pals)if(p.m&&p.m.visible)run(p.m);if(anim)run(anim.r.root)});
 
 /* ---------- Колба поліпшень ---------- */
@@ -110,7 +102,7 @@ function evolve(p){const fm=p.fm||1,nd=NEED[fm+1],b=nearFlask()||flasks()[0];if(
  inv[nd[1]]--;show(0);
  let r=null;try{r=window.PALMODEL?PALMODEL.build(p.ty):null}catch(_){r=null}
  const root=r?r.root:new THREE.Mesh(new THREE.SphereGeometry(.4,16,12),new THREE.MeshStandardMaterial({color:T[p.ty].c}));
- const base=.62;root.scale.setScalar(base);applyForm(root,fm,p.ty);
+ const base=.62;if(r&&window.PALFORM)window.PALFORM.ensure(r,p.ty,fm);root.scale.setScalar(base);applyForm(root,fm,p.ty);
  const fl=b.g.userData.flask||{},y0=b.g.position.y;root.position.set(b.x,y0+.55,b.z);sc.add(root);
  const c=elC(p.ty),beam=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,6,24,1,true),add_(0,c));beam.position.set(b.x,y0+3,b.z);sc.add(beam);
  const flash=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),add_(0,0xffffff));flash.position.set(b.x,y0+1.2,b.z);sc.add(flash);
@@ -124,7 +116,7 @@ ANI.push(()=>{if(!anim)return;const A=anim,dt=Math.min(.05,(performance.now()-(A
  A.beam.material.opacity=Math.min(.45,t*.25)*(t<3?1:Math.max(0,(4.4-t)/1.4));A.beam.scale.set(1+Math.sin(t*9)*.08,1,1+Math.sin(t*9)*.08);
  for(const s of A.sparks){const u=s.userData;u.y=(u.y+dt*u.v*(.5+t*.4))%1;const a=u.a+t*(2+t);s.position.set(A.b.x+Math.cos(a)*u.r,A.y0+.5+u.y*1.4,A.b.z+Math.sin(a)*u.r);s.material.opacity=Math.min(1,t)*(t<3.2?1:Math.max(0,(4.4-t)/1.2))}
  if(t>2.4&&t<3){const q=(t-2.4)/.6;R.scale.setScalar(A.base*(1+Math.sin(q*Math.PI*6)*.12*q))}
- if(t>=3&&!A.done){A.done=1;A.p.fm=A.to;applyForm(R,A.to,A.p.ty);R.scale.setScalar(A.base*FS[A.to]);try{save();if(window.PSFX)PSFX.sfx('level')}catch(_){}}
+ if(t>=3&&!A.done){A.done=1;A.p.fm=A.to;if(A.r&&window.PALFORM)window.PALFORM.ensure(A.r,A.p.ty,A.to);applyForm(R,A.to,A.p.ty);R.scale.setScalar(A.base*FS[A.to]);try{save();if(window.PSFX)PSFX.sfx('level')}catch(_){}}
  if(t>2.85&&t<3.6){const q=(t-2.85)/.75;A.flash.scale.setScalar(.3+q*2.6);A.flash.material.opacity=.9*(1-q)}else A.flash.material.opacity=0;
  if(t>=4.6){for(const o of[A.beam,A.flash,...A.sparks]){sc.remove(o);if(o.geometry&&!o.isSprite)o.geometry.dispose();o.material.dispose()}
   sc.remove(R);try{if(A.r&&window.PALMODEL)PALMODEL.dispose(A.r)}catch(_){}if(A.fl.lq){A.fl.lq.scale.y=1;A.fl.lq.material.emissiveIntensity=.9}
