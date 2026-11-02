@@ -21,9 +21,9 @@ modelu.
 | Lokomocja / walka | `site/assets/models/hero-locomotion.glb`, `hero-combat.glb` |
 | Kandydat Anime Remaster | Polpal Studio, katalog roboczy: `candidates/hero-anime-remaster/` (`.blend`, `.glb`) |
 | Opis modelu | `docs/hero-model.md` |
-| Opis kandydata | Polpal Studio: [`docs/hero-anime-remaster.md`](https://github.com/Popalgame/polpal-studio/blob/main/docs/hero-anime-remaster.md) |
-| Most do Blendera | Polpal Studio: [`blender-mcp/`](https://github.com/Popalgame/polpal-studio/tree/main/blender-mcp) (`README.md`, `blender_ai_addon.py`) |
-| Cel wizualny Aiko i sposób pracy | Polpal Studio: [`docs/aiko-cel-wizualny.md`](https://github.com/Popalgame/polpal-studio/blob/main/docs/aiko-cel-wizualny.md) |
+| Opis kandydata | Polpal Studio: [`docs/hero-anime-remaster.md`](https://github.com/Alexgal19/ari-motion-studio/blob/main/docs/hero-anime-remaster.md) |
+| Most do Blendera | Polpal Studio: [`blender-mcp/`](https://github.com/Alexgal19/ari-motion-studio/tree/main/blender-mcp) (`README.md`, `blender_ai_addon.py`) |
+| Cel wizualny Aiko i sposób pracy | Polpal Studio: [`docs/aiko-cel-wizualny.md`](https://github.com/Alexgal19/ari-motion-studio/blob/main/docs/aiko-cel-wizualny.md) |
 | Połączenie ze Studio | [`polpal-game.json`](../polpal-game.json), [`polpal-studio.md`](polpal-studio.md) |
 
 ## Rig i animacje
@@ -72,6 +72,6 @@ Procedura dla obecnego pipeline'u, sprawdzona w tej sesji:
 ## Stan prac
 
 - Otwarty problem kanciastego prawego policzka po eksporcie Anime Remaster
-  opisuje sekcja [`Status prac`](https://github.com/Popalgame/polpal-studio/blob/main/docs/hero-anime-remaster.md#status-prac) w Polpal Studio.
+  opisuje sekcja [`Status prac`](https://github.com/Alexgal19/ari-motion-studio/blob/main/docs/hero-anime-remaster.md#status-prac) w Polpal Studio.
 - Nie uznawaj wcześniejszego raportu za dowód naprawienia policzka. Porównaj
   aktualną scenę, zapisany `.blend` i `.glb` przed dalszym działaniem.

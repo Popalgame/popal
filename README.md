@@ -155,7 +155,7 @@ CI перед деплоєм виконує `node scripts/sw-version.mjs --sha $
 ## Локальний міст AI → Blender
 
 Міст MCP/CLI до Blender, генерація ресурсів і інструменти продукції героїв тепер живуть в окремому застосунку
-[Polpal Studio](https://github.com/Popalgame/polpal-studio) (`blender-mcp/`, `blender-forge/`, `blender-api/`, `production/`). Гра підключається
+[Polpal Studio](https://github.com/Alexgal19/ari-motion-studio) (`blender-mcp/`, `blender-forge/`, `blender-api/`, `production/`). Гра підключається
 до Studio через [`polpal-game.json`](polpal-game.json) — див. [`docs/polpal-studio.md`](docs/polpal-studio.md).
 
 ## Локальна підготовка Unreal Engine

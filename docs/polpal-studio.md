@@ -1,7 +1,9 @@
 # Polpal Studio a gra
 
-Polpal Studio to osobna aplikacja do tworzenia bohaterów 3D, w prywatnym
-repozytorium [Popalgame/polpal-studio](https://github.com/Popalgame/polpal-studio). Wcześniej leżała tu jako `tools/character-scan` i
+Polpal Studio (w interfejsie: Ari Motion Studio) to osobna aplikacja do tworzenia
+bohaterów 3D, w prywatnym repozytorium
+[Alexgal19/ari-motion-studio](https://github.com/Alexgal19/ari-motion-studio) — do 2 listopada 2026 r.
+było to Popalgame/polpal-studio. Wcześniej leżała tu jako `tools/character-scan` i
 `tools/character-build`; wydzielono ją 1 listopada 2026 r. (stan z commita
 `5e9f314`, wcześniejsza historia tych plików zostaje w tym repozytorium).
 Tego samego dnia przeniesiono do Studio pozostałe narzędzia produkcji:
