@@ -56,6 +56,7 @@ else if(id=='B_flask'){/* 0.2.9: Колба поліпшень — кам'яна
 else if(id=='B_lamp'){add(g,Cy(.05,.06,1.6,6),0x2a2a33,0,.8,0);const l=new THREE.Mesh(B(.22,.28,.22),LAMP);l.position.y=1.72;g.add(l);add(g,Co(.2,.15,4),0x2a2a33,0,1.94,0,Math.PI/4);const lt=new THREE.PointLight(0xffc070,0,10);lt.position.y=1.7;g.add(lt);g.userData.light=lt}
 else{for(const x of[-.8,0,.8])add(g,B(.12,.8,.12),W,x,.4,0);for(const y of[.3,.6])add(g,B(1.8,.08,.06),D,0,y,0)}
 return g}
+window.mkBuilding=mkB;/* 0.2.9: модель будівлі для значків (evolution.js) */
 const placed=[];window.BPLACED=placed;
 /* 0.1.27: будівлю ставлять вільно (x,z,ry у сейві); старі записи без координат — на місці слота в кільці */
 function spawnB(id,si,X,Z,RY){const[x,z]=X!=null?[X,Z]:spos(si),g=mkB(id);const C=inv._cen||[0,0];g.position.set(x,H(x,z),z);g.rotation.y=RY!=null?RY:Math.atan2(C[0]-x,C[1]-z);sc.add(g);placed.push({id,g,x,z});for(let i=trees.length-1;i>=0;i--){const t=trees[i];if(Math.hypot(t.x-x,t.z-z)<2.2){sc.remove(t.m);trees.splice(i,1)}}}

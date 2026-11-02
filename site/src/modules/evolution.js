@@ -65,6 +65,19 @@ ANI.push(()=>{const t=performance.now()/1000;
 };
  for(const p of pals)if(p.m&&p.m.visible)run(p.m);if(anim)run(anim.r.root)});
 
+/* ---------- значок Колби: знімок справжньої 3D-моделі (у крафті, рюкзаку, будові) ---------- */
+function flaskIcon(){try{if(!window.mkBuilding)return;const S=192,cv=document.createElement('canvas');cv.width=cv.height=S;
+ const rr=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true,preserveDrawingBuffer:true});rr.setPixelRatio(1);rr.setSize(S,S,false);rr.setClearColor(0,0);if('outputEncoding' in rr)rr.outputEncoding=THREE.sRGBEncoding;
+ const s=new THREE.Scene();s.add(new THREE.HemisphereLight(0xffffff,0x5a6a80,1.15));const k=new THREE.DirectionalLight(0xffffff,1.2);k.position.set(3,5,4);s.add(k);const k2=new THREE.DirectionalLight(0x9fe8ff,.5);k2.position.set(-3,2,-2);s.add(k2);
+ const g=window.mkBuilding('B_flask');g.rotation.y=-.5;s.add(g);g.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(g),c=b.getCenter(new THREE.Vector3()),z=b.getSize(new THREE.Vector3());
+ const cam=new THREE.PerspectiveCamera(26,1,.05,100),d=Math.max(z.x,z.y,z.z)*.53/Math.tan(13*Math.PI/180);cam.position.set(c.x,c.y+d*.35,c.z+d);cam.lookAt(c.x,c.y-.05,c.z);rr.render(s,cam);
+ const o=document.createElement('canvas');o.width=o.height=96;const x=o.getContext('2d');x.fillStyle='rgba(0,0,0,.3)';x.beginPath();x.ellipse(48,87,24,6,0,0,7);x.fill();
+ /* темний контур, як у намальованих значків гри (icons.js) */const sil=document.createElement('canvas');sil.width=sil.height=96;const y=sil.getContext('2d');y.drawImage(cv,0,0,96,96);y.globalCompositeOperation='source-in';y.fillStyle='rgba(26,18,22,.92)';y.fillRect(0,0,96,96);
+ for(const[dx,dy]of[[-2,0],[2,0],[0,-2],[0,2],[-1.5,-1.5],[1.5,-1.5],[-1.5,1.5],[1.5,1.5]])x.drawImage(sil,dx,dy);x.drawImage(cv,0,0,96,96);
+ const url=o.toDataURL('image/png');rr.dispose();rr.forceContextLoss();g.traverse(m=>{if(m.geometry)m.geometry.dispose()});
+ ICO.B_flask=url;if(IT.B_flask)IT.B_flask[0]=`<img class='iic' src='${url}' alt=''>`;try{if(typeof ivO!='undefined'&&ivO&&typeof ivR=='function')ivR()}catch(_){}}catch(e){console.warn('flask icon',e)}}
+if(document.readyState=='complete')setTimeout(flaskIcon,900);else addEventListener('load',()=>setTimeout(flaskIcon,900));
+
 /* ---------- Колба поліпшень ---------- */
 const flasks=()=>(window.BPLACED||[]).filter(b=>b.id=='B_flask');
 const nearFlask=()=>flasks().find(b=>Math.hypot(b.x-P.x,b.z-P.z)<2.9);

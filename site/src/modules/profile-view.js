@@ -1,6 +1,6 @@
 /* 0.2.9: рівний і охайний профіль гравця (меню з аватарки → «Профіль»).
    Дві колонки, що починаються на одній лінії: ліворуч — картка героя (3D-модель, ім'я, сила акаунта, ID гравця),
-   праворуч — рівень і здоров'я смужками, плитки статистики, досягнення однаковими плитками з прогресом і «Мої істоти» зі значками попалів.
+   праворуч — рівень і здоров'я смужками, 4 плитки статистики (попали, у центрі, перемоги, спіймано), досягнення однаковими плитками з прогресом і «Мої істоти» зі значками попалів.
    Вміст бере з наявної вкладки (core-world.js, identity.js) — поле імені, 3D-перегляд і ID лишаються ті самі елементи з тими самими обробниками. */
 (function(){try{
 if(typeof pfTab!='function')return;
@@ -21,7 +21,7 @@ const css=document.createElement('style');css.textContent=`
 .pv-row b{color:#ffd34e;font-size:16px}.pv-row span{font-variant-numeric:tabular-nums;color:#c9d6e4}
 .pv-bar{height:10px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden}.pv-bar i{display:block;height:100%;border-radius:6px}
 .pv-bar.xp i{background:linear-gradient(90deg,#4fd0f0,#7fe3f5)}.pv-bar.hp i{background:linear-gradient(90deg,#e8574a,#ff9a7a)}
-.pv-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pv-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .pv-tile{background:rgba(255,255,255,.05);border:1px solid rgba(201,162,74,.25);border-radius:12px;padding:8px 6px;text-align:center}
 .pv-tile .v{display:flex;align-items:center;justify-content:center;gap:6px;font-size:18px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
 .pv-tile .v img{width:22px;height:22px}.pv-tile small{display:block;font-size:11px;color:#9fb6d8;margin-top:2px}
@@ -36,7 +36,7 @@ const css=document.createElement('style');css.textContent=`
 .pv-pal{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(201,162,74,.35);border-radius:12px;padding:4px 10px 4px 4px;font-size:13px;font-weight:700}
 .pv-pal img{width:30px;height:30px}.pv-pal i{font-style:normal;color:#ffd34e}
 .pv-empty{font-size:13px;color:#9fb6d8}
-@media (min-width:1000px){.pv-tiles{grid-template-columns:repeat(6,1fr)}.pv-ach .bd{flex-basis:calc((100% - 32px)/5)}}
+@media (min-width:1000px){.pv-ach .bd{flex-basis:calc((100% - 32px)/5)}}
 @media (max-width:640px){.pv{grid-template-columns:1fr}}/* рівні ряди: ПК — 6 плиток і 5 досягнень в один ряд; телефон — по 3, останній ряд по центру */`;document.head.appendChild(css);
 const fmt=n=>Math.max(0,Math.round(n)).toLocaleString('uk-UA');
 function build(){const c=document.getElementById('pfc');if(!c)return;const v3=document.getElementById('pv3'),nm=c.querySelector('.pnm'),pw=c.querySelector('.ppw');if(!v3||!nm||!pw)return;
@@ -54,7 +54,6 @@ function build(){const c=document.getElementById('pfc');if(!c)return;const v3=do
    <div><div class='pv-row'><span>❤️ Здоров’я</span><span>${fmt(Math.ceil(hp))} / ${fmt(HMax)}</span></div><div class='pv-bar hp'><i style='width:${Math.min(100,hp/Math.max(1,HMax)*100)}%'></i></div></div></div>
   <div class='pv-tiles'>
    <div class='pv-tile'><div class='v'>🐾 ${all}</div><small>попалів</small></div><div class='pv-tile'><div class='v'>🏠 ${all-team}</div><small>у Попал-центрі</small></div>
-   <div class='pv-tile'><div class='v'>${ico('w')||'🪵'} ${fmt(S.w||0)}</div><small>деревини</small></div><div class='pv-tile'><div class='v'>${ico('s')||'🪨'} ${fmt(S.s||0)}</div><small>каменю</small></div>
    <div class='pv-tile'><div class='v'>⚔️ ${fmt(S.k||0)}</div><small>перемог</small></div><div class='pv-tile'><div class='v'>${ico('b')||'🔮'} ${fmt(S.c||0)}</div><small>спіймано</small></div></div>
   <div class='card'><h4>Досягнення</h4><div class='pv-ach'>${ach.map(([k,e,n,u,have,need],i)=>{const ok=have>=need;return`<div class='bd${ok?' ok':''}'><span>${oldB[i]||e}</span><b>${n}</b><small>${ok?'✔ виконано':fmt(Math.min(have,need))+' / '+need+' '+u}</small><div class='pg'><i style='width:${Math.min(100,have/need*100)}%'></i></div></div>`}).join('')}</div></div>
   <div class='card'><h4>Мої істоти</h4>${pc?`<div class='pv-pals'>${pc}</div>`:'<div class=\'pv-empty\'>Поки немає. Ловіть істот кулями 🔮</div>'}</div>
