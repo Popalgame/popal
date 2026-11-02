@@ -48,6 +48,11 @@ button.sec{background:#24435a}button.red{background:#9a3a30}button:disabled{opac
    <label>Текст листа</label><textarea id="px" placeholder="Дякуємо, що граєте в Popal!"></textarea>
    <button id="pcreate" style="margin-top:10px">Створити промокод</button><div class="msg" id="pmsg"></div></div>
 
+  <div class="card"><h2>📥 Імпорт з генератора</h2>
+   <p style="margin:0 0 6px;color:var(--mut);font-size:13px">Вставте «Пакет для гри» з артефакта «Генератор промокодів Popal» — усі коди пачки запрацюють. Коди, що вже існують, пропускаються.</p>
+   <textarea id="imp" placeholder='{"popalPromo":1,"promos":[...]}' style="min-height:90px;font-family:ui-monospace,monospace;font-size:12px"></textarea>
+   <button id="impGo" style="margin-top:8px">Імпортувати</button><div class="msg" id="imsg"></div></div>
+
   <div class="card"><h2>📋 Промокоди</h2><div class="list" id="plist"><small>Завантаження…</small></div></div>
 
   <div class="card"><h2>✉️ Надіслати лист</h2>
@@ -111,6 +116,19 @@ async function loadPromos(){const L=$('plist');try{const s=await db.collection('
  L.querySelectorAll('[data-tog]').forEach(b=>b.onclick=async()=>{await db.collection('promo').doc(b.dataset.tog).update({off:b.dataset.v=='1'});loadPromos()});
  L.querySelectorAll('[data-delp]').forEach(b=>b.onclick=async()=>{if(!confirm('Видалити промокод '+b.dataset.delp+'?'))return;await db.collection('promo').doc(b.dataset.delp).delete();loadPromos()})}
  catch(e){L.innerHTML='<small style="color:var(--bad)">Не вдалося завантажити: '+esc(e.code||e.message)+'</small>'}}
+
+/* ---------- імпорт пачки з генератора ---------- */
+$('impGo').onclick=async()=>{let d;try{d=JSON.parse($('imp').value.trim())}catch(e){return say('imsg','Це не схоже на пакет — скопіюйте його кнопкою «Скопіювати пакет для гри»')}
+ if(!d||d.popalPromo!==1||!Array.isArray(d.promos)||!d.promos.length)return say('imsg','У пакеті немає промокодів');
+ if(d.promos.length>500)return say('imsg','Забагато кодів в одному пакеті (максимум 500)');
+ const b=$('impGo');b.disabled=true;let ok=0,skip=0,bad=0;
+ try{for(const p of d.promos){const code=String(p.code||'').toUpperCase();const items={};for(const[k,v]of Object.entries(p.items||{})){const n=Math.floor(+v);if(NAME[k]&&n>0)items[k]=Math.min(n,100000)}
+   if(!/^[A-Z0-9_-]{3,24}$/.test(code)||!Object.keys(items).length){bad++;continue}
+   const ref=db.collection('promo').doc(code);if((await ref.get()).exists){skip++;continue}
+   await ref.set({items,max:Math.max(0,parseInt(p.max)||0),uses:0,exp:+p.exp||0,title:String(p.title||'Подарунок за промокодом').slice(0,80),text:String(p.text||'').slice(0,500),t:Date.now(),batch:String(d.batch||'').slice(0,60)});ok++;
+   if(ok%20==0)say('imsg','⏳ Імпортовано '+ok+' з '+d.promos.length+'…',1)}
+  say('imsg','✅ Імпортовано: '+ok+(skip?' · уже існували: '+skip:'')+(bad?' · пропущено з помилками: '+bad:''),1);$('imp').value='';loadPromos()}
+ catch(e){say('imsg','⚠️ '+(e.code=='permission-denied'?'Немає дозволу — перевірте правила Firestore':e.message)+' (імпортовано '+ok+')')}finally{b.disabled=false}};
 
 /* ---------- листи ---------- */
 $('msend').onclick=async()=>{const items=readItems($('mi')),l={title:$('mt').value.trim()||'Лист від розробника',text:$('mx').value.trim(),items,t:Date.now(),from:'Розробник Popal'};
