@@ -2,6 +2,7 @@
 window.palDefend=function(w){
  try{
   const p=pals[selP];if(!p||!w||p.nd||(window.palOn&&!palOn()))return;
+  if(window.plPalCombat){w._fightT=10;return}/* 0.2.9: у бій вступає супутник за своєю роллю — pal-growth.js */
   const r=window.PW?PW.palHit(p,w):null,dm=r?r.v:Math.round((6+3*(p.lv||1))*(window.elM?elM(p.ty,w.ty):1));/* 0.5.x: формула урону — combat.js */
   /* 0.5.x: ривок не в саму істоту (вона стоїть упритул до героя), а збоку від неї ~1.4 м — з того боку, що ближчий до попала */
   const ux=P.x-w.x,uz=P.z-w.z,ul=Math.hypot(ux,uz)||1,bx=ux/ul,bz=uz/ul,c=-.17,sn=.98;
