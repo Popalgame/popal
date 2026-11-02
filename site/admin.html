@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Popal · Розробник</title>
+<!-- Сторінка розробника: промокоди й листи гравцям. У гру не входить і з гри не відкривається.
+     Захист — правила Firestore (docs/firestore-rules-mail-promo.md): писати можуть лише з акаунта розробника;
+     сторінка додатково нічого не показує іншим акаунтам. -->
+<style>
+:root{--bg:#0c1822;--card:#132636;--line:#2b4a62;--gold:#e2bf67;--txt:#e8eef6;--mut:#9fb3c8;--ok:#5fb04a;--bad:#ff8a7a;--cy:#7fe3f5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+h1{font-size:22px;margin:0 0 4px;color:var(--gold)}h2{font-size:17px;margin:0 0 10px;color:var(--cy)}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 140px}
+label{display:block;font-size:12px;color:var(--mut);margin:6px 0 3px}
+input,textarea,select{width:100%;background:#0a1520;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:9px 10px;font:inherit}
+textarea{min-height:64px;resize:vertical}
+button{border:0;border-radius:10px;padding:10px 14px;font:700 15px inherit;font-family:inherit;color:#fff;background:linear-gradient(#5fb04a,#2f8a3a);cursor:pointer}
+button.sec{background:#24435a}button.red{background:#9a3a30}button:disabled{opacity:.45}
+.msg{min-height:20px;font-size:14px;margin-top:8px}.msg.ok{color:#9ff0a8}.msg.err{color:var(--bad)}
+.items{display:flex;flex-direction:column;gap:6px;margin-top:4px}.it{display:flex;gap:6px}.it select{flex:3}.it input{flex:1;min-width:70px}.it button{flex:none;padding:6px 10px}
+.list{display:flex;flex-direction:column;gap:8px}.li{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.li b{color:var(--gold)}.li small{color:var(--mut)}.li .sp{flex:1}.li button{padding:6px 10px;font-size:13px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.top .sp{flex:1}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="top"><div><h1>🛠️ Popal · Розробник</h1><small id="who" style="color:var(--mut)">Перевірка входу…</small></div><span class="sp"></span><button id="out" class="sec hide">Вийти</button></div>
+
+ <div id="login" class="card hide"><h2>Вхід</h2>
+  <button id="g">Увійти через Google</button>
+  <div class="row" style="margin-top:10px"><input id="em" type="email" placeholder="Пошта" autocomplete="username"><input id="pw" type="password" placeholder="Пароль" autocomplete="current-password"></div>
+  <button id="ep" class="sec" style="margin-top:8px">Увійти поштою</button><div class="msg" id="lm"></div></div>
+
+ <div id="deny" class="card hide"><h2>Немає доступу</h2><p>Ця сторінка лише для акаунта розробника.</p></div>
+
+ <div id="app" class="hide">
+  <div class="card"><h2>🎟️ Новий промокод</h2>
+   <div class="row"><div><label>Код (латиниця, цифри, _ -)</label><input id="pc" maxlength="24" placeholder="POPAL2026" style="text-transform:uppercase"></div>
+    <div><label>Скільки разів (0 — без меж)</label><input id="pm" type="number" min="0" value="0"></div><div><label>Діє днів (0 — завжди)</label><input id="pd" type="number" min="0" value="0"></div></div>
+   <label>Подарунок</label><div class="items" id="pi"></div><button class="sec" id="pia" style="margin-top:6px">+ Додати предмет</button>
+   <label>Заголовок листа</label><input id="pt" placeholder="Подарунок за промокодом">
+   <label>Текст листа</label><textarea id="px" placeholder="Дякуємо, що граєте в Popal!"></textarea>
+   <button id="pcreate" style="margin-top:10px">Створити промокод</button><div class="msg" id="pmsg"></div></div>
+
+  <div class="card"><h2>📋 Промокоди</h2><div class="list" id="plist"><small>Завантаження…</small></div></div>
+
+  <div class="card"><h2>✉️ Надіслати лист</h2>
+   <div class="row"><div><label>Кому</label><select id="mto"><option value="one">Гравцю за ID</option><option value="all">Усім гравцям</option></select></div><div id="mid"><label>ID гравця</label><input id="mpid" placeholder="0007" inputmode="numeric"></div></div>
+   <label>Заголовок</label><input id="mt" placeholder="Лист від розробника">
+   <label>Текст</label><textarea id="mx"></textarea>
+   <label>Предмети (не обов’язково)</label><div class="items" id="mi"></div><button class="sec" id="mia" style="margin-top:6px">+ Додати предмет</button>
+   <button id="msend" style="margin-top:10px">Надіслати</button><div class="msg" id="mmsg"></div></div>
+
+  <div class="card"><h2>📨 Листи всім гравцям</h2><div class="list" id="alist"><small>Завантаження…</small></div></div>
+ </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+const OWN='d.polataiko@gmail.com';
+/* предмети гри (ключ → назва), як у рюкзаку */
+const ITEMS=[['cr2','💎 Кристал еволюції'],['cr3','💜 Кристал вознесіння'],['w','🪵 Деревина'],['s','🪨 Камінь'],['sti','Палки'],['coal','Вугілля'],['ore','Залізна руда'],['ing','Залізний злиток'],['wool','Шерсть'],['lth','Шкіра'],['sd','Насіння ягід'],
+ ['be','Ягоди'],['mu','Гриби'],['gm','Смажені гриби'],['pie','Ягідний пиріг'],['b','Світло-синя куля'],['bg','Зелена куля'],['bb','Синя куля'],['br','Червона куля'],
+ ['axw','Дерев’яна сокира'],['axe','Кам’яна сокира'],['axm','Металева сокира'],['pkw','Дерев’яна кирка'],['pick','Кам’яна кирка'],['pkm','Металева кирка'],['bp1','Шкіряна торба'],['bp2','Рюкзак мандрівника'],['bp3','Рюкзак слідопита']];
+const NAME=Object.fromEntries(ITEMS);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const say=(id,t,ok)=>{const e=$(id);e.textContent=t;e.className='msg '+(ok?'ok':'err')};
+firebase.initializeApp({apiKey:'AIzaSyDSgadzJVuuCZB4qzXuqx1RXLkP4M8JBoQ',authDomain:'popal-4da6b.firebaseapp.com',projectId:'popal-4da6b',storageBucket:'popal-4da6b.firebasestorage.app',messagingSenderId:'579761049389',appId:'1:579761049389:web:24f36059be545e2a65cda4'});
+const auth=firebase.auth(),db=firebase.firestore();
+
+/* ---------- вхід ---------- */
+$('g').onclick=()=>{const p=new firebase.auth.GoogleAuthProvider();auth.signInWithPopup(p).catch(e=>{if(/popup/.test(e.code||''))auth.signInWithRedirect(p);else say('lm',e.message)})};
+$('ep').onclick=()=>auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value).catch(e=>say('lm','Не вдалося увійти: '+(e.code||e.message)));
+$('out').onclick=()=>auth.signOut();
+auth.onAuthStateChanged(u=>{const own=!!u&&(u.email||'').toLowerCase()===OWN;
+ $('who').textContent=u?('Ви увійшли як '+(u.email||u.uid)):'Не виконано вхід';$('out').classList.toggle('hide',!u);
+ $('login').classList.toggle('hide',!!u);$('deny').classList.toggle('hide',!u||own);$('app').classList.toggle('hide',!own);
+ if(own){loadPromos();loadAll()}});
+
+/* ---------- вибір предметів ---------- */
+function itemRow(box){const d=document.createElement('div');d.className='it';d.innerHTML=`<select>${ITEMS.map(([k,n])=>`<option value="${k}">${esc(n)} (${k})</option>`).join('')}</select><input type="number" min="1" value="1"><button class="red" title="Прибрати">✕</button>`;
+ d.querySelector('button').onclick=()=>d.remove();box.appendChild(d)}
+const readItems=box=>{const r={};box.querySelectorAll('.it').forEach(d=>{const k=d.querySelector('select').value,n=Math.floor(+d.querySelector('input').value);if(k&&n>0)r[k]=(r[k]||0)+Math.min(n,100000)});return r};
+const itemsTxt=o=>Object.entries(o||{}).map(([k,n])=>esc(NAME[k]||k)+' ×'+n).join(', ')||'—';
+$('pia').onclick=()=>itemRow($('pi'));$('mia').onclick=()=>itemRow($('mi'));itemRow($('pi'));
+$('mto').onchange=()=>$('mid').classList.toggle('hide',$('mto').value=='all');
+
+/* ---------- промокоди ---------- */
+$('pcreate').onclick=async()=>{const code=$('pc').value.trim().toUpperCase().replace(/\s+/g,''),items=readItems($('pi')),max=Math.max(0,parseInt($('pm').value)||0),days=Math.max(0,parseFloat($('pd').value)||0);
+ if(!/^[A-Z0-9_-]{3,24}$/.test(code))return say('pmsg','Код: 3–24 символи — латиниця, цифри, _ або -');
+ if(!Object.keys(items).length)return say('pmsg','Додайте хоча б один предмет');
+ const b=$('pcreate');b.disabled=true;
+ try{const ref=db.collection('promo').doc(code);if((await ref.get()).exists){say('pmsg','Такий код уже є');return}
+  await ref.set({items,max,uses:0,exp:days?Date.now()+days*864e5:0,title:$('pt').value.trim()||'Подарунок за промокодом',text:$('px').value.trim(),t:Date.now()});
+  say('pmsg','✅ Промокод '+code+' створено',1);$('pc').value='';loadPromos()}
+ catch(e){say('pmsg','⚠️ '+(e.code=='permission-denied'?'Немає дозволу — перевірте правила Firestore':e.message))}finally{b.disabled=false}};
+async function loadPromos(){const L=$('plist');try{const s=await db.collection('promo').orderBy('t','desc').limit(50).get();
+ L.innerHTML=s.empty?'<small>Промокодів ще немає</small>':s.docs.map(d=>{const p=d.data(),exp=p.exp?(p.exp<Date.now()?'минув ':'до ')+new Date(p.exp).toLocaleDateString('uk-UA'):'безстроковий';
+  return`<div class="li"><b>${esc(d.id)}</b><small>${p.uses||0}/${p.max||'∞'} · ${exp}${p.off?' · <span style="color:var(--bad)">вимкнено</span>':''}</small><span class="sp"></span><small>${itemsTxt(p.items)}</small>
+  <button class="sec" data-tog="${esc(d.id)}" data-v="${p.off?0:1}">${p.off?'Увімкнути':'Вимкнути'}</button><button class="red" data-delp="${esc(d.id)}">Видалити</button></div>`}).join('');
+ L.querySelectorAll('[data-tog]').forEach(b=>b.onclick=async()=>{await db.collection('promo').doc(b.dataset.tog).update({off:b.dataset.v=='1'});loadPromos()});
+ L.querySelectorAll('[data-delp]').forEach(b=>b.onclick=async()=>{if(!confirm('Видалити промокод '+b.dataset.delp+'?'))return;await db.collection('promo').doc(b.dataset.delp).delete();loadPromos()})}
+ catch(e){L.innerHTML='<small style="color:var(--bad)">Не вдалося завантажити: '+esc(e.code||e.message)+'</small>'}}
+
+/* ---------- листи ---------- */
+$('msend').onclick=async()=>{const items=readItems($('mi')),l={title:$('mt').value.trim()||'Лист від розробника',text:$('mx').value.trim(),items,t:Date.now(),from:'Розробник Popal'};
+ if(!l.text&&!Object.keys(items).length)return say('mmsg','Напишіть текст або додайте предмети');
+ const b=$('msend');b.disabled=true;
+ try{if($('mto').value=='all'){if(!confirm('Надіслати лист усім гравцям?'))return;await db.collection('mailAll').add(l);say('mmsg','✅ Лист надіслано всім гравцям',1);loadAll()}
+  else{const pid=$('mpid').value.replace(/\D/g,'').padStart(4,'0');if(pid=='0000')return say('mmsg','Вкажіть ID гравця');
+   const q=await db.collection('profiles').where('pid','==',pid).limit(1).get();if(q.empty)return say('mmsg','Гравця з ID '+pid+' не знайдено');
+   await db.collection('mail').doc(q.docs[0].id).collection('items').add(l);say('mmsg','✅ Лист надіслано гравцю ID '+pid+' ('+(q.docs[0].data().name||'')+')',1)}
+  $('mx').value='';$('mi').innerHTML=''}
+ catch(e){say('mmsg','⚠️ '+(e.code=='permission-denied'?'Немає дозволу — перевірте правила Firestore':e.message))}finally{b.disabled=false}};
+async function loadAll(){const L=$('alist');try{const s=await db.collection('mailAll').orderBy('t','desc').limit(30).get();
+ L.innerHTML=s.empty?'<small>Ще не надсилали</small>':s.docs.map(d=>{const m=d.data();return`<div class="li"><b>${esc(m.title)}</b><small>${new Date(m.t).toLocaleString('uk-UA')}</small><span class="sp"></span><small>${itemsTxt(m.items)}</small><button class="red" data-dela="${d.id}">Видалити</button></div>`}).join('');
+ L.querySelectorAll('[data-dela]').forEach(b=>b.onclick=async()=>{if(!confirm('Видалити цей лист для всіх? Хто вже забрав — залишить собі.'))return;await db.collection('mailAll').doc(b.dataset.dela).delete();loadAll()})}
+ catch(e){L.innerHTML='<small style="color:var(--bad)">Не вдалося завантажити: '+esc(e.code||e.message)+'</small>'}}
+})();
+</script>
+</body>
+</html>
