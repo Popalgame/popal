@@ -2,7 +2,7 @@
    • Кристал еволюції (cr2) — форма 2 з 25 рівня; Кристал вознесіння (cr3, рідкісніший, із сильнішого боса) — форма 3 з 50 рівня.
      Кристали не мають ваги в рюкзаку (займають лише клітинку). Поки босів немає, гравець ID 0001 отримує по 20 кожного для тестів.
    • Колба поліпшень (B_flask, world-007.js): підійдіть і натисніть «Дія» → оберіть попала → кристал → анімація перетворення.
-   • Нова форма: більший розмір, сяйво стихії, кристали-гребінь (форма 2), німб і крила (форма 3); сильніші атака, захист і HP (pal-growth.js).
+   • Нова форма: трохи більший розмір (+6% / +12%), сяйво стихії й нові частини тіла кожного виду (pal-forms.js); сильніші атака, захист і HP (pal-growth.js).
      Рівень і атаки лишаються. Дикі попали на локаціях 1–2 завжди у формі 1. */
 (function(){try{
 if(typeof pals=='undefined'||typeof THREE=='undefined')return;
@@ -35,7 +35,7 @@ const gift=setInterval(()=>{if(inv._crg){clearInterval(gift);return}if(window.my
 /* ---------- вигляд форм ---------- */
 const ECOL={gr:0x5fdc7a,ea:0xd9a25a,fi:0xff7a2a,da:0xa77ae6,ne:0xffb8d8,ai:0xbfe8ff,wa:0x3ad0ff};
 const elC=ty=>{const e=(T[ty]&&T[ty].e)||['ne'];return ty==6?0x9fe8ff:ty==7?0xffe14a:ty==1?0x7fe3f5:ECOL[e[0]]||0xffffff};
-const FS=[1,1,1.15,1.3];
+const FS=[1,1,1.06,1.12];/* форма лише трохи більша */
 const glowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);
  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.4,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
 const add_=(o,c)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
