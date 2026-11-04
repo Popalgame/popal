@@ -13,6 +13,8 @@ const BUI=[
 {id:'B_fur',n:'Плавильня',i:'🏭',c:{s:10,w:4},d:'Відкриває залізні злитки',p:3,u:1},
 {id:'B_garden',n:'Грядка',i:'🌱',c:{w:8,s:2,sd:2},d:'9 лунок (3×3) для насіння ягід. Садіть і збирайте самі — або це зробить попал-збирач. Поставлені поруч грядки примагнічуються одна до одної',p:2},/* 0.5.x: замість старої «Ягідної грядки» (garden.js) */
 {id:'B_flask',n:'Колба поліпшень',i:'🧪',c:{w:15,s:20,sti:4},d:'Еволюція попалів: покладіть попала 25+ рівня й Кристал еволюції — він набуде нової форми',p:3,u:1},/* 0.2.9: evolution.js */
+{id:'B_alch',n:'Стіл зіль',i:'⚗️',c:{w:8,s:4,sti:2},d:'Біля нього варять зілля здоров’я з ягід і грибів',p:2,u:1},/* 0.3.0: potions.js */
+{id:'B_bask',n:'Кошик з їжею',i:'🧺',c:{w:4,sti:4},d:'Покладіть сюди їжу — голодні попали бригади самі прийдуть поїсти',p:1},/* 0.3.0: pal-needs.js */
 {id:'B_lamp',n:'Ліхтар',i:'🏮',c:{w:2,s:1},d:'Світить уночі',p:1},
 {id:'B_fen',n:'Паркан',i:'🚧',c:{w:4},d:'Прикрашає базу',p:1}];
 const BI={};BUI.forEach(b=>{BI[b.id]=b;IT[b.id]=[b.i,b.n];if(inv[b.id]==null)inv[b.id]=0});
@@ -20,7 +22,7 @@ if(!Array.isArray(inv._b))inv._b=[];
 /* 0.5.x: стара «Ягідна грядка» стає новою грядкою */
 if(inv.B_farm){inv.B_garden=(inv.B_garden||0)+inv.B_farm;inv.B_farm=0}inv._b.forEach(b=>{if(b[0]=='B_farm')b[0]='B_garden'});
 RC.push(...BUI.map(b=>({id:b.id,n:b.n,c:b.c,d:b.d+' · +'+b.p+' до бази',bld:1})));
-const REQ={bg:'B_wb',bb:'B_wb2',br:'B_wb3',B_wb2:'B_wb',B_wb3:'B_wb2',B_nest5:'B_wb',axm:'B_wb',pkm:'B_wb',bp3:'B_wb',ing:'B_fur',gm:'B_kit',pie:'B_kit'}/* 0.1.28: їжу готують лише на кухні-багатті */;
+const REQ={bg:'B_wb',bb:'B_wb2',br:'B_wb3',B_wb2:'B_wb',B_wb3:'B_wb2',B_nest5:'B_wb',axm:'B_wb',pkm:'B_wb',bp3:'B_wb',ing:'B_fur',gm:'B_kit',pie:'B_kit',hpp:'B_alch'}/* 0.1.28: їжу готують лише на кухні-багатті */;
 const built=id=>inv._b.some(x=>x[0]==id)||(window.REALM==='isle'&&!!window.ISLE&&!!window.ISLE.BASE&&window.ISLE.BASE.some(b=>b[0]==id));/* на острові база табору (realm.js, ISLE.BASE) */window.isBuilt=built;
 const LV=[0,2,5,9,14];
 window.campPts=()=>inv._b.reduce((a,x)=>a+(BI[x[0]]?BI[x[0]].p:0),0);
@@ -53,6 +55,19 @@ else if(id=='B_flask'){/* 0.2.9: Колба поліпшень — кам'яна
  add(g,Cy(.05,.05,.3,8),MT,0,2.4,0);const tip=new THREE.Mesh(new THREE.SphereGeometry(.09,12,9),new THREE.MeshStandardMaterial({color:0x7fe3f5,emissive:0x7fe3f5,emissiveIntensity:1.4}));tip.position.y=2.58;g.add(tip);
  for(const s of[-1,1]){add(g,Cy(.05,.05,1.5,8),MT,s*.72,1.12,0);add(g,B(.26,.06,.06),MT,s*.62,1.8,0);add(g,B(.26,.06,.06),MT,s*.62,.5,0)}
  g.userData.flask={lq,gl,tip}}
+else if(id=='B_alch'){/* 0.3.0: Стіл зіль — дерев'яний стіл, котелок на підставці, пляшечки з кольоровим зіллям */
+ const WD=0x9a6a3e,DK=0x6e4a2a;add(g,B(1.5,.1,.8),WD,0,.82,0);for(const[x,z]of[[-.66,-.32],[.66,-.32],[-.66,.32],[.66,.32]])add(g,B(.09,.8,.09),DK,x,.4,z);add(g,B(1.36,.06,.06),DK,0,.3,.32);add(g,B(1.36,.06,.06),DK,0,.3,-.32);
+ add(g,Cy(.05,.05,.34,6),0x2a2a33,-.32,1.04,0);const pot=add(g,new THREE.SphereGeometry(.24,16,10,0,Math.PI*2,Math.PI*.28,Math.PI*.72),0x3a3d48,-.32,1.18,0);pot.material.side=THREE.DoubleSide;
+ const brew=new THREE.Mesh(new THREE.CircleGeometry(.2,16),new THREE.MeshStandardMaterial({color:0xff5a7a,emissive:0xff2a5a,emissiveIntensity:.9}));brew.rotation.x=-Math.PI/2;brew.position.set(-.32,1.3,0);g.add(brew);
+ const BT=[[0xff4a6a,.22,.18],[0x5fe08a,.42,-.16],[0x5fb8ff,.6,.14]];for(const[c,x,z]of BT){const gm=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.55,transparent:true,opacity:.85,roughness:.15});
+  const b=new THREE.Mesh(new THREE.SphereGeometry(.1,12,9),gm);b.position.set(x,.97,z);g.add(b);add(g,Cy(.03,.035,.1,8),0xdfe8ef,x,1.1,z);add(g,Cy(.035,.035,.04,8),0x8a5a32,x,1.17,z)}
+ add(g,Cy(.08,.06,.1,10),0x8a8f9e,.05,.92,.24);g.userData.brew=brew}
+else if(id=='B_bask'){/* 0.3.0: Кошик з їжею — плетений кошик, повний ягід і грибів (наповнення залежить від запасу) */
+ const WK=0xc08a4a,WD=0x8a5a2e,bk=new THREE.Mesh(new THREE.CylinderGeometry(.62,.5,.5,16,1,true),new THREE.MeshStandardMaterial({color:WK,roughness:.9}));bk.material.side=THREE.DoubleSide;bk.position.y=.27;bk.castShadow=true;g.add(bk);
+ add(g,Cy(.5,.5,.05,16),WD,0,.04,0);for(const y of[.1,.27,.44]){const r=new THREE.Mesh(new THREE.TorusGeometry(.5+y*.24,.035,6,22),new THREE.MeshStandardMaterial({color:WD,roughness:.9}));r.rotation.x=Math.PI/2;r.position.y=y+.03;g.add(r)}
+ const fill=new THREE.Group();g.add(fill);for(let i=0;i<14;i++){const a=i*2.4,rr=.12+((i*37)%10)/10*.38,c=[0xd8304a,0x4a5ad8,0xd8304a,0x7a4ad0][i%4];const b=new THREE.Mesh(new THREE.SphereGeometry(.09,10,8),new THREE.MeshStandardMaterial({color:c,roughness:.9}));b.position.set(Math.cos(a)*rr,.0,Math.sin(a)*rr);fill.add(b)}
+ for(const[x,z]of[[.18,.12],[-.2,-.1]]){add(fill,Cy(.03,.04,.12,6),0xf4ead8,x,.02,z);const c=add(fill,new THREE.SphereGeometry(.1,12,8,0,Math.PI*2,0,Math.PI/2),0xd8483a,x,.08,z);c.scale.y=.7}
+ fill.position.y=.42;add(g,new THREE.TorusGeometry(.32,.03,6,16,Math.PI),WD,0,.6,0).rotation.x=0;g.userData.bask={fill}}
 else if(id=='B_lamp'){add(g,Cy(.05,.06,1.6,6),0x2a2a33,0,.8,0);const l=new THREE.Mesh(B(.22,.28,.22),LAMP);l.position.y=1.72;g.add(l);add(g,Co(.2,.15,4),0x2a2a33,0,1.94,0,Math.PI/4);const lt=new THREE.PointLight(0xffc070,0,10);lt.position.y=1.7;g.add(lt);g.userData.light=lt}
 else{for(const x of[-.8,0,.8])add(g,B(.12,.8,.12),W,x,.4,0);for(const y of[.3,.6])add(g,B(1.8,.08,.06),D,0,y,0)}
 return g}
