@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Popal — безкоштовна 3D-гра в браузері</title>
+<title>Regnum Land — безкоштовна 3D-гра в браузері</title>
 <meta name="description" content="Лови попалів, будуй базу й бийся разом зі своїми помічниками. Безкоштовна 3D-гра для телефона й ПК, що працює просто в браузері.">
 <link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.jpg"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1c26"><meta property="og:image" content="https://popalgame.pl/img/shots/coast.webp">
-<link rel="canonical" href="https://popalgame.pl/"><meta property="og:title" content="Popal"><meta property="og:description" content="Лови попалів, будуй базу й бийся разом з помічниками. Безкоштовна 3D-гра в браузері."><meta property="og:url" content="https://popalgame.pl/">
+<link rel="canonical" href="https://popalgame.pl/"><meta property="og:title" content="Regnum Land"><meta property="og:description" content="Лови попалів, будуй базу й бийся разом з помічниками. Безкоштовна 3D-гра в браузері."><meta property="og:url" content="https://popalgame.pl/">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="img/shots/coast.webp">
@@ -49,7 +49,7 @@ h2{font-size:clamp(28px,4.6vw,46px);margin:10px 0 14px;color:var(--cream)}
 .chip{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px;color:var(--cream);background:rgba(11,28,38,.6);border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 10px;text-decoration:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .chip i{width:9px;height:9px;border-radius:50%;background:#5fe08a;box-shadow:0 0 0 4px rgba(95,224,138,.18)}
 .hero h1{display:flex;align-items:center;gap:18px;font-size:clamp(54px,10vw,112px);letter-spacing:-.02em;margin:22px 0 6px;text-shadow:0 6px 30px rgba(0,0,0,.45)}
-.hero h1 img{width:clamp(62px,9vw,96px);height:auto;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.hero h1 img.rl{width:clamp(240px,52vw,460px);height:auto;max-width:100%;border-radius:0;box-shadow:none;filter:drop-shadow(0 12px 28px rgba(0,0,0,.5))}.hero h1 img:not(.rl){width:clamp(62px,9vw,96px);height:auto;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .motto{font:800 clamp(13px,1.6vw,16px) Unbounded,system-ui,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
 .hero p.sub{max-width:34ch;font-size:clamp(18px,2.2vw,22px);margin:18px 0 30px;color:#e7efe9}
 .cta{display:flex;flex-wrap:wrap;gap:12px}
@@ -136,16 +136,16 @@ footer a{color:var(--cream)}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.hero .bg,.crit img{animation:none}.crit,.btn{transition:none}}
 </style></head><body>
 <nav class="nav" aria-label="Головне меню"><div class="wrap">
-<a class="brand" href="#top"><img src="favicon.png" alt="" width="32" height="32">Popal</a>
+<a class="brand" href="#top"><img src="favicon.png" alt="" width="32" height="32">Regnum Land</a>
 <div class="links"><a href="#game">Гра</a><a href="#creatures">Істоти</a><a href="#new">Що нового</a><a href="#download">Встановити</a></div>
-<a class="ig" href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener" aria-label="Popal в Instagram"><svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='ig' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(#ig)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg></a>
+<a class="ig" href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener" aria-label="Regnum Land в Instagram"><svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='ig' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(#ig)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg></a>
 <a class="btn main" href="game.html">Грати</a>
 </div></nav>
 
-<header class="hero" id="top"><div class="bg" role="img" aria-label="Герой на березі моря у світі Popal"></div>
+<header class="hero" id="top"><div class="bg" role="img" aria-label="Герой на березі моря у світі Regnum Land"></div>
 <div class="wrap">
 <a class="chip" href="#new"><i></i><span id="verChip">Нове оновлення</span></a>
-<h1><img src="logo.jpg" alt="" width="96" height="86">Popal</h1>
+<h1><img class="rl" src="regnum-land.webp" alt="Regnum Land" width="900" height="604"></h1>
 <div class="motto">Досліджуй · Приручай · Будуй</div>
 <p class="sub">Безкоштовна 3D-гра в браузері: лови попалів, будуй базу й бийся разом зі своїми помічниками.</p>
 <div class="cta"><a class="btn main" href="game.html">▶ Грати безкоштовно</a><a class="btn ghost" href="#download">Встановити як застосунок</a></div>
@@ -225,7 +225,7 @@ footer a{color:var(--cream)}
 <section id="download"><div class="wrap">
 <span class="eyebrow">Встановлення</span>
 <h2>Встановити гру</h2>
-<p class="lead">Popal встановлюється як застосунок з власною іконкою й відкривається на весь екран. Обирай свій пристрій.</p>
+<p class="lead">Regnum Land встановлюється як застосунок з власною іконкою й відкривається на весь екран. Обирай свій пристрій.</p>
 <div class="dls">
 <div class="dc" data-p="android"><span class="badge">Для вашого пристрою</span><div class="ic">🤖</div><h3>Android</h3>
 <a class="dbtn" id="btnAndroid" href="game.html">Завантажити для Android</a>
@@ -247,7 +247,7 @@ footer a{color:var(--cream)}
 <a class="follow" href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener"><span class="ig"><svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='ig' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(#ig)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg></span>Слідкуй за оновленнями @popalgame</a>
 </div></section>
 
-<footer>Popal, 2026. popalgame.pl · версія Beta 0.2.9 · <a href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener">Instagram</a></footer>
+<footer>Regnum Land, 2026. popalgame.pl · версія Beta 0.2.9 · <a href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener">Instagram</a></footer>
 <script>
 /* Прямі посилання на файли (необов'язково): коли з'являться APK чи інсталятор для ПК, впишіть сюди шлях, і кнопка стане завантаженням файлу. */
 const ANDROID_URL='',PC_URL='';

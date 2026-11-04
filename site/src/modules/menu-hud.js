@@ -13,7 +13,7 @@ new MutationObserver(sync).observe(mm,{attributes:true,attributeFilter:['style']
 #mmig:active{transform:scale(.93)}#mmig svg{width:100%;height:100%;display:block}`;document.head.appendChild(mc);
  if(getComputedStyle(mm).position=='static')mm.style.position='fixed';
  if(ver){const v=document.createElement('div');v.id='mmver';v.textContent='Beta '+ver;mm.appendChild(v)}
- const ig=document.createElement('a');ig.id='mmig';ig.href='https://www.instagram.com/popalgame/';ig.target='_blank';ig.rel='noopener';ig.setAttribute('aria-label','Popal в Instagram');
+ const ig=document.createElement('a');ig.id='mmig';ig.href='https://www.instagram.com/popalgame/';ig.target='_blank';ig.rel='noopener';ig.setAttribute('aria-label','Regnum Land в Instagram');
  ig.innerHTML=`<svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='igg' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect x='0' y='0' width='24' height='24' fill='url(#igg)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg>`;
  mm.appendChild(ig)}
 let hid=0;if(typeof ANI!='undefined')ANI.push(()=>{if(typeof pl=='undefined'||!pl)return;

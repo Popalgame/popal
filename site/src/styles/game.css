@@ -250,3 +250,7 @@ body.bmode #btip{display:block;position:fixed;z-index:22;left:50%;transform:tran
 #bbar .bmat .btab{padding:4px 9px}
 #bbar .bmat .bmt{font-size:16px;padding:2px 10px}
 #bbar .bitems button i{flex-direction:column;justify-content:center}
+
+/* Regnum Land: прозорий логотип — без маски, вміщується в ширину телефона */
+#spt img,#mmb h1 img{-webkit-mask-image:none;mask-image:none;max-width:88vw;object-fit:contain}
+#spt img{height:min(46vh,300px)}

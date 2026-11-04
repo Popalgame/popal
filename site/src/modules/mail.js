@@ -19,7 +19,7 @@ const itemsTxt=o=>Object.entries(o||{}).map(([k,n])=>`<span class='mi'>${ico(k)}
 /* ---------- листи ---------- */
 let remote=[],allMail=[],busy=0;
 /* системний лист (зберігається в сейві) — window.plMail.send({title,text,items,from}) */
-function sendLocal(l){const id='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);inv._mail.unshift({id,t:Date.now(),from:l.from||'Popal',title:l.title||'Лист',text:l.text||'',items:cleanItems(l.items)});try{save()}catch(_){}badge();if(open)render();return id}
+function sendLocal(l){const id='l'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);inv._mail.unshift({id,t:Date.now(),from:l.from||'Regnum Land',title:l.title||'Лист',text:l.text||'',items:cleanItems(l.items)});try{save()}catch(_){}badge();if(open)render();return id}
 function letters(){const L=[];
  for(const m of inv._mail)L.push(Object.assign({src:'l'},m));
  for(const m of remote)if(!inv._mailc.includes(m.id))L.push(Object.assign({src:'r'},m));
@@ -53,7 +53,7 @@ async function redeem(raw){const code=String(raw||'').trim().toUpperCase().repla
    tx.set(used,{t:Date.now(),pid:window.myPid||null});tx.update(ref,{uses:(P_.uses||0)+1});return{ok:1,p:P_}});
   if(r.e){say(r.e);return}
   inv._promos=(inv._promos||[]).concat(code);
-  sendLocal({from:'🎟️ Промокод '+code,title:r.p.title||'Подарунок за промокодом',text:r.p.text||'Дякуємо, що граєте в Popal!',items:r.p.items});
+  sendLocal({from:'🎟️ Промокод '+code,title:r.p.title||'Подарунок за промокодом',text:r.p.text||'Дякуємо, що граєте в Regnum Land!',items:r.p.items});
   say('✅ Промокод прийнято! Подарунок — у пошті нижче');try{if(window.PSFX)PSFX.sfx('level')}catch(_){}}
  catch(e){say(e&&e.code=='permission-denied'?'⚠️ Промокоди ще не ввімкнені на сервері':'⚠️ Не вдалося перевірити код. Спробуйте пізніше')}
  finally{busy=0}}
@@ -77,7 +77,7 @@ const say=t=>{sayTxt=t;const e=document.getElementById('mps');if(e)e.textContent
 function render(){const c=document.getElementById('pfc');if(!c||!open)return;const u=user();let h='';
  if(open=='pr'){h=`<h4>🎟️ Промокод</h4><div class='pr'><input id='mpc' placeholder='Введіть промокод' maxlength='24' autocomplete='off'><button id='mpb'>Активувати</button></div>
   <div class='ms' id='mps'>${esc(sayTxt||(u?'Подарунок за промокодом прийде у вкладку «📬 Пошта»':'🔐 Для промокодів увійдіть в акаунт'))}</div>`;}
- else{const L=letters();h=`<h4>📬 Пошта</h4>${L.length?L.map(m=>`<div class='lt ${m.got?'got':''}'><header><b>${esc(m.title)}</b><small>${new Date(m.t||Date.now()).toLocaleDateString('uk-UA')}</small></header><div class='fr'>Від: ${esc(m.from||'Popal')}</div>${m.text?`<p>${esc(m.text)}</p>`:''}${Object.keys(m.items||{}).length?`<div class='its'>${itemsTxt(m.items)}</div>`:''}${m.got?(m.src=='l'?`<button class='s' data-del='${m.id}'>Видалити</button>`:''):`<button class='g' data-claim='${m.id}'>${Object.keys(m.items||{}).length?'🎁 Забрати':'✔ Прочитано'}</button>`}</div>`).join(''):'<small>Листів поки немає</small>'}`;}
+ else{const L=letters();h=`<h4>📬 Пошта</h4>${L.length?L.map(m=>`<div class='lt ${m.got?'got':''}'><header><b>${esc(m.title)}</b><small>${new Date(m.t||Date.now()).toLocaleDateString('uk-UA')}</small></header><div class='fr'>Від: ${esc(m.from||'Regnum Land')}</div>${m.text?`<p>${esc(m.text)}</p>`:''}${Object.keys(m.items||{}).length?`<div class='its'>${itemsTxt(m.items)}</div>`:''}${m.got?(m.src=='l'?`<button class='s' data-del='${m.id}'>Видалити</button>`:''):`<button class='g' data-claim='${m.id}'>${Object.keys(m.items||{}).length?'🎁 Забрати':'✔ Прочитано'}</button>`}</div>`).join(''):'<small>Листів поки немає</small>'}`;}
  c.innerHTML=`<div id='mailp'>${h}</div>`;
  const pc=document.getElementById('mpc'),pb=document.getElementById('mpb');if(pb){pb.onclick=()=>{if(!busy)redeem(pc.value)};pc.onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();pb.click()}}}
  c.querySelectorAll('input,textarea').forEach(i=>i.addEventListener('keydown',e=>e.stopPropagation()));/* літери не керують героєм */

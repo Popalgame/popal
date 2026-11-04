@@ -29,7 +29,7 @@ try{if(window.DS)Object.assign(window.DS,{cr2:'Друга форма попал�
 /* тестові кристали для гравця ID 0001 (поки немає босів) */
 /* приходять листом у пошту (mail.js) */
 const gift=setInterval(()=>{if(inv._crg){clearInterval(gift);return}if(window.myPid!=='0001'||!window.plMail)return;inv._crg=1;clearInterval(gift);
- window.plMail.send({from:'Розробник Popal',title:'💎 Кристали для тестів',text:'Поки боси ще в роботі — ось кристали, щоб випробувати Колбу поліпшень.',items:{cr2:20,cr3:20}});
+ window.plMail.send({from:'Розробник Regnum Land',title:'💎 Кристали для тестів',text:'Поки боси ще в роботі — ось кристали, щоб випробувати Колбу поліпшень.',items:{cr2:20,cr3:20}});
  try{msg('📬 Нова пошта: кристали для тестів')}catch(_){}},2000);
 
 /* ---------- вигляд форм ---------- */
