@@ -1,5 +1,5 @@
 /* 0.3.0: зілля.
-   • Зілля здоров'я (hpp) — варять біля Столу зіль (B_alch, world-007.js) з ягід і грибів; випити в рюкзаку — +40% здоров'я героя.
+   • Зілля здоров'я (hpp) — варять біля Столу зіль (B_alch, world-007.js) з ягід і грибів; випити в рюкзаку — +300 HP героя.
    • Зілля досвіду (xpp) — +10 000 досвіду попалу, з яким ви ходите. Лише для тестів розробника: 300 штук приходять листом гравцю з ID 0001,
      у крафті його немає. Цей досвід піднімає попала навіть вище рівня героя, щоб можна було випробувати еволюції (25 і 50 рівень).
    • Значки зіль і будівель Стіл зіль та Кошик з їжею малюються з їхніх 3D-моделей. */
@@ -7,13 +7,13 @@
 if(typeof IT=='undefined'||typeof inv=='undefined')return;
 IT.hpp=['❤️','Зілля здоров’я'];IT.xpp=['✨','Зілля досвіду'];
 for(const k of['hpp','xpp'])if(inv[k]==null)inv[k]=0;
-if(typeof RC!='undefined'&&!RC.find(r=>r.id=='hpp'))RC.push({id:'hpp',n:'Зілля здоров’я',c:{be:3,mu:2},d:'Відновлює 40% здоров’я героя. Варять біля Столу зіль'});
-try{if(window.DS)Object.assign(window.DS,{hpp:'Відновлює 40% здоров’я героя. Варять біля Столу зіль з ягід і грибів',xpp:'Тестове зілля розробника: +10 000 досвіду попалу, з яким ви ходите. Не має ваги'})}catch(_){}
+if(typeof RC!='undefined'&&!RC.find(r=>r.id=='hpp'))RC.push({id:'hpp',n:'Зілля здоров’я',c:{be:3,mu:2},d:'Відновлює 300 HP героя. Варять біля Столу зіль'});
+try{if(window.DS)Object.assign(window.DS,{hpp:'Відновлює 300 HP героя. Варять біля Столу зіль з ягід і грибів',xpp:'Тестове зілля розробника: +10 000 досвіду попалу, з яким ви ходите. Не має ваги'})}catch(_){}
 try{const w0=window.itemW;if(w0)window.itemW=k=>k=='xpp'?0:k=='hpp'?.2:w0(k)}catch(_){}
 const HPmax=()=>typeof HPM!='undefined'?HPM:100;
 
 /* ---------- дія зіль ---------- */
-function drinkHp(){if(!(inv.hpp>0))return;if(P.hp>=HPmax()){msg('❤️ Здоров’я вже повне');return}inv.hpp--;const add=Math.round(HPmax()*.4);P.hp=Math.min(HPmax(),P.hp+add);
+function drinkHp(){if(!(inv.hpp>0))return;if(P.hp>=HPmax()){msg('❤️ Здоров’я вже повне');return}inv.hpp--;const add=Math.min(300,HPmax()-P.hp);P.hp=Math.min(HPmax(),P.hp+add);
  try{dmg('+'+add+' ❤️',pl,'#8dffa8')}catch(_){}msg('❤️ Випито зілля здоров’я: +'+add+' HP');try{hud();save()}catch(_){}}
 function giveXp(times){times=Math.max(1,Math.min(times||1,inv.xpp||0));if(!(inv.xpp>0))return;const p=pals[selP];if(!p||p.cs!=null){msg('✨ Візьміть попала з собою, щоб дати йому зілля');return}
  const need=window.palXpNeed;if(!need){msg('✨ Досвід попалів ще не завантажився');return}if((p.lv||1)>=50){msg('✨ '+T[p.ty].n+' уже 50 рівня');return}
