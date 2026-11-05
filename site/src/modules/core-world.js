@@ -23,7 +23,7 @@ const SZ=ISLE?62:230,rn=(a,b)=>a+Math.random()*(b-a);
 const SP=ISLE?ISLE.SP:[[0,0],[54,-30],[-60,42],[24,84],[-42,-72]],PC=new THREE.Color(0xc9a66b);
 const nearS=(x,z,r)=>SP.some(s=>Math.hypot(x-s[0],z-s[1])<r);
 /* ===== 0.1.10: новий світ POPAL-11638-g15-s75-o40-v1 (генератор як у прототипі) ===== */
-const WG={seed:11638,mount:.15,land:.75,frag:4.0,volc:1,R:ISLE?90:250,STEP:ISLE?1:2};
+const WG={seed:11638,mount:.15,land:.75,frag:4.0,volc:0,/* 0.3.1: вулкан поки прибрано */R:ISLE?90:250,STEP:ISLE?1:2};
 const WGEN=(()=>{const P=WG;function mul(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const perm=new Uint8Array(512),gr=[[1,1],[-1,1],[1,-1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1]];{const r=mul(P.seed),p=[...Array(256).keys()];for(let i=255;i>0;i--){const j=(r()*(i+1))|0;[p[i],p[j]]=[p[j],p[i]]}for(let i=0;i<512;i++)perm[i]=p[i&255]}
 const F2=.5*(Math.sqrt(3)-1),G2=(3-Math.sqrt(3))/6;
@@ -56,7 +56,7 @@ window.H=H;
 const BCOL={deep:0x1d5d86,shal:0x3aa6b9,sand:0xe9d79a,mead:0x649e42,forest:0x4a8838,swamp:0x7a8a3e,desert:0xe8c46e,tundra:0x7fae8a,rock:0x9a988f,snow:0xf2f6fc,ash:0x544040,lava:0xff5a1f};
 function BIO(x,z){const i=Math.max(0,Math.min(WG_N-1,Math.round((x+WG_R)/WG_S))),j=Math.max(0,Math.min(WG_N-1,Math.round((z+WG_R)/WG_S)));return WGEN.BG[j*WG_N+i]}
 window.BIO=BIO;window.BCOL=BCOL;
-if(!ISLE){const v=WGEN.VC;MT.push([v.x*WG_R,v.z*WG_R,24,0])}
+if(!ISLE&&WG.volc){const v=WGEN.VC;MT.push([v.x*WG_R,v.z*WG_R,24,0])}
 const tg=new THREE.PlaneGeometry(2*WG_R,2*WG_R,WG_N-1,WG_N-1);tg.rotateX(-Math.PI/2);const tp=tg.attributes.position,tcol=[],c1=new THREE.Color();
 function colorHash(i,j){let h=Math.imul(i,374761393)^Math.imul(j,668265263)^WG.seed;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967295}
 function colorNoise(x,z){const ix=Math.floor(x),iz=Math.floor(z),a=x-ix,b=z-iz,u=a*a*(3-2*a),v=b*b*(3-2*b);
