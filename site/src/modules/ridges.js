@@ -80,5 +80,5 @@ const cb0=window.colBlocked;
 window.colBlocked=function(x0,z0,x1,z1,r){if(blocked(x1,z1,.4))return true;return cb0?cb0.apply(this,arguments):false};
 /* герой, збережений усередині гір чи брили (старий сейв), — поруч на вільному місці */
 if(blocked(P_.x,P_.z,0)){for(let r=1.5;r<40;r+=1.5){let ok=null;for(let a=0;a<6.28&&!ok;a+=.4){const nx=P_.x+Math.cos(a)*r,nz=P_.z+Math.sin(a)*r;if(!blocked(nx,nz,.5)&&H_(nx,nz)>-.4)ok=[nx,nz]}if(ok){P_.x=ok[0];P_.z=ok[1];break}}}
-window.RIDGES={blocked,snow:(x,z)=>LINES.some(o=>Math.abs(z-RZ[o.k])<8&&segD(o.L,x,z)[0]<1.6),GZ:PASSES[0].GZ,PASSES,RZ};
+window.RIDGES={blocked,snow:(x,z)=>LINES.some(o=>Math.abs(z-RZ[o.k])<8&&segD(o.L,x,z)[0]<1.6),GZ:PASSES[0].GZ,PASSES,RZ,rz,W};
 }catch(e){console.warn('ridges:',e)}})();

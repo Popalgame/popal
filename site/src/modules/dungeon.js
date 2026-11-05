@@ -142,6 +142,23 @@ if(inBox(P.x,P.z)){const r=inv._dgRet||(window.SPAWN?[window.SPAWN[0],window.SPA
 const PORTAL={};
 function setPortal(x,z,ry){if(PORTAL.g)sc.remove(PORTAL.g);for(const nm of['trees','rocks','bushes','shrooms']){let A;try{A=eval(nm)}catch(_){A=null}if(!Array.isArray(A))continue;for(let i=A.length-1;i>=0;i--){const o=A[i];if(o&&Math.hypot(o.x-x,o.z-z)<13){if(o.m)sc.remove(o.m);A.splice(i,1)}}}/* біля порталу — чисто */const g=portalMesh();g.position.set(x,H(x,z),z);g.rotation.y=ry||0;sc.add(g);PORTAL.g=g;PORTAL.x=x;PORTAL.z=z}
 
+function caveMouth(px,pz,rzx){if(typeof plCliff=='undefined')return;const geos=[0,1,2].map(k=>plCliff.geo(k)),mat=plCliff.mat(),cols=plCliff.cols,A=[];let sd=777;const rn=()=>(sd=sd*16807%2147483647)/2147483647,r2=(a,b)=>a+rn()*(b-a);
+ const add=(x,z,w,h,y)=>A.push([x,(y==null?H(x,z)-h*.1:y),z,w*r2(.85,1.15),h,w*r2(.85,1.2),rn()*6.28,cols[(rn()*cols.length)|0]]);
+ /* обрамлення входу: стовпи брил обабіч порталу й важке склепіння над ним */
+ for(const sx of[-1,1])for(let k=0;k<3;k++){add(px+sx*(2.6+k*1.4),pz+r2(-.3,.5),1.9+k*.4,8+k*3);add(px+sx*(2.4+k*1.2),pz+2.6,2.2,9+k*2)}/* стіни коридору від хребта до входу */
+ for(let k=-2;k<=2;k++)add(px+k*1.4,pz+.4,1.9,2.2,H(px,pz)+5.4+Math.abs(k)*.3);
+ add(px,pz+1.6,4.2,5.5,H(px,pz)+6.6);
+ /* масив за хребтом (південніше): високі брили й піки, щоб вхід виглядав як печера в горі */
+ for(let i=0;i<46;i++){const x=px+r2(-16,16),z=rzx+r2(2,20),d=Math.hypot(x-px,(z-rzx)*.8),h=Math.max(8,30-d*.9)*r2(.8,1.15);add(x,z,r2(3,5),h)}
+ const dm=new THREE.Object3D(),cl=new THREE.Color();
+ geos.forEach((g,k)=>{const P_=A.filter((_,i)=>i%3==k),m=new THREE.InstancedMesh(g,mat,P_.length);P_.forEach((r,i)=>{dm.position.set(r[0],r[1],r[2]);dm.scale.set(r[3],r[4],r[5]);dm.rotation.set(0,r[6],0);dm.updateMatrix();m.setMatrixAt(i,dm.matrix);m.setColorAt(i,cl.setHex(r[7]))});m.castShadow=m.receiveShadow=true;sc.add(m)});
+ /* темна глибина печери за порталом */
+ const back=new THREE.Mesh(new THREE.PlaneGeometry(4.2,5.2),new THREE.MeshBasicMaterial({color:0x05040a}));back.position.set(px,H(px,pz)+2.4,pz+1.2);back.rotation.y=Math.PI;sc.add(back);
+ /* брили тверді; масив за хребтом — теж */
+ if(window.plRockCol){const C=window.plRockCol(A.filter(r=>r[1]<H(r[0],r[2])+1.5).map(r=>({x:r[0],z:r[2],r:Math.max(r[3],r[5])*.95})));const c0=window.colBlocked;
+  window.colBlocked=function(x0,z0,x1,z1,r){if(C.hit(x1,z1,(r||.4)+.2))return true;return c0?c0.apply(this,arguments):false};
+  const b0=window.BLDC;window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(C.hit(P.x,P.z,.35)){P.x=ox;P.z=oz}}}
+ for(const nm of['trees','rocks','bushes','shrooms']){let L2;try{L2=eval(nm)}catch(_){L2=null}if(!Array.isArray(L2))continue;for(let i=L2.length-1;i>=0;i--){const o=L2[i];if(o&&o.x>px-18&&o.x<px+18&&o.z>rzx-2&&o.z<rzx+22){if(o.m)sc.remove(o.m);L2.splice(i,1)}}}}
 /* ---------- «Дія»: ліхтар на підставку, портали ---------- */
 function nearSconce(){if(!G||!inBox(P.x,P.z))return null;let best=null,bd=2.4;for(const s of SCON){const d=Math.hypot(P.x-s.x,P.z-s.z);if(d<bd){bd=d;best=s}}return best}
 const nearExit=()=>G&&EXIT.x!=null&&Math.hypot(P.x-EXIT.x,P.z-EXIT.z)<2.6;
@@ -178,6 +195,7 @@ ANI.push(()=>{const t=performance.now(),dt=Math.min(.05,(t-last)/1000);last=t;
   const top=inHall(P.x,P.z)?11.5:6.8;if(k<1||c.y>top){c.set(hx+dx*k,Math.min(hy+dy*k,top),hz+dz*k);cam.lookAt(P.x,FLOOR+1.2,P.z)}}});
 
 /* 0.3.2: портал — у північній стіні хребта 2, праворуч (Старий ліс, Локація 2) */
-setPortal(128,-17,Math.PI);
+/* портал вбудований у північну стіну хребта 2: кам'яний виступ-печера навколо, а за ним — гірський масив */
+{const RG=window.RIDGES,PX=124,rzx=RG&&RG.rz?RG.rz(1,PX):0,PZ=rzx-(RG?RG.W:5.2)-3.4;setPortal(PX,PZ,Math.PI);caveMouth(PX,PZ,rzx)}
 window.DUNGEON={enter,leave,setPortal,inBox,REC,lit:()=>inv._dgl.length,sconces:()=>SCON.length,boss:()=>BOSS&&BOSS.w};
 }catch(e){console.warn('dungeon',e)}})();
