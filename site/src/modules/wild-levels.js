@@ -31,6 +31,7 @@ try{const INV_=(()=>{try{return eval('inv')}catch(_){return null}})();if(!ISL&&(
 function setup(w){const L=lvAt(w.x,w.z),b=T[w.ty].hp;w.lv=L;
  if(window.PW){const s=PW.stats(w.ty,L);w.mh=s.hp;w.atk=s.atk;w.def=s.def;w.hp=Math.round(w.mh*Math.max(0,Math.min(1,w.hp/b)));w.dm=PW.wildHit(w,true)}/* 0.5.x: показники Palworld, combat.js */
  else{w.mh=Math.round(b*(1+.12*(L-1)));w.hp=Math.round(w.mh*Math.max(0,Math.min(1,w.hp/b)));w.dm=Math.round(10*(1+.06*(L-1)))}if(!w.ag&&L>plv+5)w.ag=1}
+window.wLvSetup=w=>{w.lv=0;setup(w)};/* 0.3.2: перерахувати рівень після переміщення (loc2.js) */
 /* досвід під таблицю XPT (core-world.js): усі нагороди ×5 (XPM), за бій ще +10% за кожен рівень істоти;
    за значно слабших дають менше (до 20%), за сильніших — трохи більше. Модель: 20 рівень ~1 год, 50 — ~10 год, 100 — ~130 год активного бою */
 window.XPM=5;

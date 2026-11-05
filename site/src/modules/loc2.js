@@ -10,6 +10,11 @@ for(const y of[1.6,4.4]){const b=new THREE.Mesh(new THREE.BoxGeometry(5.2,.16,.1
 const sign=new THREE.Mesh(new THREE.BoxGeometry(3.2,.7,.12),gold);sign.position.set(0,8.6,.82);g.add(sign);
 g.position.set(G[0],H(G[0],G[1]),G[1]);sc.add(g);
 window.LOC3_GATE=G;
+/* нові дикі попали не з'являються в горах, у ущелинах-стінах і в печері підземелля (там «суша» лише для героя) */
+{const bad=(x,z)=>(window.DG&&window.DG.inBox(x,z))||(window.RIDGES&&window.RIDGES.blocked(x,z,1))||(window.BOSS_HOME&&Math.hypot(x-window.BOSS_HOME[0],z-window.BOSS_HOME[1])<22)||H(x,z)<-.35;
+ const fix=w=>{if(!w||w.boss||w.dg||!bad(w.x,w.z))return;for(let k=0;k<80;k++){const x=(Math.random()*2-1)*135,z=(Math.random()*2-1)*205;if(!bad(x,z)&&Math.hypot(x-P.x,z-P.z)>9){w.x=x;w.z=z;if(w.m)w.m.position.set(x,H(x,z),z);try{if(window.wLvSetup)window.wLvSetup(w)}catch(_){}return}}};
+ try{const s0=spawnWild;spawnWild=function(){const n=wild.length;s0.apply(this,arguments);for(let i=n;i<wild.length;i++)fix(wild[i])}}catch(_){}
+ for(const w of wild)fix(w)}
 const near=()=>Math.hypot(P.x-G[0],P.z-G[1])<4.5;let t=0;
 ANI.push(()=>{if(near()&&performance.now()-t>6000){t=performance.now();try{msg('🚧 Шлях у Локацію 3 ще будується. Повертайтеся згодом!')}catch(_){}}});
 }catch(e){console.warn('loc2',e)}})();
