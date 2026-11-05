@@ -27,7 +27,7 @@ const inRidge=(x,z,m)=>segD(RA,x,z)[0]<W+m||segD(RB,x,z)[0]<W+m;
 const blockedRaw=(x,z,m)=>!inPass(x,z,m)&&(inRidge(x,z,m)||inWall(x,z,m));
 
 /* ---------- скелі ---------- */
-const RG=[0,1,2].map(k=>plCliff.geo(k)),RC=plCliff.cols,L=[[],[],[]],SNOW=0xeef3f8;
+const RG=[0,1,2].map(k=>plCliff.geo(k)),RC=plCliff.cols,L=[[],[],[]],SNOW=0xb8b0a4;/* 0.3.1: без снігу — світлий камінь */
 const add=(x,z,w,h,col)=>{const y=H_(x,z);if(y<-2.5)return;L[(rnd()*3)|0].push([x,Math.min(y,.6)-h*.1,z,w*rr(.85,1.15),h,w*rr(.85,1.2),rnd()*6.28,col||RC[(rnd()*RC.length)|0]])};
 /* профіль висоти: до моря хребет нижчає, біля ущелини — високі стіни */
 const prof=(t,coastAt0)=>{const c=coastAt0?t:1-t;return .35+.65*Math.min(1,c*5)};
@@ -35,7 +35,7 @@ function ridge(Lp,coastAt0){let tot=0;for(let i=1;i<Lp.length;i++)tot+=Math.hypo
  let acc=0;for(let i=1;i<Lp.length;i++){const a=Lp[i-1],b=Lp[i],dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz),nx=-dz/l,nz=dx/l;
   for(let s=0;s<l;s+=2.3){const t=(acc+s)/tot,k=prof(t,coastAt0),px=a[0]+dx*s/l,pz=a[1]+dz*s/l,peak=(.75+.5*Math.abs(Math.sin(t*23+(coastAt0?1:4))))*k;
    for(const[o,w,h]of[[-4.2,3.4,9],[-1.5,4.4,17],[1.5,4.4,17],[4.2,3.4,9]]){const oo=o+rr(-.6,.6),hh=h*peak*rr(.85,1.2);add(px+nx*oo,pz+nz*oo,w*rr(.85,1.15),hh)}
-   if(peak>.95&&rnd()<.55)add(px+nx*rr(-.8,.8),pz+nz*rr(-.8,.8),2.6,24*peak*rr(.9,1.1),SNOW)}/* снігові піки */
+   if(peak>.95&&rnd()<.55)add(px+nx*rr(-.8,.8),pz+nz*rr(-.8,.8),2.6,24*peak*rr(.9,1.1),SNOW)}/* світлі кам'яні піки */
   acc+=l}}
 ridge(RA,true);ridge(RB,false);
 /* стіни ущелини: три яруси брил — нижчі біля проходу, вищі далі, тож ущелина схожа на каньйон */

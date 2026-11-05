@@ -40,7 +40,7 @@ let cone=0;if(P.volc){const dv=Math.hypot(u-VC.x,v-VC.z);cone=Math.max(0,1-dv/.1
 let h;if(land<=0)h=Math.max(-35,land*40);else{const hills=fbm(x*f*3.1+5,z*f*3.1-9,4)*.5+.5,rg=1-Math.abs(sn(x*f*2.3+40,z*f*2.3-40)),ridge=rg*rg*rg,mm=sm(.08,.42,land);
 h=land*16+hills*7*sm(0,.12,land)+ridge*mm*P.mount*75+mm*P.mount*12;if(cone>0){const c=Math.pow(cone,1.6);h=h*(1-c*.6)+c*62*Math.max(.55,P.mount);if(cone>.86)h-=(cone-.86)*120}}
 const m=fbm(u*2.1+71,v*2.1-33,4),t=-v*.85+fbm(u*1.3-51,v*1.3+17,3)*.35-Math.max(0,h)/110;return{h,m,t,cone}}
-function biome(o){const{h,m,t,cone}=o;if(h<-12)return'deep';if(h<0)return'shal';if(P.volc&&cone>.86)return'lava';if(P.volc&&cone>.28)return'ash';if(h>52||(t<-.55&&h>18))return'snow';if(h>34)return'rock';if(h<2.2)return t<-.45?'rock':'sand';if(t<-.3)return'tundra';if(t>.24&&m<.02)return'desert';if(m>.32&&h<9)return'swamp';if(m>-.02)return'forest';return'mead'}
+function biome(o){const{h,m,t,cone}=o;if(h<-12)return'deep';if(h<0)return'shal';if(P.volc&&cone>.86)return'lava';if(P.volc&&cone>.28)return'ash';/* 0.3.1: снігу на карті немає — замість нього тундра */if(h>52||(t<-.55&&h>18))return'tundra';if(h>34)return'rock';if(h<2.2)return t<-.45?'rock':'sand';if(t<-.3)return'tundra';if(t>.24&&m<.02)return'desert';if(m>.32&&h<9)return'swamp';if(m>-.02)return'forest';return'mead'}
 const N=Math.round(2*P.R/P.STEP)+1,HG=new Float32Array(N*N),BG=new Array(N*N);
 return{P,N,HG,BG,sample,biome,VC,fill(boostFn){for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=-P.R+i*P.STEP,z=-P.R+j*P.STEP,o=sample(x/P.R,z/P.R,boostFn(x,z));HG[j*N+i]=o.h<0?o.h*.2-.45:(P.volc&&o.cone>0?Math.max(o.h*.07,Math.pow(o.cone,1.6)*7.5-(o.cone>.86?(o.cone-.86)*18:0)):o.h*.07)-.45+(o.h>0?Math.min(.35,o.h*.06):0);BG[j*N+i]=biome(o)}}}})();
 const MT=[];window.MT=MT;
