@@ -20,7 +20,10 @@ const B=(w,h,d)=>new THREE.BoxGeometry(w,h,d),Cy=(a,b,h,s=8)=>new THREE.Cylinder
 function add(g,geo,c,x,y,z,ry){const m=new THREE.Mesh(geo,M(c));m.position.set(x,y,z);if(ry)m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;g.add(m);return m}
 const ISLE=window.REALM==='isle'&&window.ISLE?window.ISLE:null;/* вимір «острів» (realm.js) */
 const SZ=ISLE?62:230,rn=(a,b)=>a+Math.random()*(b-a);
-const SP=ISLE?ISLE.SP:[[0,0],[54,-30],[-60,42],[24,84],[-42,-72]],PC=new THREE.Color(0xc9a66b);
+/* 0.3.2: Локація 2 — прямокутний острів 280×424 м, чотири зони знизу (південь, +z) вгору (північ, −z).
+   SP — рівні майданчики: база в Бухті прибуття і три перевали (ridges.js); ROADS — дороги через перевали. */
+const SP=ISLE?ISLE.SP:[[0,168],[0,110],[-95,0],[95,0],[0,-118]],PC=new THREE.Color(0xc9a66b);
+const ROADS=[[[0,205],[0,168],[0,112],[-8,80],[4,48],[-40,22],[-95,6],[-95,-6],[-70,-45],[-25,-80],[0,-112],[0,-124],[0,-200]],[[4,48],[50,24],[95,6],[95,-6],[110,-14],[128,-12]]];
 const nearS=(x,z,r)=>SP.some(s=>Math.hypot(x-s[0],z-s[1])<r);
 /* ===== 0.1.10: новий світ POPAL-11638-g15-s75-o40-v1 (генератор як у прототипі) ===== */
 const WG={seed:11638,mount:.15,land:.75,frag:4.0,volc:0,/* 0.3.1: вулкан поки прибрано */R:ISLE?90:250,STEP:ISLE?1:2};
@@ -34,18 +37,26 @@ let t2=.5-x2*x2-y2*y2;if(t2>0){const g=gr[perm[ii+1+perm[jj+1]]&7];t2*=t2;n+=t2*
 function fbm(x,y,o){let a=1,f=1,s=0,m=0;for(let k=0;k<o;k++){s+=a*sn(x*f,y*f);m+=a;a*=.5;f*=2.02}return s/m}
 const sm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 let VC=null;{const r=mul(P.seed*7+3);let bv=-9;for(let k=0;k<40;k++){const a=r()*6.283,d=.18+r()*.38,u=Math.cos(a)*d,v=Math.sin(a)*d,val=fbm(u*P.frag,v*P.frag,4);if(val>bv){bv=val;VC={x:u,z:v}}}}
-function sample(u,v,boost){const wx=fbm(u*1.4+11.3,v*1.4+3.7,3)*.22,wz=fbm(u*1.4-7.1,v*1.4+19.4,3)*.22,x=u+wx,z=v+wz,f=P.frag,d=Math.hypot(u,v);
-let land=fbm(x*f,z*f,5)*.62+(P.land-.5)*.9+.12-sm(.6,1.02,d)*1.3+boost;
+const LAKE=[40,-58,20],RIVER=[[20,6],[38,30],[24,55],[48,78],[90,92],[150,100]];
+function segDist(X,Z,L){let m=1e9;for(let i=1;i<L.length;i++){const a=L[i-1],b=L[i],dx=b[0]-a[0],dz=b[1]-a[1],l2=dx*dx+dz*dz;let t=((X-a[0])*dx+(Z-a[1])*dz)/l2;t=Math.max(0,Math.min(1,t));m=Math.min(m,Math.hypot(X-a[0]-dx*t,Z-a[1]-dz*t))}return m}
+function sample(u,v,boost){const wx=fbm(u*1.4+11.3,v*1.4+3.7,3)*.22,wz=fbm(u*1.4-7.1,v*1.4+19.4,3)*.22,x=u+wx,z=v+wz,f=P.frag,X=u*P.R,Z=v*P.R;
+/* прямокутник із трохи нерівним берегом */const dR=Math.max(Math.abs(X)/140,Math.abs(Z)/212)+fbm(u*3+9,v*3-4,3)*.05;
+let land=.38+fbm(x*f,z*f,4)*.22-sm(.92,1.07,dR)*1.4+boost;
 let cone=0;if(P.volc){const dv=Math.hypot(u-VC.x,v-VC.z);cone=Math.max(0,1-dv/.13);land+=cone*.5}
 let h;if(land<=0)h=Math.max(-35,land*40);else{const hills=fbm(x*f*3.1+5,z*f*3.1-9,4)*.5+.5,rg=1-Math.abs(sn(x*f*2.3+40,z*f*2.3-40)),ridge=rg*rg*rg,mm=sm(.08,.42,land);
-h=land*16+hills*7*sm(0,.12,land)+ridge*mm*P.mount*75+mm*P.mount*12;if(cone>0){const c=Math.pow(cone,1.6);h=h*(1-c*.6)+c*62*Math.max(.55,P.mount);if(cone>.86)h-=(cone-.86)*120}}
-const m=fbm(u*2.1+71,v*2.1-33,4),t=-v*.85+fbm(u*1.3-51,v*1.3+17,3)*.35-Math.max(0,h)/110;return{h,m,t,cone}}
+h=land*16+hills*7*sm(0,.12,land)+ridge*mm*P.mount*75+mm*P.mount*12;
+ /* озеро в Старому лісі й річка через Зелені луки (на дорозі — брід) */{const dl=Math.hypot(X-LAKE[0],Z-LAKE[1]);if(dl<LAKE[2])h=Math.min(h,-3-2*(1-dl/LAKE[2]));else if(dl<LAKE[2]+6)h=Math.min(h,(dl-LAKE[2])/6*1.8);
+ const dr=segDist(X,Z,RIVER);if(dr<3.6){const ford=typeof pathD=='function'&&pathD(X,Z)<4;h=ford?Math.max(.3,Math.min(h,.6)):Math.min(h,-1.6)}else if(dr<7)h=Math.min(h,(dr-3.6)/3.4*1.8)}if(cone>0){const c=Math.pow(cone,1.6);h=h*(1-c*.6)+c*62*Math.max(.55,P.mount);if(cone>.86)h-=(cone-.86)*120}}
+let m=fbm(u*2.1+71,v*2.1-33,4),t=fbm(u*1.3-51,v*1.3+17,3)*.35-Math.max(0,h)/110;
+/* зони: Бухта прибуття — луки; Зелені луки — луки й гаї; Старий ліс — ліс і болота; Дикі землі — суха пустка */if(Z>110)m-=.25;else if(Z>=0)m+=.02;else if(Z>=-118)m+=.3;else{t+=.6;m-=.35}
+return{h,m,t,cone}}
 function biome(o){const{h,m,t,cone}=o;if(h<-12)return'deep';if(h<0)return'shal';if(P.volc&&cone>.86)return'lava';if(P.volc&&cone>.28)return'ash';/* 0.3.1: ні снігу, ні тундри — холодний край острова стає лісом, луками й болотами, як решта */if(h>52)return'rock';if(h>34)return'rock';if(h<2.2)return'sand';if(t>.24&&m<.02)return'desert';if(m>.32&&h<9)return'swamp';if(m>-.02)return'forest';return'mead'}
 const N=Math.round(2*P.R/P.STEP)+1,HG=new Float32Array(N*N),BG=new Array(N*N);
 return{P,N,HG,BG,sample,biome,VC,fill(boostFn){for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=-P.R+i*P.STEP,z=-P.R+j*P.STEP,o=sample(x/P.R,z/P.R,boostFn(x,z));HG[j*N+i]=o.h<0?o.h*.2-.45:(P.volc&&o.cone>0?Math.max(o.h*.07,Math.pow(o.cone,1.6)*7.5-(o.cone>.86?(o.cone-.86)*18:0)):o.h*.07)-.45+(o.h>0?Math.min(.35,o.h*.06):0);BG[j*N+i]=biome(o)}}}})();
 const MT=[];window.MT=MT;
 const mh=()=>0;
-function pathD(x,z){let m=99;for(let i=1;i<5;i++){const a=SP[0],b=SP[i],dx=b[0]-a[0],dz=b[1]-a[1],L=dx*dx+dz*dz,Ls=Math.sqrt(L);let t=((x-a[0])*dx+(z-a[1])*dz)/L;t=Math.max(0,Math.min(1,t));const w=Math.sin(t*9+i)*1.3,px=a[0]+dx*t-dz/Ls*w,pz=a[1]+dz*t+dx/Ls*w;m=Math.min(m,Math.hypot(x-px,z-pz))}return m}
+function pathD(x,z){if(ISLE){let m=99;for(let i=1;i<5;i++){const a=SP[0],b=SP[i],dx=b[0]-a[0],dz=b[1]-a[1],L=dx*dx+dz*dz,Ls=Math.sqrt(L);let t=((x-a[0])*dx+(z-a[1])*dz)/L;t=Math.max(0,Math.min(1,t));const w=Math.sin(t*9+i)*1.3,px=a[0]+dx*t-dz/Ls*w,pz=a[1]+dz*t+dx/Ls*w;m=Math.min(m,Math.hypot(x-px,z-pz))}return m}
+ let m=99;for(const L of ROADS){for(let i=1;i<L.length;i++){const a=L[i-1],b=L[i],dx=b[0]-a[0],dz=b[1]-a[1],l2=dx*dx+dz*dz;let t=((x-a[0])*dx+(z-a[1])*dz)/l2;t=Math.max(0,Math.min(1,t));const w=Math.sin(t*7+i)*1.1,Ls=Math.sqrt(l2);m=Math.min(m,Math.hypot(x-a[0]-dx*t+dz/Ls*w,z-a[1]-dz*t-dx/Ls*w))}}return m}
 
 {const sm=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 if(ISLE)ISLE.fill(WGEN);else WGEN.fill((x,z)=>{let b=0;for(const c of SP){const d=Math.hypot(x-c[0],z-c[1]);b=Math.max(b,.5*(1-sm(14,32,d)))}b=Math.max(b,.24*(1-sm(3,9,pathD(x,z))));return b})}

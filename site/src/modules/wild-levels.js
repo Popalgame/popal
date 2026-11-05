@@ -4,24 +4,23 @@ const PMAX=50,WMAX=25;
 /* зони: [від якої відстані від табору, назва, мін. рівень, макс. рівень]; суша закінчується ~205 від табору, межі підібрані так, щоб у кожній зоні вистачало суші.
    0.2.9: на локаціях 1 і 2 дикі попали — не вище 25 рівня і лише в першій формі (еволюція — у Колбі поліпшень, evolution.js).
    Сильніші (до 50 і еволюційовані) з'являться на наступних локаціях; спійманий попал і далі росте до 50 */
-const ZN=[[0,'Долина',1,3],[30,'Луки',3,8],[70,'Ліс',8,14],[110,'Гори',14,20],[145,'Дикі землі',20,24],[175,'Край світу',23,25]],REND=205;
-const zoneAt=(x,z)=>{const r=Math.hypot(x,z);let i=0;while(i+1<ZN.length&&r>=ZN[i+1][0])i++;return i};
-/* 0.5.x: точка появи нового гравця — на березі моря на краю карти (рівний берег на луках, ~7 м від води).
-   Від неї рівні зростають тими самими сходинками, що й від центру (до 30 м — «Тиха бухта» 1–3, далі 3–10, 10–25…):
-   істота отримує менший із двох рівнів, тож новачок біля моря не зустріне сильних */
+/* 0.3.2: Локація 2 — чотири зони знизу (південь) вгору (північ), між ними хребти з перевалами (ridges.js).
+   Рівень дикого попала росте з півдня на північ у межах зони: Бухта прибуття 1–5, Зелені луки 5–12, Старий ліс 12–20, Дикі землі 20–25. */
+const ZB=[['Бухта прибуття',110,240,1,5],['Зелені луки',0,110,5,12],['Старий ліс',-118,0,12,20],['Дикі землі',-240,-118,20,25]];
+const ZN=ZB.map(b=>[0,b[0],b[3],b[4]]),REND=205;
+const zoneAt=(x,z)=>z>=110?0:z>=0?1:z>=-118?2:3;
 const ISL=window.REALM==='isle'&&window.ISLE;
+/* точка появи — печера-портал на південному березі посередині (spawn-cliffs.js), обличчям на північ, до суші */
 const SPAWN=window.SPAWN=ISL?[ISL.START[0],ISL.START[1],Math.PI]:(()=>{let best=null;
- for(let a=0;a<360;a+=5){const t=a*Math.PI/180,dx=Math.cos(t),dz=Math.sin(t);let r=REND+50;while(r>60&&H(dx*r,dz*r)<-.45)r-=.5;if(r<=60)continue;
-  const x=dx*(r-7),z=dz*(r-7),h=H(x,z);if(h<-.2)continue;
-  let sl=0;for(const[u,v]of[[1,0],[-1,0],[0,1],[0,-1]])sl=Math.max(sl,Math.abs(H(x+u*2,z+v*2)-h)/2);
-  let b='';try{b=BIO(x,z)}catch(_){}const sc=sl+(b=='mead'?0:.3);if(!best||sc<best.sc)best={sc,x,z,f:Math.atan2(-dx,-dz)}}
- return best?[+best.x.toFixed(2),+best.z.toFixed(2),best.f]:[0,3,0]})();
-const zIdx=r=>{let i=0;while(i+1<ZN.length&&r>=ZN[i+1][0])i++;return i};
+ for(let x=-24;x<=24;x+=4){let z=240;while(z>150&&H(x,z)<-.45)z-=.5;if(z<=150)continue;const zz=z-7,h=H(x,zz);if(h<-.2)continue;
+  let sl=0;for(const[u,v]of[[1,0],[-1,0],[0,1],[0,-1]])sl=Math.max(sl,Math.abs(H(x+u*2,zz+v*2)-h)/2);const sc=sl+Math.abs(x)*.01;if(!best||sc<best.sc)best={sc,x,z:zz}}
+ return best?[+best.x.toFixed(2),+best.z.toFixed(2),Math.PI]:[0,195,Math.PI]})();
 const dSp=(x,z)=>Math.hypot(x-SPAWN[0],z-SPAWN[1]);
-const inBay=(x,z)=>dSp(x,z)<ZN[1][0];
-const zoneEff=(x,z)=>Math.min(zoneAt(x,z),zIdx(dSp(x,z)));
-const lvR=r=>{const i=zIdx(r),Z=ZN[i],r1=ZN[i+1]?ZN[i+1][0]:REND,k=Math.min(1,(r-Z[0])/(r1-Z[0]));return Z[2]+(Z[3]-Z[2])*k};
-function lvAt(x,z){if(ISL)return 1+(Math.random()<.4?1:0);/* на острові пробудження — лише 1–2 рівень */return Math.max(1,Math.min(WMAX,Math.round(Math.min(lvR(Math.hypot(x,z)),lvR(dSp(x,z)))+(Math.random()*2-1))))}
+const inBay=()=>false;
+const zoneEff=zoneAt;
+function lvAt(x,z){if(ISL)return 1+(Math.random()<.4?1:0);/* на острові пробудження — лише 1–2 рівень */
+ const b=ZB[zoneAt(x,z)],k=Math.max(0,Math.min(1,(b[2]-z)/(b[2]-b[1])));let L=b[3]+(b[4]-b[3])*k;if(dSp(x,z)<30)L=Math.min(L,2);/* біля печери прибуття — найслабші */
+ return Math.max(1,Math.min(WMAX,Math.round(L+(Math.random()*2-1))))}
 /* на самій точці появи не стоїть дерево */
 try{const TR=eval('trees');for(let i=TR.length-1;i>=0;i--){const t=TR[i];if(dSp(t.x,t.z)<6){sc.remove(t.m);TR.splice(i,1)}}}catch(_){}
 /* новий гравець (без збереження) починає в бухті, обличчям до суші */

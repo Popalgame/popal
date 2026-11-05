@@ -5,7 +5,7 @@
      росте червоне коло, з якого треба встигнути вийти; коли смуга повна — удар;
    • кулею не ловиться; здобич щоразу різна — кілька кидків по таблиці cfg.loot; повертається через cfg.respawn (час у сейві inv._boss);
    • смуга здоров'я й заклинання — угорі екрана, коли ви на арені.
-   Перший бос тут же — 👑 Страж ущелини (вогняний Ігніс-Виверг третьої форми за ущелиною). Бос підземелля — у dungeon.js. */
+   Перший бос тут же — 👑 Страж ущелини (вогняний Ігніс-Виверг третьої форми в Старому лісі). Бос підземелля — у dungeon.js. */
 (function(){try{
 if(window.REALM==='isle'||typeof wild=='undefined')return;
 if(!inv._boss||typeof inv._boss!='object')inv._boss={};
@@ -93,8 +93,8 @@ window.BOSSKIT={add(cfg){const b=Object.assign({fm:3,scale:3,arena:18,hpMul:20,a
  /* для перевірки: одразу почати вміння боса */castNow(id,i){const b=L.find(q=>q.id===id);if(b&&b.w&&!b.cast)startCast(b,b.abil[i||0])}};
 
 /* ================= 👑 Страж ущелини ================= */
-if(window.RIDGES){const RG=window.RIDGES,G=RG.GZ,N=[-.157,.988],ARENA=18;
- let Lp=[G[0]-N[0]*34,G[1]-N[1]*34];
+if(window.RIDGES){const RG=window.RIDGES,ARENA=18;
+ let Lp=[-85,-62];/* 0.3.2: Старий ліс, ліворуч від озера (Локація 2) */
  for(let r=0;r<30;r+=2){let ok=null;for(let a=0;a<6.28&&!ok;a+=.5){const x=Lp[0]+Math.cos(a)*r,z=Lp[1]+Math.sin(a)*r;if(H(x,z)>-.2&&H(x,z)<6&&!RG.blocked(x,z,ARENA*.6))ok=[x,z]}if(ok){Lp=ok;break}}
  const HOME=Lp;window.BOSS_HOME=HOME;
  /* арена: коло з брил і вогняних чаш; на ній нічого не росте, інші дикі туди не заходять */

@@ -5,7 +5,7 @@
      щоб поставити Ліхтар з крафту (🏮). Поставлені ліхтарі лишаються назавжди (inv._dgl). Зала боса освітлена.
    • У тунелі — 4 сильні дикі попали (16–18 рів.), у залі — 👑 Кришталевий Владика (20 рів., рушій boss.js) з двома заклинаннями
      й різною здобиччю: малі Кристали еволюції та зілля здоров'я.
-   • Вхід: портал на острові. Місце порталу ще не вибране — DUNGEON.setPortal(x,z) поставить його; до того вхід лише через DUNGEON.enter().
+   • Вхід: портал у Старому лісі біля правого перевалу хребта 2 (DUNGEON.setPortal).
    • Якщо гравця збережено всередині — після завантаження він на острові біля порталу (inv._dgRet). */
 (function(){try{
 if(window.REALM==='isle'||typeof wild=='undefined')return;
@@ -24,7 +24,7 @@ window.DG={inBox,walk};
 /* ---------- висота: підлога печери (window.H і BLDY — для героя, моделей і анімації) ---------- */
 {const H0=window.H;window.H=(x,z)=>inBox(x,z)?FLOOR:H0(x,z);
  const b0=window.BLDY;window.BLDY=function(x,z,dt){if(inBox(x,z))return FLOOR;return b0?b0.apply(this,arguments):H0(x,z)};
- const s0=window.spdF;window.spdF=()=>(s0?s0():1)*(inBox(P.x,P.z)?1/.55:1);/* під печерою море — без цього герой «плив би» повільно */
+ const s0=window.spdF;window.spdF=()=>(s0?s0():1)*(inBox(P.x,P.z)&&H0(P.x,P.z)<-1.15?1/.55:1);/* під печерою море — без цього герой «плив би» повільно */
  const z0=window.plZoom;window.plZoom=()=>{const v=z0?z0():9.5;return inBox(P.x,P.z)?Math.min(v,inHall(P.x,P.z)?11:6.5):v}}
 
 /* ---------- стіни тверді ---------- */
@@ -140,7 +140,7 @@ if(inBox(P.x,P.z)){const r=inv._dgRet||(window.SPAWN?[window.SPAWN[0],window.SPA
 
 /* ---------- портал на острові (місце виберемо пізніше) ---------- */
 const PORTAL={};
-function setPortal(x,z,ry){if(PORTAL.g)sc.remove(PORTAL.g);const g=portalMesh();g.position.set(x,H(x,z),z);g.rotation.y=ry||0;sc.add(g);PORTAL.g=g;PORTAL.x=x;PORTAL.z=z}
+function setPortal(x,z,ry){if(PORTAL.g)sc.remove(PORTAL.g);for(const nm of['trees','rocks','bushes','shrooms']){let A;try{A=eval(nm)}catch(_){A=null}if(!Array.isArray(A))continue;for(let i=A.length-1;i>=0;i--){const o=A[i];if(o&&Math.hypot(o.x-x,o.z-z)<13){if(o.m)sc.remove(o.m);A.splice(i,1)}}}/* біля порталу — чисто */const g=portalMesh();g.position.set(x,H(x,z),z);g.rotation.y=ry||0;sc.add(g);PORTAL.g=g;PORTAL.x=x;PORTAL.z=z}
 
 /* ---------- «Дія»: ліхтар на підставку, портали ---------- */
 function nearSconce(){if(!G||!inBox(P.x,P.z))return null;let best=null,bd=2.4;for(const s of SCON){const d=Math.hypot(P.x-s.x,P.z-s.z);if(d<bd){bd=d;best=s}}return best}
@@ -177,5 +177,7 @@ ANI.push(()=>{const t=performance.now(),dt=Math.min(.05,(t-last)/1000);last=t;
   for(let t=.06;t<=1.0001;t+=.06){if(!walk(hx+dx*t,hz+dz*t,.55)){k=Math.max(.12,t-.08);break}}
   const top=inHall(P.x,P.z)?11.5:6.8;if(k<1||c.y>top){c.set(hx+dx*k,Math.min(hy+dy*k,top),hz+dz*k);cam.lookAt(P.x,FLOOR+1.2,P.z)}}});
 
+/* 0.3.2: портал — у північній стіні хребта 2, праворуч (Старий ліс, Локація 2) */
+setPortal(128,-17,Math.PI);
 window.DUNGEON={enter,leave,setPortal,inBox,REC,lit:()=>inv._dgl.length,sconces:()=>SCON.length,boss:()=>BOSS&&BOSS.w};
 }catch(e){console.warn('dungeon',e)}})();

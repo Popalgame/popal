@@ -1,52 +1,47 @@
-/* Гірські хребти великого світу (за малюнком на мапі).
-   Північний хребет іде від північного берега на південь до центру острова, східний — від центру на схід до берега біля спавну.
-   Між ними — вузька ущелина: єдиний прохід, до якого веде дорога з центру. Гори тверді для героя й істот;
-   дерева, каміння й істоти з-під гір прибрано. На мапі хребти — сірі скелі зі сніговими верхівками. */
+/* Гірські хребти Локації 2: три хребти поперек острова відділяють чотири зони; пройти можна лише ущелинами-перевалами
+   (кам'яні стіни в три яруси, арка, стежка з каменів). Гори тверді для героя й істот; дерева, каміння й істоти з-під гір прибрано. */
 (function(){try{
 if(window.REALM==='isle'||typeof THREE=='undefined'||typeof plCliff=='undefined')return;
 const G=n=>{try{return eval(n)}catch(_){return undefined}};
 const sc_=G('sc'),P_=G('P'),H_=window.H;if(!sc_||!P_||!H_)return;
 let seed=7919;const rnd=()=>(seed=seed*16807%2147483647)/2147483647,rr=(a,b)=>a+rnd()*(b-a);
-/* ущелина: центр GZ, хребет іде вздовж T, прохід — уздовж N */
-const GZ=[50.5,-34],T=[.988,.157],N=[-.157,.988],GW=6;/* півширина проходу між стінами */
-const gp=s=>[GZ[0]+T[0]*s,GZ[1]+T[1]*s];
-/* лінії хребтів (світові x,z), від берега до ущелини й від ущелини до берега */
-const RA=[[15.8,-190],[13.5,-157.5],[15.8,-135],[24.8,-121.5],[31.5,-110.3],[27,-96.8],[18,-94.5],[17.1,-76.5],[22.5,-63],[29.3,-54],[36,-42],gp(-GW-4.5)];
-const RB=[gp(GW+4.5),[65.3,-31.5],[76.5,-24.8],[85.5,-15.8],[94.5,0],[103.5,4.5],[117,0],[130.5,-4.5],[139.5,4.5],[141.8,22.5],[144,31.5],[157.5,29.3],[175.5,27],[189,27],[192,42]];
-const W=5.2;/* півширина хребта */
-/* відстань до ламаної; повертає [відстань, позиція вздовж (0..1)] */
+/* 0.3.2: Локація 2 — три хребти поперек острова; пройти можна лише перевалами (ущелинами):
+   хребет 1 (z≈110) — перевал посередині; хребет 2 (z≈0) — два перевали, лівий і правий; хребет 3 (z≈−118) — перевал посередині.
+   У кожній ущелині s — уздовж хребта (вісь x), q — уздовж проходу (вісь z). */
+const GW=6,GL=16,W=5.2;/* півширина проходу, напівдовжина ущелини, півширина хребта */
+const RZ=[110,0,-118],rz=(k,x)=>RZ[k]+4*Math.sin(x*.045+k*1.7)+2*Math.sin(x*.11+k);
+const PASSES=[[0,0],[1,-95],[1,95],[2,0]].map(([k,x])=>({k,GZ:[x,rz(k,x)]}));
+const LINES=[];/* відрізки хребтів між перевалами, від берега до берега */
+for(let k=0;k<3;k++){const gaps=PASSES.filter(p=>p.k==k).map(p=>p.GZ[0]).sort((a,b)=>a-b);let x0=-160;
+ for(const g of[...gaps,999]){const x1=g==999?160:g-GW-4.5;const L=[];for(let x=x0;x<x1;x+=10)L.push([x,rz(k,x)]);L.push([x1,rz(k,x1)]);if(L.length>1)LINES.push({k,L,coastA:x0<=-159,coastB:g==999});x0=g+GW+4.5}}
 function segD(L,x,z){let best=1e9,bt=0,acc=0,tot=0;for(let i=1;i<L.length;i++)tot+=Math.hypot(L[i][0]-L[i-1][0],L[i][1]-L[i-1][1]);
  for(let i=1;i<L.length;i++){const a=L[i-1],b=L[i],dx=b[0]-a[0],dz=b[1]-a[1],l2=dx*dx+dz*dz,l=Math.sqrt(l2);let t=((x-a[0])*dx+(z-a[1])*dz)/l2;t=Math.max(0,Math.min(1,t));
   const d=Math.hypot(x-a[0]-dx*t,z-a[1]-dz*t);if(d<best){best=d;bt=(acc+l*t)/tot}acc+=l}return[best,bt]}
-/* у системі ущелини: s — уздовж хребта, q — уздовж проходу */
-const gL=(x,z)=>{const dx=x-GZ[0],dz=z-GZ[1];return[dx*T[0]+dz*T[1],dx*N[0]+dz*N[1]]};
-const GL=16;/* напівдовжина ущелини */
-const inPass=(x,z,m)=>{const[s,q]=gL(x,z);return Math.abs(s)<GW-.6-m&&Math.abs(q)<GL+6};
-const inWall=(x,z,m)=>{const[s,q]=gL(x,z);return Math.abs(s)>=GW-.6-m&&Math.abs(s)<GW+9.6+m&&Math.abs(q)<GL+m};
-const inRidge=(x,z,m)=>segD(RA,x,z)[0]<W+m||segD(RB,x,z)[0]<W+m;
+const gL=(P,x,z)=>[x-P.GZ[0],z-P.GZ[1]];
+const inPass=(x,z,m)=>PASSES.some(P=>{const[s,q]=gL(P,x,z);return Math.abs(s)<GW-.6-m&&Math.abs(q)<GL+6});
+const inWall=(x,z,m)=>PASSES.some(P=>{const[s,q]=gL(P,x,z);return Math.abs(s)>=GW-.6-m&&Math.abs(s)<GW+9.6+m&&Math.abs(q)<GL+m});
+const inRidge=(x,z,m)=>LINES.some(o=>Math.abs(z-RZ[o.k])<16&&segD(o.L,x,z)[0]<W+m);
 const blockedRaw=(x,z,m)=>!inPass(x,z,m)&&(inRidge(x,z,m)||inWall(x,z,m));
 
 /* ---------- скелі ---------- */
 const RG=[0,1,2].map(k=>plCliff.geo(k)),RC=plCliff.cols,L=[[],[],[]],SNOW=0xb8b0a4;/* 0.3.1: без снігу — світлий камінь */
 const add=(x,z,w,h,col)=>{const y=H_(x,z);if(y<-2.5)return;L[(rnd()*3)|0].push([x,Math.min(y,.6)-h*.1,z,w*rr(.85,1.15),h,w*rr(.85,1.2),rnd()*6.28,col||RC[(rnd()*RC.length)|0]])};
 /* профіль висоти: до моря хребет нижчає, біля ущелини — високі стіни */
-const prof=(t,coastAt0)=>{const c=coastAt0?t:1-t;return .35+.65*Math.min(1,c*5)};
-function ridge(Lp,coastAt0){let tot=0;for(let i=1;i<Lp.length;i++)tot+=Math.hypot(Lp[i][0]-Lp[i-1][0],Lp[i][1]-Lp[i-1][1]);
+const prof=(t,coastA,coastB)=>{let k=1;if(coastA)k=Math.min(k,.35+.65*Math.min(1,t*5));if(coastB)k=Math.min(k,.35+.65*Math.min(1,(1-t)*5));return k};
+function ridge(Lp,coastA,coastB){let tot=0;for(let i=1;i<Lp.length;i++)tot+=Math.hypot(Lp[i][0]-Lp[i-1][0],Lp[i][1]-Lp[i-1][1]);
  let acc=0;for(let i=1;i<Lp.length;i++){const a=Lp[i-1],b=Lp[i],dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz),nx=-dz/l,nz=dx/l;
-  for(let s=0;s<l;s+=2.3){const t=(acc+s)/tot,k=prof(t,coastAt0),px=a[0]+dx*s/l,pz=a[1]+dz*s/l,peak=(.75+.5*Math.abs(Math.sin(t*23+(coastAt0?1:4))))*k;
+  for(let s=0;s<l;s+=2.3){const t=(acc+s)/tot,k=prof(t,coastA,coastB),px=a[0]+dx*s/l,pz=a[1]+dz*s/l,peak=(.75+.5*Math.abs(Math.sin(px*.21+pz)))*k;
    for(const[o,w,h]of[[-4.2,3.4,9],[-1.5,4.4,17],[1.5,4.4,17],[4.2,3.4,9]]){const oo=o+rr(-.6,.6),hh=h*peak*rr(.85,1.2);add(px+nx*oo,pz+nz*oo,w*rr(.85,1.15),hh)}
    if(peak>.95&&rnd()<.55)add(px+nx*rr(-.8,.8),pz+nz*rr(-.8,.8),2.6,24*peak*rr(.9,1.1),SNOW)}/* світлі кам'яні піки */
   acc+=l}}
-ridge(RA,true);ridge(RB,false);
-/* стіни ущелини: три яруси брил — нижчі біля проходу, вищі далі, тож ущелина схожа на каньйон */
+for(const o of LINES)ridge(o.L,o.coastA,o.coastB);
+/* ущелини: три яруси брил обабіч проходу, кам'яна арка над серединою, валуни біля підніжжя */
 const RIM=[];
-for(const sd of[-1,1])for(let q=-GL;q<=GL;q+=1.6){const taper=1-Math.pow(Math.abs(q)/(GL+4),2)*.4;
- for(const[o,w,h]of[[GW+2.8,2.6,10],[GW+5.4,3.4,17],[GW+8.2,4.2,25]]){const s=sd*(o+rr(-.3,.3)),x=GZ[0]+T[0]*s+N[0]*q,z=GZ[1]+T[1]*s+N[1]*q;const hh=h*taper*rr(.85,1.15);add(x,z,w,hh);if(o>GW+7)RIM.push([x,z,hh])}}
-/* кам'яна арка над серединою проходу */
-for(let a=0;a<=Math.PI+1e-6;a+=Math.PI/11){const s=-Math.cos(a)*(GW+1.6),y=Math.sin(a)*7.5+4.5,x=GZ[0]+T[0]*s,z=GZ[1]+T[1]*s;
- L[(rnd()*3)|0].push([x,H_(GZ[0],GZ[1])+y,z,1.9,1.5,1.7,rnd()*6.28,RC[(rnd()*RC.length)|0]])}
-/* валуни біля підніжжя стін (не на стежці) */
-for(const sd of[-1,1])for(let q=-GL+2;q<=GL-2;q+=rr(3.5,6)){const s=sd*rr(GW-.9,GW-.3),x=GZ[0]+T[0]*s+N[0]*q,z=GZ[1]+T[1]*s+N[1]*q;add(x,z,rr(.7,1.1),rr(1.1,1.8))}
+for(const PS of PASSES){const[gx,gz]=PS.GZ;
+ for(const sd of[-1,1])for(let q=-GL;q<=GL;q+=1.6){const taper=1-Math.pow(Math.abs(q)/(GL+4),2)*.4;
+  for(const[o,w,h]of[[GW+2.8,2.6,10],[GW+5.4,3.4,17],[GW+8.2,4.2,25]]){const x=gx+sd*(o+rr(-.3,.3)),z=gz+q;const hh=h*taper*rr(.85,1.15);add(x,z,w,hh);if(o>GW+7)RIM.push([x,z,hh])}}
+ for(let a=0;a<=Math.PI+1e-6;a+=Math.PI/11){const x=gx-Math.cos(a)*(GW+1.6),y=Math.sin(a)*7.5+4.5;L[(rnd()*3)|0].push([x,H_(gx,gz)+y,gz,1.9,1.5,1.7,rnd()*6.28,RC[(rnd()*RC.length)|0]])}
+ for(const sd of[-1,1])for(let q=-GL+2;q<=GL-2;q+=rr(3.5,6))add(gx+sd*rr(GW-.9,GW-.3),gz+q,rr(.7,1.1),rr(1.1,1.8))}
 const dm=new THREE.Object3D(),cl=new THREE.Color(),RMAT=plCliff.mat();
 L.forEach((A,k)=>{if(!A.length)return;const m=new THREE.InstancedMesh(RG[k],RMAT,A.length);
  A.forEach((r,i)=>{dm.position.set(r[0],r[1],r[2]);dm.scale.set(r[3],r[4],r[5]);dm.rotation.set(0,r[6],0);dm.updateMatrix();m.setMatrixAt(i,dm.matrix);m.setColorAt(i,cl.setHex(r[7]))});
@@ -58,8 +53,8 @@ L.forEach((A,k)=>{if(!A.length)return;const m=new THREE.InstancedMesh(RG[k],RMAT
  pm.castShadow=true;sc_.add(pm)}
 
 /* стежка з пласких каменів посередині проходу і ялинки на краях каньйону */
-{const sg=new THREE.CylinderGeometry(.55,.62,.16,9),sm=new THREE.MeshStandardMaterial({color:0xb9ad98,roughness:1,flatShading:true}),n=Math.floor(GL*2/1.25)+1,st=new THREE.InstancedMesh(sg,sm,n);
- for(let i=0;i<n;i++){const q=-GL+i*1.25,s=Math.sin(q*.35)*.9+rr(-.25,.25),x=GZ[0]+T[0]*s+N[0]*q,z=GZ[1]+T[1]*s+N[1]*q;dm.position.set(x,H_(x,z)+.03,z);dm.scale.set(rr(.8,1.2),1,rr(.7,1.1));dm.rotation.set(0,rnd()*6,0);dm.updateMatrix();st.setMatrixAt(i,dm.matrix)}
+{const sg=new THREE.CylinderGeometry(.55,.62,.16,9),sm=new THREE.MeshStandardMaterial({color:0xb9ad98,roughness:1,flatShading:true}),n1=Math.floor(GL*2/1.25)+1,st=new THREE.InstancedMesh(sg,sm,n1*PASSES.length);let ii=0;
+ for(const PS of PASSES)for(let i=0;i<n1;i++){const q=-GL+i*1.25,s=Math.sin(q*.35)*.9+rr(-.25,.25),x=PS.GZ[0]+s,z=PS.GZ[1]+q;dm.position.set(x,H_(x,z)+.03,z);dm.scale.set(rr(.8,1.2),1,rr(.7,1.1));dm.rotation.set(0,rnd()*6,0);dm.updateMatrix();st.setMatrixAt(ii++,dm.matrix)}
  st.receiveShadow=true;sc_.add(st);
  const pg=new THREE.ConeGeometry(1.1,3.4,7),pm=new THREE.MeshStandardMaterial({color:0x2c6a3a,roughness:.9,flatShading:true}),P=RIM.filter(()=>rnd()<.6),pi=new THREE.InstancedMesh(pg,pm,P.length*2);let k=0;
  P.forEach(r=>{for(let t=0;t<2;t++){dm.position.set(r[0]+rr(-1.2,1.2),Math.min(H_(r[0],r[2]),.6)+r[2]*.33+1.4,r[1]+rr(-1.2,1.2));dm.scale.setScalar(rr(.7,1.25));dm.rotation.set(0,rnd()*6,0);dm.updateMatrix();pi.setMatrixAt(k++,dm.matrix)}});
@@ -85,5 +80,5 @@ const cb0=window.colBlocked;
 window.colBlocked=function(x0,z0,x1,z1,r){if(blocked(x1,z1,.4))return true;return cb0?cb0.apply(this,arguments):false};
 /* герой, збережений усередині гір чи брили (старий сейв), — поруч на вільному місці */
 if(blocked(P_.x,P_.z,0)){for(let r=1.5;r<40;r+=1.5){let ok=null;for(let a=0;a<6.28&&!ok;a+=.4){const nx=P_.x+Math.cos(a)*r,nz=P_.z+Math.sin(a)*r;if(!blocked(nx,nz,.5)&&H_(nx,nz)>-.4)ok=[nx,nz]}if(ok){P_.x=ok[0];P_.z=ok[1];break}}}
-window.RIDGES={blocked,snow:(x,z)=>{const a=segD(RA,x,z),b=segD(RB,x,z);return Math.min(a[0],b[0])<1.6},GZ};
+window.RIDGES={blocked,snow:(x,z)=>LINES.some(o=>Math.abs(z-RZ[o.k])<8&&segD(o.L,x,z)[0]<1.6),GZ:PASSES[0].GZ,PASSES,RZ};
 }catch(e){console.warn('ridges:',e)}})();

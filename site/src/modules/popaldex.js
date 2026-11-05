@@ -77,9 +77,9 @@ function infoTab(i){const t=T[i],c=DX.c[i]>0,s=DX.s[i]>0,e0=elsOf(i)[0];
  <h6>Характеристики</h6><div class='bx'>❤️ Здоровʼя: ${t.hp} · ${t.ag?'😠 Нападає першим':'🙂 Мирний'}<br>Стихія: ${elsOf(i).map(k=>EC[k][1]+' '+EN[k]).join(' / ')}</div>
  <h6>Трофеї</h6><div class='bx'>${t.d=='s'?'🪨 Камінь ×2':'🪵 Деревина ×2'} — за перемогу</div>`+capPips(i)}
 function capPips(i){const n=Math.min(CB,DX.c[i]);return `<h6>Бонус за поїмку</h6><div class='dxp'>${Array.from({length:CB},(_,k)=>`<i class='${k<n?'on':''}'></i>`).join('')}<b>${n} / ${CB}</b></div><div class='bx' style='opacity:.6'>Кожен з перших ${CB} спійманих попалів цього виду дає +${CBXP} XP</div>`}
-function habitatTab(i){const ZN=[[0,'Долина',1,3],[30,'Луки',3,10],[70,'Ліс',10,25],[110,'Гори',25,45],[145,'Дикі землі',45,70],[175,'Край світу',70,100]];const n=wild.filter(w=>w.ty===i).length;
+function habitatTab(i){const ZN=[[0,'Бухта прибуття',1,5],[0,'Зелені луки',5,12],[0,'Старий ліс',12,20],[0,'Дикі землі',20,25]];const n=wild.filter(w=>w.ty===i).length;
  return `<h6>Зона проживання</h6><div class='bx'>${DX.s[i]?`Трапляється по всьому краю. Зараз у світі: <b style='display:inline;border:none;padding:0'>${n}</b> (на карті — сині точки).`:'Ви ще не зустрічали цього попала.'}</div>
- <h6>Рівні за зонами</h6><div class='bx'>${ZN.map(z=>`${z[1]}: рів. ${z[2]}–${z[3]}`).join('<br>')}<br><span style='opacity:.6'>Що далі від центру світу — то сильніші дикі попали.</span></div>`}
+ <h6>Рівні за зонами</h6><div class='bx'>${ZN.map(z=>`${z[1]}: рів. ${z[2]}–${z[3]}`).join('<br>')}<br><span style='opacity:.6'>Що далі на північ, за хребти, — то сильніші дикі попали.</span></div>`}
 function drawMap(cv,i){const x=cv.getContext('2d'),S=cv.width,R0=230,tp=(a,b)=>[S/2+a/R0*S/2,S/2+b/R0*S/2];x.clearRect(0,0,S,S);
  x.fillStyle='rgba(30,70,110,.6)';x.beginPath();x.arc(S/2,S/2,S/2-2,0,7);x.fill();
  for(let gx=0;gx<120;gx++)for(let gz=0;gz<120;gz++){const wx=(gx/120*2-1)*R0,wz=(gz/120*2-1)*R0;let h=-9;try{h=H(wx,wz)}catch(_){}if(h<-.4)continue;x.fillStyle='#'+BCOL[BIO(wx,wz)].toString(16).padStart(6,'0');const[a,b]=tp(wx,wz);x.fillRect(a,b,S/120+1,S/120+1)}
