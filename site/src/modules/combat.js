@@ -34,14 +34,18 @@ function hit(o){const raw=1.1*((1.5*o.lv+20)*o.sp*o.atk/Math.max(1,o.def))/15;
  return{v,e,crit,sleep:slp,tag:(e>1?' ✦':e<1?' ▽':'')+(crit?' !':'')+(slp?' 💤':'')}}
 const hero=()=>{const L=typeof plv=='number'?plv:1;return{lv:L,atk:100+8*(L-1),def:100+6*(L-1)}};
 function wake(w){if(w&&w.sl){w.sl=0;w.ag=1}}
-const PW=window.PW={stats,skill,eff,hit,hero,
+/* 0.3.1: різниця рівнів. Ціль вища за атакувальника більше ніж на 3 рівні — шкода різко падає (×0.72 за кожен рівень понад 3),
+   а сильніша дика істота б'є героя й попала сильніше (+28% за кожен рівень понад 3, до ×5).
+   Герой 1 рівня ще перемагає істот до 5 рівня; 2 рівень проти 15 — майже без шансів. */
+const gapDeal=d=>d<=3?1:Math.max(.04,Math.pow(.72,d-3)),gapTake=d=>d<=3?1:Math.min(5,1+.28*(d-3));
+const PW=window.PW={stats,skill,eff,hit,hero,gapDeal,gapTake,
  /* попал (його навичка) б'є дику істоту */
- palHit(p,w){const s=stats(p.ty,p.lv),k=skill(p.ty),d=w.def||stats(w.ty,w.lv).def,r=hit({lv:p.lv||1,sp:k.p,atk:s.atk,def:d,el:k.e,own:els(p.ty),ds:els(w.ty),sleep:w.sl});wake(w);return r},
+ palHit(p,w){const s=stats(p.ty,p.lv),k=skill(p.ty),d=w.def||stats(w.ty,w.lv).def,r=hit({lv:p.lv||1,sp:k.p,atk:s.atk,def:d,el:k.e,own:els(p.ty),ds:els(w.ty),sleep:w.sl});r.v=Math.max(1,Math.round(r.v*gapDeal((w.lv||1)-(p.lv||1))));wake(w);return r},
  /* герой б'є дику істоту */
- heroHit(w){const h=hero(),d=w.def||stats(w.ty,w.lv).def,r=hit({lv:h.lv,sp:40,atk:h.atk,def:d,sleep:w.sl});wake(w);return r},
+ heroHit(w){const h=hero(),d=w.def||stats(w.ty,w.lv).def,r=hit({lv:h.lv,sp:40,atk:h.atk,def:d,sleep:w.sl});r.v=Math.max(1,Math.round(r.v*gapDeal((w.lv||1)-h.lv)));wake(w);return r},
  /* дика істота б'є героя (своєю навичкою; у героя немає стихії) */
  wildHit(w,avg){const s=w.atk?{atk:w.atk}:stats(w.ty,w.lv),k=skill(w.ty),o={lv:w.lv||1,sp:k.p*.4,atk:s.atk,def:hero().def,el:k.e,own:els(w.ty)};
-  if(avg)return Math.round(1.1*((1.5*o.lv+20)*o.sp*o.atk/o.def)/15*1.2);return hit(o).v}};
+  const g=gapTake((w.lv||1)-hero().lv);if(avg)return Math.round(1.1*((1.5*o.lv+20)*o.sp*o.atk/o.def)/15*1.2*g);return Math.round(hit(o).v*g)}};
 window.hpMax=()=>500+25*((typeof plv=='number'?plv:1)-1);
 /* сон: уночі мирні (неагресивні) дикі істоти засинають і стоять на місці; удар будить */
 if(typeof ANI!='undefined'&&typeof wild!='undefined')ANI.push(()=>{const n=window.isNight&&window.isNight();for(const w of wild){

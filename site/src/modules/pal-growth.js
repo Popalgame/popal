@@ -116,13 +116,13 @@ function tickShots(dt){for(let i=SH.length-1;i>=0;i--){const s=SH[i];s.t+=dt*2.4
 /* ---------- урон ---------- */
 const cur=()=>{const p=pals[selP];return p&&(!window.palOn||palOn())&&p.m&&p.m.visible?p:null};
 function hitWild(p,w,a,mult){if(!wild.includes(w))return;const s=stats(p),e=elOf(p.ty),rl=role(p);
- let r;if(window.PW){r=PW.hit({lv:p.lv||1,sp:a.p*(mult||1)*(rl=='dd'&&a.k=='melee'?1.15:1),atk:s.atk,def:w.def||PW.stats(w.ty,w.lv).def,el:e,own:(T[p.ty]&&T[p.ty].e)||[e],ds:(T[w.ty]&&T[w.ty].e)||['ne'],sleep:w.sl});if(w.sl){w.sl=0}}
+ let r;if(window.PW){r=PW.hit({lv:p.lv||1,sp:a.p*(mult||1)*(rl=='dd'&&a.k=='melee'?1.15:1),atk:s.atk,def:w.def||PW.stats(w.ty,w.lv).def,el:e,own:(T[p.ty]&&T[p.ty].e)||[e],ds:(T[w.ty]&&T[w.ty].e)||['ne'],sleep:w.sl});if(PW.gapDeal)r.v=Math.max(1,Math.round(r.v*PW.gapDeal((w.lv||1)-(p.lv||1))));if(w.sl){w.sl=0}}
  else r={v:Math.round(a.p*(mult||1)*.3*(1+.1*(p.lv||1))),tag:''};
  w.hp=Math.max(1,w.hp-r.v);w.ag=1;w._fightT=10;try{flash(w)}catch(_){}
  dmg(a.n+' '+r.v+(r.tag||''),w.m,'#'+a.c.toString(16).padStart(6,'0'));if(a.slow)w._slow=3;
- if(window.palXp)palXp(p,3);if(w.hp<=1&&!w.wk){w.wk=1;msg('🔮 '+T[w.ty].n+' ослаблена! Киньте кулю')}}
+ if(window.palXp)palXp(p,3);if(w.hp<=1&&!w.wk&&!w.boss){w.wk=1;msg('🔮 '+T[w.ty].n+' ослаблена! Киньте кулю')}}
 /* DoT — горіння/отрута/струм */
-setInterval(()=>{for(const w of wild){if(!(w._dot>0))continue;w._dot--;const p=w._dotP;if(!p)continue;w.hp=Math.max(1,w.hp-w._dotV);try{dmg(String(w._dotV),w.m,'#'+w._dotC.toString(16).padStart(6,'0'));burstFx(w.x,H(w.x,w.z)+.9,w.z,w._dotC,3,1)}catch(_){}if(w.hp<=1&&!w.wk){w.wk=1;msg('🔮 '+T[w.ty].n+' ослаблена! Киньте кулю')}}},1000);
+setInterval(()=>{for(const w of wild){if(!(w._dot>0))continue;w._dot--;const p=w._dotP;if(!p)continue;w.hp=Math.max(1,w.hp-w._dotV);try{dmg(String(w._dotV),w.m,'#'+w._dotC.toString(16).padStart(6,'0'));burstFx(w.x,H(w.x,w.z)+.9,w.z,w._dotC,3,1)}catch(_){}if(w.hp<=1&&!w.wk&&!w.boss){w.wk=1;msg('🔮 '+T[w.ty].n+' ослаблена! Киньте кулю')}}},1000);
 
 /* ---------- щит героя, урон по героях ---------- */
 let shieldT=0;
@@ -170,7 +170,7 @@ window.palCombatPos=p=>{if(p!==cur()||!target||!enemyOk(target))return null;cons
 
 /* ---------- дикі б'ють попала (по одній цілі) ---------- */
 function palTakeHit(p,w,k){const s=stats(p),rl=role(p),sk=window.PW?PW.skill(w.ty):{p:40};
- const v=window.PW?PW.hit({lv:w.lv||1,sp:sk.p*.4*(k||1),atk:w.atk||100,def:s.def*(rl=='tank'?1.33:1)*(p._tauntT>0?1.25:1),el:sk.e,own:(T[w.ty]&&T[w.ty].e)||[],ds:(T[p.ty]&&T[p.ty].e)||[]}).v:8;
+ const v=window.PW?PW.hit({lv:w.lv||1,sp:sk.p*.4*(k||1),atk:w.atk||100,def:s.def*(rl=='tank'?1.33:1)*(p._tauntT>0?1.25:1),el:sk.e,own:(T[w.ty]&&T[w.ty].e)||[],ds:(T[p.ty]&&T[p.ty].e)||[]}).v*(PW.gapTake?PW.gapTake((w.lv||1)-(p.lv||1)):1):8;
  p.chp=(p.chp==null?s.hp:p.chp)-v;try{dmg('-'+v,p.m,'#ffb070')}catch(_){}
  if(p.chp<=0){p.chp=0;try{msg('💫 '+(T[p.ty]||{}).n+' знесилився й повертається у сферу. Відновиться за хвилину')}catch(_){}target=null;if(window.palToggle)palToggle()}}
 window.wildVsPal=(w,dt,dHero)=>{if(w._tele>0)return 1e-4;/* замахується для масового удару — стоїть */
@@ -196,7 +196,7 @@ function slam(w,R){if(!wild.includes(w))return;const sk=window.PW?PW.skill(w.ty)
   try{dmg('-'+v,pl,'#ff6b6b');hud()}catch(_){}if(P.hp<=0&&window.plHeroDown)window.plHeroDown()}
  const p=cur();if(p&&Math.hypot(w.x-p.x,w.z-p.z)<=R){palTakeHit(p,w,.8);hit=1}
  if(hit)try{dmg('💥 '+sk.n,w.m,'#ffcf7a')}catch(_){}}
-function wildAoe(dt){const p=cur();for(const w of wild){if(w.wk||w.sl||!(w.ag||w._fightT>0))continue;const R=w.aoeR||AOE_R[w.ty]||2.8;/* бос — ширше коло (boss.js) */
+function wildAoe(dt){const p=cur();for(const w of wild){if(w.wk||w.sl||w.boss||!(w.ag||w._fightT>0))continue;/* боси мають власні заклинання (boss.js) */const R=w.aoeR||AOE_R[w.ty]||2.8;/* бос — ширше коло (boss.js) */
  if(w._tele>0){w._tele-=dt;if(w._tele<=0)slam(w,R);continue}
  const dh=Math.hypot(w.x-P.x,w.z-P.z),dp=p?Math.hypot(w.x-p.x,w.z-p.z):99;if(Math.min(dh,dp)>R*1.6){continue}
  w._acd=(w._acd==null?3+Math.random()*4:w._acd)-dt;
