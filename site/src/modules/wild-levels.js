@@ -77,7 +77,7 @@ let zT=0,zLast=-1;
   const w=it[1];if(!w._h){try{w._h=Math.min(2.4,(new THREE.Box3().setFromObject(w.m).max.y-w.m.position.y)/(w.m.scale.y||1))+.15}catch(_){w._h=1.8}}
   v3.set(w.x,w.m.position.y+w._h,w.z).project(cam);if(v3.z>1||Math.abs(v3.x)>1.1||Math.abs(v3.y)>1.1){b.d.style.display='none';b.w=null;continue}
   const x=(v3.x+1)/2*innerWidth,y=(1-v3.y)/2*innerHeight;b.d.style.display='flex';b.d.style.transform=`translate(${x|0}px,${y|0}px) translate(-50%,-100%)`;
-  const k=w.lv+':'+Math.max(0,Math.ceil(w.hp))+':'+w.mh+':'+(w.sl?1:0);if(b.w!==w||b.k!==k){b.w=w;b.k=k;b.s.innerHTML=`<b>${w.lv}</b> ${T[w.ty].n}${w.sl?' 💤':''}`;b.u.style.width=Math.max(0,Math.min(100,w.hp/w.mh*100))+'%';b.d.classList.toggle('hi',w.lv>plv+5)}}
+  const k=w.lv+':'+Math.max(0,Math.ceil(w.hp))+':'+w.mh+':'+(w.sl?1:0);if(b.w!==w||b.k!==k){b.w=w;b.k=k;b.s.innerHTML=`<b>${w.lv}</b> ${w.name||T[w.ty].n}${w.sl?' 💤':''}`;b.u.style.width=Math.max(0,Math.min(100,w.hp/w.mh*100))+'%';b.d.classList.toggle('hi',w.lv>plv+5)}}
  /* повідомлення про зону, коли гравець переходить в іншу */
  zT+=1;if(!ISL&&zT>30){zT=0;const z=inBay(P.x,P.z)?-2:zoneEff(P.x,P.z);if(z!==zLast){if(zLast!==-1&&!busy){if(z==-2)msg('🏖️ Тиха бухта · істоти рівня 1–3');else{const Z=ZN[z];msg('🗺️ '+Z[1]+' · істоти рівня '+Z[2]+'–'+Z[3])}}zLast=z}}
 }catch(e){}loop()})})();

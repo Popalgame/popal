@@ -196,7 +196,7 @@ function slam(w,R){if(!wild.includes(w))return;const sk=window.PW?PW.skill(w.ty)
   try{dmg('-'+v,pl,'#ff6b6b');hud()}catch(_){}if(P.hp<=0&&window.plHeroDown)window.plHeroDown()}
  const p=cur();if(p&&Math.hypot(w.x-p.x,w.z-p.z)<=R){palTakeHit(p,w,.8);hit=1}
  if(hit)try{dmg('💥 '+sk.n,w.m,'#ffcf7a')}catch(_){}}
-function wildAoe(dt){const p=cur();for(const w of wild){if(w.wk||w.sl||!(w.ag||w._fightT>0))continue;const R=AOE_R[w.ty]||2.8;
+function wildAoe(dt){const p=cur();for(const w of wild){if(w.wk||w.sl||!(w.ag||w._fightT>0))continue;const R=w.aoeR||AOE_R[w.ty]||2.8;/* бос — ширше коло (boss.js) */
  if(w._tele>0){w._tele-=dt;if(w._tele<=0)slam(w,R);continue}
  const dh=Math.hypot(w.x-P.x,w.z-P.z),dp=p?Math.hypot(w.x-p.x,w.z-p.z):99;if(Math.min(dh,dp)>R*1.6){continue}
  w._acd=(w._acd==null?3+Math.random()*4:w._acd)-dt;

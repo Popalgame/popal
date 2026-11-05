@@ -54,7 +54,7 @@ function applyForm(o,fm,ty){const m=o.m||o;let fx=m.getObjectByName('formFx');co
  const key=fm+':'+m.children.length;if(fx&&m.userData.fmKey===key)return;if(fx){m.remove(fx);fx.traverse(q=>{if(q.geometry)q.geometry.dispose();if(q.material)q.material.dispose()})}
  const tmp=new THREE.Group();m.add(tmp);const h=modelH(m,tmp);m.remove(tmp);fx=formFx(fm,h,elC(ty));m.add(fx);m.userData.fmKey=key;m.userData.fmApplied=fm}
 /* попали гравця: аксесуари й масштаб форми */
-setInterval(()=>{const PF=window.PALFORM;if(PF){for(const p of pals)if(p._hi)PF.ensure(p._hi,p.ty,p.fm||1);for(const w of(typeof wild!='undefined'?wild:[]))if(w._hi)PF.ensure(w._hi,w.ty,1)}/* моделі з пулу — потрібна форма; дикі завжди форма 1 */
+setInterval(()=>{const PF=window.PALFORM;if(PF){for(const p of pals)if(p._hi)PF.ensure(p._hi,p.ty,p.fm||1);for(const w of(typeof wild!='undefined'?wild:[]))if(w._hi)PF.ensure(w._hi,w.ty,w.fm||1)}/* моделі з пулу — потрібна форма; дикі — форма 1, бос — своя (boss.js) */
  for(const p of pals){if(!p.m)continue;const fm=p.fm||1,fs=FS[fm]||1;applyForm(p,fm,p.ty);
  if(p._s0!==fs){const was=p._s0||1;p._s0=fs;if(Math.abs(p.m.scale.x-was)<.01)p.m.scale.setScalar(fs)}}},600);
 /* анімація аксесуарів */
