@@ -6,7 +6,10 @@ TOOLS.splice(0,TOOLS.length,{id:null,i:'✋',n:'Руки',d:'🌲 повільн
 const NR=[{id:'sti',n:'Палки ×2',c:{w:1},d:'Основа для всіх інструментів',q:2},{id:'axw',n:'Дерев’яна сокира',c:{sti:3,w:2},d:'Рубає втричі швидше за руки',one:1},{id:'pkw',n:'Дерев’яна кирка',c:{sti:3,w:3},d:'Дозволяє добувати камінь',one:1},{id:'axe',n:'Кам’яна сокира',c:{sti:2,s:3,w:2},d:'Сильніший удар, більше деревини',one:1},{id:'pick',n:'Кам’яна кирка',c:{sti:2,s:4,w:2},d:'Швидше б’є камінь і добуває залізну руду й вугілля з жил',one:1},{id:'ing',n:'Залізний злиток',c:{ore:2,w:1},d:'Переплавлена руда для металевих інструментів'},{id:'axm',n:'Металева сокира',c:{sti:2,ing:3,w:2},d:'Валить дерево з одного удару, ×2 деревини',one:1},{id:'pkm',n:'Металева кирка',c:{sti:2,ing:4,w:2},d:'Розбиває скелю з одного удару, більше руди з жил',one:1}];
 RC.splice(0,RC.length,...NR,...RC.filter(r=>r.id!='axe'&&r.id!='pick'));
 let hint=0,sh=0;
-window.gHit=function(k,o){const t=TT[eq.tool],ok=!!t&&t.k==k;if(!o.mx)o.mx=o.hp=8;
+/* 0.3.2: потрібний інструмент є в рюкзаку — герой сам бере найкращий у руки (раніше: «камінь руками не добути», хоча кирка вже є) */
+function autoTool(k){const c=TT[eq.tool];if(c&&c.k==k)return;let best=null;for(const id in TT){const t=TT[id];if(t.k==k&&(inv[id]||0)>0&&(!best||t.t>TT[best].t))best=id}
+ if(best){eq.tool=best;try{buildHero(pl,look||DLOOK);eqUp()}catch(_){}msg((k=='w'?'🪓':'⛏️')+' У руках: '+IT[best][1])}}
+window.gHit=function(k,o){autoTool(k);const t=TT[eq.tool],ok=!!t&&t.k==k;if(!o.mx)o.mx=o.hp=8;
 if(k=='s'&&!ok){if(Date.now()-sh>2500){sh=Date.now();msg('⛏️ Камінь руками не добути: створіть кирку в Крафті')}return -1}
 const dm=ok?t.d:1;o.hp-=dm;const y=ok?t.y:0,tx=[];if(y){res[k]+=y;st[k]+=y;tx.push('+'+y+(k=='w'?' 🪵':' 🪨'))}
 if(k=='w'&&Math.random()<(ok?.2:.35)){inv.sti++;tx.push('+1 🥢')}

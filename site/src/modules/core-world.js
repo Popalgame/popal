@@ -135,7 +135,7 @@ function pcUp(){const mx=plv>=XPMAX;$('xt').textContent=mx?'МАКС':xp+' / '+x
 function addXp(n){if(plv>=XPMAX){xp=0;hud();return}xp+=n;dmg('+'+n+' XP',pl,'#7fe3f5');let up=0;while(plv<XPMAX&&xp>=xpN(plv)){xp-=xpN(plv);plv++;up=1;res.b+=1;if(window.hpMax)HPM=hpMax();P.hp=HPM}if(plv>=XPMAX)xp=0;if(up)msg('⭐ Рівень '+plv+'! +1 світло-синя куля');hud();save()}
 /* fx */
 const tgR=new THREE.Mesh(new THREE.RingGeometry(.75,.95,32),new THREE.MeshBasicMaterial({color:0xff5a5a,transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false}));tgR.rotation.x=-Math.PI/2;tgR.visible=false;sc.add(tgR);
-function dmg(t,o,col){const v=new THREE.Vector3(o.position.x,o.position.y+2,o.position.z).project(cam),d=document.createElement('div');d.className='dmg';d.textContent=t;if(col)d.style.color=col;d.style.left=(v.x*.5+.5)*innerWidth+'px';d.style.top=(-v.y*.5+.5)*innerHeight+'px';document.body.appendChild(d);requestAnimationFrame(()=>{d.style.transform='translate(-50%,-70px)';d.style.opacity=0});setTimeout(()=>d.remove(),950)}
+function dmg(t,o,col){t=plainTxt(t);const v=new THREE.Vector3(o.position.x,o.position.y+2,o.position.z).project(cam),d=document.createElement('div');d.className='dmg';d.textContent=t;if(col)d.style.color=col;d.style.left=(v.x*.5+.5)*innerWidth+'px';d.style.top=(-v.y*.5+.5)*innerHeight+'px';document.body.appendChild(d);requestAnimationFrame(()=>{d.style.transform='translate(-50%,-70px)';d.style.opacity=0});setTimeout(()=>d.remove(),950)}
 /* player */
 const SK=[0xf0c9a4,0xe0ac80,0xb7835a,0x7a5235,0xf6d9c0,0x5a3a26],HC=[0x3a2a1e,0x8a5a2b,0xe8c25a,0xd93b3b,0x5b6bd6,0xf4f4f4,0x7a1f3a,0x6b3f1e],TC=[0x5b6bd6,0xd93b3b,0x4f9a4a,0xe8803a,0x8e5a3a,0x2e3658,0x2f78d0],DLOOK={g:0,hr:4,hc:0,top:0,tc:0,sk:0};
 function buildHero(g,lk){while(g.children.length)g.remove(g.children[0]);const sk=SK[lk.sk],hc=HC[lk.hc],tc=TC[lk.tc],f=lk.g==1;
@@ -192,7 +192,9 @@ const palTeam=()=>pals.reduce((a,p,i)=>(p.cs==null&&a.push(i),a),[]);window.palT
 function save(){if(window.zNoSave)return;/* вихід з акаунта: не записуємо прогрес назад до перезавантаження */try{localStorage.setItem('zi',JSON.stringify({res,plv,xp,qi,qa,st,pname,look,inv,eq,cf,t:Date.now(),pals:pals.map(p=>[p.ty,p.lv||1,p.cs==null?-1:p.cs,p.wk&&p.cs!=null?1:0,p.cr||0,palCargo(p.ai)]),pos:[+P.x.toFixed(1),+P.z.toFixed(1),+(P.face||0).toFixed(2)]}))}catch(e){}cloudPush()}setInterval(save,5000);
 /* ui */
 const $=id=>document.getElementById(id);let mt;
-function msg(s){$('msg').textContent=s;$('msg').style.display='block';clearTimeout(mt);mt=setTimeout(()=>$('msg').style.display='none',3500)}
+/* 0.3.2: у текст повідомлень потрапляють значки-картинки предметів (IT[k][0] — <img>) — показуємо замість них емодзі */
+function plainTxt(s){s=String(s);if(s.indexOf('<')<0)return s;return s.replace(/<img[^>]*alt=['"]([^'"]*)['"][^>]*>/g,(m,a)=>{for(const k in IT)if(IT[k][1]==a)return IT[k].e||'';return ''}).replace(/<[^>]+>/g,'')}
+function msg(s){s=plainTxt(s);$('msg').textContent=s;$('msg').style.display='block';clearTimeout(mt);mt=setTimeout(()=>$('msg').style.display='none',3500)}
 function hud(){$('a').textContent='🪵 '+res.w;$('b').textContent='🪨 '+res.s;$('c').textContent='🔮 '+res.b;$('d').textContent='❤️ '+Math.ceil(P.hp)+'/'+HPM;$('hpf').style.width=(Math.max(0,P.hp)/HPM*100)+'%';$('hpt').textContent='❤ '+Math.ceil(P.hp)+' / '+HPM;$('hf').style.width=(Math.max(0,P.hp)/HPM*100)+'%';$('ht').textContent='❤ '+Math.ceil(Math.max(0,P.hp))+' / '+HPM;$('e').textContent='🐾 '+palTeam().length+'/'+(window.palCap?palCap():8);pcUp();qUp();pwUp();eqUp();$('quest').textContent=''}
 /* input */
 let jx=0,jy=0,jid=null;const joy=$('joy'),kn=$('knob');

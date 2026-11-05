@@ -12,6 +12,11 @@ try{if(window.DS)Object.assign(window.DS,{hpp:'Відновлює 300 HP гер�
 try{const w0=window.itemW;if(w0)window.itemW=k=>k=='xpp'?0:k=='hpp'?.2:w0(k)}catch(_){}
 const HPmax=()=>typeof HPM!='undefined'?HPM:100;
 
+/* варити зілля можна лише біля Столу зіль (до 5 м) — як страви біля кухні (cooking.js) */
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-r]');if(!t||typeof RC=='undefined')return;const r=RC[+t.dataset.r];if(!r||r.id!='hpp')return;
+ const b=(window.BPLACED||[]).filter(q=>q.id=='B_alch').sort((a,c)=>Math.hypot(a.x-P.x,a.z-P.z)-Math.hypot(c.x-P.x,c.z-P.z))[0];
+ if(!b){e.stopImmediatePropagation();e.preventDefault();msg('⚗️ Щоб варити зілля, збудуйте Стіл зіль');return}
+ if(Math.hypot(b.x-P.x,b.z-P.z)>5){e.stopImmediatePropagation();e.preventDefault();msg('⚗️ Підійдіть до Столу зіль — зілля варять на ньому')}},true);
 /* ---------- дія зіль ---------- */
 function drinkHp(){if(!(inv.hpp>0))return;if(P.hp>=HPmax()){msg('❤️ Здоров’я вже повне');return}inv.hpp--;const add=Math.min(300,HPmax()-P.hp);P.hp=Math.min(HPmax(),P.hp+add);
  try{dmg('+'+add+' ❤️',pl,'#8dffa8')}catch(_){}msg('❤️ Випито зілля здоров’я: +'+add+' HP');try{hud();save()}catch(_){}}

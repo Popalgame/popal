@@ -203,7 +203,7 @@ const D={wool,lth:leather,w:log,s:stone,sti:sticks,ing:ingot,ore:()=>lump('ore')
  axw:()=>axe('w'),axe:()=>axe('s'),axm:()=>axe('m'),pkw:()=>pick('w'),pick:()=>pick('s'),pkm:()=>pick('m'),bp1,bp2,bp3,
  B_bed:bed,B_kit:kitchen,B_wb:bench,B_fur:furnace,B_farm:farm,B_lamp:lamp,B_fen:fence,B_cen:center,B_ch:chest};
 Object.assign(D,BICO);
-const SRC={};for(const k in D){try{SRC[k]=D[k]();if(IT[k])IT[k][0]=img(SRC[k],IT[k][1])}catch(e){console.warn('icon '+k,e)}}
+const SRC={};for(const k in D){try{SRC[k]=D[k]();if(IT[k]){if(!IT[k].e&&!/</.test(IT[k][0]))IT[k].e=IT[k][0];IT[k][0]=img(SRC[k],IT[k][1])}}catch(e){console.warn('icon '+k,e)}}/* IT[k].e — початковий емодзі для текстових повідомлень */
 window.plIconSrc=k=>SRC[k]||((/src='([^']+)'/.exec((IT[k]||[''])[0])||[])[1])||null;
 window.plIcon=k=>SRC[k]?img(SRC[k]):(IT[k]?IT[k][0]:'');
 /* головні кнопки */
