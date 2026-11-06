@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="uk"><head><meta charset="utf-8">
+<html lang="pl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Regnum Land — безкоштовна 3D-гра в браузері</title>
-<meta name="description" content="Лови попалів, будуй базу й бийся разом зі своїми помічниками. Безкоштовна 3D-гра для телефона й ПК, що працює просто в браузері.">
+<title>Regnum Land — darmowa gra 3D w przeglądarce</title>
+<meta name="description" content="Łap popale, buduj bazę i walcz razem ze swoimi pomocnikami. Darmowa gra 3D na telefon i PC, która działa prosto w przeglądarce.">
 <link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.jpg"><meta name="apple-mobile-web-app-title" content="Regnum Land"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1c26"><meta property="og:image" content="https://popalgame.pl/img/shots/coast.webp">
-<link rel="canonical" href="https://popalgame.pl/"><meta property="og:title" content="Regnum Land"><meta property="og:description" content="Лови попалів, будуй базу й бийся разом з помічниками. Безкоштовна 3D-гра в браузері."><meta property="og:url" content="https://popalgame.pl/">
+<link rel="canonical" href="https://popalgame.pl/"><meta property="og:title" content="Regnum Land"><meta property="og:description" content="Łap popale, buduj bazę i walcz razem z pomocnikami. Darmowa gra 3D w przeglądarce."><meta property="og:url" content="https://popalgame.pl/">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="img/shots/coast.webp">
@@ -123,7 +123,7 @@ h2{font-size:clamp(28px,4.6vw,46px);margin:10px 0 14px;color:var(--cream)}
 .badge{position:absolute;top:-12px;right:18px;background:var(--gold);color:var(--bg);font:800 11px Unbounded,system-ui,sans-serif;padding:5px 10px;border-radius:999px;display:none}
 .rec .badge{display:block}
 .dnote{margin-top:22px;font-size:14px;color:var(--muted);max-width:72ch}
-/* фінал */
+/* final */
 .end{position:relative;text-align:center;overflow:hidden;isolation:isolate;padding:120px 0}
 .end::before{content:'';position:absolute;inset:0;z-index:-2;background:url(img/shots/night.webp) center/cover}
 .end::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,var(--bg) 0%,rgba(11,28,38,.55) 40%,rgba(11,28,38,.7) 70%,var(--bg) 100%)}
@@ -135,124 +135,124 @@ footer{border-top:1px solid var(--line);padding:26px 20px calc(env(safe-area-ins
 footer a{color:var(--cream)}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.hero .bg,.crit img{animation:none}.crit,.btn{transition:none}}
 </style></head><body>
-<nav class="nav" aria-label="Головне меню"><div class="wrap">
+<nav class="nav" aria-label="Menu główne"><div class="wrap">
 <a class="brand" href="#top"><img src="favicon.png" alt="" width="32" height="32">Regnum Land</a>
-<div class="links"><a href="#game">Гра</a><a href="#creatures">Істоти</a><a href="#new">Що нового</a><a href="#download">Встановити</a></div>
-<a class="ig" href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener" aria-label="Regnum Land в Instagram"><svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='ig' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(#ig)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg></a>
-<a class="btn main" href="game.html">Грати</a>
+<div class="links"><a href="#game">Gra</a><a href="#creatures">Stworzenia</a><a href="#new">Co nowego</a><a href="#download">Zainstaluj</a></div>
+<a class="ig" href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener" aria-label="Regnum Land na Instagramie"><svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='ig' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(#ig)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg></a>
+<a class="btn main" href="game.html">Graj</a>
 </div></nav>
 
-<header class="hero" id="top"><div class="bg" role="img" aria-label="Герой на березі моря у світі Regnum Land"></div>
+<header class="hero" id="top"><div class="bg" role="img" aria-label="Bohater na brzegu morza w świecie Regnum Land"></div>
 <div class="wrap">
-<a class="chip" href="#new"><i></i><span id="verChip">Нове оновлення</span></a>
+<a class="chip" href="#new"><i></i><span id="verChip">Nowa aktualizacja</span></a>
 <h1><img class="rl" src="regnum-land.webp" alt="Regnum Land" width="900" height="604"></h1>
-<div class="motto">Досліджуй · Приручай · Будуй</div>
-<p class="sub">Безкоштовна 3D-гра в браузері: лови попалів, будуй базу й бийся разом зі своїми помічниками.</p>
-<div class="cta"><a class="btn main" href="game.html">▶ Грати безкоштовно</a><a class="btn ghost" href="#download">Встановити як застосунок</a></div>
-<div class="note">📱 Телефон і ПК — без завантаження й реєстрації</div>
+<div class="motto">Odkrywaj · Oswajaj · Buduj</div>
+<p class="sub">Darmowa gra 3D w przeglądarce: łap popale, buduj bazę i walcz razem ze swoimi pomocnikami.</p>
+<div class="cta"><a class="btn main" href="game.html">▶ Graj za darmo</a><a class="btn ghost" href="#download">Zainstaluj jako aplikację</a></div>
+<div class="note">📱 Telefon i PC — bez pobierania i rejestracji</div>
 <div class="stats">
-<div><b>10</b><span>видів попалів</span></div>
-<div><b>7</b><span>стихій у бою</span></div>
-<div><b>День і ніч</b><span>живий світ</span></div>
-<div><b>☁️</b><span>хмарні збереження</span></div>
+<div><b>10</b><span>gatunków popali</span></div>
+<div><b>7</b><span>żywiołów w walce</span></div>
+<div><b>Dzień i noc</b><span>żywy świat</span></div>
+<div><b>☁️</b><span>zapis w chmurze</span></div>
 </div></div></header>
 
 <section id="game"><div class="wrap">
-<span class="eyebrow">Гра</span>
-<h2>Великий світ, твої попали, твоя база</h2>
-<p class="lead">Починаєш на березі моря в Тихій бухті, де живуть лише слабкі істоти. Далі — ліси, гори й дикі землі, де попали сильніші, а здобич цінніша.</p>
-<div class="feature"><figure class="shot"><img src="img/shots/fight.webp" width="1280" height="720" loading="lazy" alt="Попал-павук захищає героя від дикої істоти"><figcaption>⚔️ Бій</figcaption></figure>
-<div><span class="eyebrow">Бій</span><h3>Бийся разом з попалами</h3>
-<p>Твій попал б’є своєю навичкою, а урон залежить від рівня, атаки, захисту й стихій. Вогонь пече траву, вода гасить вогонь, а сплячу вночі істоту можна застати зненацька.</p>
-<ul class="tags"><li>Стихія <b>×1.5</b></li><li>Своя стихія <b>×1.2</b></li><li>Крит <b>×1.5</b></li><li>По сплячій <b>×3</b></li></ul></div></div>
-<div class="feature flip"><figure class="shot"><img src="img/shots/base.webp" width="1280" height="720" loading="lazy" alt="База з Попал-центром, плавильнею, верстаками й попалами"><figcaption>🏕️ База</figcaption></figure>
-<div><span class="eyebrow">База</span><h3>Будуй базу де завгодно</h3>
-<p>Постав Попал-центр будь-де на суші, а навколо — кухню, плавильню, верстак і ліжко. Попали з бригади самі рубають дерева, добувають руду, плавлять злитки й готують їжу.</p>
-<ul class="tags"><li>🔥 Плавильня</li><li>🍲 Кухня</li><li>🔧 Ремонтний верстак</li><li>📦 Скрині</li></ul></div></div>
-<div class="feature"><figure class="shot"><img src="img/shots/night.webp" width="1280" height="720" loading="lazy" alt="Нічний берег під зорями"><figcaption>🌙 Ніч</figcaption></figure>
-<div><span class="eyebrow">Світ</span><h3>День змінює ніч</h3>
-<p>Уночі світять ліхтарі й літають світлячки, а мирні істоти засинають просто неба. Ліжко на базі дозволяє проспати до ранку.</p>
-<ul class="tags"><li>🌅 45 хв день</li><li>🌙 15 хв ніч</li><li>💤 Сплячі істоти</li></ul></div></div>
+<span class="eyebrow">Gra</span>
+<h2>Wielki świat, twoje popale, twoja baza</h2>
+<p class="lead">Zaczynasz na brzegu morza w Zatoce Przybycia, gdzie żyją tylko słabe stworzenia. Dalej — lasy, góry i dzikie ziemie, gdzie popale są silniejsze, a łupy cenniejsze.</p>
+<div class="feature"><figure class="shot"><img src="img/shots/fight.webp" width="1280" height="720" loading="lazy" alt="Popal-pająk broni bohatera przed dzikim stworzeniem"><figcaption>⚔️ Walka</figcaption></figure>
+<div><span class="eyebrow">Walka</span><h3>Walcz razem z popalami</h3>
+<p>Twój popal uderza swoją umiejętnością, a obrażenia zależą od poziomu, ataku, obrony i żywiołów. Ogień pali trawę, woda gasi ogień, a śpiące w nocy stworzenie można zaskoczyć.</p>
+<ul class="tags"><li>Żywioł <b>×1,5</b></li><li>Własny żywioł <b>×1,2</b></li><li>Kryt <b>×1,5</b></li><li>W śpiącego <b>×3</b></li></ul></div></div>
+<div class="feature flip"><figure class="shot"><img src="img/shots/base.webp" width="1280" height="720" loading="lazy" alt="Baza z Centrum Popali, hutą, warsztatami i popalami"><figcaption>🏕️ Baza</figcaption></figure>
+<div><span class="eyebrow">Baza</span><h3>Buduj bazę, gdzie chcesz</h3>
+<p>Postaw Centrum Popali w dowolnym miejscu na lądzie, a wokół — kuchnię, hutę, warsztat i łóżko. Popale z brygady same rąbią drzewa, wydobywają rudę, wytapiają sztabki i gotują jedzenie.</p>
+<ul class="tags"><li>🔥 Huta</li><li>🍲 Kuchnia</li><li>🔧 Warsztat naprawczy</li><li>📦 Skrzynie</li></ul></div></div>
+<div class="feature"><figure class="shot"><img src="img/shots/night.webp" width="1280" height="720" loading="lazy" alt="Nocny brzeg pod gwiazdami"><figcaption>🌙 Noc</figcaption></figure>
+<div><span class="eyebrow">Świat</span><h3>Dzień zmienia się w noc</h3>
+<p>Nocą świecą latarnie i latają świetliki, a spokojne stworzenia zasypiają pod gołym niebem. Łóżko w bazie pozwala przespać do rana.</p>
+<ul class="tags"><li>🌅 45 min dnia</li><li>🌙 15 min nocy</li><li>💤 Śpiące stworzenia</li></ul></div></div>
 <div class="cards" style="margin-top:28px">
-<div class="card"><div class="ic">🪓</div><h3>Інструменти й ремонт</h3><p>Сокири й кирки зношуються від роботи. Лагодь їх на ремонтному верстаку.</p></div>
-<div class="card"><div class="ic">🧶</div><h3>Здобич з істот</h3><p>Шерсть з Пухоклуба, шкіра з Моророга, Грозовика й Бамбузла.</p></div>
-<div class="card"><div class="ic">📱</div><h3>Під твій пристрій</h3><p>Розстав кнопки як зручно, а на слабкому телефоні зменш траву — гра не лагатиме.</p></div>
+<div class="card"><div class="ic">🪓</div><h3>Narzędzia i naprawa</h3><p>Siekiery i kilofy zużywają się od pracy. Naprawiaj je na warsztacie naprawczym.</p></div>
+<div class="card"><div class="ic">🧶</div><h3>Łupy ze stworzeń</h3><p>Wełna z Puszkłębka, skóra z Mrozoroga, Burzownika i Bambuzela.</p></div>
+<div class="card"><div class="ic">📱</div><h3>Pod twoje urządzenie</h3><p>Rozstaw przyciski, jak ci wygodnie, a na słabym telefonie zmniejsz trawę — gra nie będzie się zacinać.</p></div>
 </div>
 </div></section>
 
 <section class="creatures" id="creatures"><div class="wrap">
-<span class="eyebrow">Істоти</span>
-<h2>Кого можна зловити</h2>
-<p class="lead">Десять видів попалів. Ослаб істоту, кинь кулю — і вона стане твоїм помічником у бою чи працівником на базі.</p>
+<span class="eyebrow">Stworzenia</span>
+<h2>Kogo można złapać</h2>
+<p class="lead">Dziesięć gatunków popali. Osłab stworzenie, rzuć kulę — i stanie się twoim pomocnikiem w walce albo pracownikiem w bazie.</p>
 <div class="crits">
-<div class="crit" style="--d:0.00s"><img src="img/pals/0.webp" width="140" height="140" loading="lazy" alt="Бамбузл"><h3>Бамбузл</h3><span class="el">🌿 Трава</span><p>Добродушна панда з бамбуковим списом.</p><ul class="jobs"><li>🪓 Рубає дерева</li><li>🫐 Збирає ягоди й гриби</li></ul></div>
-<div class="crit" style="--d:0.37s"><img src="img/pals/1.webp" width="140" height="140" loading="lazy" alt="Грумрок"><h3>Грумрок</h3><span class="el">💎 Земля</span><p>Броньований копач із кристалами на спині.</p><ul class="jobs"><li>⛏️ Добуває камінь</li><li>📦 Носить вантажі</li></ul></div>
-<div class="crit" style="--d:0.74s"><img src="img/pals/2.webp" width="140" height="140" loading="lazy" alt="Ігніс-Виверг"><h3>Ігніс-Виверг</h3><span class="el">🔥 Вогонь</span><p>Вогняний павук. Нападає першим, тож бережіть здоровʼя.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує на кухні-багатті</li></ul></div>
-<div class="crit" style="--d:1.11s"><img src="img/pals/3.webp" width="140" height="140" loading="lazy" alt="Міражбр"><h3>Міражбр</h3><span class="el">👻 Темрява</span><p>Напівпрозорий хамелеон, ловиться легше за інших.</p><ul class="jobs"><li>📦 Найкращий носій: годує бригаду</li></ul></div>
-<div class="crit" style="--d:1.48s"><img src="img/pals/4.webp" width="140" height="140" loading="lazy" alt="Пухоклуб"><h3>Пухоклуб</h3><span class="el">⚪ Нейтральний</span><p>Хмаринка-овечка з золотими ріжками.</p><ul class="jobs"><li>🫐 Збирає ягоди й гриби</li><li>📦 Носить вантажі</li></ul></div>
-<div class="crit" style="--d:1.85s"><img src="img/pals/5.webp" width="140" height="140" loading="lazy" alt="Крилоша"><h3>Крилоша</h3><span class="el">🌪️ Повітря</span><p>Метелик-фея з чотирма крилами.</p><ul class="jobs"><li>🫐 Найкращий збирач урожаю</li></ul></div>
-<div class="crit" style="--d:2.22s"><img src="img/pals/6.webp" width="140" height="140" loading="lazy" alt="Мороріг"><h3>Мороріг</h3><span class="el">❄️ Вода й лід</span><p>Крижаний олень з кришталевими рогами.</p><ul class="jobs"><li>⛏️ Добуває камінь</li></ul></div>
-<div class="crit" style="--d:2.59s"><img src="img/pals/7.webp" width="140" height="140" loading="lazy" alt="Грозовик"><h3>Грозовик</h3><span class="el">⚡ Темрява й повітря</span><p>Чорний вовк з неоновими блискавками. Нападає першим.</p><ul class="jobs"><li>📦 Носить вантажі</li><li>🪓 Рубає дерева</li></ul></div>
-<div class="crit" style="--d:2.96s"><img src="img/pals/8.webp" width="140" height="140" loading="lazy" alt="Хвилезуб"><h3>Хвилезуб</h3><span class="el">💧 Вода</span><p>Сухопутна акула на лапках.</p><ul class="jobs"><li>🪓 Рубає дерева</li></ul></div>
-<div class="crit" style="--d:3.33s"><img src="img/pals/9.webp" width="140" height="140" loading="lazy" alt="Сонцеклюв"><h3>Сонцеклюв</h3><span class="el">☀️ Вогонь і повітря</span><p>Високий птах із сонячним вінцем за головою.</p><ul class="jobs"><li>🔩 Плавить руду в плавильні</li><li>🍳 Готує</li><li>📦 Носить</li></ul></div>
+<div class="crit" style="--d:0.00s"><img src="img/pals/0.webp" width="140" height="140" loading="lazy" alt="Bambuzel"><h3>Bambuzel</h3><span class="el">🌿 Trawa</span><p>Dobroduszna panda z bambusową włócznią.</p><ul class="jobs"><li>🪓 Rąbie drzewa</li><li>🫐 Zbiera jagody i grzyby</li></ul></div>
+<div class="crit" style="--d:0.37s"><img src="img/pals/1.webp" width="140" height="140" loading="lazy" alt="Grumrok"><h3>Grumrok</h3><span class="el">💎 Ziemia</span><p>Opancerzony kopacz z kryształami na grzbiecie.</p><ul class="jobs"><li>⛏️ Wydobywa kamień</li><li>📦 Nosi ładunki</li></ul></div>
+<div class="crit" style="--d:0.74s"><img src="img/pals/2.webp" width="140" height="140" loading="lazy" alt="Ignis Wywerna"><h3>Ignis Wywerna</h3><span class="el">🔥 Ogień</span><p>Ognisty pająk. Atakuje pierwszy, więc uważaj na zdrowie.</p><ul class="jobs"><li>🔩 Wytapia rudę w hucie</li><li>🍳 Gotuje na ognisku kuchennym</li></ul></div>
+<div class="crit" style="--d:1.11s"><img src="img/pals/3.webp" width="140" height="140" loading="lazy" alt="Mirażbr"><h3>Mirażbr</h3><span class="el">👻 Ciemność</span><p>Półprzezroczysty kameleon, łapie się go łatwiej niż innych.</p><ul class="jobs"><li>📦 Najlepszy tragarz: karmi brygadę</li></ul></div>
+<div class="crit" style="--d:1.48s"><img src="img/pals/4.webp" width="140" height="140" loading="lazy" alt="Puszkłębek"><h3>Puszkłębek</h3><span class="el">⚪ Neutralny</span><p>Owieczka-chmurka ze złotymi różkami.</p><ul class="jobs"><li>🫐 Zbiera jagody i grzyby</li><li>📦 Nosi ładunki</li></ul></div>
+<div class="crit" style="--d:1.85s"><img src="img/pals/5.webp" width="140" height="140" loading="lazy" alt="Krylosza"><h3>Krylosza</h3><span class="el">🌪️ Powietrze</span><p>Motyl-wróżka z czterema skrzydłami.</p><ul class="jobs"><li>🫐 Najlepszy zbieracz plonów</li></ul></div>
+<div class="crit" style="--d:2.22s"><img src="img/pals/6.webp" width="140" height="140" loading="lazy" alt="Mrozoróg"><h3>Mrozoróg</h3><span class="el">❄️ Woda i lód</span><p>Lodowy jeleń z kryształowymi rogami.</p><ul class="jobs"><li>⛏️ Wydobywa kamień</li></ul></div>
+<div class="crit" style="--d:2.59s"><img src="img/pals/7.webp" width="140" height="140" loading="lazy" alt="Burzownik"><h3>Burzownik</h3><span class="el">⚡ Ciemność i powietrze</span><p>Czarny wilk z neonowymi błyskawicami. Atakuje pierwszy.</p><ul class="jobs"><li>📦 Nosi ładunki</li><li>🪓 Rąbie drzewa</li></ul></div>
+<div class="crit" style="--d:2.96s"><img src="img/pals/8.webp" width="140" height="140" loading="lazy" alt="Falozęb"><h3>Falozęb</h3><span class="el">💧 Woda</span><p>Lądowy rekin na łapkach.</p><ul class="jobs"><li>🪓 Rąbie drzewa</li></ul></div>
+<div class="crit" style="--d:3.33s"><img src="img/pals/9.webp" width="140" height="140" loading="lazy" alt="Słońcodziób"><h3>Słońcodziób</h3><span class="el">☀️ Ogień i powietrze</span><p>Wysoki ptak ze słoneczną koroną za głową.</p><ul class="jobs"><li>🔩 Wytapia rudę w hucie</li><li>🍳 Gotuje</li><li>📦 Nosi</li></ul></div>
 </div></div></section>
 
 <section><div class="wrap">
-<span class="eyebrow">Старт</span>
-<h2>Як грати</h2>
-<p class="lead">Перша істота на твоїй базі за кілька хвилин.</p>
+<span class="eyebrow">Start</span>
+<h2>Jak grać</h2>
+<p class="lead">Pierwsze stworzenie w twojej bazie w kilka minut.</p>
 <ol class="steps">
-<li><div><b>Зберіть ресурси</b>Підійдіть до дерева чи скелі й натискайте «Дія».</div></li>
-<li><div><b>Створіть кулю</b>Кнопка «Крафт» робить кулю з 3 деревини та 2 каменю.</div></li>
-<li><div><b>Ослабте істоту</b>Кілька ударів знижують її здоровʼя, і шанс ловлі росте.</div></li>
-<li><div><b>Киньте кулю</b>Спіймана істота буде з вами у сфері.</div></li>
-<li><div><b>Поставте Попал-центр</b>Скрафтіть його з 20 деревини й 15 каменю, покладіть туди істот — і вони почнуть працювати.</div></li>
+<li><div><b>Zbierz surowce</b>Podejdź do drzewa lub skały i naciskaj „Akcja”.</div></li>
+<li><div><b>Zrób kulę</b>Przycisk „Wytwarzanie” robi kulę z 3 drewna i 2 kamieni.</div></li>
+<li><div><b>Osłab stworzenie</b>Kilka ciosów obniża jego zdrowie, a szansa na złapanie rośnie.</div></li>
+<li><div><b>Rzuć kulę</b>Złapane stworzenie będzie z tobą w kuli.</div></li>
+<li><div><b>Postaw Centrum Popali</b>Wytwórz je z 20 drewna i 15 kamieni, umieść w nim stworzenia — i zaczną pracować.</div></li>
 </ol>
 </div></section>
 
 <section class="new" id="new"><div class="wrap"><div class="newbox">
-<div class="ver"><small>Актуальна версія</small><b id="verBig">—</b><p>Гра оновлюється сама: просто відкрий її знову.</p><a class="btn main" href="game.html">Грати</a></div>
-<div><span class="eyebrow">Що нового</span><h2>Останні оновлення</h2>
+<div class="ver"><small>Aktualna wersja</small><b id="verBig">—</b><p>Gra aktualizuje się sama: po prostu otwórz ją ponownie.</p><a class="btn main" href="game.html">Graj</a></div>
+<div><span class="eyebrow">Co nowego</span><h2>Ostatnie aktualizacje</h2>
 <ul class="log">
-<li><span>🐑</span><div><b>Загін</b><p>Поселіть Пухоклуба, Моророга, Грозовика чи Бамбузла — вони гуляють за парканом і дають шерсть або шкіру у скриню загону.</p></div></li>
-<li><span>🏆</span><div><b>Рейтинг гравців</b><p>Лідери за рівнем героя — лише гравці з акаунтом і ID. У меню зліва.</p></div></li>
-<li><span>📰</span><div><b>Нове меню й новини</b><p>Меню зліва з іконками «Новини» й «Рейтинг», новини з картинками.</p></div></li>
-<li><span>🎒</span><div><b>Рюкзак і кошик</b><p>Опис предмета у великому вікні, кошик відкривається як скриня, на шкалах попала — цифри здоров’я й ситості.</p></div></li>
-<li><span>👑</span><div><b>Regnum Land</b><p>Нова назва, логотип та іконка гри. Ваші попали й прогрес — на місці.</p></div></li>
-<li><span>🗺️</span><div><b>Локація 2</b><p>Прямокутний острів і чотири зони: що далі на північ, за хребти й перевали, — то сильніші дикі попали.</p></div></li>
-<li><span>🕳️</span><div><b>Кришталеві печери</b><p>Перше підземелля: темний тунель, ліхтарі, сильні мешканці й бос Кришталевий Владика. Вхід — червоний портал у стіні хребта.</p></div></li>
-<li><span>🔥</span><div><b>Боси</b><p>Страж ущелини й Владика чаклують: смуга заклинання й червоні кола на землі — відбігайте! Здобич щоразу різна.</p></div></li>
-<li><span>🧺</span><div><b>Попали їдять і сплять</b><p>Кошик з їжею, лежанки, утома й Стіл зіль із зіллям здоров’я (+300 HP).</p></div></li>
+<li><span>🐑</span><div><b>Zagroda</b><p>Zasiedl Puszkłębka, Mrozoroga, Burzownika lub Bambuzela — chodzą za płotem i dają wełnę albo skórę do skrzyni zagrody.</p></div></li>
+<li><span>🏆</span><div><b>Ranking graczy</b><p>Liderzy według poziomu bohatera — tylko gracze z kontem i ID. W menu po lewej.</p></div></li>
+<li><span>📰</span><div><b>Nowe menu i aktualności</b><p>Menu po lewej z ikonami „Aktualności” i „Ranking”, aktualności z obrazkami.</p></div></li>
+<li><span>🎒</span><div><b>Plecak i kosz</b><p>Opis przedmiotu w dużym oknie, kosz otwiera się jak skrzynia, na paskach popala — liczby zdrowia i sytości.</p></div></li>
+<li><span>👑</span><div><b>Regnum Land</b><p>Nowa nazwa, logo i ikona gry. Twoje popale i postęp — na miejscu.</p></div></li>
+<li><span>🗺️</span><div><b>Lokacja 2</b><p>Prostokątna wyspa i cztery strefy: im dalej na północ, za grzbiety i przełęcze, tym silniejsze dzikie popale.</p></div></li>
+<li><span>🕳️</span><div><b>Kryształowe Jaskinie</b><p>Pierwszy loch: ciemny tunel, latarnie, silni mieszkańcy i boss Kryształowy Władca. Wejście — czerwony portal w ścianie grzbietu.</p></div></li>
+<li><span>🔥</span><div><b>Bossowie</b><p>Strażnik Wąwozu i Władca rzucają zaklęcia: pasek zaklęcia i czerwone kręgi na ziemi — uciekaj! Łupy za każdym razem inne.</p></div></li>
+<li><span>🧺</span><div><b>Popale jedzą i śpią</b><p>Kosz z jedzeniem, posłania, zmęczenie i Stół mikstur z miksturą zdrowia (+300 HP).</p></div></li>
 </ul></div></div></div></section>
 
 <section id="download"><div class="wrap">
-<span class="eyebrow">Встановлення</span>
-<h2>Встановити гру</h2>
-<p class="lead">Regnum Land встановлюється як застосунок з власною іконкою й відкривається на весь екран. Обирай свій пристрій.</p>
+<span class="eyebrow">Instalacja</span>
+<h2>Zainstaluj grę</h2>
+<p class="lead">Regnum Land instaluje się jako aplikacja z własną ikoną i otwiera się na pełnym ekranie. Wybierz swoje urządzenie.</p>
 <div class="dls">
-<div class="dc" data-p="android"><span class="badge">Для вашого пристрою</span><div class="ic">🤖</div><h3>Android</h3>
-<a class="dbtn" id="btnAndroid" href="game.html">Завантажити для Android</a>
-<ol><li>Відкрийте popalgame.pl у браузері <b>Chrome</b>.</li><li>Натисніть кнопку вище. Якщо з’явиться вікно, підтвердьте встановлення.</li><li>Інакше в грі відкрийте меню Chrome ⋮ і виберіть «Установити застосунок».</li><li>Іконка Popal з’явиться на головному екрані.</li></ol></div>
-<div class="dc" data-p="pc"><span class="badge">Для вашого пристрою</span><div class="ic">💻</div><h3>ПК (Windows, Mac, Linux)</h3>
-<a class="dbtn" id="btnPC" href="game.html">Завантажити для ПК</a>
-<ol><li>Відкрийте popalgame.pl у <b>Chrome</b> або <b>Edge</b>.</li><li>Натисніть кнопку вище або значок встановлення в правій частині адресного рядка.</li><li>Підтвердьте. Popal відкриється в окремому вікні з ярликом на робочому столі чи в меню.</li><li>На Mac у Safari: меню «Файл» → «Додати в Dock».</li></ol></div>
-<div class="dc" data-p="ios"><span class="badge">Для вашого пристрою</span><div class="ic">🍎</div><h3>iPhone та iPad</h3>
-<a class="dbtn" id="btnIOS" href="game.html">Завантажити для iOS</a>
-<ol><li>Відкрийте гру в <b>Safari</b>: <a href="https://popalgame.pl/game.html">popalgame.pl/game.html</a>.</li><li>Натисніть «Поділитися» (квадрат зі стрілкою вгору ⬆️).</li><li>Виберіть «<b>На початковий екран</b>» і натисніть «Додати».</li><li>Запускайте Popal з нової іконки: гра відкриється без панелей браузера.</li></ol></div>
+<div class="dc" data-p="android"><span class="badge">Dla twojego urządzenia</span><div class="ic">🤖</div><h3>Android</h3>
+<a class="dbtn" id="btnAndroid" href="game.html">Pobierz na Androida</a>
+<ol><li>Otwórz popalgame.pl w przeglądarce <b>Chrome</b>.</li><li>Naciśnij przycisk powyżej. Jeśli pojawi się okno, potwierdź instalację.</li><li>W przeciwnym razie w grze otwórz menu Chrome ⋮ i wybierz „Zainstaluj aplikację”.</li><li>Ikona Regnum Land pojawi się na ekranie głównym.</li></ol></div>
+<div class="dc" data-p="pc"><span class="badge">Dla twojego urządzenia</span><div class="ic">💻</div><h3>PC (Windows, Mac, Linux)</h3>
+<a class="dbtn" id="btnPC" href="game.html">Pobierz na PC</a>
+<ol><li>Otwórz popalgame.pl w <b>Chrome</b> lub <b>Edge</b>.</li><li>Naciśnij przycisk powyżej albo ikonę instalacji po prawej stronie paska adresu.</li><li>Potwierdź. Regnum Land otworzy się w osobnym oknie ze skrótem na pulpicie lub w menu.</li><li>Na Macu w Safari: menu „Plik” → „Dodaj do Docka”.</li></ol></div>
+<div class="dc" data-p="ios"><span class="badge">Dla twojego urządzenia</span><div class="ic">🍎</div><h3>iPhone i iPad</h3>
+<a class="dbtn" id="btnIOS" href="game.html">Pobierz na iOS</a>
+<ol><li>Otwórz grę w <b>Safari</b>: <a href="https://popalgame.pl/game.html">popalgame.pl/game.html</a>.</li><li>Naciśnij „Udostępnij” (kwadrat ze strzałką w górę ⬆️).</li><li>Wybierz „<b>Do ekranu początkowego</b>” i naciśnij „Dodaj”.</li><li>Uruchamiaj Regnum Land z nowej ikony: gra otworzy się bez pasków przeglądarki.</li></ol></div>
 </div>
-<p class="dnote">Гра безкоштовна й без реєстрації. Прогрес зберігається на вашому пристрої. Гру можна просто відкрити в браузері кнопкою «Грати» і встановити пізніше з розділу «Налаштування» всередині гри.</p>
+<p class="dnote">Gra jest darmowa i bez rejestracji. Postęp zapisuje się na twoim urządzeniu. Grę możesz po prostu otworzyć w przeglądarce przyciskiem „Graj” i zainstalować później w „Ustawieniach” w grze.</p>
 </div></section>
 
 <section class="end"><div class="wrap">
-<h2>Готовий до пригоди?</h2>
-<p>Гра працює в браузері телефона чи комп’ютера. Без завантаження, без реєстрації.</p>
-<div class="cta"><a class="btn main" href="game.html">▶ Грати безкоштовно</a></div>
-<a class="follow" href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener"><span class="ig"><svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='ig' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(#ig)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg></span>Слідкуй за оновленнями @popalgame</a>
+<h2>Gotowy na przygodę?</h2>
+<p>Gra działa w przeglądarce telefonu lub komputera. Bez pobierania, bez rejestracji.</p>
+<div class="cta"><a class="btn main" href="game.html">▶ Graj za darmo</a></div>
+<a class="follow" href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener"><span class="ig"><svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='ig' x1='0' y1='1' x2='1' y2='0'><stop offset='0' stop-color='#feda75'/><stop offset='.35' stop-color='#fa7e1e'/><stop offset='.6' stop-color='#d62976'/><stop offset='.85' stop-color='#962fbf'/><stop offset='1' stop-color='#4f5bd5'/></linearGradient></defs><rect width='24' height='24' rx='6' fill='url(#ig)'/><rect x='5' y='5' width='14' height='14' rx='4.2' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='12' cy='12' r='3.3' fill='none' stroke='#fff' stroke-width='1.9'/><circle cx='16.6' cy='7.4' r='1.1' fill='#fff'/></svg></span>Śledź aktualizacje @popalgame</a>
 </div></section>
 
-<footer>Regnum Land, 2026. popalgame.pl · версія Alpha 0.2.11 · <a href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener">Instagram</a></footer>
+<footer>Regnum Land, 2026. popalgame.pl · wersja Alpha 0.2.11 · <a href="https://www.instagram.com/popalgame/" target="_blank" rel="noopener">Instagram</a></footer>
 <script>
-/* Прямі посилання на файли (необов'язково): коли з'являться APK чи інсталятор для ПК, впишіть сюди шлях, і кнопка стане завантаженням файлу. */
+/* Прямі посилання на файли (необов'язково): коли з'являться APK чи інсталятор для ПК, впишіть сюди шлях, і кнопка стане завантаженням файлу. Сторінка польською (lang="pl"); інші мови — автоперекладом браузера. */
 const ANDROID_URL='',PC_URL='';
 let bip=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();bip=e});
@@ -265,7 +265,7 @@ const card=document.querySelector('.dc[data-p="'+kind+'"]');if(card)card.classLi
 </script>
 <script>
 /* актуальна версія — з футера (його оновлюють разом із package.json, це перевіряють тести) */
-(function(){const m=/версія\s+([^·]+)/.exec(document.querySelector('footer').textContent);if(!m)return;const v=m[1].trim();
-document.getElementById('verChip').textContent=v+' · нове оновлення';document.getElementById('verBig').textContent=v})();
+(function(){const m=/(?:версія|wersja)\s+([^·]+)/.exec(document.querySelector('footer').textContent);if(!m)return;const v=m[1].trim();
+document.getElementById('verChip').textContent=v+' · nowa aktualizacja';document.getElementById('verBig').textContent=v})();
 </script>
 </body></html>
