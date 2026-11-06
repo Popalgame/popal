@@ -1,10 +1,12 @@
 (function(){try{
 const N=42;let ORD=[];try{ORD=JSON.parse(localStorage.getItem('zi_ord')||'[]')}catch(_){}
 const sv=()=>{try{localStorage.setItem('zi_ord',JSON.stringify(ORD))}catch(_){}};
-function sync(){const ks=Object.keys(IT).filter(k=>cnt(k)>0);while(ORD.length<N)ORD.push(null);ORD=ORD.slice(0,N).map(k=>k&&ks.includes(k)?k:null);const SNv=24+(window.bagS?bagS():0);for(const k of ks)if(!ORD.includes(k)){let i=ORD.findIndex((x,j)=>x==null&&j<SNv);if(i<0)i=ORD.indexOf(null);if(i>=0)ORD[i]=k}}
+/* 0.2.10: надягнутий рюкзак і інструмент у руках — у слотах спорядження, а не в сітці (в сітці лише решта таких самих) */
+const eff=k=>cnt(k)-(eq.bag==k?1:0)-(eq.tool==k?1:0);
+function sync(){const ks=Object.keys(IT).filter(k=>eff(k)>0);while(ORD.length<N)ORD.push(null);ORD=ORD.slice(0,N).map(k=>k&&ks.includes(k)?k:null);const SNv=24+(window.bagS?bagS():0);for(const k of ks)if(!ORD.includes(k)){let i=ORD.findIndex((x,j)=>x==null&&j<SNv);if(i<0)i=ORD.indexOf(null);if(i>=0)ORD[i]=k}}
 function bar(g){const t=g.parentNode.querySelector('.i2sb');if(!t)return;const th=t.firstChild,r=Math.min(1,g.clientHeight/(g.scrollHeight||1)),h=Math.max(18,r*t.clientHeight),mx=g.scrollHeight-g.clientHeight;th.style.height=h+'px';th.style.transform='translateY('+(mx>0?g.scrollTop/mx*(t.clientHeight-h):0)+'px)';t.style.opacity=r>=1?.35:1}
 const _r=ivR;ivR=function(){_r();const c=$('ivc');if(ivTab!='i'){c.classList.remove('fix');return}c.classList.add('fix');const g=c.querySelector('.i2g');if(!g)return;const on=(g.querySelector('.i2s.on')||{dataset:{}}).dataset.sl;sync();sv();
-g.innerHTML=ORD.map((k,i)=>k?`<button class='i2s ${k==on?'on':''}' data-sl='${k}' data-ix='${i}'>${IT[k][0]}<b>${cnt(k)}</b></button>`:`<div class='i2s${i>=24+(window.bagS?bagS():0)?' lk':''}' data-ix='${i}'>${i>=24+(window.bagS?bagS():0)?'🔒':''}</div>`).join('');
+g.innerHTML=ORD.map((k,i)=>k?`<button class='i2s ${k==on?'on':''}' data-sl='${k}' data-ix='${i}'>${IT[k][0]}<b>${eff(k)}</b></button>`:`<div class='i2s${i>=24+(window.bagS?bagS():0)?' lk':''}' data-ix='${i}'>${i>=24+(window.bagS?bagS():0)?'🔒':''}</div>`).join('');
 const w=document.createElement('div');w.className='i2gw';g.parentNode.insertBefore(w,g);w.appendChild(g);const tr=document.createElement('div');tr.className='i2sb';tr.innerHTML='<i></i>';w.appendChild(tr);
 g.scrollTop=ivR.st||0;requestAnimationFrame(()=>bar(g));g.onscroll=()=>{ivR.st=g.scrollTop;bar(g)};
 const sc=y=>{const r=tr.getBoundingClientRect();g.scrollTop=Math.max(0,Math.min(1,(y-r.top)/r.height))*(g.scrollHeight-g.clientHeight)};

@@ -23,6 +23,7 @@ c.innerHTML=`<div class='i2'><div><h5>Рюкзак</h5><div class='i2g'>${sl}</d
 <div class='i2r'><h5>Гравець</h5><div class='lvb'><b>${plv}</b><small>РІВЕНЬ ГРАВЦЯ<br>до наступного: ${nx-xp} XP</small></div><small>❤ ${Math.ceil(P.hp)} / ${HPM}</small><div class='bar'><i style='width:${Math.max(0,P.hp)/HPM*100}%;background:linear-gradient(90deg,#5fe08a,#2fa65a)'></i></div><small>✦ ${xp} / ${nx} XP</small><div class='bar'><i style='width:${xp/nx*100}%;background:linear-gradient(90deg,#7fe3f5,#3a8ee6)'></i></div><ul><li><span>⚔️ Атака</span><b>${10+cb}</b></li><li><span>🛠️ У руках</span><b>${eq.tool?IT[eq.tool][0]+' удар '+TT[eq.tool].d:'✋ удар 1'}</b></li><li><span>🔮 Сила кулі</span><b>×${fx(B.m)}</b></li><li><span>🐾 Загін</span><b>${pals.length} / ${window.palCap?palCap():8}</b></li><li><span>🍖 Годівниця</span><b>${cf}</b></li><li><span>💪 Сила акаунта</span><b>${(100+plv*125+pals.length*210).toLocaleString('uk-UA')}</b></li></ul></div></div>`;
 $('ivv').appendChild(R2.domElement);buildHero(hp2,look||DLOOK)};
 function after(m){msg(m);try{eqUp()}catch(_){}hud();save();ivR()}
+window.ivSel=v=>{sel=v};/* 0.2.10: inv-ui.js закриває вікно опису */
 $('ivc').addEventListener('click',e=>{const t=e.target.closest('[data-sl],[data-eqb],[data-eqt],[data-drop],[data-cyc],[data-pp],[data-look]');if(!t)return;const d=t.dataset;
 if(d.sl!==undefined){sel=d.sl==sel?null:d.sl;ivR();return}
 if(d.eqb!==undefined){eq.ball=d.eqb;after('🔮 Вибрано: '+IT[d.eqb][1]);return}
