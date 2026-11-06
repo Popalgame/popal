@@ -115,7 +115,7 @@ if(window.RIDGES){const RG=window.RIDGES,ARENA=18;
  for(const nm of['trees','rocks','bushes','shrooms']){let A;try{A=eval(nm)}catch(_){A=null}if(!Array.isArray(A))continue;for(let i=A.length-1;i>=0;i--){const o=A[i];if(o&&Math.hypot(o.x-HOME[0],o.z-HOME[1])<ARENA+1.5){if(o.m)sc.remove(o.m);A.splice(i,1)}}}
  setInterval(()=>{for(const w of wild){if(w.boss||w.dg)continue;const d=Math.hypot(w.x-HOME[0],w.z-HOME[1]);if(d<ARENA+2){const k=(ARENA+4)/Math.max(.1,d);w.x=HOME[0]+(w.x-HOME[0])*k;w.z=HOME[1]+(w.z-HOME[1])*k}}},2000);
  if(typeof inv._bossT=='number'&&inv._bossT>0&&!inv._boss.warden){inv._boss.warden=inv._bossT}delete inv._bossT;/* сейв попередньої версії */
- window.BOSSKIT.add({id:'warden',name:'👑 Страж ущелини',ty:2,lv:25,fm:3,scale:3.1,r:2.4,home:HOME,arena:ARENA,hpMul:15,/* 0.2.15: було 24 — з паузою між ударами героя (0.5 с) бій тривав ~55 с і вимагав 5–6 зіль; тепер ~35 с і 2–3 зілля */atkMul:1.6,melee:.03,respawn:600000,xp:400,
+ window.BOSSKIT.add({id:'warden',name:'👑 Страж ущелини',ty:2,lv:25,fm:3,scale:3.1,r:2.4,home:HOME,arena:ARENA,hpMul:24,atkMul:1.6,melee:.03,respawn:600000,xp:400,
   abil:[{n:'Вогняне коло',icon:'🔥 ',kind:'nova',R:7,cast:3,cd:9,first:5,k:.45,col:0xff3a1a},
         {n:'Вогняний дощ',icon:'☄️ ',kind:'rain',cnt:4,R:2.6,cast:3.2,cd:8,first:8,k:.32,col:0xff7a2a}],
   loot:[{tab:[{k:'cr2',n:[1,1],w:50},{k:'cr2',n:[2,2],w:15},{k:'hpp',n:[1,2],w:35}]},
