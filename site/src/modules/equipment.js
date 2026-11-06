@@ -12,11 +12,11 @@ function autoTool(k){const c=TT[eq.tool];if(c&&c.k==k)return;let best=null;for(c
 window.gHit=function(k,o){autoTool(k);const t=TT[eq.tool],ok=!!t&&t.k==k;if(!o.mx)o.mx=o.hp=8;
 if(k=='s'&&!ok){if(Date.now()-sh>2500){sh=Date.now();msg('⛏️ Камінь руками не добути: створіть кирку в Крафті')}return -1}
 const dm=ok?t.d:1;o.hp-=dm;const y=ok?t.y:0,tx=[];if(y){res[k]+=y;st[k]+=y;tx.push('+'+y+(k=='w'?' 🪵':' 🪨'))}
-if(k=='w'&&Math.random()<(ok?.2:.35)){inv.sti++;tx.push('+1 🥢')}
+if(k=='w'&&Math.random()<(ok?.1:.175)){inv.sti++;tx.push('+1 🥢')}/* 0.3.2: палиць удвічі менше */
 if(k=='w'&&!ok&&!hint){hint=1;msg('✋ Руками дерево рубається повільно. З палок 🥢 створіть сокиру')}
 return{y,dm,tx}};
 window.fellB=function(k,o){const t=TT[eq.tool],ok=!!t&&t.k==k,b=ok?t.t+1:2,tx=['+'+b+(k=='w'?' 🪵':' 🪨')];res[k]+=b;st[k]+=b;
-if(k=='w'){const n=1+(Math.random()*2|0);inv.sti+=n;tx.push('+'+n+' 🥢')}
+if(k=='w'){const n=Math.random()<.75?1:0;if(n){inv.sti+=n;tx.push('+'+n+' 🥢')}}/* у середньому 0.75 замість 1.5 */
 const p=o.m.position.clone();setTimeout(()=>dmg(tx.join(' '),{position:p},'#ffd34e'),250)};
 try{eqUp()}catch(_){}
 }catch(e){console.warn('tools2:',e)}})();

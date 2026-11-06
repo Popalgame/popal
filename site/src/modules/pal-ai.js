@@ -68,7 +68,7 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return;const A=p.ai||(p.ai
   const L=wk[A.job]||1,n=(A.k=='w'||A.k=='s')?(L>=3?2:1):(A.k=='be'?2:1);
   if(bagW(A)+W(A.k)*n>cap+1e-6){o._cl=null;A.s='deliver';break}
   A.bag[A.k]=(A.bag[A.k]||0)+n;let tx='+'+n+' '+(A.k=='w'?'🪵':A.k=='s'?'🪨':A.k=='be'?'🫐':'🍄');
-  if(A.k=='w'&&Math.random()<.35&&bagW(A)+W('sti')<=cap){A.bag.sti=(A.bag.sti||0)+1;tx+=' +1 🥢'}
+  if(A.k=='w'&&Math.random()<.175&&bagW(A)+W('sti')<=cap){A.bag.sti=(A.bag.sti||0)+1;tx+=' +1 🥢'}
   if(A.k=='be'&&Math.random()<.3&&bagW(A)+W('sd')<=cap){A.bag.sd=(A.bag.sd||0)+1;tx+=' +1 🌰'}/* 0.5.x: насіння з кущів */
   if(!o.mx)o.mx=o.hp=(A.L===trees||A.L===rocks)?8:Math.max(1,o.hp||1);o.hp-=(A.L===trees||A.L===rocks)?1+L:1;
   try{if(window.flash)flash(o)}catch(_){}say(tx,o.m);XP(p);
