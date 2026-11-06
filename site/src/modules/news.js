@@ -21,7 +21,7 @@ let seen=new Set();try{seen=new Set((localStorage.getItem('zi_news')||'').split(
 const keep=()=>{try{localStorage.setItem('zi_news',[...seen].join(','))}catch(_){}};
 const unread=n=>!seen.has(n.id);
 const css=document.createElement('style');css.textContent=`
-#nwb{position:fixed;left:0;top:calc(50% - 34px);z-index:19;width:calc(44px + env(safe-area-inset-left,0px));height:68px;padding:0 0 0 env(safe-area-inset-left,0px);box-sizing:border-box;border:2px solid #d9b45a;border-left:0;border-radius:0 16px 16px 0;
+#nwb{position:fixed;left:max(6px,calc(env(safe-area-inset-left,0px) - 4px));top:calc(40% - 28px);z-index:19;width:42px;height:56px;padding:0;box-sizing:border-box;border:2px solid #d9b45a;border-radius:14px;
  background:linear-gradient(180deg,#1b3442,#0f2029);box-shadow:0 4px 14px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,230,160,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
 #nwb i{display:block;width:20px;height:4px;border-radius:2px;background:linear-gradient(#ffe7a0,#c9952e);box-shadow:0 -7px 0 #e9c46a,0 7px 0 #e9c46a}
 #nwb b{position:absolute;right:-5px;top:-5px;width:13px;height:13px;border-radius:50%;background:#ff4a3a;border:2px solid #0f2029;display:none}#nwb.new b{display:block}
