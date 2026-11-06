@@ -99,7 +99,7 @@ X.innerHTML=`<div class='win'><div class='hd'><button class='bk' aria-label='Н�
 let cat='main',cur=null;
 const live=n=>{if(n.live!=='boss')return n.text;const b=window.BOSS&&window.BOSS.get&&window.BOSS.get();
  if(b&&typeof wild!='undefined'&&wild.includes(b))return'Вогняний бос 25 рівня чекає на своїй арені в Старому лісі. Червоні кола на землі — відбігайте! Здобич: Кристали еволюції й зілля.';
- const t=(typeof inv!='undefined'&&inv._boss&&inv._boss.warden)||0,s=Math.max(0,Math.round((t-Date.now())/1000));return s?'Переможений. З’явиться знову через '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+'. Здобич: Кристали еволюції й зілля.':'Вогняний бос 25 рівня в Старому лісі. Червоні кола на землі — відбігайте! Здобич: Кристали еволюції й зілля.'};
+ const t=(typeof inv!='undefined'&&inv._boss&&inv._boss.warden)||0,s=Math.max(0,Math.round((t-Date.now())/1000));return s?'Переможений. З’явиться знову через '+(window.plDur?window.plDur(s*1000):Math.ceil(s/60)+' хв')+'. Здобич: Кристали еволюції й зілля.':'Вогняний бос 25 рівня в Старому лісі. Червоні кола на землі — відбігайте! Здобич: Кристали еволюції й зілля.'};
 const TAG={lang:'👑 Гра',pen:'🏠 База',needs:'🏠 База',boss:'🔥 Бос',dg1:'🕳️ Підземелля',loc2:'🗺️ Світ',rl:'👑 Гра',mail:'📬 Пошта'};
 const pic=n=>n.img?`<span class='im' style="background-image:url('${IMG(n.img)}')"></span>`:`<span class='im em'>${n.ico||'📰'}</span>`;
 const chips=n=>`<span class='ch'><em class='n'>НОВЕ</em><em>${TAG[n.id]||'📰 Новина'}</em><em class='d'>${n.d}</em></span>`;

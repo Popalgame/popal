@@ -3,7 +3,7 @@
    • бос живе на своїй арені (cfg.home, cfg.arena): коли герой поруч — нападає й іде за ним, утекли — повертається й лікується;
    • заклинання з часом підготовки: під смугою здоров'я боса — друга смуга «чаклує…», вона заповнюється 3–4 с, а на землі
      росте червоне коло, з якого треба встигнути вийти; коли смуга повна — удар;
-   • кулею не ловиться; здобич щоразу різна — кілька кидків по таблиці cfg.loot; повертається через cfg.respawn (час у сейві inv._boss);
+   • кулею не ловиться; здобич щоразу різна — кілька кидків по таблиці cfg.loot; повертається через cfg.respawn (час у сейві inv._boss; з 0.2.15 обидва боси — раз на добу);
    • смуга здоров'я й заклинання — угорі екрана, коли ви на арені.
    Перший бос тут же — 👑 Страж ущелини (вогняний Ігніс-Виверг третьої форми в Старому лісі). Бос підземелля — у dungeon.js. */
 (function(){try{
@@ -11,6 +11,8 @@ if(window.REALM==='isle'||typeof wild=='undefined')return;
 if(!inv._boss||typeof inv._boss!='object')inv._boss={};
 const L=[];/* усі боси */
 const now=()=>Date.now();
+/* 0.2.15: боси повертаються раз на добу; тривалість для написів — «23 год 59 хв», «45 хв» */
+const dur=ms=>{const m=Math.max(0,Math.ceil(ms/60000)),h=Math.floor(m/60),r=m%60;return h?(h+' год'+(r?' '+r+' хв':'')):(m+' хв')};window.plDur=dur;
 const hpOf=w=>Math.max(0,Math.ceil(w.hp));
 /* 0.3.2: шкода боса — частка здоров'я героя (так бій однаково важкий на будь-якому рівні), × різниця рівнів (combat.js, gapTake).
    Звичайний удар — b.melee від макс. здоров'я раз на секунду; заклинання — a.k від макс. здоров'я, якщо не встигли вийти з кола. */
@@ -35,7 +37,7 @@ function giveLoot(b){const got={};for(const t of b.loot){if(t.chance!=null&&Math
  for(const k in got){if(k in res)res[k]+=got[k];else inv[k]=(inv[k]||0)+got[k]}showLoot(b,got);return got}
 const lootBox=document.createElement('div');lootBox.id='bossloot';document.body.appendChild(lootBox);
 function showLoot(b,got){const ico=k=>window.plIcon?plIcon(k):(IT[k]?IT[k][0]:'');
- lootBox.innerHTML=`<h4>🏆 ${b.name} переможений!</h4><div class='lg'>${Object.entries(got).map(([k,n])=>`<span>${ico(k)}<b>×${n}</b><small>${IT[k]?IT[k][1]:k}</small></span>`).join('')}</div><small class='nx'>Повернеться за ${Math.round(b.respawn/60000)} хв</small>`;
+ lootBox.innerHTML=`<h4>🏆 ${b.name} переможений!</h4><div class='lg'>${Object.entries(got).map(([k,n])=>`<span>${ico(k)}<b>×${n}</b><small>${IT[k]?IT[k][1]:k}</small></span>`).join('')}</div><small class='nx'>Повернеться за ${dur(b.respawn)}</small>`;
  lootBox.classList.add('on');clearTimeout(lootBox._t);lootBox._t=setTimeout(()=>lootBox.classList.remove('on'),6500)}
 
 /* ---------- смуги ---------- */
@@ -115,7 +117,7 @@ if(window.RIDGES){const RG=window.RIDGES,ARENA=18;
  for(const nm of['trees','rocks','bushes','shrooms']){let A;try{A=eval(nm)}catch(_){A=null}if(!Array.isArray(A))continue;for(let i=A.length-1;i>=0;i--){const o=A[i];if(o&&Math.hypot(o.x-HOME[0],o.z-HOME[1])<ARENA+1.5){if(o.m)sc.remove(o.m);A.splice(i,1)}}}
  setInterval(()=>{for(const w of wild){if(w.boss||w.dg)continue;const d=Math.hypot(w.x-HOME[0],w.z-HOME[1]);if(d<ARENA+2){const k=(ARENA+4)/Math.max(.1,d);w.x=HOME[0]+(w.x-HOME[0])*k;w.z=HOME[1]+(w.z-HOME[1])*k}}},2000);
  if(typeof inv._bossT=='number'&&inv._bossT>0&&!inv._boss.warden){inv._boss.warden=inv._bossT}delete inv._bossT;/* сейв попередньої версії */
- window.BOSSKIT.add({id:'warden',name:'👑 Страж ущелини',ty:2,lv:25,fm:3,scale:3.1,r:2.4,home:HOME,arena:ARENA,hpMul:24,atkMul:1.6,melee:.03,respawn:600000,xp:400,
+ window.BOSSKIT.add({id:'warden',name:'👑 Страж ущелини',ty:2,lv:25,fm:3,scale:3.1,r:2.4,home:HOME,arena:ARENA,hpMul:24,atkMul:1.6,melee:.03,respawn:86400000,/* раз на добу */xp:400,
   abil:[{n:'Вогняне коло',icon:'🔥 ',kind:'nova',R:7,cast:3,cd:9,first:5,k:.45,col:0xff3a1a},
         {n:'Вогняний дощ',icon:'☄️ ',kind:'rain',cnt:4,R:2.6,cast:3.2,cd:8,first:8,k:.32,col:0xff7a2a}],
   loot:[{tab:[{k:'cr2',n:[1,1],w:50},{k:'cr2',n:[2,2],w:15},{k:'hpp',n:[1,2],w:35}]},

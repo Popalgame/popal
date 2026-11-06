@@ -120,7 +120,7 @@ function spawnMobs(){if(mobs().length)return;if(inv._dgMobT&&Date.now()<inv._dgM
 {const sp=wild.splice;wild.splice=function(){const out=sp.apply(this,arguments);if(out.some(w=>w&&w.dg)&&!wild.some(w=>w.dg))inv._dgMobT=Date.now()+5*60000;return out}}/* усіх переможено — нові через 5 хв */
 
 /* ---------- 👑 Кришталевий Владика ---------- */
-const BOSS=window.BOSSKIT?window.BOSSKIT.add({id:'dg1',name:'👑 Кришталевий Владика',ty:1,lv:20,fm:3,scale:2.8,r:2.3,home:L(HALL[0],HALL[1]),arena:HALL[2]-1,hpMul:20,atkMul:1.5,melee:.022,respawn:600000,xp:500,
+const BOSS=window.BOSSKIT?window.BOSSKIT.add({id:'dg1',name:'👑 Кришталевий Владика',ty:1,lv:20,fm:3,scale:2.8,r:2.3,home:L(HALL[0],HALL[1]),arena:HALL[2]-1,hpMul:20,atkMul:1.5,melee:.022,respawn:86400000,/* раз на добу */xp:500,
  enabled:()=>!!G,y:()=>FLOOR,
  abil:[{n:'Кришталевий вибух',icon:'💎 ',kind:'nova',R:7.5,cast:3.2,cd:9,first:4,k:.35,col:0xff3a5a},
        {n:'Град уламків',icon:'🪨 ',kind:'rain',cnt:5,R:2.5,cast:3,cd:7,first:7,k:.25,col:0x7fe3f5}],
