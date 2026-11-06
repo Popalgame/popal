@@ -9,7 +9,7 @@ for(let i=-2;i<=2;i++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09
 for(const y of[1.6,4.4]){const b=new THREE.Mesh(new THREE.BoxGeometry(5.2,.16,.16),dk);b.position.y=y;g.add(b)}
 const sign=new THREE.Mesh(new THREE.BoxGeometry(3.2,.7,.12),gold);sign.position.set(0,8.6,.82);g.add(sign);
 g.position.set(G[0],H(G[0],G[1]),G[1]);sc.add(g);
-window.LOC3_GATE=G;
+window.LOC3_GATE=G;(window.MAPMARKS=window.MAPMARKS||[]).push({x:G[0],z:G[1],c:'#ffd34e',t:''});
 /* нові дикі попали не з'являються в горах, у ущелинах-стінах і в печері підземелля (там «суша» лише для героя) */
 {const bad=(x,z)=>(window.DG&&window.DG.inBox(x,z))||(window.RIDGES&&window.RIDGES.blocked(x,z,1))||(window.BOSS_HOME&&Math.hypot(x-window.BOSS_HOME[0],z-window.BOSS_HOME[1])<22)||H(x,z)<-.35;
  const fix=w=>{if(!w||w.boss||w.dg||!bad(w.x,w.z))return;for(let k=0;k<80;k++){const x=(Math.random()*2-1)*135,z=(Math.random()*2-1)*205;if(!bad(x,z)&&Math.hypot(x-P.x,z-P.z)>9){w.x=x;w.z=z;if(w.m)w.m.position.set(x,H(x,z),z);try{if(window.wLvSetup)window.wLvSetup(w)}catch(_){}return}}};

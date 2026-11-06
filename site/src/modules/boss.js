@@ -96,7 +96,7 @@ window.BOSSKIT={add(cfg){const b=Object.assign({fm:3,scale:3,arena:18,hpMul:20,a
 if(window.RIDGES){const RG=window.RIDGES,ARENA=18;
  let Lp=[-85,-62];/* 0.3.2: Старий ліс, ліворуч від озера (Локація 2) */
  for(let r=0;r<30;r+=2){let ok=null;for(let a=0;a<6.28&&!ok;a+=.5){const x=Lp[0]+Math.cos(a)*r,z=Lp[1]+Math.sin(a)*r;if(H(x,z)>-.2&&H(x,z)<6&&!RG.blocked(x,z,ARENA*.6))ok=[x,z]}if(ok){Lp=ok;break}}
- const HOME=Lp;window.BOSS_HOME=HOME;
+ const HOME=Lp;window.BOSS_HOME=HOME;(window.MAPMARKS=window.MAPMARKS||[]).push({x:HOME[0],z:HOME[1],c:'#ff5a3a',t:''});
  /* арена: коло з брил і вогняних чаш; на ній нічого не росте, інші дикі туди не заходять */
  {const g=new THREE.Group(),y0=H(HOME[0],HOME[1]),stone=new THREE.MeshStandardMaterial({color:0x8d8578,roughness:1,flatShading:true}),dark=new THREE.MeshStandardMaterial({color:0x4a4038,roughness:1,flatShading:true});
   for(let i=0;i<14;i++){if(i%7==3)continue;const a=i/14*Math.PI*2,x=HOME[0]+Math.cos(a)*ARENA,z=HOME[1]+Math.sin(a)*ARENA;const m=new THREE.Mesh(new THREE.DodecahedronGeometry(1,0),i%2?stone:dark);m.scale.set(1.1,2.2+(i%3)*.7,1);m.position.set(x,H(x,z)+1,z);m.rotation.y=a;m.castShadow=true;g.add(m)}

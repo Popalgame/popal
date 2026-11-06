@@ -93,10 +93,12 @@ function build(){G=new THREE.Group();G.name='dungeon1';MAT.rock=window.plCliff?p
   HL.push([hx,FLOOR+9,hz,0xb08aff,1.6,R*2.2],[hx+3,FLOOR+3,hz+3,0xffa040,1.1,R*1.6])}
  sc.add(G)}
 const EXIT={},THR={},HL=[];
-function portalMesh(){const g=new THREE.Group();for(let i=0;i<9;i++){const a=i/8*Math.PI,x=Math.cos(a)*1.6,y=Math.sin(a)*2.4+.2;const s=new THREE.Mesh(new THREE.DodecahedronGeometry(.42,0),new THREE.MeshStandardMaterial({color:0x6e665e,roughness:1,flatShading:true}));s.position.set(x,y,0);g.add(s)}
+/* red — портал до боса: червоний вир, червоні руни на каменях і червоне світло */
+function portalMesh(red){const g=new THREE.Group();for(let i=0;i<9;i++){const a=i/8*Math.PI,x=Math.cos(a)*1.6,y=Math.sin(a)*2.4+.2;const s=new THREE.Mesh(new THREE.DodecahedronGeometry(.42,0),new THREE.MeshStandardMaterial(red?{color:0x4a2a2a,roughness:.9,flatShading:true,emissive:0x8a0a0a,emissiveIntensity:.55}:{color:0x6e665e,roughness:1,flatShading:true}));s.position.set(x,y,0);g.add(s)}
+ if(red){const l=new THREE.PointLight(0xff2a1a,2.2,11,2);l.position.set(0,1.9,-.8);g.add(l);g.userData.light=l}
  const PU={t:{value:0}},sw=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.ShaderMaterial({uniforms:PU,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,
   vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-  fragmentShader:'uniform float t;varying vec2 vU;void main(){vec2 p=vU*2.-1.;float r=length(p),a=atan(p.y,p.x);float sw=sin(a*5.-r*12.+t*3.)*.5+.5;float e=smoothstep(1.,.75,r);vec3 c=mix(vec3(.45,.25,1.),vec3(.6,1.,.95),sw);float k=e*(.35+.65*sw);gl_FragColor=vec4(c*k,k);}'}));
+  fragmentShader:'uniform float t;varying vec2 vU;void main(){vec2 p=vU*2.-1.;float r=length(p),a=atan(p.y,p.x);float sw=sin(a*5.-r*12.+t*3.)*.5+.5;float e=smoothstep(1.,.75,r);vec3 c='+(red?'mix(vec3(.75,.02,.02),vec3(1.,.42,.18),sw)':'mix(vec3(.45,.25,1.),vec3(.6,1.,.95),sw)')+';float k=e*(.35+.65*sw);gl_FragColor=vec4(c*k,k);}'}));
  sw.scale.set(1.25,1.95,1);sw.position.y=1.9;g.add(sw);g.userData.pu=PU;return g}
 
 /* ---------- світло й темрява ---------- */
@@ -140,20 +142,21 @@ if(inBox(P.x,P.z)){const r=inv._dgRet||(window.SPAWN?[window.SPAWN[0],window.SPA
 
 /* ---------- портал на острові (місце виберемо пізніше) ---------- */
 const PORTAL={};
-function setPortal(x,z,ry){if(PORTAL.g)sc.remove(PORTAL.g);for(const nm of['trees','rocks','bushes','shrooms']){let A;try{A=eval(nm)}catch(_){A=null}if(!Array.isArray(A))continue;for(let i=A.length-1;i>=0;i--){const o=A[i];if(o&&Math.hypot(o.x-x,o.z-z)<13){if(o.m)sc.remove(o.m);A.splice(i,1)}}}/* біля порталу — чисто */const g=portalMesh();g.position.set(x,H(x,z),z);g.rotation.y=ry||0;sc.add(g);PORTAL.g=g;PORTAL.x=x;PORTAL.z=z}
+function setPortal(x,z,ry){(window.MAPMARKS=window.MAPMARKS||[]).push({x,z,c:'#ff3a2a',t:''});if(PORTAL.g)sc.remove(PORTAL.g);for(const nm of['trees','rocks','bushes','shrooms']){let A;try{A=eval(nm)}catch(_){A=null}if(!Array.isArray(A))continue;for(let i=A.length-1;i>=0;i--){const o=A[i];if(o&&Math.hypot(o.x-x,o.z-z)<13){if(o.m)sc.remove(o.m);A.splice(i,1)}}}/* біля порталу — чисто */const g=portalMesh(true);g.position.set(x,H(x,z),z);g.rotation.y=ry||0;sc.add(g);PORTAL.g=g;PORTAL.x=x;PORTAL.z=z}
 
 function caveMouth(px,pz,rzx){if(typeof plCliff=='undefined')return;const geos=[0,1,2].map(k=>plCliff.geo(k)),mat=plCliff.mat(),cols=plCliff.cols,A=[];let sd=777;const rn=()=>(sd=sd*16807%2147483647)/2147483647,r2=(a,b)=>a+rn()*(b-a);
  const add=(x,z,w,h,y)=>A.push([x,(y==null?H(x,z)-h*.1:y),z,w*r2(.85,1.15),h,w*r2(.85,1.2),rn()*6.28,cols[(rn()*cols.length)|0]]);
  /* обрамлення входу: стовпи брил обабіч порталу й важке склепіння над ним */
- for(const sx of[-1,1])for(let k=0;k<3;k++){add(px+sx*(2.6+k*1.4),pz+r2(-.3,.5),1.9+k*.4,8+k*3);add(px+sx*(2.4+k*1.2),pz+2.6,2.2,9+k*2)}/* стіни коридору від хребта до входу */
- for(let k=-2;k<=2;k++)add(px+k*1.4,pz+.4,1.9,2.2,H(px,pz)+5.4+Math.abs(k)*.3);
- add(px,pz+1.6,4.2,5.5,H(px,pz)+6.6);
+ /* вхід відкритий: стовпи стоять обабіч порталу, не перекриваючи його; склепіння — вище за верх порталу (≈4.3 м) */
+ for(const sx of[-1,1])for(let k=0;k<3;k++){add(px+sx*(3.7+k*1.5),pz+r2(-.2,.4),1.5+k*.35,8+k*3);add(px+sx*(3.9+k*1.3),pz+2.8,1.9,9+k*2)}
+ const y0=H(px,pz);for(let k=-3;k<=3;k++)add(px+k*1.25,pz+.6,1.15,1,y0+5.3+Math.abs(k)*.25);
+ add(px,pz+2.4,3.8,3,y0+8.6);
  /* масив за хребтом (південніше): високі брили й піки, щоб вхід виглядав як печера в горі */
  for(let i=0;i<46;i++){const x=px+r2(-16,16),z=rzx+r2(2,20),d=Math.hypot(x-px,(z-rzx)*.8),h=Math.max(8,30-d*.9)*r2(.8,1.15);add(x,z,r2(3,5),h)}
  const dm=new THREE.Object3D(),cl=new THREE.Color();
  geos.forEach((g,k)=>{const P_=A.filter((_,i)=>i%3==k),m=new THREE.InstancedMesh(g,mat,P_.length);P_.forEach((r,i)=>{dm.position.set(r[0],r[1],r[2]);dm.scale.set(r[3],r[4],r[5]);dm.rotation.set(0,r[6],0);dm.updateMatrix();m.setMatrixAt(i,dm.matrix);m.setColorAt(i,cl.setHex(r[7]))});m.castShadow=m.receiveShadow=true;sc.add(m)});
  /* темна глибина печери за порталом */
- const back=new THREE.Mesh(new THREE.PlaneGeometry(4.2,5.2),new THREE.MeshBasicMaterial({color:0x05040a}));back.position.set(px,H(px,pz)+2.4,pz+1.2);back.rotation.y=Math.PI;sc.add(back);
+ const back=new THREE.Mesh(new THREE.CircleGeometry(1,32),new THREE.MeshBasicMaterial({color:0x0a0405}));back.scale.set(3.2,5.2,1);back.position.set(px,H(px,pz)-.2,pz+1.4);/* арка темряви — глибина печери */back.rotation.y=Math.PI;sc.add(back);
  /* брили тверді; масив за хребтом — теж */
  if(window.plRockCol){const C=window.plRockCol(A.filter(r=>r[1]<H(r[0],r[2])+1.5).map(r=>({x:r[0],z:r[2],r:Math.max(r[3],r[5])*.95})));const c0=window.colBlocked;
   window.colBlocked=function(x0,z0,x1,z1,r){if(C.hit(x1,z1,(r||.4)+.2))return true;return c0?c0.apply(this,arguments):false};
@@ -173,7 +176,7 @@ function lightUp(s){if(inv._dgl.includes(s.i)){msg('🏮 Тут уже світ�
 /* ---------- кадр ---------- */
 let last=performance.now();
 ANI.push(()=>{const t=performance.now(),dt=Math.min(.05,(t-last)/1000);last=t;
- for(const g of[EXIT.g,PORTAL.g])if(g&&g.userData.pu)g.userData.pu.t.value=t/1000;
+ for(const g of[EXIT.g,PORTAL.g])if(g&&g.userData.pu)g.userData.pu.t.value=t/1000;if(PORTAL.g&&PORTAL.g.userData.light)PORTAL.g.userData.light.intensity=2+Math.sin(t/240)*.5;
  const inn=inBox(P.x,P.z);if(inn&&!inside){inside=true;if(!G)build();lightsOn()}else if(!inn&&inside){inside=false;lightsOff()}
  if(G)G.visible=inside;if(!inside)return;
  /* темрява: денне світло майже гасне, туман чорний */
