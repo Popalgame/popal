@@ -1,6 +1,6 @@
 {
   "name": "popal",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "description": "Popal — безкоштовна 3D-браузерна гра (PWA): ловіть істот, збирайте ресурси, будуйте базу. popalgame.pl",
   "private": true,
   "type": "module",

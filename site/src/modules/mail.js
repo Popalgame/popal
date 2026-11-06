@@ -70,7 +70,7 @@ const css=document.createElement('style');css.textContent=`
 #mailp .lt header{display:flex;gap:8px;align-items:baseline}#mailp .lt header b{flex:1;color:#ffe7a8;font-size:15px}#mailp .lt header small{opacity:.65;font-size:11px}
 #mailp .lt p{margin:4px 0 6px;font-size:13px;white-space:pre-wrap}#mailp .lt .fr{font-size:11px;opacity:.7}
 #mailp .its{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}#mailp .mi{display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.3);border-radius:9px;padding:3px 8px;font-size:13px}#mailp .mi .iic{width:24px;height:24px}#mailp .mi small{opacity:.75}
-#avmb{position:absolute;right:-6px;top:-6px;min-width:20px;height:20px;border-radius:10px;background:#e8452c;color:#fff;font:800 12px/20px system-ui;text-align:center;padding:0 5px;box-shadow:0 0 0 2px #13211e;display:none;pointer-events:none;z-index:2}`;document.head.appendChild(css);
+#avmb{position:absolute;min-width:17px;height:17px;box-sizing:border-box;border-radius:9px;background:#e8452c;color:#fff;font:800 10px/14px system-ui,sans-serif;text-align:center;padding:0 4px;border:1.5px solid #fff3ef;box-shadow:0 1px 4px rgba(0,0,0,.55);display:none;pointer-events:none;z-index:3}/* 0.2.15: маленький акуратний кружечок на правому верхньому куті аватарки */`;document.head.appendChild(css);
 let open=0,sayTxt='';
 const say=t=>{sayTxt=t;const e=document.getElementById('mps');if(e)e.textContent=t};
 /* open: 'm' — вкладка «Пошта», 'pr' — вкладка «Промокод» */
@@ -90,7 +90,7 @@ const _pf=pfTab;pfTab=function(t){if(t!=='m'&&t!=='pr'){open=0;return _pf.apply(
  {const pf=document.getElementById('pf'),tl=pf&&pf.querySelector('#pfh b');if(pf)pf.classList.add('pfme');if(tl)tl.textContent='Профіль'}/* меню гравця, не налаштування (profile-split.js) */
  document.querySelectorAll('#pfs button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));open=t;sayTxt='';render();if(t=='m')refresh()};
 /* значок непрочитаних на аватарці й на вкладці */
-function badge(){const n=unclaimed(),av=document.getElementById('av');if(av&&av.parentElement){let b=document.getElementById('avmb');if(!b){b=document.createElement('div');b.id='avmb';av.parentElement.appendChild(b)}
+function badge(){const n=unclaimed(),av=document.getElementById('av');if(av&&av.parentElement){let b=document.getElementById('avmb');if(!b){b=document.createElement('div');b.id='avmb';av.parentElement.appendChild(b)}b.style.left=(av.offsetLeft+av.offsetWidth-13)+'px';b.style.top=(av.offsetTop-4)+'px';
   b.style.left=(av.offsetLeft+av.offsetWidth-14)+'px';b.style.top=(av.offsetTop-6)+'px';b.style.right='auto';b.style.display=n?'block':'none';b.textContent=n}
  const t=document.getElementById('mtb');if(t)t.textContent=n?'('+n+')':''}
 badge();setTimeout(refresh,6000);setInterval(refresh,90000);

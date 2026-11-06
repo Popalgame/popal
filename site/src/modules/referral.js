@@ -103,7 +103,7 @@ function render(){linkBox();if(!list.length){bd.innerHTML="<div class='em'>По�
  const n50=list.filter(f=>(f.lv|0)>=BONUS.lv).length,bst=inv._refb?'done':n50>=BONUS.need?'ready':'lock';
  let h=`<div class='grid' style='--n:${list.length}'><span class='h l'>Гравець</span><span class='h'>Рівень</span>${TIERS.map(t=>`<span class='h'>${t}</span>`).join('')}<span class='h'>Бонус</span>`;
  list.forEach((f,i)=>{const got=inv._refc[f.uid]||[];
-  h+=`<div class='pl'><span class='av'>${esc((f.name||'?').slice(0,1).toUpperCase())}</span><span class='nm'><b>${esc(f.name)}</b><small>ID ${esc(f.pid)}</small><small class='ago'>${ago(f.t)}</small></span></div><span class='lv'>${f.lv|0}</span>`;
+  h+=`<div class='pl'><span class='av' translate='no'>${esc((f.name||'?').slice(0,1).toUpperCase())}</span><span class='nm'><b translate='no'>${esc(f.name)}</b><small>ID ${esc(f.pid)}</small><small class='ago'>${ago(f.t)}</small></span></div><span class='lv'>${f.lv|0}</span>`;
   for(const t of TIERS){const st=got.includes(t)?'done':(f.lv|0)>=t?'ready':'lock';h+=cell(REW[t],st,st=='ready'?`data-u='${esc(f.uid)}' data-l='${t}'`:'')}
   if(i==0)h+=`<div class='bonus'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${n50>=BONUS.need?'near':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n50} / ${BONUS.need} друзів<br>з ${BONUS.lv} рівнем</small><small class='soon'>Унікальний попал — скоро</small></div>`});
  bd.innerHTML=h+'</div>'+tip();

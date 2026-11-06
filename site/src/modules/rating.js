@@ -49,7 +49,7 @@ X.innerHTML="<div class='win'><div class='hd'><span class='co'>🏆</span><div c
 const bd=X.querySelector('.rbd');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const medal=i=>String(i+1);
-const row=(r,i,mine)=>`<div class='rw ${i<3&&i>=0?'rk'+(i+1):''} ${mine?'me':''}'><span class='pl'>${i>=0?medal(i):'—'}</span><span class='nm'>${esc(r.name)}${mine?' (ви)':''}<small>ID ${esc(r.pid)}</small></span><span class='lv'>${r.lv|0}</span><span class='xp'>${(r.xp|0).toLocaleString('uk-UA')} XP</span></div>`;
+const row=(r,i,mine)=>`<div class='rw ${i<3&&i>=0?'rk'+(i+1):''} ${mine?'me':''}'><span class='pl'>${i>=0?medal(i):'—'}</span><span class='nm'><span translate='no'>${esc(r.name)}</span>${mine?' (ви)':''}<small>ID ${esc(r.pid)}</small></span><span class='lv'>${r.lv|0}</span><span class='xp'>${(r.xp|0).toLocaleString('uk-UA')} XP</span></div>`;
 async function load(){bd.innerHTML="<div class='msg'>Завантаження…</div>";
  if(!ok()){bd.innerHTML="<div class='msg'>Рейтинг працює лише з підключенням до сервера. Спробуйте пізніше.</div>";return}
  push(true);const u=me();
