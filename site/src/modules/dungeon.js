@@ -136,9 +136,11 @@ function companion(){const p=pals[selP];if(p&&p.m){p.x=P.x+1;p.z=P.z+1}}
 function enter(){go(()=>{if(!inBox(P.x,P.z))inv._dgRet=[+P.x.toFixed(2),+P.z.toFixed(2)];if(!G)build();const[x,z]=L(-21,-18);P.x=x;P.z=z;P.face=Math.atan2(1,-.4);companion();spawnMobs();
  if(!inv._dgSeen){inv._dgSeen=1;setTimeout(()=>{try{msg('🕯️ Тут темно. Поставте ліхтарі на підставки вздовж тунелю: підійдіть і натисніть «Дія» (потрібен 🏮 Ліхтар з крафту)')}catch(_){}},900)}
  else setTimeout(()=>{try{msg('🕳️ Кришталеві печери · рекомендований рівень '+REC+'+')}catch(_){}},900);try{save()}catch(_){}})}
-function leave(){go(()=>{const r=inv._dgRet||(PORTAL.x!=null?[PORTAL.x+2,PORTAL.z+2]:window.SPAWN?[window.SPAWN[0],window.SPAWN[1]]:[0,3]);P.x=r[0];P.z=r[1];companion();try{save()}catch(_){}})}
+/* вихід — завжди на галявину перед порталом (портал дивиться на північ), а не туди, де стояли до входу: там тепер можуть бути скелі */
+const outPt=()=>PORTAL.x!=null?[PORTAL.x,PORTAL.z-3.2]:(inv._dgRet||(window.SPAWN?[window.SPAWN[0],window.SPAWN[1]]:[0,3]));
+function leave(){go(()=>{const r=outPt();P.face=Math.PI;P.x=r[0];P.z=r[1];companion();try{save()}catch(_){}})}
 /* збережено в печері — після завантаження на острові */
-if(inBox(P.x,P.z)){const r=inv._dgRet||(window.SPAWN?[window.SPAWN[0],window.SPAWN[1]]:[0,3]);P.x=r[0];P.z=r[1]}
+let savedIn=inBox(P.x,P.z);
 
 /* ---------- портал на острові (місце виберемо пізніше) ---------- */
 const PORTAL={};
@@ -200,5 +202,6 @@ ANI.push(()=>{const t=performance.now(),dt=Math.min(.05,(t-last)/1000);last=t;
 /* 0.3.2: портал — у північній стіні хребта 2, праворуч (Старий ліс, Локація 2) */
 /* портал вбудований у північну стіну хребта 2: кам'яний виступ-печера навколо, а за ним — гірський масив */
 {const RG=window.RIDGES,PX=124,rzx=RG&&RG.rz?RG.rz(1,PX):0,PZ=rzx-(RG?RG.W:5.2)-3.4;setPortal(PX,PZ,Math.PI);caveMouth(PX,PZ,rzx)}
+if(savedIn){const r=outPt();P.x=r[0];P.z=r[1]}/* збережено в печері — після завантаження перед порталом */
 window.DUNGEON={enter,leave,setPortal,inBox,REC,lit:()=>inv._dgl.length,sconces:()=>SCON.length,boss:()=>BOSS&&BOSS.w};
 }catch(e){console.warn('dungeon',e)}})();
