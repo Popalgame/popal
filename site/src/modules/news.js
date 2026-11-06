@@ -9,6 +9,7 @@
    • Новини — у масиві NEWS нижче (найновіші зверху); картинки — img/news/*.webp, 960×480. */
 (function(){try{
 const NEWS=[
+ {id:'lang',cat:'main',d:'06.11.2026',img:'',ico:'🌐',title:'Чотири мови',sub:'Українська, English, Polski, русский',text:'Гра сама вмикає мову вашого телефона. Змінити її можна в Налаштуваннях → «🌐 Мова» — гра перемкнеться одразу. А ще в головному меню з’явилась Telegram-група розробників.'},
  {id:'pen',cat:'main',d:'06.11.2026',img:'pen',title:'Загін для попалів',sub:'Шерсть і шкіра — без полювання',text:'Збудуйте Загін і поселіть туди Пухоклуба, Моророга, Грозовика чи Бамбузла: вони гуляють за парканом і дають шерсть або шкіру. Що вищий рівень попала, то частіше. Усе складається у скриню загону біля хвіртки — підійдіть і натисніть «Дія», щоб забрати.'},
  {id:'needs',cat:'main',d:'05.11.2026',img:'bask',title:'Попали їдять і сплять',sub:'Кошик з їжею, лежанки й Стіл зіль',text:'Попали бригади голоднішають і втомлюються. Покладіть їжу в Кошик — вони самі прийдуть поїсти. Уночі сплять на лежанках. Голодні й утомлені попали не працюють. На Столі зіль варять зілля здоров’я: +300 HP.'},
  {id:'boss',cat:'main',d:'04.11.2026',img:'boss',title:'Страж ущелини',sub:'Вогняний бос 25 рівня',live:'boss',btn:'Показати на мапі',act:'map'},
@@ -99,7 +100,7 @@ let cat='main',cur=null;
 const live=n=>{if(n.live!=='boss')return n.text;const b=window.BOSS&&window.BOSS.get&&window.BOSS.get();
  if(b&&typeof wild!='undefined'&&wild.includes(b))return'Вогняний бос 25 рівня чекає на своїй арені в Старому лісі. Червоні кола на землі — відбігайте! Здобич: Кристали еволюції й зілля.';
  const t=(typeof inv!='undefined'&&inv._boss&&inv._boss.warden)||0,s=Math.max(0,Math.round((t-Date.now())/1000));return s?'Переможений. З’явиться знову через '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+'. Здобич: Кристали еволюції й зілля.':'Вогняний бос 25 рівня в Старому лісі. Червоні кола на землі — відбігайте! Здобич: Кристали еволюції й зілля.'};
-const TAG={pen:'🏠 База',needs:'🏠 База',boss:'🔥 Бос',dg1:'🕳️ Підземелля',loc2:'🗺️ Світ',rl:'👑 Гра',mail:'📬 Пошта'};
+const TAG={lang:'👑 Гра',pen:'🏠 База',needs:'🏠 База',boss:'🔥 Бос',dg1:'🕳️ Підземелля',loc2:'🗺️ Світ',rl:'👑 Гра',mail:'📬 Пошта'};
 const pic=n=>n.img?`<span class='im' style="background-image:url('${IMG(n.img)}')"></span>`:`<span class='im em'>${n.ico||'📰'}</span>`;
 const chips=n=>`<span class='ch'><em class='n'>НОВЕ</em><em>${TAG[n.id]||'📰 Новина'}</em><em class='d'>${n.d}</em></span>`;
 const feat=n=>`<button class='nf ${unread(n)?'new':''}' data-id='${n.id}'>${pic(n)}<span class='tx'>${chips(n)}<b>${n.title}</b><span>${n.sub}</span></span></button>`;

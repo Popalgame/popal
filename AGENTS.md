@@ -40,3 +40,13 @@ Przed **każdym** wypchnięciem na `main` agent musi:
 
 Podczas pracy na gałęzi roboczej tłumaczenia nie są wymagane — dopiero przed
 wypchnięciem na `main`.
+
+## Wersja przy każdej aktualizacji
+
+Każde wypchnięcie na `main` (każda aktualizacja gry) podnosi wersję o jeden numer
+poprawki (np. 0.2.11 → 0.2.12): `package.json` i `package-lock.json`
+(`npm version X.Y.Z --no-git-tag-version`), stopka `site/index.html`
+(„wersja Alpha X.Y.Z”), `core-world.js?v=` i `i18n.js?v=` w `site/game.html`,
+`VER` w `site/src/modules/i18n.js`, `README.md`, lista „Co nowego” na stronie
+głównej, a na końcu `npm run bump` (cache service workera). Testy `version.test.mjs`
+pilnują zgodności.
