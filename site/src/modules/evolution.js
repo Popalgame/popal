@@ -1,5 +1,5 @@
 /* 0.2.9: еволюція попалів — кристали, Колба поліпшень і форми 2 й 3.
-   • Кристал еволюції (cr2) — форма 2 з 25 рівня; Кристал вознесіння (cr3, рідкісніший, із сильнішого боса) — форма 3 з 50 рівня.
+   • Кристал еволюції (cr2) — форма 2 з 20 рівня; Кристал вознесіння (cr3, рідкісніший, із сильнішого боса) — форма 3 з 50 рівня.
      Кристали не мають ваги в рюкзаку (займають лише клітинку). Поки босів немає, гравець ID 0001 отримує по 20 кожного для тестів.
    • Колба поліпшень (B_flask, world-007.js): підійдіть і натисніть «Дія» → оберіть попала → кристал → анімація перетворення.
    • Нова форма: трохи більший розмір (+6% / +12%), сяйво стихії й нові частини тіла кожного виду (pal-forms.js); сильніші атака, захист і HP (pal-growth.js).
@@ -25,7 +25,7 @@ for(const k of['cr2','cr3'])if(inv[k]==null)inv[k]=0;
 try{const s=window.plIconSrc;window.plIconSrc=k=>ICO[k]||(s?s(k):null)}catch(_){}
 try{const w0=window.itemW;if(w0)window.itemW=k=>k=='cr2'||k=='cr3'?0:w0(k)}catch(_){}/* кристали не мають ваги */
 /* опис у рюкзаку */
-try{if(window.DS)Object.assign(window.DS,{cr2:'Друга форма попала з 25 рівня. Випадає з боса. Використовується в Колбі поліпшень. Не має ваги',cr3:'Третя форма попала з 50 рівня. Рідкісний — із сильнішого боса. Використовується в Колбі поліпшень. Не має ваги'})}catch(_){}
+try{if(window.DS)Object.assign(window.DS,{cr2:'Друга форма попала з 20 рівня. Випадає з боса. Використовується в Колбі поліпшень. Не має ваги',cr3:'Третя форма попала з 50 рівня. Рідкісний — із сильнішого боса. Використовується в Колбі поліпшень. Не має ваги'})}catch(_){}
 /* тестові кристали для гравця ID 0001 (поки немає босів) */
 /* приходять листом у пошту (mail.js) */
 const gift=setInterval(()=>{if(inv._crg){clearInterval(gift);return}if(window.myPid!=='0001'||!window.plMail)return;inv._crg=1;clearInterval(gift);
@@ -81,7 +81,7 @@ if(document.readyState=='complete')setTimeout(flaskIcon,900);else addEventListen
 /* ---------- Колба поліпшень ---------- */
 const flasks=()=>(window.BPLACED||[]).filter(b=>b.id=='B_flask');
 const nearFlask=()=>flasks().find(b=>Math.hypot(b.x-P.x,b.z-P.z)<2.9);
-const NEED={2:[25,'cr2'],3:[50,'cr3']};
+const NEED={2:[20,'cr2'],3:[50,'cr3']};
 const css=document.createElement('style');css.textContent=`
 #evo{display:none;position:fixed;left:calc(env(safe-area-inset-left,0px) + 10%);right:calc(env(safe-area-inset-right,0px) + 10%);top:calc(env(safe-area-inset-top,0px) + 6%);bottom:calc(env(safe-area-inset-bottom,0px) + 6%);z-index:36;flex-direction:column;background:rgba(14,20,42,.96);border:2px solid #7fe3f5;border-radius:16px;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.5);overflow:hidden}
 #evo header{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(127,227,245,.4)}#evo header b{flex:1;font-size:18px;color:#bff6ff}
@@ -102,7 +102,7 @@ function render(){const cr=k=>`<span>${img(k)} <b>${inv[k]||0}</b> ${IT[k][1]}</
   return`<div class='pc'><div class='ic'>${ico}</div><div class='tx'><b>${nm}</b> · ${lv} рів.<small>Форма ${fm}${nd?' → '+nx+' · '+(ok?'готовий':why):' · '+why}</small></div><button data-e='${i}' ${ok?'':'disabled'}>🧪 Еволюція</button></div>`}).join('');
  box.innerHTML=`<header><b>🧪 Колба поліпшень</b><button class='cx'>✕</button></header><div class='cr'>${cr('cr2')}${cr('cr3')}</div>
  <div class='ls'>${rows||'<small>Поки немає попалів</small>'}</div>
- <div class='em'>Форма 2 — з 25 рівня й Кристал еволюції. Форма 3 — з 50 рівня й Кристал вознесіння. Кристали випадають із босів. Рівень і атаки попала зберігаються</div>`}
+ <div class='em'>Форма 2 — з 20 рівня й Кристал еволюції. Форма 3 — з 50 рівня й Кристал вознесіння. Кристали випадають із босів. Рівень і атаки попала зберігаються</div>`}
 function show(v){open=v;box.style.display=v?'flex':'none';if(v)render()}
 box.addEventListener('click',e=>{if(e.target.closest('.cx')){show(0);return}const b=e.target.closest('[data-e]');if(!b||b.disabled)return;const p=pals[+b.dataset.e];if(p)evolve(p)});
 const hb=document.getElementById('hit');
