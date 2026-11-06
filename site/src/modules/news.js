@@ -1,20 +1,25 @@
-/* 0.3.2: банер новин зліва. 0.2.10: стрічка — це меню з плиток-іконок (поки лише «Новини»), новини відкриваються після торкання плитки; язичок і стрічка прилягають до краю екрана (виріз заповнено фоном), закрита стрічка повністю схована.
-   • На лівому краю екрана — язичок ☰ (золота рамка). Торкніться — висувається стрічка новин із картками; ще раз або ✕ — ховається.
-   • Враховує виріз-«чубчик» на iPhone та Android (env(safe-area-inset-*)), у горизонтальному й вертикальному положенні.
-   • Язичок можна пересувати й змінювати розмір у редакторі розташування інтерфейсу (hud-layout.js, id «nwb»); стрічка відкривається поруч із ним.
-   • Нові новини — червона крапка на язичку, доки стрічку не відкрили (localStorage zi_news).
-   • Картки — у масиві NEWS нижче; кнопка картки може відкрити пошту, мапу тощо. */
+/* 0.3.2: меню зліва. 0.2.10: вікно новин на весь екран.
+   • На лівому краю екрана — язичок ☰ (золота рамка). Торкніться — висувається «Меню» з круглими іконками («Новини» і «Рейтинг», rating.js).
+   • «Новини» відкривають вікно на весь екран: вкладки «Оновлення» / «Загальне» (з лічильником непрочитаних), кнопка «Прочитати все»,
+     зліва велика картка найновішої новини, справа список карток з мініатюрою, мітками (розділ, дата, «НОВЕ»), назвою й підзаголовком.
+     Оформлення — як у вікнах гри: темно-синя панель із золотою рамкою, бірюзові акценти, заокруглені кути.
+     Торкнулися картки — відкривається новина повністю (картинка, текст, кнопка дії: мапа, пошта); ← — назад до списку.
+   • Непрочитані — мітка «НОВЕ» й бірюзова рамка на картці, лічильник на вкладці, червона крапка на іконці «Новини» й на язичку (localStorage zi_news — id прочитаних).
+   • Враховує виріз-«чубчик» на iPhone та Android (env(safe-area-inset-*)). Язичок можна пересувати в редакторі інтерфейсу (hud-layout.js, «nwb»).
+   • Новини — у масиві NEWS нижче (найновіші зверху); картинки — img/news/*.webp, 960×480. */
 (function(){try{
 const NEWS=[
- {id:'rl',ico:'👑',title:'Popal тепер — Regnum Land',text:'Нова назва, логотип та іконка. Та сама гра, ваші попали й прогрес — на місці.'},
- {id:'loc2',ico:'🗺️',title:'Локація 2: нова мапа',text:'Прямокутний острів і чотири зони. Що далі на північ, за хребти й перевали, — то сильніші дикі попали.',btn:'Відкрити мапу',act:'map'},
- {id:'dg1',ico:'🕳️',title:'Підземелля: Кришталеві печери',text:'Вхід — печера в стіні хребта біля правого перевалу (фіолетова позначка на мапі). Візьміть ліхтарі: всередині темно. Рекомендовано 16+ рівень.',btn:'Показати на мапі',act:'map'},
- {id:'boss',ico:'🔥',title:'Страж ущелини',text:'',live:'boss',btn:'Показати на мапі',act:'map'},
- {id:'needs',ico:'🧺',title:'Попали їдять і сплять',text:'Кошик з їжею, лежанки й Стіл зіль із зіллям здоров’я (+300 HP). Голодні й утомлені попали не працюють.'},
- {id:'pen',ico:'🐑',title:'Загін для попалів',text:'Збудуйте Загін і поселіть туди Пухоклуба, Моророга, Грозовика чи Бамбузла: вони гуляють за парканом і дають шерсть або шкіру. «Дія» біля загону — забрати.'},
- {id:'mail',ico:'📬',title:'Пошта й промокоди',text:'Подарунки від розробників і промокоди з нашого Instagram — у меню героя.',btn:'Відкрити пошту',act:'mail'}];
-const VER=NEWS.map(n=>n.id).join(',');
-let seen='';try{seen=localStorage.getItem('zi_news')||''}catch(_){}
+ {id:'pen',cat:'main',d:'06.11.2026',img:'pen',title:'Загін для попалів',sub:'Шерсть і шкіра — без полювання',text:'Збудуйте Загін і поселіть туди Пухоклуба, Моророга, Грозовика чи Бамбузла: вони гуляють за парканом і дають шерсть або шкіру. Що вищий рівень попала, то частіше. Усе складається у скриню загону біля хвіртки — підійдіть і натисніть «Дія», щоб забрати.'},
+ {id:'needs',cat:'main',d:'05.11.2026',img:'bask',title:'Попали їдять і сплять',sub:'Кошик з їжею, лежанки й Стіл зіль',text:'Попали бригади голоднішають і втомлюються. Покладіть їжу в Кошик — вони самі прийдуть поїсти. Уночі сплять на лежанках. Голодні й утомлені попали не працюють. На Столі зіль варять зілля здоров’я: +300 HP.'},
+ {id:'boss',cat:'main',d:'04.11.2026',img:'boss',title:'Страж ущелини',sub:'Вогняний бос 25 рівня',live:'boss',btn:'Показати на мапі',act:'map'},
+ {id:'dg1',cat:'main',d:'04.11.2026',img:'dg1',title:'Підземелля: Кришталеві печери',sub:'Візьміть ліхтарі — всередині темно',text:'Вхід — печера в стіні хребта біля правого перевалу (фіолетова позначка на мапі). Поставте ліхтарі на підставки, переможіть мешканців печер і Кришталевого Владику. Рекомендовано 16+ рівень. Здобич: Кристали еволюції й зілля.',btn:'Показати на мапі',act:'map'},
+ {id:'loc2',cat:'main',d:'04.11.2026',img:'loc2',title:'Локація 2: нова мапа',sub:'Прямокутний острів і чотири зони',text:'Що далі на північ, за хребти й перевали, — то сильніші дикі попали. Бухта прибуття, Зелені луки, Старий ліс і Дикі землі. Між зонами — лише через перевали.',btn:'Відкрити мапу',act:'map'},
+ {id:'rl',cat:'gen',d:'04.11.2026',img:'rl',title:'Popal тепер — Regnum Land',sub:'Нова назва, логотип та іконка',text:'Та сама гра, ваші попали й прогрес — на місці.'},
+ {id:'mail',cat:'gen',d:'01.11.2026',img:'',ico:'📬',title:'Пошта й промокоди',sub:'Подарунки від розробників',text:'Подарунки від розробників і промокоди з нашого Instagram — у меню героя, вкладка «Пошта».',btn:'Відкрити пошту',act:'mail'}];
+const IMG=k=>'img/news/'+k+'.webp';
+let seen=new Set();try{seen=new Set((localStorage.getItem('zi_news')||'').split(',').filter(Boolean))}catch(_){}
+const keep=()=>{try{localStorage.setItem('zi_news',[...seen].join(','))}catch(_){}};
+const unread=n=>!seen.has(n.id);
 const css=document.createElement('style');css.textContent=`
 #nwb{position:fixed;left:0;top:calc(50% - 34px);z-index:19;width:calc(44px + env(safe-area-inset-left,0px));height:68px;padding:0 0 0 env(safe-area-inset-left,0px);box-sizing:border-box;border:2px solid #d9b45a;border-left:0;border-radius:0 16px 16px 0;
  background:linear-gradient(180deg,#1b3442,#0f2029);box-shadow:0 4px 14px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,230,160,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
@@ -27,43 +32,102 @@ const css=document.createElement('style');css.textContent=`
 #nwp header{display:flex;align-items:center;gap:8px;padding:12px 12px 10px 16px;border-bottom:1px solid rgba(217,180,90,.35)}
 #nwp header h3{margin:0;flex:1;font-size:17px;color:#ffd977;letter-spacing:.3px}
 #nwp header button{width:32px;height:32px;border-radius:10px;border:1px solid rgba(217,180,90,.5);background:rgba(255,255,255,.06);color:#fff;font-size:16px;cursor:pointer}
-#nwp .ls{flex:1;overflow-y:auto;padding:10px 12px 14px 14px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
-#nwp .nc{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:start;padding:10px;border-radius:14px;background:linear-gradient(180deg,rgba(255,226,140,.12),rgba(255,226,140,.04));border:1px solid rgba(217,180,90,.35)}
-#nwp .nc .ic{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:30px;background:radial-gradient(circle at 50% 35%,#2f5a6c,#122a35);border:1px solid rgba(217,180,90,.5)}
-#nwp .nc h4{margin:0 0 3px;font-size:14px;color:#fff;line-height:1.25}#nwp .nc p{margin:0;font-size:12.5px;line-height:1.4;color:#c6d6dc}
-#nwp .nc button{grid-column:1/-1;margin-top:2px;padding:8px 10px;border-radius:10px;border:0;background:linear-gradient(#ffe08a,#d9a43a);color:#2a1a06;font-weight:800;font-size:13px;cursor:pointer}
-#nwp .nc.new{border-color:#ffd977;box-shadow:0 0 0 1px rgba(255,217,119,.4)}
 #nwp .mn{flex:1;overflow-y:auto;padding:16px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px 6px;align-content:start}
 #nwp .mt{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;color:#fff;cursor:pointer;font:700 13px system-ui,sans-serif;padding:0;position:relative;text-shadow:0 1px 2px #000}
 #nwp .mt .ci{position:relative;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;background:radial-gradient(circle at 50% 35%,#f4d27a,#b8862e 62%,#7a5418);border:3px solid #ffe7a0;box-shadow:0 4px 10px rgba(0,0,0,.5),inset 0 -4px 8px rgba(0,0,0,.25)}
 #nwp .mt .ci i{position:absolute;right:-2px;top:-2px;width:15px;height:15px;border-radius:50%;background:#ff3a2a;border:2px solid #fff;display:none}#nwp .mt.new .ci i{display:block}
 #nwp .mt:active .ci{transform:scale(.94)}
-#nwp header .bk{display:none}#nwp.nv header .bk{display:block}
-body.hedit #nwp{display:none}
+body.hedit #nwp,body.hedit #nwx{display:none}
 #guide{left:calc(env(safe-area-inset-left,0px) + 52px)!important}/* підказка — правіше язичка, щоб не перекривала його */
+/* ---------- вікно новин — у стилі вікон гри (рюкзак, скрині): темно-синя панель, золото й бірюза, заокруглені кути ---------- */
+#nwx{position:fixed;inset:0;z-index:44;display:none;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eef4ff;
+ background:rgba(4,10,22,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+ padding:calc(env(safe-area-inset-top,0px) + 2.5vh) calc(env(safe-area-inset-right,0px) + 2.5vw) calc(env(safe-area-inset-bottom,0px) + 2.5vh) calc(env(safe-area-inset-left,0px) + 2.5vw)}
+#nwx.on{display:flex}
+#nwx .win{position:relative;width:min(1080px,100%);height:100%;display:flex;flex-direction:column;border-radius:20px;overflow:hidden;
+ background:radial-gradient(120% 70% at 85% 0%,rgba(127,227,245,.12),transparent 60%),linear-gradient(180deg,#16264a,#0d1830 70%,#0a1426);
+ border:2px solid #e2bf67;box-shadow:0 18px 50px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,231,168,.12)}
+#nwx .hd{display:flex;align-items:center;gap:12px;padding:12px 14px 10px 16px}
+#nwx .hd .co{width:42px;height:42px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;background:radial-gradient(circle at 50% 35%,#f4d27a,#b8862e 62%,#7a5418);border:2px solid #ffe7a0;box-shadow:0 3px 8px rgba(0,0,0,.45)}
+#nwx .hd .tt{flex:1;min-width:0}#nwx .hd h2{margin:0;font-size:21px;font-weight:900;color:#ffe7a8;letter-spacing:.3px;line-height:1.1}#nwx .hd small{display:block;color:#9fb3cf;font-size:12.5px;margin-top:2px}
+#nwx .hd button{flex:none;width:38px;height:38px;border-radius:12px;border:2px solid rgba(226,191,103,.55);background:rgba(255,255,255,.05);color:#ffe7a8;font-size:18px;font-weight:800;cursor:pointer}
+#nwx .hd .bk{display:none}#nwx.dt .hd .bk{display:block}#nwx.dt .hd .co{display:none}
+#nwx .tb{display:flex;align-items:center;gap:8px;padding:0 16px 10px;border-bottom:1px solid rgba(226,191,103,.3)}
+#nwx .tb .t{position:relative;padding:8px 16px;border-radius:12px;border:2px solid rgba(226,191,103,.35);background:#16244a;color:#d7e2f5;font:800 14.5px system-ui,sans-serif;cursor:pointer}
+#nwx .tb .t.on{color:#fff;border-color:#7fe3f5;background:linear-gradient(180deg,#1f3c66,#16284a);box-shadow:0 0 0 1px rgba(127,227,245,.25),0 4px 12px rgba(63,198,220,.25)}
+#nwx .tb .t u{display:none;margin-left:7px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#ff5a3a;color:#fff;font:800 12px/20px system-ui,sans-serif;text-decoration:none;vertical-align:1px}#nwx .tb .t.new u{display:inline-block}
+#nwx .tb .sp{flex:1}
+#nwx .tb .ra{padding:8px 14px;border-radius:12px;border:2px solid #e2bf67;background:linear-gradient(#5fb04a,#2f8a3a);color:#fff;font:800 13.5px system-ui,sans-serif;cursor:pointer}
+#nwx .tb .ra:disabled{opacity:.4;filter:grayscale(.6);cursor:default}
+#nwx .nbd{flex:1;min-height:0;display:flex;gap:14px;padding:14px 16px 16px}
+#nwx .nf{position:relative;flex:1.05;min-width:0;min-height:0;border-radius:18px;overflow:hidden;border:2px solid rgba(226,191,103,.7);background:#0b1426 center/cover no-repeat;cursor:pointer;padding:0;color:#fff;text-align:left;box-shadow:0 8px 22px rgba(0,0,0,.45)}
+#nwx .nf .im{position:absolute;inset:0;background:center/cover no-repeat;transition:transform .5s ease}#nwx .nf:hover .im{transform:scale(1.04)}
+#nwx .nf .tx{position:absolute;left:10px;right:10px;bottom:10px;padding:12px 14px;border-radius:14px;background:rgba(10,20,40,.82);border:1px solid rgba(127,227,245,.3);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#nwx .nf .tx b{display:block;font-size:20px;font-weight:900;color:#ffe7a8;line-height:1.2}#nwx .nf .tx span{display:block;font-size:14px;color:#cfe0f0;margin-top:3px}
+#nwx .lst{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px 4px 2px 0;-webkit-overflow-scrolling:touch}
+#nwx .nr{position:relative;display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;padding:8px;border-radius:16px;border:2px solid rgba(226,191,103,.35);background:linear-gradient(180deg,rgba(31,52,92,.75),rgba(18,32,62,.75));color:#fff;text-align:left;cursor:pointer;flex:none}
+#nwx .nr:hover{border-color:#e2bf67}#nwx .nr:active{transform:scale(.99)}
+#nwx .nr .im{width:132px;aspect-ratio:2/1;border-radius:11px;background:center/cover no-repeat;border:1px solid rgba(255,231,168,.25)}
+#nwx .nr b{display:block;font-size:15.5px;font-weight:800;color:#fff;line-height:1.25}#nwx .nr span.s{display:block;font-size:12.5px;color:#a9bed6;margin-top:2px}
+#nwx .em{display:flex;align-items:center;justify-content:center;font-size:44px;background:radial-gradient(circle at 50% 40%,#2c4f86,#14254a)!important}#nwx .nf .em{position:absolute;inset:0;font-size:110px}
+#nwx .ch{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:5px}
+#nwx .ch em{font-style:normal;font-size:11px;font-weight:800;letter-spacing:.3px;padding:2px 8px;border-radius:8px;background:rgba(127,227,245,.14);color:#bff3ff;border:1px solid rgba(127,227,245,.3)}
+#nwx .ch em.d{background:rgba(255,255,255,.07);color:#c9d6e8;border-color:rgba(255,255,255,.14)}
+#nwx .ch em.n{display:none;background:linear-gradient(#ffe08a,#e2a93a);color:#3a2408;border-color:#fff3c8}#nwx .new .ch em.n{display:inline-block}
+#nwx .new.nr{border-color:#7fe3f5;box-shadow:0 0 0 1px rgba(127,227,245,.3),0 0 14px rgba(127,227,245,.18)}
+#nwx .none{margin:auto;opacity:.75;text-align:center}
+/* повна новина */
+#nwx .full{display:none;flex:1;min-height:0;overflow-y:auto;padding:4px 16px 18px;justify-content:center}#nwx.dt .full{display:flex}#nwx.dt .tb,#nwx.dt .nbd{display:none}
+#nwx .full article{width:min(780px,100%)}
+#nwx .full .pic{width:100%;aspect-ratio:2/1;border-radius:18px;border:2px solid rgba(226,191,103,.7);background:#0b1426 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:110px;box-shadow:0 8px 22px rgba(0,0,0,.45)}
+#nwx .full .bx{margin-top:-28px;position:relative;margin-left:14px;margin-right:14px;padding:14px 16px 16px;border-radius:16px;background:linear-gradient(180deg,#1b2f58,#13234a);border:2px solid rgba(127,227,245,.35);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+#nwx .full h3{margin:2px 0 3px;font-size:23px;font-weight:900;color:#ffe7a8}#nwx .full h4{margin:0 0 10px;font-size:15px;color:#bff3ff;font-weight:700}
+#nwx .full p{margin:0 0 14px;font-size:15px;line-height:1.55;color:#d9e5f3}
+#nwx .full .go{padding:10px 20px;border-radius:12px;border:2px solid #e2bf67;background:linear-gradient(#f39a4a,#d9532e);color:#fff;font:800 15px system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.35)}
+@media (max-width:760px){#nwx{padding:calc(env(safe-area-inset-top,0px) + 6px) calc(env(safe-area-inset-right,0px) + 6px) calc(env(safe-area-inset-bottom,0px) + 6px) calc(env(safe-area-inset-left,0px) + 6px)}
+ #nwx .nbd{flex-direction:column;overflow-y:auto}#nwx .nf{flex:none;aspect-ratio:2/1}#nwx .lst{flex:none;overflow:visible}#nwx .nr{grid-template-columns:104px 1fr}#nwx .nr .im{width:104px}#nwx .hd small{display:none}}
+@media (max-height:460px){#nwx .hd{padding:8px 12px 6px 14px}#nwx .hd .co{width:34px;height:34px;font-size:17px}#nwx .hd h2{font-size:18px}#nwx .tb{padding-bottom:8px}#nwx .tb .t,#nwx .tb .ra{padding:6px 12px;font-size:13px}#nwx .nbd{padding:10px 12px 12px;gap:10px}#nwx .nf .tx b{font-size:17px}#nwx .nf .tx span{font-size:12.5px}#nwx .nr{grid-template-columns:110px 1fr;padding:6px}#nwx .nr .im{width:110px}#nwx .nr b{font-size:14px}}
 @media (prefers-reduced-motion:reduce){#nwp{transition:none}}`;document.head.appendChild(css);
 const tab=document.createElement('button');tab.id='nwb';tab.setAttribute('aria-label','Меню');tab.innerHTML='<i></i><b></b>';document.body.appendChild(tab);
-const pan=document.createElement('aside');pan.id='nwp';pan.setAttribute('aria-label','Меню');pan.innerHTML="<header><button class='bk' aria-label='Назад'>←</button><h3>☰ Меню</h3><button class='cl' aria-label='Закрити'>✕</button></header><div class='mn'><button class='mt' data-v='news'><span class='ci'>📰<i></i></span>Новини</button></div><div class='ls'></div>";document.body.appendChild(pan);
-const ls=pan.querySelector('.ls'),mn=pan.querySelector('.mn'),h3=pan.querySelector('header h3');
-const css2=document.createElement('style');css2.textContent='#nwp .ls{display:none}#nwp.nv .ls{display:flex}#nwp.nv .mn{display:none}';document.head.appendChild(css2);
+const pan=document.createElement('aside');pan.id='nwp';pan.setAttribute('aria-label','Меню');pan.innerHTML="<header><h3>☰ Меню</h3><button class='cl' aria-label='Закрити'>✕</button></header><div class='mn'><button class='mt' data-v='news'><span class='ci'>📰<i></i></span>Новини</button><button class='mt' data-v='rate'><span class='ci'>🏆</span>Рейтинг</button></div>";document.body.appendChild(pan);
+const mn=pan.querySelector('.mn');
+const X=document.createElement('section');X.id='nwx';X.setAttribute('aria-label','Новини');
+X.innerHTML=`<div class='win'><div class='hd'><button class='bk' aria-label='Назад'>←</button><span class='co'>📰</span><div class='tt'><h2>Новини</h2><small>Що нового в Regnum Land</small></div><button class='cl' aria-label='Закрити'>✕</button></div>
+<div class='tb'><button class='t' data-c='main'>Оновлення<u></u></button><button class='t' data-c='gen'>Загальне<u></u></button><span class='sp'></span><button class='ra'>✓ Прочитати все</button></div>
+<div class='nbd'></div><div class='full'></div></div>`;document.body.appendChild(X);
+let cat='main',cur=null;
 const live=n=>{if(n.live!=='boss')return n.text;const b=window.BOSS&&window.BOSS.get&&window.BOSS.get();
  if(b&&typeof wild!='undefined'&&wild.includes(b))return'Вогняний бос 25 рівня чекає на своїй арені в Старому лісі. Червоні кола на землі — відбігайте! Здобич: Кристали еволюції й зілля.';
- const t=(typeof inv!='undefined'&&inv._boss&&inv._boss.warden)||0,s=Math.max(0,Math.round((t-Date.now())/1000));return s?'Переможений. З’явиться знову через '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+'.':'Вогняний бос 25 рівня в Старому лісі.'};
-function render(){const old=new Set(seen.split(','));ls.innerHTML=NEWS.map(n=>`<div class='nc ${old.has(n.id)?'':'new'}'><div class='ic'>${n.ico}</div><div><h4>${n.title}</h4><p data-live='${n.id}'>${live(n)}</p></div>${n.btn?`<button data-act='${n.act}'>${n.btn}</button>`:''}</div>`).join('')}
-function badge(){const n=seen!==VER;tab.classList.toggle('new',n);mn.querySelector("[data-v='news']").classList.toggle('new',n)}
-/* меню: плитки-іконки (поки лише «Новини»); торкнулися плитки — відкривається її розділ, ← — назад до меню */
-function view(v){pan.classList.toggle('nv',v=='news');h3.textContent=v=='news'?'📰 Новини':'☰ Меню';
- if(v=='news'){render();ls.scrollTop=0;seen=VER;try{localStorage.setItem('zi_news',VER)}catch(_){}badge()}}
-function open(on){pan.classList.toggle('on',on);if(on){view('menu');badge()}}
-mn.addEventListener('click',e=>{const t=e.target.closest('[data-v]');if(t)view(t.dataset.v)});
-pan.querySelector('header .bk').onclick=()=>view('menu');
-tab.onclick=()=>{if(document.body.classList.contains('hedit'))return;open(!pan.classList.contains('on'))};
-pan.querySelector('header .cl').onclick=()=>open(false);
-ls.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;open(false);
+ const t=(typeof inv!='undefined'&&inv._boss&&inv._boss.warden)||0,s=Math.max(0,Math.round((t-Date.now())/1000));return s?'Переможений. З’явиться знову через '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+'. Здобич: Кристали еволюції й зілля.':'Вогняний бос 25 рівня в Старому лісі. Червоні кола на землі — відбігайте! Здобич: Кристали еволюції й зілля.'};
+const TAG={pen:'🏠 База',needs:'🏠 База',boss:'🔥 Бос',dg1:'🕳️ Підземелля',loc2:'🗺️ Світ',rl:'👑 Гра',mail:'📬 Пошта'};
+const pic=n=>n.img?`<span class='im' style="background-image:url('${IMG(n.img)}')"></span>`:`<span class='im em'>${n.ico||'📰'}</span>`;
+const chips=n=>`<span class='ch'><em class='n'>НОВЕ</em><em>${TAG[n.id]||'📰 Новина'}</em><em class='d'>${n.d}</em></span>`;
+const feat=n=>`<button class='nf ${unread(n)?'new':''}' data-id='${n.id}'>${pic(n)}<span class='tx'>${chips(n)}<b>${n.title}</b><span>${n.sub}</span></span></button>`;
+const row=n=>`<button class='nr ${unread(n)?'new':''}' data-id='${n.id}'>${pic(n)}<span>${chips(n)}<b>${n.title}</b><span class='s'>${n.sub}</span></span></button>`;
+function badge(){const any=NEWS.some(unread);tab.classList.toggle('new',any);mn.querySelector("[data-v='news']").classList.toggle('new',any);
+ X.querySelectorAll('.tb .t').forEach(t=>{const k=NEWS.filter(n=>n.cat==t.dataset.c&&unread(n)).length;t.classList.toggle('new',k>0);t.querySelector('u').textContent=k||''});X.querySelector('.ra').disabled=!NEWS.some(unread)}
+function list(){X.classList.remove('dt');cur=null;const L=NEWS.filter(n=>n.cat==cat);X.querySelectorAll('.tb .t').forEach(t=>t.classList.toggle('on',t.dataset.c==cat));
+ const b=X.querySelector('.nbd');b.innerHTML=L.length?feat(L[0])+(L.length>1?`<div class='lst'>${L.slice(1).map(row).join('')}</div>`:''):"<div class='none'>Поки немає новин</div>";b.scrollTop=0;badge()}
+function full(n){cur=n;seen.add(n.id);keep();X.classList.add('dt');const f=X.querySelector('.full');
+ f.innerHTML=`<article><div class='pic ${n.img?'':'em'}' style="${n.img?`background-image:url('${IMG(n.img)}')`:''}">${n.img?'':(n.ico||'📰')}</div><div class='bx'><span class='ch'><em>${TAG[n.id]||'📰 Новина'}</em><em class='d'>${n.d}</em></span><h3>${n.title}</h3><h4>${n.sub}</h4><p data-live='${n.id}'>${live(n)}</p>${n.btn?`<button class='go' data-act='${n.act}'>${n.btn}</button>`:''}</div></article>`;f.scrollTop=0;badge()}
+function openX(){pan.classList.remove('on');X.classList.add('on');if(!NEWS.some(n=>n.cat==cat&&unread(n))&&NEWS.some(n=>n.cat!=cat&&unread(n)))cat=cat=='main'?'gen':'main';list()}
+function closeX(){X.classList.remove('on','dt');cur=null}
+X.querySelector('.hd .cl').onclick=closeX;X.querySelector('.hd .bk').onclick=list;
+X.querySelectorAll('.tb .t').forEach(t=>t.onclick=()=>{cat=t.dataset.c;list()});
+X.querySelector('.ra').onclick=()=>{NEWS.forEach(n=>seen.add(n.id));keep();list()};
+X.addEventListener('click',e=>{const c=e.target.closest('[data-id]');if(c){full(NEWS.find(n=>n.id==c.dataset.id));return}
+ const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;closeX();
  if(a==='map'){const m=document.getElementById('mmap');if(m&&!m.classList.contains('big'))m.click()}
  else if(a==='mail'){try{const av=document.getElementById('av');if(av)av.click();setTimeout(()=>{try{pfTab('m')}catch(_){}},150)}catch(_){}}});
-setInterval(()=>{if(!pan.classList.contains('on')||!pan.classList.contains('nv'))return;const p=ls.querySelector("[data-live='boss']");if(p)p.textContent=live(NEWS.find(n=>n.id=='boss'))},1000);
-/* язичок ховається там, де ховаються інші кнопки (меню, інвентар, діалоги) */
-setInterval(()=>{const hide=(typeof menuO!='undefined'&&menuO&&!document.body.classList.contains('hedit'))||(typeof ivO!='undefined'&&ivO)||(typeof pfO!='undefined'&&pfO);tab.style.visibility=hide?'hidden':'';if(hide&&pan.classList.contains('on'))open(false)},400);
+addEventListener('keydown',e=>{if(e.key=='Escape'&&X.classList.contains('on')){if(X.classList.contains('dt'))list();else closeX()}});
+/* меню */
+function open(on){pan.classList.toggle('on',on);if(on)badge()}
+mn.addEventListener('click',e=>{const t=e.target.closest('[data-v]');if(!t)return;if(t.dataset.v=='news')openX();else if(t.dataset.v=='rate'&&window.plRating){pan.classList.remove('on');window.plRating.open()}});
+tab.onclick=()=>{if(document.body.classList.contains('hedit'))return;open(!pan.classList.contains('on'))};
+pan.querySelector('header .cl').onclick=()=>open(false);
+setInterval(()=>{if(!cur||cur.live!='boss'||!X.classList.contains('on'))return;const p=X.querySelector("[data-live='boss']");if(p)p.textContent=live(cur)},1000);
+/* язичок ховається там, де ховаються інші кнопки (меню, інвентар, діалоги) і поки відкрите вікно новин */
+setInterval(()=>{const hide=X.classList.contains('on')||(window.plRating&&window.plRating.isOpen())||(typeof menuO!='undefined'&&menuO&&!document.body.classList.contains('hedit'))||(typeof ivO!='undefined'&&ivO)||(typeof pfO!='undefined'&&pfO);tab.style.visibility=hide?'hidden':'';if(hide&&pan.classList.contains('on'))open(false)},400);
+window.plNews={open:openX,list:NEWS};
 badge();
 }catch(e){console.warn('news',e)}})();
