@@ -15,6 +15,7 @@ const BUI=[
 {id:'B_flask',n:'Колба поліпшень',i:'🧪',c:{w:15,s:20,sti:4},d:'Еволюція попалів: покладіть попала 25+ рівня й Кристал еволюції — він набуде нової форми',p:3,u:1},/* 0.2.9: evolution.js */
 {id:'B_alch',n:'Стіл зіль',i:'⚗️',c:{w:8,s:4,sti:2},d:'Біля нього варять зілля здоров’я з ягід і грибів',p:2,u:1},/* 0.3.0: potions.js */
 {id:'B_bask',n:'Кошик з їжею',i:'🧺',c:{w:4,sti:4},d:'Покладіть сюди їжу — голодні попали бригади самі прийдуть поїсти',p:1},/* 0.3.0: pal-needs.js */
+{id:'B_pen',n:'Загін',i:'🐑',c:{w:14,sti:6},d:'Поселіть сюди попалів, з яких падає шерсть або шкіра (Пухоклуб, Мороріг, Грозовик, Бамбузл): вони гуляють у загоні й дають шерсть чи шкіру',p:2},/* 0.2.10: pen.js */
 {id:'B_lamp',n:'Ліхтар',i:'🏮',c:{w:2,s:1},d:'Світить уночі',p:1},
 {id:'B_fen',n:'Паркан',i:'🚧',c:{w:4},d:'Прикрашає базу',p:1}];
 const BI={};BUI.forEach(b=>{BI[b.id]=b;IT[b.id]=[b.i,b.n];if(inv[b.id]==null)inv[b.id]=0});
@@ -68,6 +69,15 @@ else if(id=='B_bask'){/* 0.3.0: Кошик з їжею — плетений ко
  const fill=new THREE.Group();g.add(fill);for(let i=0;i<14;i++){const a=i*2.4,rr=.12+((i*37)%10)/10*.38,c=[0xd8304a,0x4a5ad8,0xd8304a,0x7a4ad0][i%4];const b=new THREE.Mesh(new THREE.SphereGeometry(.09,10,8),new THREE.MeshStandardMaterial({color:c,roughness:.9}));b.position.set(Math.cos(a)*rr,.0,Math.sin(a)*rr);fill.add(b)}
  for(const[x,z]of[[.18,.12],[-.2,-.1]]){add(fill,Cy(.03,.04,.12,6),0xf4ead8,x,.02,z);const c=add(fill,new THREE.SphereGeometry(.1,12,8,0,Math.PI*2,0,Math.PI/2),0xd8483a,x,.08,z);c.scale.y=.7}
  fill.position.y=.42;add(g,new THREE.TorusGeometry(.32,.03,6,16,Math.PI),WD,0,.6,0).rotation.x=0;g.userData.bask={fill}}
+else if(id=='B_pen'){/* 0.2.10: Загін — квадратний дерев'яний паркан 5,2×5,2 м з хвірткою спереду, солома, копиця сіна й корито з водою */
+ const WD=0x9a6a3e,DK=0x6e4a2a,HL=2.6;const straw=new THREE.Mesh(new THREE.CircleGeometry(2.45,28),new THREE.MeshStandardMaterial({color:0xc9b06a,roughness:1}));straw.rotation.x=-Math.PI/2;straw.position.y=.04;straw.receiveShadow=true;g.add(straw);
+ const post=(x,z)=>add(g,B(.14,.9,.14),DK,x,.45,z);const rail=(x,z,l,rot)=>{for(const y of[.35,.68]){const r=add(g,B(l,.08,.06),WD,x,y,z);r.rotation.y=rot}};
+ for(let i=0;i<=4;i++){const t=-HL+i*HL/2;post(t,-HL);post(-HL,t);post(HL,t);if(i!=2)post(t,HL)}
+ rail(0,-HL,HL*2,0);rail(-HL,0,HL*2,Math.PI/2);rail(HL,0,HL*2,Math.PI/2);rail(-HL*.75,HL,HL/2,0);rail(HL*.75,HL,HL/2,0);/* спереду — хвіртка посередині */
+ const gt=new THREE.Group();gt.position.set(-.65,0,HL);g.add(gt);for(const y of[.32,.62])add(gt,B(1.25,.07,.05),0xb07a48,.62,y,0);add(gt,B(.07,.6,.05),0xb07a48,.18,.47,0);add(gt,B(.07,.6,.05),0xb07a48,1.12,.47,0);gt.rotation.y=-.9;
+ const hay=add(g,Cy(.42,.46,.6,12),0xd8be5a,-1.55,.3,-1.55);hay.rotation.z=Math.PI/2;add(g,B(.5,.18,.5),0xe0c86a,-1.45,.66,-1.5);
+ add(g,B(1.2,.3,.45),DK,1.45,.2,-1.75);const wt=new THREE.Mesh(B(1.04,.04,.32),new THREE.MeshStandardMaterial({color:0x4aa8d8,roughness:.2,emissive:0x0a3048,emissiveIntensity:.4}));wt.position.set(1.45,.33,-1.75);g.add(wt);
+ const pile=new THREE.Group();pile.position.set(1.6,.05,1.5);g.add(pile);g.userData.pile=pile}
 else if(id=='B_lamp'){add(g,Cy(.05,.06,1.6,6),0x2a2a33,0,.8,0);const l=new THREE.Mesh(B(.22,.28,.22),LAMP);l.position.y=1.72;g.add(l);add(g,Co(.2,.15,4),0x2a2a33,0,1.94,0,Math.PI/4);const lt=new THREE.PointLight(0xffc070,0,10);lt.position.y=1.7;g.add(lt);g.userData.light=lt}
 else{for(const x of[-.8,0,.8])add(g,B(.12,.8,.12),W,x,.4,0);for(const y of[.3,.6])add(g,B(1.8,.08,.06),D,0,y,0)}
 return g}
@@ -79,9 +89,9 @@ if(inv._cen||window.REALM==='isle')inv._b.forEach(rec=>{const[id,si,x,z,ry]=rec;
 const isleBase=()=>{if(window.REALM==='isle'&&window.ISLE&&window.ISLE.BASE)for(const[id,x,z,ry]of window.ISLE.BASE)if(BI[id]){spawnB(id,-1,x,z,ry);placed[placed.length-1].fixed=1}};isleBase();
 window.respawnB=()=>{placed.forEach(b=>sc.remove(b.g));placed.length=0;if(inv._cen||window.REALM==='isle')inv._b.forEach(rec=>{const[id,si,x,z,ry]=rec;if(BI[id]){spawnB(id,si,x,z,ry);placed[placed.length-1].rec=rec}});isleBase()};
 function placeB(id){if(!inv._cen&&window.REALM!=='isle'){msg('🏠 Спершу збудуйте й поставте Попал-центр');return}/* на острові база без центру */if(!(inv[id]>0))return;if(BI[id].u&&built(id)){msg('Це вже збудовано');return}
- const r=(window.colR&&colR[id])||.8;
- const gd=id=='B_garden';
- if(window.plPlace){plPlace({name:'🏗️ '+BI[id].n,r,dist:gd?3.2:r+1.6,ry:(P.face||0)+Math.PI,mk:()=>mkB(id),snap:gd?gSnap:null,valid:gd?gFree:null,onOk:(x,z,ry)=>doPlaceB(id,x,z,ry)});return}
+ const r=id=='B_pen'?2.7:((window.colR&&colR[id])||.8);
+ const gd=id=='B_garden',pen=id=='B_pen';
+ if(window.plPlace){plPlace({name:'🏗️ '+BI[id].n,r,dist:gd?3.2:pen?3.8:r+1.6,ry:(P.face||0)+Math.PI,mk:()=>mkB(id),snap:gd?gSnap:null,valid:gd?gFree:null,onOk:(x,z,ry)=>doPlaceB(id,x,z,ry)});return}
  doPlaceB(id,P.x+Math.sin(P.face||0)*(r+1.6),P.z+Math.cos(P.face||0)*(r+1.6),(P.face||0)+Math.PI)}
 /* 0.2.7: «магніт» грядок — привид, підведений ближче ніж GSNAP до вільного боку іншої грядки, стає впритул до неї, рівно в ряд і з тим самим поворотом */
 const GS=3.12,GSNAP=1.3;window.GARDEN_S=GS;
