@@ -1,7 +1,7 @@
 /* 0.3.0: потреби попалів бригади — їжа, сон і втома.
    • Ситість (p.fd, 0–100): працюючи на базі, попал голоднішає (повна шкала — приблизно за 15 хв роботи). Стала нижчою за 35 —
-     сам іде до Кошика з їжею (B_bask) і їсть, доки не наїсться. Кошик наповнює гравець: підійдіть і натисніть «Дія» — уся їжа
-     з рюкзака (ягоди, гриби, смажені гриби, пиріг) перейде в кошик. Порожній кошик — голодний попал (ситість 0) не працює.
+     сам іде до Кошика з їжею (B_bask) і їсть, доки не наїсться. Кошик наповнює гравець: підійдіть і натисніть «Дія» — відкриється
+     вікно кошика (що в ньому лежить і їжа з рюкзака). Порожній кошик — голодний попал (ситість 0) не працює.
    • Сон: уночі попал іде на вільне місце на лежанці (B_nest2 / B_nest5, garden.js) і спить до ранку.
    • Втома (p.ft, 0–100): хто не має де спати, працює всю ніч і втомлюється; до ранку — повна втома. Втомлений попал не працює:
      спить на лежанці, якщо є місце, або відпочиває біля центру, доки не відпочине. Сон знімає втому швидко, відпочинок — повільно.
@@ -19,21 +19,61 @@ pals.forEach((p,i)=>{const d=inv._nd[i];p.fd=d&&isFinite(d[0])?clamp(d[0]):100;p
 const _ap=addPal;addPal=function(){const r=_ap.apply(this,arguments),p=pals[pals.length-1];if(p&&p.fd==null){p.fd=100;p.ft=0}return r};
 const _sv=save;save=function(){try{inv._nd=pals.map(p=>[Math.round(p.fd==null?100:p.fd),Math.round(p.ft||0)])}catch(_){}return _sv.apply(this,arguments)};
 
-/* ---------- кошики ---------- */
+/* ---------- кошики ----------
+   0.2.10: кошик — як скриня, але лише для їжі. «Дія» поруч відкриває вікно: зліва що лежить у кошику (кожен вид окремо, з кількістю),
+   справа їжа з рюкзака — «1», «10», «Усе». Забрати назад теж можна. Місткість — 150 одиниць ситості (ягода й гриб — 2, смажені гриби — 6, пиріг — 12).
+   inv._bsk[ключ] = {be,mu,gm,pie}; старе збереження (просто число одиниць) перетворюється на ягоди. */
+const FK=['be','mu','gm','pie'];
 const baskets=()=>(window.BPLACED||[]).filter(b=>b.id=='B_bask');
 const bkey=b=>Math.round(b.x*10)/10+','+Math.round(b.z*10)/10;
-const stock=b=>inv._bsk[bkey(b)]||0;
-function setStock(b,v){inv._bsk[bkey(b)]=Math.max(0,Math.min(BCAP,v));const f=b.g&&b.g.userData.bask&&b.g.userData.bask.fill;if(f){const k=stock(b)/BCAP;f.visible=k>0;f.position.y=.12+.3*Math.min(1,k*1.4)}}
-setInterval(()=>baskets().forEach(b=>setStock(b,stock(b))),1500);/* наповнення кошика видно на моделі */
+const box=b=>{const k=bkey(b);let o=inv._bsk[k];if(typeof o=='number')o=inv._bsk[k]=o>0?{be:Math.ceil(o/FOODV.be)}:{};if(!o||typeof o!='object')o=inv._bsk[k]={};return o};
+const stock=b=>{const o=box(b);return FK.reduce((a,k)=>a+(o[k]||0)*FOODV[k],0)};
+function showFill(b){const f=b.g&&b.g.userData.bask&&b.g.userData.bask.fill;if(f){const k=stock(b)/BCAP;f.visible=k>0;f.position.y=.12+.3*Math.min(1,k*1.4)}}
+setInterval(()=>baskets().forEach(showFill),1500);/* наповнення кошика видно на моделі */
 function bestBasket(p){let best=null,bd=1e9;for(const b of baskets()){if(stock(b)<=0)continue;const d=Math.hypot(b.x-p.x,b.z-p.z);if(d<bd){bd=d;best=b}}return best}
+/* попал з'їдає одну річ: найменшу, якої вистачає до ситості, або найбільшу, що є */
+function eatOne(b,p){const o=box(b),need=(100-(p.fd||0))/UNIT,have=FK.filter(k=>o[k]>0);if(!have.length)return 0;
+ const k=have.filter(k=>FOODV[k]>=need).sort((x,y)=>FOODV[x]-FOODV[y])[0]||have.sort((x,y)=>FOODV[y]-FOODV[x])[0];
+ o[k]--;if(!o[k])delete o[k];showFill(b);return FOODV[k]*UNIT}
 
-/* гравець кладе їжу з рюкзака в кошик: «Дія» поруч із кошиком */
+/* гравець відкриває кошик: «Дія» поруч із кошиком */
 const near=()=>{let best=null,bd=2.6;for(const b of baskets()){const d=Math.hypot(b.x-P.x,b.z-P.z);if(d<bd){bd=d;best=b}}return best};
-function fill(b){let room=BCAP-stock(b),put=0;const got=[];for(const k of['pie','gm','be','mu']){let n=inv[k]||0,t=0;while(n>0&&room>=FOODV[k]){n--;t++;room-=FOODV[k];put+=FOODV[k]}if(t){inv[k]-=t;got.push(IT[k][0]+'×'+t)}}
- if(!put){msg(stock(b)>=BCAP?'🧺 Кошик повний':'🧺 У рюкзаку немає їжі: ягоди, гриби, смажені гриби або пиріг');return}
- setStock(b,stock(b)+put);msg('🧺 У кошик: '+got.join(' ')+' · запас '+stock(b)+' / '+BCAP);try{hud();save()}catch(_){}}
-{const hb=document.getElementById('hit');if(hb){const h0=hb.onclick;hb.onclick=function(){const b=near();if(b&&!nearest(wild,2.6)){fill(b);return}return h0&&h0.apply(this,arguments)};
- let was=null,hit0=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML=(window.plIcon?plIcon('B_bask'):'🧺')+'<small>Покласти їжу</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}})}}
+{const css=document.createElement('style');css.textContent=`
+#bks{display:none;position:fixed;left:calc(env(safe-area-inset-left,0px) + 6%);right:calc(env(safe-area-inset-right,0px) + 6%);top:calc(env(safe-area-inset-top,0px) + 5%);bottom:calc(env(safe-area-inset-bottom,0px) + 5%);z-index:36;flex-direction:column;background:rgba(14,20,42,.96);border:2px solid #e2bf67;border-radius:16px;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.5);overflow:hidden;font-family:system-ui,sans-serif}
+#bks header{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(226,191,103,.4)}#bks header b{font-size:18px;color:#ffe7a8;flex:1}
+#bks .cx{background:none;border:none;color:#e2bf67;font-size:24px;cursor:pointer}
+#bks .cap{padding:8px 14px 0;font-size:13px;color:#dfe8f5}#bks .cap i{display:block;height:8px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:4px}#bks .cap i b{display:block;height:100%;background:linear-gradient(90deg,#ffd08a,#e8902a)}
+#bks .cb{flex:1;display:flex;gap:12px;padding:10px 12px;min-height:0}#bks .col{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+#bks h5{margin:0 0 6px;color:#e2bf67;font-size:13px;display:flex;align-items:center;gap:8px}#bks h5 span{flex:1}
+#bks .ls{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px;min-height:0;padding-right:4px}
+#bks .r{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px 8px}
+#bks .r.e{opacity:.45}#bks .r .ic{font-size:26px;width:34px;text-align:center}#bks .r .ic img{width:32px;height:32px}
+#bks .r .nm{flex:1;min-width:0;font-size:13px;line-height:1.25}#bks .r .nm small{display:block;opacity:.7;font-size:11px}#bks .r .n{font-weight:800;font-size:16px;color:#ffe7a8;min-width:34px;text-align:right}
+#bks button.b{background:linear-gradient(#f39a4a,#d9532e);border:2px solid #e2bf67;color:#fff;border-radius:9px;padding:3px 9px;font-weight:700;cursor:pointer;font-size:12px;font-family:inherit;min-height:30px}
+#bks button.b.g{background:linear-gradient(#5fb04a,#2f8a3a)}#bks button.b:disabled{opacity:.35}#bks .em{opacity:.65;font-size:12px;padding:6px}
+@media (max-width:640px){#bks .cb{flex-direction:column}}`;document.head.appendChild(css)}
+const W=document.createElement('div');W.id='bks';document.body.appendChild(W);
+let cur=null;
+const ic=k=>IT[k]?IT[k][0]:'❔',nm=k=>IT[k]?IT[k][1]:k;
+function bkOpen(b){cur=b;ivO=1;W.style.display='flex';bkR()}
+function bkClose(){W.style.display='none';ivO=0;cur=null;try{hud();save()}catch(_){}}
+function put(k,n){const room=Math.floor((BCAP-stock(cur))/FOODV[k]);n=Math.min(n,inv[k]||0,room);if(n<=0){msg(room<=0?'🧺 Кошик повний':'🧺 У рюкзаку цього немає');return}inv[k]-=n;const o=box(cur);o[k]=(o[k]||0)+n;showFill(cur);bkR()}
+function take(k,n){const o=box(cur);n=Math.min(n,o[k]||0);if(n<=0)return;o[k]-=n;if(!o[k])delete o[k];addI(k,n);showFill(cur);bkR()}
+function bkR(){if(!cur)return;const o=box(cur),st=stock(cur),pc=Math.round(st/BCAP*100),hungry=pals.filter(p=>p.cs!=null&&p.wk&&(p.fd||0)<HUNGRY).length;
+ W.innerHTML=`<header><b>🧺 Кошик з їжею</b><button class='cx' aria-label='Закрити'>✕</button></header>
+ <div class='cap'>Запас: <b>${st}</b> / ${BCAP} · ${st?'попали їдять звідси самі':'порожньо — голодні попали не працюватимуть'}${hungry?' · голодних: '+hungry:''}<i><b style='width:${pc}%'></b></i></div>
+ <div class='cb'><div class='col'><h5><span>У кошику</span>${st?"<button class='b g' data-all>⬇ Забрати все</button>":''}</h5><div class='ls'>${FK.map(k=>`<div class='r ${o[k]?'':'e'}'><span class='ic'>${ic(k)}</span><span class='nm'>${nm(k)}<small>+${FOODV[k]*UNIT}% ситості</small></span><span class='n'>${o[k]||0}</span><button class='b g' data-t='${k}' data-n='1' ${o[k]?'':'disabled'}>1</button><button class='b g' data-t='${k}' data-n='1e9' ${o[k]?'':'disabled'}>Усе</button></div>`).join('')}</div></div>
+ <div class='col'><h5><span>🎒 Їжа в рюкзаку</span>${FK.some(k=>inv[k]>0)?"<button class='b' data-pall>⬆ Покласти все</button>":''}</h5><div class='ls'>${FK.some(k=>inv[k]>0)?FK.filter(k=>inv[k]>0).map(k=>`<div class='r'><span class='ic'>${ic(k)}</span><span class='nm'>${nm(k)}</span><span class='n'>${inv[k]}</span><button class='b' data-p='${k}' data-n='1'>1</button><button class='b' data-p='${k}' data-n='10'>10</button><button class='b' data-p='${k}' data-n='1e9'>Усе</button></div>`).join(''):"<div class='em'>У рюкзаку немає їжі. Сюди можна покласти лише ягоди, гриби, смажені гриби й пиріг.</div>"}</div></div></div>`;
+ W.querySelector('.cx').onclick=bkClose;
+ W.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>take(b.dataset.t,+b.dataset.n));
+ W.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>put(b.dataset.p,+b.dataset.n));
+ const a=W.querySelector('[data-all]');if(a)a.onclick=()=>{for(const k of FK)take(k,1e9)};
+ const pa=W.querySelector('[data-pall]');if(pa)pa.onclick=()=>{for(const k of['pie','gm','be','mu'])if(inv[k]>0&&stock(cur)+FOODV[k]<=BCAP)put(k,1e9)}}
+addEventListener('keydown',e=>{if(e.key=='Escape'&&W.style.display=='flex')bkClose()});
+setInterval(()=>{if(cur&&W.style.display=='flex'&&!W.matches(':hover'))bkR()},2000);/* видно, як попали їдять */
+function fill(b){bkOpen(b)}
+{const hb=document.getElementById('hit');if(hb){const h0=hb.onclick;hb.onclick=function(){const b=near();if(b&&!nearest(wild,2.6)){bkOpen(b);return}return h0&&h0.apply(this,arguments)};
+ let was=null,hit0=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML=(window.plIcon?plIcon('B_bask'):'🧺')+'<small>Кошик</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}})}}
 
 /* ---------- рух і положення (як у pal-ai.js) ---------- */
 function moveTo(p,x,z,dt,stop){const dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);if(d<=stop+.08)return true;const s=Math.min(d-stop,2.2*dt),nx=p.x+dx/d*s,nz=p.z+dz/d*s;p.a=Math.atan2(dx,dz);
@@ -54,7 +94,7 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return ai0.apply(this,argu
  if(!s){/* працює як звичайно */const busy=p.ai&&p.ai.s!='rest';p.fd=clamp(p.fd-(busy?FD_ON:FD_IDLE)*dt);p.ft=clamp(p.ft+(busy?(N?FT_NIGHT:FT_DAY):FT_REST)*dt);return ai0.apply(this,arguments)}
  let moving=false;const A=p.ai;A.s='rest';A.t=2;
  if(s=='eat'){const b=bestBasket(p);if(!b){leave(p);return}p.st='🍖 іде поїсти до кошика';p.job=null;moving=!moveTo(p,b.x,b.z,dt,1.05);
-  if(!moving){p.st='🍖 їсть з кошика';p.a=Math.atan2(b.x-p.x,b.z-p.z);p._et=(p._et||0)+dt;if(p._et>=1.2){p._et=0;if(stock(b)>0){setStock(b,stock(b)-1);p.fd=clamp(p.fd+UNIT);say('🍖 +'+UNIT,p.m,'#ffd08a')}
+  if(!moving){p.st='🍖 їсть з кошика';p.a=Math.atan2(b.x-p.x,b.z-p.z);p._et=(p._et||0)+dt;if(p._et>=1.2){p._et=0;const add=eatOne(b,p);if(add){p.fd=clamp(p.fd+add);say('🍖 +'+add,p.m,'#ffd08a')}
    if(p.fd>=FULL||stock(b)<=0){say('😋 наївся',p.m,'#ffd08a');leave(p)}}}}
  else if(s=='sleep'){const ns=window.NEST&&window.NEST.claim(p);if(!ns||(!N&&p.ft<=0)){leave(p);return}/* уранці прокидається, коли відпочив */
   moving=!moveTo(p,ns.x,ns.z,dt,.05);p.sleep=!moving;p.st=p.sleep?'😴 спить на лежанці':'🌙 іде спати';p.job=null;
@@ -67,7 +107,7 @@ window.palAI=function(p,dt,tm){const C=inv._cen;if(!C)return ai0.apply(this,argu
  else if(s=='hungry'){p.job=null;p.sleep=0;p.st='😩 голодний — покладіть їжу в кошик 🧺';const d=Math.hypot(p.x-C[0],p.z-C[1]);if(d>5)moving=!moveTo(p,C[0],C[1],dt,4);p.ft=clamp(p.ft+FT_REST*dt);
   if(bestBasket(p)){leave(p);take(p,'eat')}else if(p.fd>0)leave(p)}
  place(p,tm,moving)};
-window.PALNEEDS={baskets,stock,fill,HUNGRY};
+window.PALNEEDS={baskets,stock,fill,open:bkOpen,HUNGRY};
 
 /* ---------- шкала ситості супутника (під шкалою здоров'я у виборі попала) ---------- */
 {const w2=document.getElementById('pw2');if(w2){const bar=document.createElement('div');bar.id='pcfd';bar.innerHTML='<i></i><span></span>';w2.appendChild(bar);
