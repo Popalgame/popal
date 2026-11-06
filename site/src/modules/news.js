@@ -1,4 +1,4 @@
-/* 0.3.2: банер новин зліва.
+/* 0.3.2: банер новин зліва. 0.2.10: язичок і стрічка прилягають до краю екрана (виріз заповнено фоном), закрита стрічка повністю схована.
    • На лівому краю екрана — язичок ☰ (золота рамка). Торкніться — висувається стрічка новин із картками; ще раз або ✕ — ховається.
    • Враховує виріз-«чубчик» на iPhone та Android (env(safe-area-inset-*)), у горизонтальному й вертикальному положенні.
    • Язичок можна пересувати й змінювати розмір у редакторі розташування інтерфейсу (hud-layout.js, id «nwb»); стрічка відкривається поруч із ним.
@@ -16,14 +16,14 @@ const NEWS=[
 const VER=NEWS.map(n=>n.id).join(',');
 let seen='';try{seen=localStorage.getItem('zi_news')||''}catch(_){}
 const css=document.createElement('style');css.textContent=`
-#nwb{position:fixed;left:calc(env(safe-area-inset-left,0px) + 0px);top:calc(50% - 34px);z-index:19;width:44px;height:68px;padding:0;border:2px solid #d9b45a;border-left:0;border-radius:0 16px 16px 0;
+#nwb{position:fixed;left:0;top:calc(50% - 34px);z-index:19;width:calc(44px + env(safe-area-inset-left,0px));height:68px;padding:0 0 0 env(safe-area-inset-left,0px);box-sizing:border-box;border:2px solid #d9b45a;border-left:0;border-radius:0 16px 16px 0;
  background:linear-gradient(180deg,#1b3442,#0f2029);box-shadow:0 4px 14px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,230,160,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
 #nwb i{display:block;width:20px;height:4px;border-radius:2px;background:linear-gradient(#ffe7a0,#c9952e);box-shadow:0 -7px 0 #e9c46a,0 7px 0 #e9c46a}
 #nwb b{position:absolute;right:-5px;top:-5px;width:13px;height:13px;border-radius:50%;background:#ff4a3a;border:2px solid #0f2029;display:none}#nwb.new b{display:block}
 #nwb:focus-visible{outline:2px solid #ffe7a0;outline-offset:2px}
-#nwp{position:fixed;left:calc(env(safe-area-inset-left,0px) + 0px);top:calc(env(safe-area-inset-top,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:min(340px,calc(86vw - env(safe-area-inset-left,0px)));z-index:43;
- transform:translateX(-110%);transition:transform .28s ease;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(18,36,46,.97),rgba(10,22,30,.97));border:2px solid #d9b45a;border-left:0;border-radius:0 18px 18px 0;box-shadow:6px 0 30px rgba(0,0,0,.55);color:#eef4f6;font-family:system-ui,sans-serif}
-#nwp.on{transform:none}
+#nwp{position:fixed;left:0;padding-left:env(safe-area-inset-left,0px);box-sizing:border-box;top:calc(env(safe-area-inset-top,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:min(calc(340px + env(safe-area-inset-left,0px)),86vw);z-index:43;
+ transform:translateX(calc(-100% - 40px));visibility:hidden;transition:transform .28s ease,visibility 0s linear .28s;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(18,36,46,.97),rgba(10,22,30,.97));border:2px solid #d9b45a;border-left:0;border-radius:0 18px 18px 0;box-shadow:6px 0 30px rgba(0,0,0,.55);color:#eef4f6;font-family:system-ui,sans-serif}
+#nwp.on{transform:none;visibility:visible;transition:transform .28s ease,visibility 0s}
 #nwp header{display:flex;align-items:center;gap:8px;padding:12px 12px 10px 16px;border-bottom:1px solid rgba(217,180,90,.35)}
 #nwp header h3{margin:0;flex:1;font-size:17px;color:#ffd977;letter-spacing:.3px}
 #nwp header button{width:32px;height:32px;border-radius:10px;border:1px solid rgba(217,180,90,.5);background:rgba(255,255,255,.06);color:#fff;font-size:16px;cursor:pointer}
