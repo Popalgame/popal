@@ -12,10 +12,15 @@ if(!inv._boss||typeof inv._boss!='object')inv._boss={};
 const L=[];/* усі боси */
 const now=()=>Date.now();
 const hpOf=w=>Math.max(0,Math.ceil(w.hp));
-const heroDmg=(w,k)=>Math.max(1,Math.round((window.PW?PW.wildHit(w):40)*k*(window.plHeroDmgK?window.plHeroDmgK():1)));
+/* 0.3.2: шкода боса — частка здоров'я героя (так бій однаково важкий на будь-якому рівні), × різниця рівнів (combat.js, gapTake).
+   Звичайний удар — b.melee від макс. здоров'я раз на секунду; заклинання — a.k від макс. здоров'я, якщо не встигли вийти з кола. */
+const HPmax=()=>window.hpMax?window.hpMax():(typeof HPM!='undefined'?HPM:500);
+const gapK=w=>window.PW&&PW.gapTake?PW.gapTake((w.lv||1)-(typeof plv!='undefined'?plv:1)):1;
+const heroDmg=(w,k)=>Math.max(1,Math.round(HPmax()*k*gapK(w)*(window.plHeroDmgK?window.plHeroDmgK():1)));
+if(window.PW&&PW.wildHit){const h0=PW.wildHit;PW.wildHit=function(w,avg){if(w&&w.boss){const b=L.find(q=>q.id===w.boss);if(b)return Math.max(1,Math.round(HPmax()*b.melee*gapK(w)))}return h0.apply(this,arguments)}}
 function hurtHero(v,txt){P.hp-=v;try{dmg((txt||'')+'-'+v,pl,'#ff6b3a');hud()}catch(_){}if(P.hp<=0&&window.plHeroDown)window.plHeroDown()}
-function hurtPal(w,R,x,z,k){const p=pals[selP];if(!p||!p.m||!p.m.visible||p.cs!=null)return;if(Math.hypot(p.x-x,p.z-z)>R)return;
- const st=window.PW?PW.stats(p.ty,p.lv):{hp:500};const v=Math.max(1,Math.round(heroDmg(w,k)*.7));p.chp=(p.chp==null?st.hp:p.chp)-v;try{dmg('-'+v,p.m,'#ffb070')}catch(_){}
+function hurtPal(w,R,x,z,k){const p=pals[selP];k=k*.6;if(!p||!p.m||!p.m.visible||p.cs!=null)return;if(Math.hypot(p.x-x,p.z-z)>R)return;
+ const st=window.PW?PW.stats(p.ty,p.lv):{hp:500};const st2=window.PW?PW.stats(p.ty,p.lv):{hp:500},v=Math.max(1,Math.round(st2.hp*k));p.chp=(p.chp==null?st.hp:p.chp)-v;try{dmg('-'+v,p.m,'#ffb070')}catch(_){}
  if(p.chp<=0){p.chp=0;try{msg('💫 '+T[p.ty].n+' знесилився й повертається у сферу. Відновиться за хвилину');if(window.palToggle)palToggle()}catch(_){}}}
 
 /* ---------- ефекти ---------- */
@@ -54,14 +59,14 @@ function showBar(b){bar.style.display='block';$b('.bn').textContent=b.name+' · 
 /* ---------- один бос ---------- */
 function spawn(b){const m=mkPal(T[b.ty].c);sc.add(m);const s=window.PW?PW.stats(b.ty,b.lv):{hp:400,atk:60,def:40};
  const w={m,ty:b.ty,lv:b.lv,fm:b.fm,name:b.name,boss:b.id,hp:Math.round(s.hp*b.hpMul),mh:Math.round(s.hp*b.hpMul),atk:Math.round(s.atk*b.atkMul),def:Math.round(s.def*1.4),x:b.home[0],z:b.home[1],a:0,t:0,ag:0,cd:0,_r:b.r||2.2};
- m.position.set(w.x,b.y(w.x,w.z),w.z);m.scale.setScalar(b.scale);wild.push(w);b.w=w;b.cast=null;b.cds={}}
+ m.position.set(w.x,b.y(w.x,w.z),w.z);m.scale.setScalar(b.scale);wild.push(w);b.w=w;b.cast=null;b.cds={};b.raged=0}
 function release(b){const c=b.cast;b.cast=null;for(const z of c.zones){sc.remove(z.v.g);burst(z.x,b.y(z.x,z.z)+.4,z.z,c.a.col,12);
   if(Math.hypot(P.x-z.x,P.z-z.z)<=z.R)hurtHero(heroDmg(b.w,c.a.k),c.a.icon||'💥 ');hurtPal(b.w,z.R,z.x,z.z,c.a.k)}
  try{dmg((c.a.icon||'💥')+' '+c.a.n,b.w.m,'#ffcf7a')}catch(_){}}
 function startCast(b,a){const w=b.w,zones=[];
  if(a.kind=='nova')zones.push({x:w.x,z:w.z,R:a.R});
  else for(let k=0;k<(a.cnt||3);k++){const ang=Math.random()*6.28,d=k?1.5+Math.random()*3.5:0,x=P.x+Math.cos(ang)*d,z=P.z+Math.sin(ang)*d;zones.push({x,z,R:a.R})}
- for(const z of zones)z.v=circle(z.x,b.y(z.x,z.z),z.z,z.R,a.col);b.cast={a,t:0,T:a.cast,zones,px:w.x,pz:w.z};b.cds[a.n]=a.cd;try{dmg('🔮 '+a.n+'…',w.m,'#e9d4ff')}catch(_){}}
+ for(const z of zones)z.v=circle(z.x,b.y(z.x,z.z),z.z,z.R,a.col);b.cast={a,t:0,T:a.cast*(w.hp<w.mh*.35?.8:1),zones,px:w.x,pz:w.z};b.cds[a.n]=a.cd;try{dmg('🔮 '+a.n+'…',w.m,'#e9d4ff')}catch(_){}}
 let last=performance.now(),shownB=null;
 ANI.push(()=>{const t0=performance.now(),dt=Math.min(.05,(t0-last)/1000);last=t0;
  for(let i=fx.length-1;i>=0;i--){const f=fx[i];f.t+=dt;f.v[1]-=14*dt;f.m.position.x+=f.v[0]*dt;f.m.position.y+=f.v[1]*dt;f.m.position.z+=f.v[2]*dt;f.m.material.opacity=1-f.t;if(f.t>=1){sc.remove(f.m);f.m.geometry.dispose();fx.splice(i,1)}}
@@ -75,7 +80,8 @@ ANI.push(()=>{const t0=performance.now(),dt=Math.min(.05,(t0-last)/1000);last=t0
   else{w.ag=1;show=b;const dH=Math.hypot(P.x-w.x,P.z-w.z);
    if(b.cast){b.cast.t+=dt;w.x=b.cast.px;w.z=b.cast.pz;for(const z of b.cast.zones){z.v.d.scale.setScalar(Math.min(1,b.cast.t/b.cast.T));z.v.r.material.opacity=.55+.45*Math.sin(b.cast.t*14)}if(b.cast.t>=b.cast.T)release(b)}
    else{w.a=Math.atan2(P.x-w.x,P.z-w.z);const reach=(w._r||2)+.9;if(dH>reach&&b.chase){w.x+=Math.sin(w.a)*2.4*dt;w.z+=Math.cos(w.a)*2.4*dt}
-    for(const a of b.abil){b.cds[a.n]=(b.cds[a.n]==null?a.first:b.cds[a.n])-dt}
+    const rage=w.hp<w.mh*.35;if(rage&&!b.raged){b.raged=1;try{dmg('😡 Лють!',w.m,'#ff4a2a');msg('😡 '+b.name+' у люті: заклинання частіше!')}catch(_){}}
+    for(const a of b.abil){b.cds[a.n]=(b.cds[a.n]==null?a.first:b.cds[a.n])-dt*(rage?1.6:1)}
     const ready=b.abil.filter(a=>b.cds[a.n]<=0&&(a.kind!='nova'||dH<a.R+2));if(ready.length)startCast(b,ready[Math.random()*ready.length|0])}}
   const dh=Math.hypot(w.x-b.home[0],w.z-b.home[1]),lim=b.arena-2;if(dh>lim){w.x=b.home[0]+(w.x-b.home[0])*lim/dh;w.z=b.home[1]+(w.z-b.home[1])*lim/dh}
   w.m.position.set(w.x,b.y(w.x,w.z),w.z);w.m.rotation.y=w.a}
@@ -89,7 +95,7 @@ window.plBigTarget=()=>{let best=null,bd=1e9;for(const b of L){const w=b.w;if(!w
 {const sp=wild.splice;wild.splice=function(){const out=sp.apply(this,arguments);for(const w of out){if(!w||!w.boss||w.hp>0)continue;const b=L.find(q=>q.id===w.boss);if(!b)continue;
  try{inv._boss[b.id]=now()+b.respawn;giveLoot(b);addXp(window.wXp?wXp(w,b.xp||400):400);const p=w.m.position.clone();burst(p.x,p.y+2,p.z,0xffd34e,24);if(b.onWin)b.onWin();hud();save()}catch(e){console.warn('boss win',e)}}return out}}
 
-window.BOSSKIT={add(cfg){const b=Object.assign({fm:3,scale:3,arena:18,hpMul:20,atkMul:1.6,respawn:600000,xp:400,chase:1,abil:[],loot:[],enabled:()=>true,y:(x,z)=>H(x,z)},cfg);L.push(b);return b},list:L,
+window.BOSSKIT={add(cfg){const b=Object.assign({fm:3,scale:3,arena:18,hpMul:20,atkMul:1.6,melee:.02,respawn:600000,xp:400,chase:1,abil:[],loot:[],enabled:()=>true,y:(x,z)=>H(x,z)},cfg);L.push(b);return b},list:L,
  /* для перевірки: одразу почати вміння боса */castNow(id,i){const b=L.find(q=>q.id===id);if(b&&b.w&&!b.cast)startCast(b,b.abil[i||0])}};
 
 /* ================= 👑 Страж ущелини ================= */
@@ -109,9 +115,9 @@ if(window.RIDGES){const RG=window.RIDGES,ARENA=18;
  for(const nm of['trees','rocks','bushes','shrooms']){let A;try{A=eval(nm)}catch(_){A=null}if(!Array.isArray(A))continue;for(let i=A.length-1;i>=0;i--){const o=A[i];if(o&&Math.hypot(o.x-HOME[0],o.z-HOME[1])<ARENA+1.5){if(o.m)sc.remove(o.m);A.splice(i,1)}}}
  setInterval(()=>{for(const w of wild){if(w.boss||w.dg)continue;const d=Math.hypot(w.x-HOME[0],w.z-HOME[1]);if(d<ARENA+2){const k=(ARENA+4)/Math.max(.1,d);w.x=HOME[0]+(w.x-HOME[0])*k;w.z=HOME[1]+(w.z-HOME[1])*k}}},2000);
  if(typeof inv._bossT=='number'&&inv._bossT>0&&!inv._boss.warden){inv._boss.warden=inv._bossT}delete inv._bossT;/* сейв попередньої версії */
- window.BOSSKIT.add({id:'warden',name:'👑 Страж ущелини',ty:2,lv:25,fm:3,scale:3.1,r:2.4,home:HOME,arena:ARENA,hpMul:22,atkMul:1.6,respawn:600000,xp:400,
-  abil:[{n:'Вогняне коло',icon:'🔥 ',kind:'nova',R:6.5,cast:3.2,cd:11,first:5,k:1.4,col:0xff3a1a},
-        {n:'Вогняний дощ',icon:'☄️ ',kind:'rain',cnt:3,R:2.4,cast:3.5,cd:10,first:9,k:1.1,col:0xff7a2a}],
+ window.BOSSKIT.add({id:'warden',name:'👑 Страж ущелини',ty:2,lv:25,fm:3,scale:3.1,r:2.4,home:HOME,arena:ARENA,hpMul:24,atkMul:1.6,melee:.03,respawn:600000,xp:400,
+  abil:[{n:'Вогняне коло',icon:'🔥 ',kind:'nova',R:7,cast:3,cd:9,first:5,k:.45,col:0xff3a1a},
+        {n:'Вогняний дощ',icon:'☄️ ',kind:'rain',cnt:4,R:2.6,cast:3.2,cd:8,first:8,k:.32,col:0xff7a2a}],
   loot:[{tab:[{k:'cr2',n:[1,1],w:50},{k:'cr2',n:[2,2],w:15},{k:'hpp',n:[1,2],w:35}]},
         {chance:.6,tab:[{k:'hpp',n:[1,3],w:60},{k:'cr2',n:[1,1],w:40}]}]})}
 window.BOSS={get:()=>{const b=L.find(q=>q.id=='warden');return b&&b.w},home:window.BOSS_HOME};
