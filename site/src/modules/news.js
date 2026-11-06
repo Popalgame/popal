@@ -1,4 +1,4 @@
-/* 0.3.2: банер новин зліва. 0.2.10: язичок і стрічка прилягають до краю екрана (виріз заповнено фоном), закрита стрічка повністю схована.
+/* 0.3.2: банер новин зліва. 0.2.10: стрічка — це меню з плиток-іконок (поки лише «Новини»), новини відкриваються після торкання плитки; язичок і стрічка прилягають до краю екрана (виріз заповнено фоном), закрита стрічка повністю схована.
    • На лівому краю екрана — язичок ☰ (золота рамка). Торкніться — висувається стрічка новин із картками; ще раз або ✕ — ховається.
    • Враховує виріз-«чубчик» на iPhone та Android (env(safe-area-inset-*)), у горизонтальному й вертикальному положенні.
    • Язичок можна пересувати й змінювати розмір у редакторі розташування інтерфейсу (hud-layout.js, id «nwb»); стрічка відкривається поруч із ним.
@@ -33,24 +33,36 @@ const css=document.createElement('style');css.textContent=`
 #nwp .nc h4{margin:0 0 3px;font-size:14px;color:#fff;line-height:1.25}#nwp .nc p{margin:0;font-size:12.5px;line-height:1.4;color:#c6d6dc}
 #nwp .nc button{grid-column:1/-1;margin-top:2px;padding:8px 10px;border-radius:10px;border:0;background:linear-gradient(#ffe08a,#d9a43a);color:#2a1a06;font-weight:800;font-size:13px;cursor:pointer}
 #nwp .nc.new{border-color:#ffd977;box-shadow:0 0 0 1px rgba(255,217,119,.4)}
+#nwp .mn{flex:1;overflow-y:auto;padding:16px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px 6px;align-content:start}
+#nwp .mt{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;color:#fff;cursor:pointer;font:700 13px system-ui,sans-serif;padding:0;position:relative;text-shadow:0 1px 2px #000}
+#nwp .mt .ci{position:relative;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;background:radial-gradient(circle at 50% 35%,#f4d27a,#b8862e 62%,#7a5418);border:3px solid #ffe7a0;box-shadow:0 4px 10px rgba(0,0,0,.5),inset 0 -4px 8px rgba(0,0,0,.25)}
+#nwp .mt .ci i{position:absolute;right:-2px;top:-2px;width:15px;height:15px;border-radius:50%;background:#ff3a2a;border:2px solid #fff;display:none}#nwp .mt.new .ci i{display:block}
+#nwp .mt:active .ci{transform:scale(.94)}
+#nwp header .bk{display:none}#nwp.nv header .bk{display:block}
 body.hedit #nwp{display:none}
 #guide{left:calc(env(safe-area-inset-left,0px) + 52px)!important}/* підказка — правіше язичка, щоб не перекривала його */
 @media (prefers-reduced-motion:reduce){#nwp{transition:none}}`;document.head.appendChild(css);
-const tab=document.createElement('button');tab.id='nwb';tab.setAttribute('aria-label','Новини');tab.innerHTML='<i></i><b></b>';document.body.appendChild(tab);
-const pan=document.createElement('aside');pan.id='nwp';pan.setAttribute('aria-label','Новини');pan.innerHTML="<header><h3>📰 Новини</h3><button aria-label='Закрити'>✕</button></header><div class='ls'></div>";document.body.appendChild(pan);
-const ls=pan.querySelector('.ls');
+const tab=document.createElement('button');tab.id='nwb';tab.setAttribute('aria-label','Меню');tab.innerHTML='<i></i><b></b>';document.body.appendChild(tab);
+const pan=document.createElement('aside');pan.id='nwp';pan.setAttribute('aria-label','Меню');pan.innerHTML="<header><button class='bk' aria-label='Назад'>←</button><h3>☰ Меню</h3><button class='cl' aria-label='Закрити'>✕</button></header><div class='mn'><button class='mt' data-v='news'><span class='ci'>📰<i></i></span>Новини</button></div><div class='ls'></div>";document.body.appendChild(pan);
+const ls=pan.querySelector('.ls'),mn=pan.querySelector('.mn'),h3=pan.querySelector('header h3');
+const css2=document.createElement('style');css2.textContent='#nwp .ls{display:none}#nwp.nv .ls{display:flex}#nwp.nv .mn{display:none}';document.head.appendChild(css2);
 const live=n=>{if(n.live!=='boss')return n.text;const b=window.BOSS&&window.BOSS.get&&window.BOSS.get();
  if(b&&typeof wild!='undefined'&&wild.includes(b))return'Вогняний бос 25 рівня чекає на своїй арені в Старому лісі. Червоні кола на землі — відбігайте! Здобич: Кристали еволюції й зілля.';
  const t=(typeof inv!='undefined'&&inv._boss&&inv._boss.warden)||0,s=Math.max(0,Math.round((t-Date.now())/1000));return s?'Переможений. З’явиться знову через '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+'.':'Вогняний бос 25 рівня в Старому лісі.'};
 function render(){const old=new Set(seen.split(','));ls.innerHTML=NEWS.map(n=>`<div class='nc ${old.has(n.id)?'':'new'}'><div class='ic'>${n.ico}</div><div><h4>${n.title}</h4><p data-live='${n.id}'>${live(n)}</p></div>${n.btn?`<button data-act='${n.act}'>${n.btn}</button>`:''}</div>`).join('')}
-function badge(){tab.classList.toggle('new',seen!==VER)}
-function open(on){pan.classList.toggle('on',on);if(on){render();seen=VER;try{localStorage.setItem('zi_news',VER)}catch(_){}badge()}}
+function badge(){const n=seen!==VER;tab.classList.toggle('new',n);mn.querySelector("[data-v='news']").classList.toggle('new',n)}
+/* меню: плитки-іконки (поки лише «Новини»); торкнулися плитки — відкривається її розділ, ← — назад до меню */
+function view(v){pan.classList.toggle('nv',v=='news');h3.textContent=v=='news'?'📰 Новини':'☰ Меню';
+ if(v=='news'){render();ls.scrollTop=0;seen=VER;try{localStorage.setItem('zi_news',VER)}catch(_){}badge()}}
+function open(on){pan.classList.toggle('on',on);if(on){view('menu');badge()}}
+mn.addEventListener('click',e=>{const t=e.target.closest('[data-v]');if(t)view(t.dataset.v)});
+pan.querySelector('header .bk').onclick=()=>view('menu');
 tab.onclick=()=>{if(document.body.classList.contains('hedit'))return;open(!pan.classList.contains('on'))};
-pan.querySelector('header button').onclick=()=>open(false);
+pan.querySelector('header .cl').onclick=()=>open(false);
 ls.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;open(false);
  if(a==='map'){const m=document.getElementById('mmap');if(m&&!m.classList.contains('big'))m.click()}
  else if(a==='mail'){try{const av=document.getElementById('av');if(av)av.click();setTimeout(()=>{try{pfTab('m')}catch(_){}},150)}catch(_){}}});
-setInterval(()=>{if(!pan.classList.contains('on'))return;const p=ls.querySelector("[data-live='boss']");if(p)p.textContent=live(NEWS.find(n=>n.id=='boss'))},1000);
+setInterval(()=>{if(!pan.classList.contains('on')||!pan.classList.contains('nv'))return;const p=ls.querySelector("[data-live='boss']");if(p)p.textContent=live(NEWS.find(n=>n.id=='boss'))},1000);
 /* язичок ховається там, де ховаються інші кнопки (меню, інвентар, діалоги) */
 setInterval(()=>{const hide=(typeof menuO!='undefined'&&menuO&&!document.body.classList.contains('hedit'))||(typeof ivO!='undefined'&&ivO)||(typeof pfO!='undefined'&&pfO);tab.style.visibility=hide?'hidden':'';if(hide&&pan.classList.contains('on'))open(false)},400);
 badge();
