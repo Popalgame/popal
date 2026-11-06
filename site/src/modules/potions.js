@@ -8,7 +8,7 @@ if(typeof IT=='undefined'||typeof inv=='undefined')return;
 IT.hpp=['❤️','Зілля здоров’я'];IT.xpp=['✨','Зілля досвіду'];
 for(const k of['hpp','xpp'])if(inv[k]==null)inv[k]=0;
 if(typeof RC!='undefined'&&!RC.find(r=>r.id=='hpp'))RC.push({id:'hpp',n:'Зілля здоров’я',c:{be:3,mu:2},d:'Відновлює 300 HP героя. Варять біля Столу зіль'});
-try{if(window.DS)Object.assign(window.DS,{hpp:'Відновлює 300 HP героя. Варять біля Столу зіль з ягід і грибів',xpp:'Тестове зілля розробника: +10 000 досвіду попалу, з яким ви ходите. Не має ваги'})}catch(_){}
+try{if(window.DS)Object.assign(window.DS,{hpp:'Відновлює 300 HP героя. Варять біля Столу зіль з ягід і грибів',xpp:'Зілля досвіду: +10 000 досвіду попалу, з яким ви ходите (не вище рівня героя). Нагорода реферальної програми. Не має ваги'})}catch(_){}
 try{const w0=window.itemW;if(w0)window.itemW=k=>k=='xpp'?0:k=='hpp'?.2:w0(k)}catch(_){}
 const HPmax=()=>typeof HPM!='undefined'?HPM:100;
 
@@ -22,7 +22,9 @@ function drinkHp(){if(!(inv.hpp>0))return;if(P.hp>=HPmax()){msg('❤️ Здор
  try{dmg('+'+add+' ❤️',pl,'#8dffa8')}catch(_){}msg('❤️ Випито зілля здоров’я: +'+add+' HP');try{hud();save()}catch(_){}}
 function giveXp(times){times=Math.max(1,Math.min(times||1,inv.xpp||0));if(!(inv.xpp>0))return;const p=pals[selP];if(!p||p.cs!=null){msg('✨ Візьміть попала з собою, щоб дати йому зілля');return}
  const need=window.palXpNeed;if(!need){msg('✨ Досвід попалів ще не завантажився');return}if((p.lv||1)>=50){msg('✨ '+T[p.ty].n+' уже 50 рівня');return}
- inv.xpp-=times;let xpn=(p.xp||0)+10000*times,lv=p.lv||1;while(lv<50&&xpn>=need(lv)){xpn-=need(lv);lv++}/* без обмеження рівнем героя — для тестів */
+ /* 0.2.15: зілля досвіду — нагорода реферальної програми; у гравців попал не росте вище героя, без обмеження — лише розробник (ID 0001) для тестів */
+ const dev=window.myPid==='0001',cap=dev?50:Math.min(50,typeof plv=='number'?plv:50);if((p.lv||1)>=cap){msg('✨ '+T[p.ty].n+' уже на рівні героя — підвищіть рівень героя');return}
+ inv.xpp-=times;let xpn=(p.xp||0)+10000*times,lv=p.lv||1;while(lv<cap&&xpn>=need(lv)){xpn-=need(lv);lv++}if(lv>=cap)xpn=0;
  const up=lv-(p.lv||1);p.lv=lv;p.xp=lv>=50?0:xpn;try{inv._px=pals.map(q=>q.xp||0)}catch(_){}
  msg('✨ '+T[p.ty].n+': +'+(10000*times).toLocaleString('uk-UA')+' досвіду'+(up?' · рівень '+lv:''));try{dmg('✨ +'+10000*times,p.m,'#ffe28a');pwUp();save()}catch(_){}}
 window.plPotion={drinkHp,giveXp};

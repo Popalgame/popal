@@ -9,7 +9,7 @@
 (function(){try{
 const TIERS=[10,20,30,40,50];
 /* нагороди запрошувачу за кожного друга */
-const REW={10:{bg:5,hpp:3},20:{bb:5,hpp:5},30:{cr2:1},40:{br:5,hpp:5},50:{cr2:1}};
+const REW={10:{bg:5},20:{bb:5},30:{br:5},40:{xpp:1},50:{cr2:1}};
 /* бонус за трьох друзів на 50 рівні — поки таємниця «?», згодом тут буде унікальний попал */
 const BONUS={need:3,lv:50,items:null};
 const REF_GIFT={bg:3,hpp:2};
@@ -93,7 +93,7 @@ function render(){linkBox();if(!list.length){bd.innerHTML="<div class='em'>По�
   if(i==0)h+=`<div class='bonus'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${n50>=BONUS.need?'near':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n50} / ${BONUS.need} друзів<br>з ${BONUS.lv} рівнем</small><small class='soon'>Унікальний попал — скоро</small></div>`});
  bd.innerHTML=h+'</div>'+tip();
  bd.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>claim(b.dataset.u,+b.dataset.l));const bb=bd.querySelector('[data-b]');if(bb)bb.onclick=claimBonus}
-const tip=()=>`<p class='tip'>Нагороду за рівень друга можна забрати, коли він його досягне — торкніться клітинки, що світиться. За кожного друга: 10 рів. — ${Object.entries(REW[10]).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', ')}; 20 — ${Object.entries(REW[20]).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', ')}; 30 — ${IT.cr2?IT.cr2[1]:''}; 40 — ${Object.entries(REW[40]).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', ')}; 50 — ${IT.cr2?IT.cr2[1]:''}. Три друзі з 50 рівнем — таємний бонус: незабаром тут буде унікальний попал.</p>`;
+const tip=()=>`<p class='tip'>Нагороду за рівень друга можна забрати, коли він його досягне — торкніться клітинки, що світиться. За кожного друга: ${TIERS.map(t=>t+' рів. — '+Object.entries(REW[t]).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', ')).join('; ')}. Три друзі з 50 рівнем — таємний бонус: незабаром тут буде унікальний попал.</p>`;
 async function load(){list=[];render();if(!ok()||!window.myPid){return}
  bd.insertAdjacentHTML('afterbegin',"<div class='em' data-ld>Завантаження…</div>");
  try{const q=await fbDb.collection('referrals').where('ref','==',window.myPid).limit(100).get();list=q.docs.map(d=>Object.assign({uid:d.id},d.data())).sort((a,b)=>(b.lv|0)-(a.lv|0));render()}
