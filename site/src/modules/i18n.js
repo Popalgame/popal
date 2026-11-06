@@ -9,7 +9,7 @@
      Зміна мови в налаштуваннях — без перезапуску: довантажується словник і весь екран перекладається заново.
    • Вузли з атрибутом translate="no" (назви мов у налаштуваннях) не перекладаються. */
 (function(){
-const LANGS=[['uk','Українська'],['en','English'],['pl','Polski'],['ru','Русский']],OK=LANGS.map(l=>l[0]),KEY='zi_lang',VER='0.2.13';
+const LANGS=[['uk','Українська'],['en','English'],['pl','Polski'],['ru','Русский']],OK=LANGS.map(l=>l[0]),KEY='zi_lang',VER='0.2.14';
 const detect=()=>{let ls=[];try{ls=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']).map(s=>String(s).toLowerCase().split('-')[0])}catch(_){}
  for(const b of ls){if(b=='uk')return'uk';if(b=='ru'||b=='be')return'ru';if(b=='pl')return'pl';if(b=='en')return'en'}return'en'};
 let pref='auto';try{pref=localStorage.getItem(KEY)||'auto'}catch(_){}
