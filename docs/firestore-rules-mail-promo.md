@@ -74,3 +74,27 @@
 
 Без цього блоку вікно рейтингу пише «Рейтинг ще не ввімкнено на сервері», а гра працює як звичайно.
 Розробник може прибрати чийсь рядок (наприклад, тестовий акаунт) у Firebase Console → Firestore → `leaders`.
+
+## Реферальна програма (0.2.15)
+
+Вікно «🤝 Запроси друга» в лівому меню. Новий гравець, що прийшов за посиланням `popalgame.pl/game.html?ref=<ID>`,
+після входу в акаунт записує себе в колекцію `referrals` і оновлює свій рівень. Запрошувач бачить своїх друзів за полем `ref`.
+Додайте блок у ті самі Rules (поряд із `leaders`):
+
+```
+    // Реферали: читають гравці з акаунтом; кожен записує лише себе, зі своїм ID; запрошувача (ref) змінити не можна.
+    match /referrals/{uid} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['ref', 'pid', 'name', 'lv', 't'])
+        && request.resource.data.pid == get(/databases/$(database)/documents/profiles/$(uid)).data.pid
+        && request.resource.data.ref is string && request.resource.data.ref != request.resource.data.pid
+        && request.resource.data.lv is int && request.resource.data.lv >= 1 && request.resource.data.lv <= 500
+        && request.resource.data.name is string && request.resource.data.name.size() <= 16;
+      allow update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'lv', 't'])
+        && request.resource.data.lv is int && request.resource.data.lv >= 1 && request.resource.data.lv <= 500
+        && request.resource.data.name is string && request.resource.data.name.size() <= 16;
+      allow delete: if request.auth != null && request.auth.token.email == 'd.polataiko@gmail.com';
+    }
+```

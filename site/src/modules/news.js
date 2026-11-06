@@ -90,7 +90,7 @@ body.hedit #nwp,body.hedit #nwx{display:none}
 @media (max-height:460px){#nwx .hd{padding:8px 12px 6px 14px}#nwx .hd .co{width:34px;height:34px;font-size:17px}#nwx .hd h2{font-size:18px}#nwx .tb{padding-bottom:8px}#nwx .tb .t,#nwx .tb .ra{padding:6px 12px;font-size:13px}#nwx .nbd{padding:10px 12px 12px;gap:10px}#nwx .nf .tx b{font-size:17px}#nwx .nf .tx span{font-size:12.5px}#nwx .nr{grid-template-columns:110px 1fr;padding:6px}#nwx .nr .im{width:110px}#nwx .nr b{font-size:14px}}
 @media (prefers-reduced-motion:reduce){#nwp{transition:none}}`;document.head.appendChild(css);
 const tab=document.createElement('button');tab.id='nwb';tab.setAttribute('aria-label','Меню');tab.innerHTML='<i></i><b></b>';document.body.appendChild(tab);
-const pan=document.createElement('aside');pan.id='nwp';pan.setAttribute('aria-label','Меню');pan.innerHTML="<header><h3>☰ Меню</h3><button class='cl' aria-label='Закрити'>✕</button></header><div class='mn'><button class='mt' data-v='news'><span class='ci'>📰<i></i></span>Новини</button><button class='mt' data-v='rate'><span class='ci'>🏆</span>Рейтинг</button></div>";document.body.appendChild(pan);
+const pan=document.createElement('aside');pan.id='nwp';pan.setAttribute('aria-label','Меню');pan.innerHTML="<header><h3>☰ Меню</h3><button class='cl' aria-label='Закрити'>✕</button></header><div class='mn'><button class='mt' data-v='news'><span class='ci'>📰<i></i></span>Новини</button><button class='mt' data-v='rate'><span class='ci'>🏆</span>Рейтинг</button><button class='mt' data-v='ref'><span class='ci'>🤝</span>Запроси друга</button></div>";document.body.appendChild(pan);
 const mn=pan.querySelector('.mn');
 const X=document.createElement('section');X.id='nwx';X.setAttribute('aria-label','Новини');
 X.innerHTML=`<div class='win'><div class='hd'><button class='bk' aria-label='Назад'>←</button><span class='co'>📰</span><div class='tt'><h2>Новини</h2><small>Що нового в Regnum Land</small></div><button class='cl' aria-label='Закрити'>✕</button></div>
@@ -123,13 +123,13 @@ X.addEventListener('click',e=>{const c=e.target.closest('[data-id]');if(c){full(
 addEventListener('keydown',e=>{if(e.key=='Escape'&&X.classList.contains('on')){if(X.classList.contains('dt'))list();else closeX()}});
 /* меню */
 function open(on){pan.classList.toggle('on',on);if(on)badge()}
-mn.addEventListener('click',e=>{const t=e.target.closest('[data-v]');if(!t)return;if(t.dataset.v=='news')openX();else if(t.dataset.v=='rate'&&window.plRating){pan.classList.remove('on');window.plRating.open()}});
+mn.addEventListener('click',e=>{const t=e.target.closest('[data-v]');if(!t)return;if(t.dataset.v=='news')openX();else if(t.dataset.v=='rate'&&window.plRating){pan.classList.remove('on');window.plRating.open()}else if(t.dataset.v=='ref'&&window.plReferral){pan.classList.remove('on');window.plReferral.open()}});
 tab.onclick=()=>{if(document.body.classList.contains('hedit'))return;open(!pan.classList.contains('on'))};
 pan.querySelector('header .cl').onclick=()=>open(false);
 setInterval(()=>{if(!cur||cur.live!='boss'||!X.classList.contains('on'))return;const p=X.querySelector("[data-live='boss']");if(p)p.textContent=live(cur)},1000);
 /* язичок ховається там, де ховаються інші кнопки (меню, інвентар, діалоги) і поки відкрите вікно новин */
 /* 0.2.13: язичок прикріплений до лівого краю посередині висоти (як бічне меню в мобільних RPG): на iPhone заходить під виріз, смужки — правіше від нього. */
-setInterval(()=>{const hide=X.classList.contains('on')||(window.plRating&&window.plRating.isOpen())||(typeof menuO!='undefined'&&menuO&&!document.body.classList.contains('hedit'))||(typeof ivO!='undefined'&&ivO)||(typeof pfO!='undefined'&&pfO);tab.style.visibility=hide?'hidden':'';if(hide&&pan.classList.contains('on'))open(false)},400);
+setInterval(()=>{const hide=X.classList.contains('on')||(window.plRating&&window.plRating.isOpen())||(window.plReferral&&window.plReferral.isOpen())||(typeof menuO!='undefined'&&menuO&&!document.body.classList.contains('hedit'))||(typeof ivO!='undefined'&&ivO)||(typeof pfO!='undefined'&&pfO);tab.style.visibility=hide?'hidden':'';if(hide&&pan.classList.contains('on'))open(false)},400);
 window.plNews={open:openX,list:NEWS};
 badge();
 }catch(e){console.warn('news',e)}})();
