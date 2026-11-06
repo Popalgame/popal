@@ -22,9 +22,9 @@ let seen=new Set();try{seen=new Set((localStorage.getItem('zi_news')||'').split(
 const keep=()=>{try{localStorage.setItem('zi_news',[...seen].join(','))}catch(_){}};
 const unread=n=>!seen.has(n.id);
 const css=document.createElement('style');css.textContent=`
-#nwb{position:fixed;left:max(6px,calc(env(safe-area-inset-left,0px) - 4px));top:calc(40% - 28px);z-index:19;width:42px;height:56px;padding:0;box-sizing:border-box;border:2px solid #d9b45a;border-radius:14px;
+#nwb{position:fixed;left:calc(env(safe-area-inset-left,0px) + 20px);top:136px;z-index:19;width:42px;height:42px;padding:0;box-sizing:border-box;border:2px solid #d9b45a;border-radius:12px;
  background:linear-gradient(180deg,#1b3442,#0f2029);box-shadow:0 4px 14px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,230,160,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
-#nwb i{display:block;width:20px;height:4px;border-radius:2px;background:linear-gradient(#ffe7a0,#c9952e);box-shadow:0 -7px 0 #e9c46a,0 7px 0 #e9c46a}
+#nwb i{font-style:normal;font-size:21px;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
 #nwb b{position:absolute;right:-5px;top:-5px;width:13px;height:13px;border-radius:50%;background:#ff4a3a;border:2px solid #0f2029;display:none}#nwb.new b{display:block}
 #nwb:focus-visible{outline:2px solid #ffe7a0;outline-offset:2px}
 #nwp{position:fixed;left:0;padding-left:env(safe-area-inset-left,0px);box-sizing:border-box;top:calc(env(safe-area-inset-top,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:min(calc(340px + env(safe-area-inset-left,0px)),86vw);z-index:43;
@@ -39,7 +39,7 @@ const css=document.createElement('style');css.textContent=`
 #nwp .mt .ci i{position:absolute;right:-2px;top:-2px;width:15px;height:15px;border-radius:50%;background:#ff3a2a;border:2px solid #fff;display:none}#nwp .mt.new .ci i{display:block}
 #nwp .mt:active .ci{transform:scale(.94)}
 body.hedit #nwp,body.hedit #nwx{display:none}
-#guide{left:calc(env(safe-area-inset-left,0px) + 52px)!important}/* підказка — правіше язичка, щоб не перекривала його */
+#guide{left:calc(env(safe-area-inset-left,0px) + 74px)!important}/* підказка — правіше язичка, щоб не перекривала його */
 /* ---------- вікно новин — у стилі вікон гри (рюкзак, скрині): темно-синя панель, золото й бірюза, заокруглені кути ---------- */
 #nwx{position:fixed;inset:0;z-index:44;display:none;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eef4ff;
  background:rgba(4,10,22,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
@@ -89,7 +89,7 @@ body.hedit #nwp,body.hedit #nwx{display:none}
  #nwx .nbd{flex-direction:column;overflow-y:auto}#nwx .nf{flex:none;aspect-ratio:2/1}#nwx .lst{flex:none;overflow:visible}#nwx .nr{grid-template-columns:104px 1fr}#nwx .nr .im{width:104px}#nwx .hd small{display:none}}
 @media (max-height:460px){#nwx .hd{padding:8px 12px 6px 14px}#nwx .hd .co{width:34px;height:34px;font-size:17px}#nwx .hd h2{font-size:18px}#nwx .tb{padding-bottom:8px}#nwx .tb .t,#nwx .tb .ra{padding:6px 12px;font-size:13px}#nwx .nbd{padding:10px 12px 12px;gap:10px}#nwx .nf .tx b{font-size:17px}#nwx .nf .tx span{font-size:12.5px}#nwx .nr{grid-template-columns:110px 1fr;padding:6px}#nwx .nr .im{width:110px}#nwx .nr b{font-size:14px}}
 @media (prefers-reduced-motion:reduce){#nwp{transition:none}}`;document.head.appendChild(css);
-const tab=document.createElement('button');tab.id='nwb';tab.setAttribute('aria-label','Меню');tab.innerHTML='<i></i><b></b>';document.body.appendChild(tab);
+const tab=document.createElement('button');tab.id='nwb';tab.setAttribute('aria-label','Меню');tab.innerHTML='<i>📰</i><b></b>';document.body.appendChild(tab);
 const pan=document.createElement('aside');pan.id='nwp';pan.setAttribute('aria-label','Меню');pan.innerHTML="<header><h3>☰ Меню</h3><button class='cl' aria-label='Закрити'>✕</button></header><div class='mn'><button class='mt' data-v='news'><span class='ci'>📰<i></i></span>Новини</button><button class='mt' data-v='rate'><span class='ci'>🏆</span>Рейтинг</button></div>";document.body.appendChild(pan);
 const mn=pan.querySelector('.mn');
 const X=document.createElement('section');X.id='nwx';X.setAttribute('aria-label','Новини');
@@ -128,7 +128,12 @@ tab.onclick=()=>{if(document.body.classList.contains('hedit'))return;open(!pan.c
 pan.querySelector('header .cl').onclick=()=>open(false);
 setInterval(()=>{if(!cur||cur.live!='boss'||!X.classList.contains('on'))return;const p=X.querySelector("[data-live='boss']");if(p)p.textContent=live(cur)},1000);
 /* язичок ховається там, де ховаються інші кнопки (меню, інвентар, діалоги) і поки відкрите вікно новин */
-setInterval(()=>{const hide=X.classList.contains('on')||(window.plRating&&window.plRating.isOpen())||(typeof menuO!='undefined'&&menuO&&!document.body.classList.contains('hedit'))||(typeof ivO!='undefined'&&ivO)||(typeof pfO!='undefined'&&pfO);tab.style.visibility=hide?'hidden':'';if(hide&&pan.classList.contains('on'))open(false)},400);
+/* 0.2.13: кнопка — не другий «☰», а окрема іконка 📰 (новини й рейтинг) рівно під кнопкою меню гри (#mbt), такого ж розміру.
+   Якщо гравець сам пересунув її в редакторі розташування (hud-layout.js ставить left/top з !important) — не чіпаємо. */
+function pin(){if(tab.style.getPropertyPriority('left')==='important')return;const m=document.getElementById('mbt');if(!m||!m.offsetParent)return;const r=m.getBoundingClientRect();if(!r.width)return;
+ const l=Math.round(r.left+(r.width-42)/2)+'px',t=Math.round(r.bottom+10)+'px';if(tab.style.left!==l)tab.style.left=l;if(tab.style.top!==t)tab.style.top=t}
+addEventListener('resize',()=>setTimeout(pin,60));setTimeout(pin,500);
+setInterval(()=>{const hide=X.classList.contains('on')||(window.plRating&&window.plRating.isOpen())||(typeof menuO!='undefined'&&menuO&&!document.body.classList.contains('hedit'))||(typeof ivO!='undefined'&&ivO)||(typeof pfO!='undefined'&&pfO);tab.style.visibility=hide?'hidden':'';if(!hide)pin();if(hide&&pan.classList.contains('on'))open(false)},400);
 window.plNews={open:openX,list:NEWS};
 badge();
 }catch(e){console.warn('news',e)}})();
