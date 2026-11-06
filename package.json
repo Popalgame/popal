@@ -9,7 +9,9 @@
     "test": "node --test",
     "lint": "eslint site",
     "bump": "node scripts/sw-version.mjs",
-    "check": "npm run lint && npm test"
+    "check": "npm run lint && npm test",
+    "i18n:check": "node scripts/i18n-check.mjs",
+    "i18n:build": "node scripts/i18n-build.mjs"
   },
   "engines": {
     "node": ">=18"
