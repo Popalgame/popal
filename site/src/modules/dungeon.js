@@ -124,9 +124,10 @@ const BOSS=window.BOSSKIT?window.BOSSKIT.add({id:'dg1',name:'👑 Криштал
  enabled:()=>!!G,y:()=>FLOOR,
  abil:[{n:'Кришталевий вибух',icon:'💎 ',kind:'nova',R:7.5,cast:3.2,cd:9,first:4,k:.35,col:0xff3a5a},
        {n:'Град уламків',icon:'🪨 ',kind:'rain',cnt:5,R:2.5,cast:3,cd:7,first:7,k:.25,col:0x7fe3f5}],
- loot:[{tab:[{k:'cr2',n:[1,1],w:55},{k:'cr2',n:[2,2],w:30},{k:'cr2',n:[3,3],w:15}]},
-       {tab:[{k:'hpp',n:[1,2],w:50},{k:'hpp',n:[3,4],w:20},{k:'cr2',n:[1,1],w:30}]},
-       {chance:.5,tab:[{k:'hpp',n:[2,3],w:70},{k:'cr2',n:[1,1],w:30}]}]}):null;
+ loot:[{tab:[{k:'cr2_ea',n:[1,1],w:55},{k:'cr2_ea',n:[2,2],w:30},{k:'cr2_ea',n:[3,3],w:15}]},
+       {tab:[{k:'hpp',n:[1,2],w:50},{k:'hpp',n:[3,4],w:20},{k:'cr2_ea',n:[1,1],w:30}]},
+       {chance:.5,tab:[{k:'hpp',n:[2,3],w:70},{k:'cr2_ea',n:[1,1],w:30}]},
+       {chance:.05,tab:[{k:'cr2',n:[1,1],w:1}]}/* 0.2.15: універсальний кристал — рідкісний, 5% */]}):null;
 
 /* ---------- вхід і вихід ---------- */
 const fade=document.createElement('div');fade.style.cssText='position:fixed;inset:0;background:radial-gradient(circle,#2a1a4a 0%,#0a0614 70%);opacity:0;pointer-events:none;transition:opacity .7s;z-index:9999';document.body.appendChild(fade);

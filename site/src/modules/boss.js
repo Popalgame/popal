@@ -120,7 +120,8 @@ if(window.RIDGES){const RG=window.RIDGES,ARENA=18;
  window.BOSSKIT.add({id:'warden',name:'👑 Страж ущелини',ty:2,lv:25,fm:3,scale:3.1,r:2.4,home:HOME,arena:ARENA,hpMul:24,atkMul:1.6,melee:.03,respawn:86400000,/* раз на добу */xp:400,
   abil:[{n:'Вогняне коло',icon:'🔥 ',kind:'nova',R:7,cast:3,cd:9,first:5,k:.45,col:0xff3a1a},
         {n:'Вогняний дощ',icon:'☄️ ',kind:'rain',cnt:4,R:2.6,cast:3.2,cd:8,first:8,k:.32,col:0xff7a2a}],
-  loot:[{tab:[{k:'cr2',n:[1,1],w:50},{k:'cr2',n:[2,2],w:15},{k:'hpp',n:[1,2],w:35}]},
-        {chance:.6,tab:[{k:'hpp',n:[1,3],w:60},{k:'cr2',n:[1,1],w:40}]}]})}
+  loot:[{tab:[{k:'cr2_fi',n:[1,1],w:50},{k:'cr2_fi',n:[2,2],w:15},{k:'hpp',n:[1,2],w:35}]},
+        {chance:.6,tab:[{k:'hpp',n:[1,3],w:60},{k:'cr2_fi',n:[1,1],w:40}]},
+        {chance:.05,tab:[{k:'cr2',n:[1,1],w:1}]}/* 0.2.15: універсальний кристал — рідкісний, 5% */]})}
 window.BOSS={get:()=>{const b=L.find(q=>q.id=='warden');return b&&b.w},home:window.BOSS_HOME};
 }catch(e){console.warn('boss',e)}})();

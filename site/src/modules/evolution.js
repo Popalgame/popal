@@ -19,13 +19,27 @@ function gem(c1,c2,c3,star){const c=document.createElement('canvas');c.width=c.h
  if(star){x.fillStyle='#fff';for(const[u,v,r]of[[70,16,6],[24,58,4]]){x.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4,rr=i%2?r*.3:r;x.lineTo(u+Math.cos(a)*rr,v+Math.sin(a)*rr)}x.fill()}}
  return c.toDataURL()}
 const ICO={cr2:gem('#bff6ff','#2a8ee0','#7fe3f5',0),cr3:gem('#ffe9a8','#9a46e6','#d9a8ff',1)};
+/* 0.2.15: кристали еволюції за стихіями. Попалу потрібен кристал своєї стихії (у двостихійних — будь-якої з двох).
+   Кожен бос дає лише кристал своєї стихії: Страж ущелини — вогню, Кришталевий Владика — землі. «cr2» — універсальний: підходить будь-кому, випадає з будь-якого боса з шансом 5%. */
+const CR=[['fi','Кристал вогню','#ffe0a0','#e0401a','#ff8a3a'],['wa','Кристал води','#d8f6ff','#1f7fd8','#5fc8ff'],['gr','Кристал трави','#e6ffc0','#2f9a3a','#7fe08a'],
+ ['ea','Кристал землі','#ffe8c0','#9a5a24','#e0a860'],['ai','Кристал повітря','#ffffff','#7fb8d8','#cfefff'],['da','Кристал темряви','#e8d0ff','#5a2a9a','#a77ae6'],['ne','Нейтральний кристал','#ffffff','#b8b8c8','#ffe0f0']];
+for(const[e,,c1,c2,c3]of CR)ICO['cr2_'+e]=gem(c1,c2,c3,0);
+const CRK=CR.map(c=>'cr2_'+c[0]);window.EVO_CR=CRK;
 const img=k=>`<img class='iic' src='${ICO[k]}' alt=''>`;
-IT.cr2=[img('cr2'),'Кристал еволюції'];IT.cr3=[img('cr3'),'Кристал вознесіння'];
-for(const k of['cr2','cr3'])if(inv[k]==null)inv[k]=0;
+IT.cr2=[img('cr2'),'Універсальний кристал еволюції'];IT.cr3=[img('cr3'),'Кристал вознесіння'];for(const[e,n]of CR)IT['cr2_'+e]=[img('cr2_'+e),n];
+for(const k of['cr2','cr3',...CRK])if(inv[k]==null)inv[k]=0;
 try{const s=window.plIconSrc;window.plIconSrc=k=>ICO[k]||(s?s(k):null)}catch(_){}
-try{const w0=window.itemW;if(w0)window.itemW=k=>k=='cr2'||k=='cr3'?0:w0(k)}catch(_){}/* кристали не мають ваги */
+try{const w0=window.itemW;if(w0)window.itemW=k=>k=='cr2'||k=='cr3'||/^cr2_/.test(k)?0:w0(k)}catch(_){}/* кристали не мають ваги */
 /* опис у рюкзаку */
-try{if(window.DS)Object.assign(window.DS,{cr2:'Друга форма попала з 25 рівня. Випадає з боса. Використовується в Колбі поліпшень. Не має ваги',cr3:'Третя форма попала з 50 рівня. Рідкісний — із сильнішого боса. Використовується в Колбі поліпшень. Не має ваги'})}catch(_){}
+try{if(window.DS)Object.assign(window.DS,{cr2:'Друга форма будь-якого попала з 25 рівня — підходить усім стихіям. Рідкісний: випадає з будь-якого боса з шансом 5%. Використовується в Колбі поліпшень. Не має ваги',cr3:'Третя форма попала з 50 рівня. Рідкісний — із сильнішого боса. Використовується в Колбі поліпшень. Не має ваги'});
+ Object.assign(window.DS,{
+  cr2_fi:'Друга форма вогняного попала з 25 рівня. Випадає зі Стража ущелини. Не має ваги',
+  cr2_wa:'Друга форма водяного попала з 25 рівня. Випадає з боса стихії води. Не має ваги',
+  cr2_gr:'Друга форма трав’яного попала з 25 рівня. Випадає з боса стихії трави. Не має ваги',
+  cr2_ea:'Друга форма земляного попала з 25 рівня. Випадає з Кришталевого Владики. Не має ваги',
+  cr2_ai:'Друга форма повітряного попала з 25 рівня. Випадає з боса стихії повітря. Не має ваги',
+  cr2_da:'Друга форма темного попала з 25 рівня. Випадає з боса стихії темряви. Не має ваги',
+  cr2_ne:'Друга форма нейтрального попала з 25 рівня. Випадає з нейтрального боса. Не має ваги'})}catch(_){}
 /* тестові кристали для гравця ID 0001 (поки немає босів) */
 /* приходять листом у пошту (mail.js) */
 const gift=setInterval(()=>{if(inv._crg){clearInterval(gift);return}if(window.myPid!=='0001'||!window.plMail)return;inv._crg=1;clearInterval(gift);
@@ -82,11 +96,15 @@ if(document.readyState=='complete')setTimeout(flaskIcon,900);else addEventListen
 const flasks=()=>(window.BPLACED||[]).filter(b=>b.id=='B_flask');
 const nearFlask=()=>flasks().find(b=>Math.hypot(b.x-P.x,b.z-P.z)<2.9);
 const NEED={2:[25,'cr2'],3:[50,'cr3']};
+/* який кристал потрібен попалу: для форми 2 — кристал своєї стихії (або універсальний), для форми 3 — кристал вознесіння */
+const elsOf=p=>((T[p.ty]||{}).e&&T[p.ty].e.length?T[p.ty].e:['ne']);
+const want=(p,f)=>f==2?elsOf(p).map(e=>'cr2_'+e):[NEED[f][1]];
+const pick=(p,f)=>{const w=want(p,f);for(const k of w)if(inv[k]>0)return k;if(f==2&&inv.cr2>0)return'cr2';return null};
 const css=document.createElement('style');css.textContent=`
 #evo{display:none;position:fixed;left:calc(env(safe-area-inset-left,0px) + 10%);right:calc(env(safe-area-inset-right,0px) + 10%);top:calc(env(safe-area-inset-top,0px) + 6%);bottom:calc(env(safe-area-inset-bottom,0px) + 6%);z-index:36;flex-direction:column;background:rgba(14,20,42,.96);border:2px solid #7fe3f5;border-radius:16px;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.5);overflow:hidden}
 #evo header{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(127,227,245,.4)}#evo header b{flex:1;font-size:18px;color:#bff6ff}
 #evo .cx{background:none;border:none;color:#7fe3f5;font-size:24px;cursor:pointer}
-#evo .cr{display:flex;gap:14px;justify-content:center;padding:8px 12px;font-size:15px}#evo .cr span{display:flex;align-items:center;gap:6px}#evo .cr img{width:30px;height:30px}
+#evo .cr{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;padding:8px 12px;font-size:15px}#evo .cr span{display:flex;align-items:center;gap:6px}#evo .cr img{width:30px;height:30px}
 #evo .ls{overflow:auto;padding:4px 12px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
 #evo .pc{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(127,227,245,.3);border-radius:12px;padding:6px 8px}
 #evo .pc .ic{width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;font-size:30px}#evo .pc .ic img{width:44px;height:44px}
@@ -97,12 +115,12 @@ const box=document.createElement('div');box.id='evo';document.body.appendChild(b
 let open=0;
 function render(){const cr=k=>`<span>${img(k)} <b>${inv[k]||0}</b> ${IT[k][1]}</span>`;
  const rows=pals.map((p,i)=>{const fm=p.fm||1,nx=fm+1,nd=NEED[nx],nm=(T[p.ty]||{}).n,lv=p.lv||1;let why='',ok=0;
-  if(!nd)why='Максимальна форма';else if(lv<nd[0])why=`Потрібен ${nd[0]} рівень`;else if(!(inv[nd[1]]>0))why=`Потрібен ${IT[nd[1]][1]}`;else ok=1;
+  if(!nd)why='Максимальна форма';else if(lv<nd[0])why=`Потрібен ${nd[0]} рівень`;else if(!pick(p,nx))why=`Потрібен ${want(p,nx).map(k=>IT[k][1]).join(' або ')}`;else ok=1;
   const ico=(typeof EM!='undefined'&&EM[p.ty])||'🐾';
   return`<div class='pc'><div class='ic'>${ico}</div><div class='tx'><b>${nm}</b> · ${lv} рів.<small>Форма ${fm}${nd?' → '+nx+' · '+(ok?'готовий':why):' · '+why}</small></div><button data-e='${i}' ${ok?'':'disabled'}>🧪 Еволюція</button></div>`}).join('');
- box.innerHTML=`<header><b>🧪 Колба поліпшень</b><button class='cx'>✕</button></header><div class='cr'>${cr('cr2')}${cr('cr3')}</div>
+ box.innerHTML=`<header><b>🧪 Колба поліпшень</b><button class='cx'>✕</button></header><div class='cr'>${['cr2',...CRK,'cr3'].filter(k=>inv[k]>0).map(cr).join('')||'<small>Кристалів поки немає — вони випадають із босів</small>'}</div>
  <div class='ls'>${rows||'<small>Поки немає попалів</small>'}</div>
- <div class='em'>Форма 2 — з 25 рівня й Кристал еволюції. Форма 3 — з 50 рівня й Кристал вознесіння. Кристали випадають із босів. Рівень і атаки попала зберігаються</div>`}
+ <div class='em'>Форма 2 — з 25 рівня й кристал стихії попала (вогню, води, трави…). Кожен бос дає кристал своєї стихії. Форма 3 — з 50 рівня й Кристал вознесіння. Кристали випадають із босів. Рівень і атаки попала зберігаються</div>`}
 function show(v){open=v;box.style.display=v?'flex':'none';if(v)render()}
 box.addEventListener('click',e=>{if(e.target.closest('.cx')){show(0);return}const b=e.target.closest('[data-e]');if(!b||b.disabled)return;const p=pals[+b.dataset.e];if(p)evolve(p)});
 const hb=document.getElementById('hit');
@@ -111,8 +129,8 @@ if(hb){const h0=hb.onclick;hb.onclick=function(){if(nearFlask()&&!(typeof neares
 
 /* ---------- перетворення ---------- */
 let anim=null;
-function evolve(p){const fm=p.fm||1,nd=NEED[fm+1],b=nearFlask()||flasks()[0];if(!nd||!b||(p.lv||1)<nd[0]||!(inv[nd[1]]>0)||anim)return;
- inv[nd[1]]--;show(0);
+function evolve(p){const fm=p.fm||1,nd=NEED[fm+1],b=nearFlask()||flasks()[0];const ck=nd?pick(p,fm+1):null;if(!nd||!b||(p.lv||1)<nd[0]||!ck||anim)return;
+ inv[ck]--;show(0);
  let r=null;try{r=window.PALMODEL?PALMODEL.build(p.ty):null}catch(_){r=null}
  const root=r?r.root:new THREE.Mesh(new THREE.SphereGeometry(.4,16,12),new THREE.MeshStandardMaterial({color:T[p.ty].c}));
  const base=.62;if(r&&window.PALFORM)window.PALFORM.ensure(r,p.ty,fm);root.scale.setScalar(base);applyForm(root,fm,p.ty);
