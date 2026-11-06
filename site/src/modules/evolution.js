@@ -122,6 +122,8 @@ function evolve(p){const fm=p.fm||1,nd=NEED[fm+1],b=nearFlask()||flasks()[0];if(
  const sparks=[];for(let i=0;i<18;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:i%3?c:0xffffff,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0}));s.scale.setScalar(.25);s.userData={a:Math.random()*6.28,r:.35+Math.random()*.25,v:.6+Math.random(),y:Math.random()};sc.add(s);sparks.push(s)}
  const nm=(T[p.ty]||{}).n;try{msg('🧪 '+nm+' у Колбі поліпшень…');if(window.PSFX)PSFX.sfx('build')}catch(_){}
  anim={p,r,root,beam,flash,sparks,fl,b,t:0,done:0,base,c,y0,to:fm+1}}
+/* 0.2.10: поки попал у Колбі — справжній попал зникає з поля (він «переміщений» у колбу), а після еволюції з'являється біля колби */
+ANI.push(()=>{if(!anim)return;const A=anim;if(A.p.m&&!A.done)A.p.m.scale.setScalar(.0001)});
 ANI.push(()=>{if(!anim)return;const A=anim,dt=Math.min(.05,(performance.now()-(A.lt||performance.now()))/1000);A.lt=performance.now();A.t+=dt;const t=A.t,R=A.root;
  const k1=Math.min(1,t/1.3);R.position.y=A.y0+.55+k1*.55+Math.sin(t*3)*.04;R.rotation.y+=dt*(1.5+t*3);
  if(A.fl.lq){A.fl.lq.material.emissiveIntensity=.9+Math.min(2.2,t*1.1)*(t<3?1:Math.max(0,(4.4-t)/1.4));A.fl.lq.scale.y=1+Math.min(1.4,t*.6)*(t<3?1:Math.max(0,(4.4-t)/1.4))}
@@ -129,10 +131,11 @@ ANI.push(()=>{if(!anim)return;const A=anim,dt=Math.min(.05,(performance.now()-(A
  A.beam.material.opacity=Math.min(.45,t*.25)*(t<3?1:Math.max(0,(4.4-t)/1.4));A.beam.scale.set(1+Math.sin(t*9)*.08,1,1+Math.sin(t*9)*.08);
  for(const s of A.sparks){const u=s.userData;u.y=(u.y+dt*u.v*(.5+t*.4))%1;const a=u.a+t*(2+t);s.position.set(A.b.x+Math.cos(a)*u.r,A.y0+.5+u.y*1.4,A.b.z+Math.sin(a)*u.r);s.material.opacity=Math.min(1,t)*(t<3.2?1:Math.max(0,(4.4-t)/1.2))}
  if(t>2.4&&t<3){const q=(t-2.4)/.6;R.scale.setScalar(A.base*(1+Math.sin(q*Math.PI*6)*.12*q))}
- if(t>=3&&!A.done){A.done=1;A.p.fm=A.to;if(A.r&&window.PALFORM)window.PALFORM.ensure(A.r,A.p.ty,A.to);applyForm(R,A.to,A.p.ty);R.scale.setScalar(A.base*FS[A.to]);try{save();if(window.PSFX)PSFX.sfx('level')}catch(_){}}
+ if(t>=3&&!A.done){A.done=1;if(A.p.m)A.p.m.scale.setScalar(.0001);A.p.fm=A.to;if(A.r&&window.PALFORM)window.PALFORM.ensure(A.r,A.p.ty,A.to);applyForm(R,A.to,A.p.ty);R.scale.setScalar(A.base*FS[A.to]);try{save();if(window.PSFX)PSFX.sfx('level')}catch(_){}}
  if(t>2.85&&t<3.6){const q=(t-2.85)/.75;A.flash.scale.setScalar(.3+q*2.6);A.flash.material.opacity=.9*(1-q)}else A.flash.material.opacity=0;
  if(t>=4.6){for(const o of[A.beam,A.flash,...A.sparks]){sc.remove(o);if(o.geometry&&!o.isSprite)o.geometry.dispose();o.material.dispose()}
-  sc.remove(R);try{if(A.r&&window.PALMODEL)PALMODEL.dispose(A.r)}catch(_){}if(A.fl.lq){A.fl.lq.scale.y=1;A.fl.lq.material.emissiveIntensity=.9}
+  sc.remove(R);try{if(A.r&&window.PALMODEL)PALMODEL.dispose(A.r)}catch(_){}
+  if(A.p.m){const fs=FS[A.to]||1;A.p._s0=fs;A.p.m.scale.setScalar(fs);A.p.x=A.b.x+1.2;A.p.z=A.b.z+1.2;A.p.m.position.set(A.p.x,H(A.p.x,A.p.z),A.p.z)}if(A.fl.lq){A.fl.lq.scale.y=1;A.fl.lq.material.emissiveIntensity=.9}
   try{msg('🎉 '+(T[A.p.ty]||{}).n+' еволюціонував — тепер форма '+A.to+'! Сильніші атака, захист і здоров’я')}catch(_){}anim=null}});
 window.EVOLUTION={evolve,applyForm,show:()=>show(1),FS,NEED};
 }catch(e){console.warn('evolution',e)}})();
