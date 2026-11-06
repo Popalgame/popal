@@ -9,7 +9,7 @@
 (function(){try{
 const TIERS=[10,20,30,40,50];
 /* нагороди запрошувачу за кожного друга */
-const REW={10:{bg:5},20:{bb:5},30:{br:5},40:{hpp:10},50:{cr2:1}};
+const REW={10:{bg:5},20:{bb:5},30:{xpb:1},40:{br:5},50:{_crx:1}};/* _crx — кристал стихії на вибір (evolution.js, EVO_CR) */
 /* бонус за трьох друзів на 50 рівні — поки таємниця «?», згодом тут буде унікальний попал */
 const BONUS={need:3,lv:50,items:null};
 const REF_GIFT={bg:3,hpp:2};
@@ -62,6 +62,14 @@ const css=document.createElement('style');css.textContent=`
 #rfx .rw.ready{border-color:#ffd977;cursor:pointer;box-shadow:0 0 0 2px rgba(255,217,119,.35),0 0 14px rgba(255,217,119,.45);animation:rfp 1.4s ease-in-out infinite}
 #rfx .rw.done::after{content:'✔';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:900 26px system-ui,sans-serif;color:#7fe3f5;text-shadow:0 0 6px #000,0 0 2px #000;background:rgba(5,15,30,.35);border-radius:10px}
 @keyframes rfp{50%{transform:scale(1.06)}}
+#rfx .rw .crx{position:relative;width:40px;height:36px;display:block}#rfx .rw .crx img{position:absolute;width:24px!important;height:24px!important}#rfx .rw .crx img:nth-child(1){left:0;top:8px}#rfx .rw .crx img:nth-child(2){left:8px;top:0;z-index:1}#rfx .rw .crx img:nth-child(3){left:16px;top:8px}
+#rfx .rfch{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(4,10,22,.6)}
+#rfx .rfch .bx{width:min(560px,92%);padding:16px;border-radius:18px;background:linear-gradient(180deg,#1b2f58,#13234a);border:2px solid #e2bf67;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.6)}
+#rfx .rfch h3{margin:0 0 4px;color:#ffe7a8;font-size:19px}#rfx .rfch p{margin:0 0 12px;color:#c9d6e8;font-size:13px}
+#rfx .rfch .gr{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+#rfx .rfch .gr button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:12px;border:2px solid rgba(226,191,103,.4);background:rgba(10,20,40,.6);color:#fff;cursor:pointer;font:700 12px system-ui,sans-serif}
+#rfx .rfch .gr button:hover{border-color:#ffd977}#rfx .rfch .gr img{width:44px;height:44px}
+#rfx .rfch .no{margin-top:12px;padding:8px 18px;border-radius:12px;border:2px solid rgba(226,191,103,.55);background:rgba(255,255,255,.05);color:#ffe7a8;font:800 13px system-ui,sans-serif;cursor:pointer}
 #rfx .rw.mys{width:62px;height:62px;border-color:#b98cff;background:radial-gradient(circle at 50% 40%,#3a2a6a,#160e30);box-shadow:0 0 14px rgba(185,140,255,.45)}#rfx .rw.mys .ic{font:900 34px system-ui,sans-serif;color:#e8d8ff;text-shadow:0 0 10px #b98cff}
 #rfx .bonus small.soon{color:#d8c4ff;font-weight:700}
 #rfx .bonus{grid-column:8;grid-row:2 / span var(--n,1);align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-left:2px solid rgba(226,191,103,.5);padding-left:8px}
@@ -75,10 +83,17 @@ const bd=X.querySelector('.rfb'),lkw=X.querySelector('.lkw');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ico=k=>window.plIcon?window.plIcon(k):(IT[k]?IT[k][0]:'🎁');
 const ago=t=>{if(!t)return'';const m=Math.max(0,Math.round((Date.now()-t)/60000));if(m<5)return'у грі зараз';if(m<60)return m+' хв тому';const h=Math.round(m/60);if(h<24)return h+' год тому';return Math.round(h/24)+' дн. тому'};
-const cell=(items,st,attrs)=>{const[k,n]=Object.entries(items)[0];return`<button class='rw ${st}' ${attrs||''} title='${Object.entries(items).map(([i,c])=>(IT[i]?IT[i][1]:i)+' ×'+c).join(', ')}'><span class='ic'>${ico(k)}</span><u>${Object.keys(items).length>1?'+':'×'+n}</u></button>`};
+const nm=i=>i=='_crx'?'Кристал стихії на вибір':(IT[i]?IT[i][1]:i);
+const cell=(items,st,attrs)=>{const[k,n]=Object.entries(items)[0];const ic=k=='_crx'?`<span class='crx'>${['cr2_fi','cr2_wa','cr2_gr'].map(x=>ico(x)).join('')}</span>`:ico(k);return`<button class='rw ${st}' ${attrs||''} title='${Object.entries(items).map(([i,c])=>nm(i)+' ×'+c).join(', ')}'><span class='ic'>${ic}</span><u>${Object.keys(items).length>1?'+':'×'+n}</u></button>`};
 let list=[];
 function give(items){for(const[i,n]of Object.entries(items))addI(i,n);try{msg('🎁 Нагорода за друга: '+Object.entries(items).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', '));hud();save()}catch(_){}}
-function claim(uid,lv){const f=list.find(x=>x.uid===uid);if(!f||(f.lv|0)<lv)return;const got=inv._refc[uid]||(inv._refc[uid]=[]);if(got.includes(lv))return;got.push(lv);give(REW[lv]);render()}
+function claim(uid,lv){const f=list.find(x=>x.uid===uid);if(!f||(f.lv|0)<lv)return;const got=inv._refc[uid]||(inv._refc[uid]=[]);if(got.includes(lv))return;
+ if(REW[lv]._crx){choose(k=>{if(got.includes(lv))return;got.push(lv);give({[k]:1});render()});return}
+ got.push(lv);give(REW[lv]);render()}
+/* вибір кристала стихії */
+function choose(cb){const ks=window.EVO_CR||[];const d=document.createElement('div');d.className='rfch';
+ d.innerHTML=`<div class='bx'><h3>Виберіть кристал стихії</h3><p>Кристал потрібен для другої форми попала цієї стихії з 25 рівня.</p><div class='gr'>${ks.map(k=>`<button data-k='${k}'>${ico(k)}<b>${IT[k]?IT[k][1]:k}</b></button>`).join('')}</div><button class='no'>Скасувати</button></div>`;
+ X.appendChild(d);d.onclick=e=>{const b=e.target.closest('[data-k]');if(b){d.remove();cb(b.dataset.k);return}if(e.target.closest('.no')||e.target===d)d.remove()}}
 function claimBonus(){const n=list.filter(f=>(f.lv|0)>=BONUS.lv).length;if(n<BONUS.need||inv._refb||!BONUS.items)return;inv._refb=1;give(BONUS.items);render()}
 function linkBox(){if(!window.myPid){lkw.innerHTML="<div class='lk'><small>Увійдіть в акаунт у меню героя — отримаєте ID і власне посилання для друзів.</small></div>";return}
  lkw.innerHTML=`<div class='lk'><code translate='no'>${esc(link())}</code><button data-cp>📋 Копіювати</button>${navigator.share?"<button class='o' data-sh>📤 Поділитися</button>":''}<small>Друг відкриває гру за цим посиланням і входить в акаунт — і одразу отримує подарунок: ${Object.entries(REF_GIFT).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', ')}.</small></div>`;
@@ -93,7 +108,7 @@ function render(){linkBox();if(!list.length){bd.innerHTML="<div class='em'>По�
   if(i==0)h+=`<div class='bonus'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${n50>=BONUS.need?'near':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n50} / ${BONUS.need} друзів<br>з ${BONUS.lv} рівнем</small><small class='soon'>Унікальний попал — скоро</small></div>`});
  bd.innerHTML=h+'</div>'+tip();
  bd.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>claim(b.dataset.u,+b.dataset.l));const bb=bd.querySelector('[data-b]');if(bb)bb.onclick=claimBonus}
-const tip=()=>`<p class='tip'>Нагороду за рівень друга можна забрати, коли він його досягне — торкніться клітинки, що світиться. За кожного друга: ${TIERS.map(t=>t+' рів. — '+Object.entries(REW[t]).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', ')).join('; ')}. Три друзі з 50 рівнем — таємний бонус: незабаром тут буде унікальний попал.</p>`;
+const tip=()=>`<p class='tip'>Нагороду за рівень друга можна забрати, коли він його досягне — торкніться клітинки, що світиться. За кожного друга: ${TIERS.map(t=>t+' рів. — '+Object.entries(REW[t]).map(([i,n])=>nm(i)+' ×'+n).join(', ')).join('; ')}. Три друзі з 50 рівнем — таємний бонус: незабаром тут буде унікальний попал.</p>`;
 async function load(){list=[];render();if(!ok()||!window.myPid){return}
  bd.insertAdjacentHTML('afterbegin',"<div class='em' data-ld>Завантаження…</div>");
  try{const q=await fbDb.collection('referrals').where('ref','==',window.myPid).limit(100).get();list=q.docs.map(d=>Object.assign({uid:d.id},d.data())).sort((a,b)=>(b.lv|0)-(a.lv|0));render()}
