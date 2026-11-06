@@ -230,7 +230,7 @@ ANI.push(()=>{const now=performance.now(),dt=Math.min(.1,(now-last)/1000);last=n
   if(q._cds)for(const k in q._cds)q._cds[k]-=dt}
  const p=cur();
  if(p&&p.chp<=0)p.chp=stats(p).hp*.1;
- {const b=bar;if(p){const mx=stats(p).hp;b.style.display='block';b.firstChild.style.width=Math.max(0,Math.min(100,p.chp/mx*100))+'%';b.lastChild.textContent=Math.ceil(p.chp)}else b.style.display='none'}
+ {const b=bar;if(p){const mx=stats(p).hp;b.style.display='block';b.firstChild.style.width=Math.max(0,Math.min(100,p.chp/mx*100))+'%';b.lastChild.textContent='❤ '+Math.max(0,Math.ceil(p.chp))+' / '+Math.round(mx)}else b.style.display='none'}
  if(!p||(typeof menuO!='undefined'&&menuO)||(typeof ivO!='undefined'&&ivO)){target=null;return}
  if(p._dash>0)p._dash-=dt;
  if(!target||!enemyOk(target)||Math.hypot(target.x-P.x,target.z-P.z)>14)target=pickTarget(p);

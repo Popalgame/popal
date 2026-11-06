@@ -77,7 +77,12 @@ else if(id=='B_pen'){/* 0.2.10: Загін — квадратний дерев'�
  const gt=new THREE.Group();gt.position.set(-.65,0,HL);g.add(gt);for(const y of[.32,.62])add(gt,B(1.25,.07,.05),0xb07a48,.62,y,0);add(gt,B(.07,.6,.05),0xb07a48,.18,.47,0);add(gt,B(.07,.6,.05),0xb07a48,1.12,.47,0);gt.rotation.y=-.9;
  const hay=add(g,Cy(.42,.46,.6,12),0xd8be5a,-1.55,.3,-1.55);hay.rotation.z=Math.PI/2;add(g,B(.5,.18,.5),0xe0c86a,-1.45,.66,-1.5);
  add(g,B(1.2,.3,.45),DK,1.45,.2,-1.75);const wt=new THREE.Mesh(B(1.04,.04,.32),new THREE.MeshStandardMaterial({color:0x4aa8d8,roughness:.2,emissive:0x0a3048,emissiveIntensity:.4}));wt.position.set(1.45,.33,-1.75);g.add(wt);
- const pile=new THREE.Group();pile.position.set(1.6,.05,1.5);g.add(pile);g.userData.pile=pile}
+ /* скриня загону — зовні біля хвіртки, праворуч; сюди попали складають шерсть і шкіру (pen.js) */
+ const cx=1.75,cz=HL+.62;add(g,B(.92,.44,.58),0x9a6234,cx,.24,cz);add(g,B(.98,.14,.64),0xb87a44,cx,.53,cz);add(g,B(.84,.07,.5),0xb87a44,cx,.63,cz);
+ for(const x of[-.36,.36])add(g,B(.07,.56,.66),0x4a4a56,cx+x,.32,cz);add(g,B(.16,.2,.05),0xe2bf67,cx,.44,cz+.31);
+ const sg=add(g,B(.5,.26,.04),0x6e4a2a,cx,.95,cz-.12);sg.rotation.x=-.25;add(g,B(.05,.4,.05),0x6e4a2a,cx,.72,cz-.16);
+ const wl=add(g,S(.08),0xf4eee0,cx-.1,.97,cz-.08);wl.scale.set(1,1,.5);add(g,B(.12,.1,.02),0x8a5a32,cx+.12,.97,cz-.09);
+ g.userData.penChest=[cx,cz]}
 else if(id=='B_lamp'){add(g,Cy(.05,.06,1.6,6),0x2a2a33,0,.8,0);const l=new THREE.Mesh(B(.22,.28,.22),LAMP);l.position.y=1.72;g.add(l);add(g,Co(.2,.15,4),0x2a2a33,0,1.94,0,Math.PI/4);const lt=new THREE.PointLight(0xffc070,0,10);lt.position.y=1.7;g.add(lt);g.userData.light=lt}
 else{for(const x of[-.8,0,.8])add(g,B(.12,.8,.12),W,x,.4,0);for(const y of[.3,.6])add(g,B(1.8,.08,.06),D,0,y,0)}
 return g}

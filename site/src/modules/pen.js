@@ -1,7 +1,7 @@
 /* 0.2.10: Загін (B_pen, модель — world-007.js).
    • Поселіть у загін попалів, з яких падає шерсть або шкіра (creature-drops.js: Пухоклуб — 🧶, Мороріг, Грозовик, Бамбузл — 🟫).
-     Вони гуляють усередині паркану й час від часу дають шерсть чи шкіру — вона збирається в загоні (копичка біля хвіртки).
-   • «Дія» поруч із загоном — вікно: хто живе в загоні, що назбиралося («Забрати все»), кого можна поселити.
+     Вони гуляють усередині паркану й час від часу дають шерсть чи шкіру — вона складається в скриню загону.
+   • Скриня загону стоїть зовні праворуч від хвіртки; класти в неї нічого не можна. «Дія» біля неї — вікно: хто живе в загоні, що назбиралося («Забрати все»), кого можна поселити.
    • До 3 попалів у загоні. Що вищий рівень попала, то швидше: 1 рів. — раз на 3 хв, 25 рів. — приблизно раз на 80 с.
    • Попал у загоні живе в Попал-центрі (займає місце в сховищі), але не працює в бригаді й не потребує кошика.
      Візьмете його з собою або в бригаду — він сам покине загін.
@@ -9,7 +9,7 @@
    • Збереження: inv._pen[ключ] = {it:{wool,lth}, t}, inv._pn — загін кожного попала (за порядком pals). */
 (function(){try{
 if(typeof pals=='undefined'||typeof IT=='undefined')return;
-const CAP=3,STORE=60,R=1.9,NEAR=3.6;
+const CAP=3,STORE=60,R=1.9,NEAR=1.8;
 const LOOT=window.PAL_LOOT||{'Пухоклуб':'wool','Мороріг':'lth','Грозовик':'lth','Бамбузл':'lth'},EMO={wool:'🧶',lth:'🟫'};
 const prod=p=>LOOT[(T[p.ty]||{}).n]||null;
 const every=p=>180/(1+((p.lv||1)-1)/20);/* секунд на одну річ */
@@ -49,7 +49,9 @@ let lt=0;ANI.push(tm=>{const dt=Math.min(.1,Math.max(0,tm-(lt||tm)));lt=tm;const
   p.x=w.x;p.z=w.z;p.m.visible=true;p.m.position.set(w.x,H(w.x,w.z)+.04+(mv?Math.abs(Math.sin(tm*8+w.x))*.05:0),w.z);if(w.a!=null)p.m.rotation.y=w.a;p.st='🐑 гуляє в загоні'}});
 
 /* ---------- вікно загону ---------- */
-const near=()=>{let best=null,bd=NEAR;for(const b of pens()){const d=Math.hypot(b.x-P.x,b.z-P.z);if(d<bd){bd=d;best=b}}return best};
+/* «Дія» — біля скрині загону (зовні, праворуч від хвіртки) */
+const chestAt=b=>{const c=b.g&&b.g.userData.penChest||[1.75,3.22],r=b.g?b.g.rotation.y:0,s=Math.sin(r),k=Math.cos(r);return[b.x+c[0]*k+c[1]*s,b.z-c[0]*s+c[1]*k]};
+const near=()=>{let best=null,bd=NEAR;for(const b of pens()){const[x,z]=chestAt(b),d=Math.hypot(x-P.x,z-P.z);if(d<bd){bd=d;best=b}}return best};
 {const css=document.createElement('style');css.textContent=`
 #pen{display:none;position:fixed;left:calc(env(safe-area-inset-left,0px) + 6%);right:calc(env(safe-area-inset-right,0px) + 6%);top:calc(env(safe-area-inset-top,0px) + 5%);bottom:calc(env(safe-area-inset-bottom,0px) + 5%);z-index:36;flex-direction:column;background:rgba(14,20,42,.97);border:2px solid #e2bf67;border-radius:16px;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.5);overflow:hidden;font-family:system-ui,sans-serif}
 #pen header{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(226,191,103,.4)}#pen header b{font-size:18px;color:#ffe7a8;flex:1}#pen header small{opacity:.75;font-size:12px}
@@ -79,7 +81,7 @@ function settle(p){if(!cur)return;if(inPen(cur).length>=CAP){msg('🐑 У заг
 function out(p){p.pen=null;p._pa=0;p._pw=null;msg('🗄️ '+nm(p)+' повернувся у сховище Попал-центру');try{save()}catch(_){}render()}
 function takeAll(){const o=rec(cur),got=[];for(const[k,n]of Object.entries(o.it))if(n>0){addI(k,n);got.push(EMO[k]+' '+IT[k][1]+' ×'+n)}o.it={};showPile(cur,o);if(got.length)msg('🐑 Забрано: '+got.join(', '));try{hud();save()}catch(_){}render()}
 function render(){if(!cur)return;const o=rec(cur),list=inPen(cur),cand=pals.filter(p=>prod(p)&&!p.pen),w=o.it.wool||0,l=o.it.lth||0;
- W.innerHTML=`<header><b>🐑 Загін</b><small>Попалів: ${list.length} / ${CAP}</small><button class='cx' aria-label='Закрити'>✕</button></header>
+ W.innerHTML=`<header><b>📦 Скриня загону</b><small>Попалів: ${list.length} / ${CAP} · сюди нічого не кладуть — лише забирають</small><button class='cx' aria-label='Закрити'>✕</button></header>
  <div class='st'><span>Назбиралося:</span><span class='it'><span>${IT.wool?IT.wool[0]:'🧶'} Шерсть <b>${w}</b></span><span>${IT.lth?IT.lth[0]:'🟫'} Шкіра <b>${l}</b></span></span><small style='opacity:.7'>${total(o)} / ${STORE}</small><button class='b g' data-all ${total(o)?'':'disabled'}>⬇ Забрати все</button></div>
  <div class='cb'><div class='col'><h5>Живуть у загоні</h5><div class='ls'>${list.length?list.map((p,i)=>{const k=prod(p),ev=every(p),pc=Math.min(100,Math.round((p._pa||0)/ev*100));return`<div class='r' data-c='l${i}'><span class='nm'><b>${nm(p)}</b> · рів. ${p.lv||1}<small>${EMO[k]} ${IT[k][1].toLowerCase()} — раз на ${Math.round(ev)} с</small><i><b style='width:${pc}%'></b></i></span><button class='b' data-out='${pals.indexOf(p)}'>Вивести</button></div>`}).join(''):"<div class='em'>Тут поки нікого. Поселіть попала, з якого падає шерсть або шкіра.</div>"}</div></div>
  <div class='col'><h5>Можна поселити</h5><div class='ls'>${cand.length?cand.map((p,i)=>{const k=prod(p);return`<div class='r' data-c='c${i}'><span class='nm'><b>${nm(p)}</b> · рів. ${p.lv||1}<small>${EMO[k]} дає ${IT[k][1].toLowerCase()} · ${where(p)}</small></span><button class='b g' data-in='${pals.indexOf(p)}' ${list.length>=CAP||p===pals[selP]?'disabled':''}>Поселити</button></div>`}).join(''):"<div class='em'>Немає попалів, з яких падає шерсть або шкіра. Шерсть дає Пухоклуб, шкіру — Мороріг, Грозовик і Бамбузл. Спіймайте когось із них.</div>"}</div></div></div>`;
@@ -92,6 +94,6 @@ function render(){if(!cur)return;const o=rec(cur),list=inPen(cur),cand=pals.filt
 addEventListener('keydown',e=>{if(e.key=='Escape'&&W.style.display=='flex')close_()});
 setInterval(()=>{if(cur&&W.style.display=='flex'&&!W.matches(':hover'))render()},2000);
 {const hb=document.getElementById('hit');if(hb){const h0=hb.onclick;hb.onclick=function(){const b=near();if(b&&!nearest(wild,2.6)){open_(b);return}return h0&&h0.apply(this,arguments)};
- let was=null,hit0=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML='<span style="font-size:30px">🐑</span><small>Загін</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}})}}
+ let was=null,hit0=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML=(window.plIcon?plIcon('B_ch'):'📦')+'<small>Загін</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}})}}
 window.PEN={pens,inPen,open:open_,every};
 }catch(e){console.warn('pen',e)}})();
