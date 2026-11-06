@@ -19,8 +19,8 @@ function activate(){if(!(inv.xpb>0))return;inv.xpb--;inv._xpb=Math.max(Date.now(
 if(typeof ivR=='function'){const _r=ivR;ivR=function(){_r.apply(this,arguments);try{if(typeof ivTab!='undefined'&&ivTab!='i')return;const sel=document.querySelector('#ivc .i2s.on'),k=sel&&sel.dataset.sl,d=document.querySelector('#ivc .i2d');
  if(!d||k!='xpb'||d.querySelector('[data-xpb]'))return;const b=document.createElement('button');b.dataset.xpb=1;b.textContent='⚡ Активувати';b.onclick=()=>{activate();ivR()};d.insertBefore(b,d.querySelector('[data-drop]'))}catch(_){}}}
 /* значок біля смуги досвіду */
-const css=document.createElement('style');css.textContent=`#xpbav{position:absolute;right:-6px;bottom:-6px;width:24px;height:24px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:14px;line-height:1;background:radial-gradient(circle at 50% 35%,#fff3b0,#f2b52a 70%);border:2px solid #fff6d0;box-shadow:0 0 10px rgba(255,210,80,.85);z-index:3;pointer-events:none;animation:xpbp 1.6s ease-in-out infinite}
-#xpbav.on{display:flex}@keyframes xpbp{50%{box-shadow:0 0 18px rgba(255,210,80,1);transform:scale(1.08)}}@media (prefers-reduced-motion:reduce){#xpbav{animation:none}}
+const css=document.createElement('style');css.textContent=`#xpbav{position:absolute;right:-3px;bottom:-3px;width:17px;height:17px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:10px;line-height:1;background:#16263a;border:1.5px solid #f2c14e;box-shadow:0 1px 4px rgba(0,0,0,.55),0 0 6px rgba(242,193,78,.45);z-index:3;pointer-events:none}
+#xpbav.on{display:flex}
 #xpbc{position:fixed;z-index:6;display:none;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:linear-gradient(#ffe08a,#e2a93a);color:#2a1a06;font:800 11px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4);pointer-events:none}`;document.head.appendChild(css);
 const c=document.createElement('div');c.id='xpbc';document.body.appendChild(c);
 /* блискавка на аватарці героя, поки бустер діє */
