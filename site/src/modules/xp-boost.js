@@ -1,7 +1,7 @@
 /* 0.2.15: бустер досвіду (xpb) — нагорода реферальної програми (referral.js, 30 рівень друга).
    • У рюкзаку: виберіть «Бустер досвіду» → «⚡ Активувати». Діє 24 години: увесь досвід героя й попалів ×2 (+100%).
    • Кілька бустерів підряд — час додається. Кінець дії зберігається в inv._xpb (мітка часу), тож перезапуск гри його не скидає.
-   • Поки діє — блискавка ⚡ на аватарці героя, біля смуги досвіду значок «⚡ ×2», а в меню персонажа — точний відлік «год:хв:сек». */
+   • Поки діє — блискавка ⚡ на аватарці героя, а час, що лишився, — лише в меню персонажа: «год:хв:сек». */
 (function(){try{
 if(typeof IT=='undefined'||typeof inv=='undefined')return;
 const DAY=86400000;
@@ -25,7 +25,8 @@ const css=document.createElement('style');css.textContent=`#xpbav{position:absol
 const c=document.createElement('div');c.id='xpbc';document.body.appendChild(c);
 /* блискавка на аватарці героя, поки бустер діє */
 const av=document.getElementById('av');let ab=null;if(av){if(getComputedStyle(av).position=='static')av.style.position='relative';ab=document.createElement('span');ab.id='xpbav';ab.textContent='⚡';ab.title='Бустер досвіду ×2';av.appendChild(ab)}
-function chip(){if(ab)ab.classList.toggle('on',on());if(!on()){c.style.display='none';return}const x=document.getElementById('xb');const r=x&&x.getBoundingClientRect();if(!r||!r.width){c.style.display='none';return}
+function chip(){if(ab)ab.classList.toggle('on',on());c.style.display='none';return;/* 0.2.15: час — лише в меню персонажа */
+ if(!on()){c.style.display='none';return}const x=document.getElementById('xb');const r=x&&x.getBoundingClientRect();if(!r||!r.width){c.style.display='none';return}
  c.style.display='flex';c.style.left=Math.round(r.right+6)+'px';c.style.top=Math.round(r.top+r.height/2-9)+'px';c.textContent='⚡ ×2 · '+(window.plDur?window.plDur(inv._xpb-Date.now()):'')}
 /* у меню персонажа (профіль) — скільки лишилось: години, хвилини й секунди, щосекунди */
 const hms=ms=>{const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),x=t%60;return h+':'+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0')};
