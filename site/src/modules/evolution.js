@@ -24,6 +24,18 @@ const ICO={cr2:gem('#bff6ff','#2a8ee0','#7fe3f5',0),cr3:gem('#ffe9a8','#9a46e6',
 const CR=[['fi','Кристал вогню','#ffe0a0','#e0401a','#ff8a3a'],['wa','Кристал води','#d8f6ff','#1f7fd8','#5fc8ff'],['gr','Кристал трави','#e6ffc0','#2f9a3a','#7fe08a'],
  ['ea','Кристал землі','#ffe8c0','#9a5a24','#e0a860'],['ai','Кристал повітря','#ffffff','#7fb8d8','#cfefff'],['da','Кристал темряви','#e8d0ff','#5a2a9a','#a77ae6'],['ne','Нейтральний кристал','#ffffff','#b8b8c8','#ffe0f0']];
 for(const[e,,c1,c2,c3]of CR)ICO['cr2_'+e]=gem(c1,c2,c3,0);
+/* універсальний — райдужний з іскорками, щоб не плутати з кристалом води */
+ICO.cr2=(()=>{const c=document.createElement('canvas');c.width=c.height=96;const x=c.getContext('2d'),im=new Image();
+ x.fillStyle='rgba(0,0,0,.28)';x.beginPath();x.ellipse(48,86,24,5,0,0,7);x.fill();
+ const g=x.createRadialGradient(48,48,4,48,48,46);g.addColorStop(0,'#ffe08aaa');g.addColorStop(1,'#ffe08a00');x.fillStyle=g;x.fillRect(0,0,96,96);
+ const P=[[48,8],[74,30],[66,80],[30,80],[22,30]];x.beginPath();P.forEach(([u,v],i)=>i?x.lineTo(u,v):x.moveTo(u,v));x.closePath();
+ const f=x.createLinearGradient(22,12,74,82);['#ff6a6a','#ffb84a','#fff07a','#6ae08a','#5ac8ff','#a67aff','#ff7ae0'].forEach((c,i,a)=>f.addColorStop(i/(a.length-1),c));
+ x.fillStyle=f;x.fill();x.lineWidth=3;x.strokeStyle='rgba(26,18,22,.9)';x.stroke();
+ x.fillStyle='rgba(255,255,255,.4)';x.beginPath();x.moveTo(48,8);x.lineTo(48,46);x.lineTo(22,30);x.closePath();x.fill();
+ x.fillStyle='rgba(0,0,0,.15)';x.beginPath();x.moveTo(48,46);x.lineTo(66,80);x.lineTo(74,30);x.closePath();x.fill();
+ x.strokeStyle='rgba(255,255,255,.55)';x.lineWidth=1.5;x.beginPath();x.moveTo(22,30);x.lineTo(48,46);x.lineTo(74,30);x.moveTo(48,46);x.lineTo(48,80);x.stroke();
+ x.fillStyle='#fff';for(const[u,v,r]of[[72,14,7],[22,60,5],[78,62,4]]){x.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4,rr=i%2?r*.3:r;x.lineTo(u+Math.cos(a)*rr,v+Math.sin(a)*rr)}x.fill()}
+ return c.toDataURL()})();
 const CRK=CR.map(c=>'cr2_'+c[0]);window.EVO_CR=CRK;
 const img=k=>`<img class='iic' src='${ICO[k]}' alt=''>`;
 IT.cr2=[img('cr2'),'Універсальний кристал еволюції'];IT.cr3=[img('cr3'),'Кристал вознесіння'];for(const[e,n]of CR)IT['cr2_'+e]=[img('cr2_'+e),n];
