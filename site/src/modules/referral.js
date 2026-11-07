@@ -2,7 +2,9 @@
    • У кожного гравця з ID своє посилання: popalgame.pl/game.html?ref=<ID>. Новий гравець, що прийшов за ним, після входу в акаунт
      записує себе в Firestore: referrals/{uid} = {ref, pid, name, lv, t} і раз на хвилину оновлює рівень (як рейтинг, rating.js).
      Новачок одразу отримує подарунок другу (REF_GIFT).
-   • Вікно показує запрошених друзів: імʼя, ID, коли був у грі, рівень, і нагороди за рівні друга 10 · 20 · 30 · 40 · 50.
+   • Вікно — таблиця на MAX=3 місця (як список друзів у RPG): аватар з рівнем, імʼя, коли був у грі, «довіра» (грав за тиждень),
+     нагороди за рівні друга 10 · 20 · 30 · 40 · 50 і бонус зі скобкою праворуч. Друг займає місце назавжди (inv._refSlots),
+     ✕ прибирає його (inv._refHide) і звільняє місце наступному. Порожні місця — «Вільне місце».
      Нагорода стає доступною, коли друг досяг рівня; гравець забирає її натисканням (відмітка ✔ — inv._refc[uid] = [10,20,…]).
      Бонус за трьох друзів на 50 рівні — поки «?», згодом унікальний попал.
    • Правила Firestore для колекції referrals — docs/firestore-rules-mail-promo.md. Без них вікно пише «ще не ввімкнено на сервері». */
@@ -33,59 +35,97 @@ function push(){if(!ok())return;const u=me();if(!u||!window.myPid)return;let ref
  .catch(e=>{if(e&&e.code!='permission-denied')console.warn('referral',e)})}
 setInterval(push,60000);setTimeout(push,9000);
 
-/* ---------- вікно ---------- */
+/* ---------- вікно: таблиця на 3 місця (як «друзі» в RPG) ---------- */
+const MAX=3;/* скільки друзів поміщається; згодом можна збільшити */
+if(!Array.isArray(inv._refSlots))inv._refSlots=[];
+if(!inv._refHide||typeof inv._refHide!='object')inv._refHide={};
 const css=document.createElement('style');css.textContent=`
 #rfx{position:fixed;inset:0;z-index:44;display:none;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eef4ff;background:rgba(4,10,22,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
  padding:calc(env(safe-area-inset-top,0px) + 2.5vh) calc(env(safe-area-inset-right,0px) + 2.5vw) calc(env(safe-area-inset-bottom,0px) + 2.5vh) calc(env(safe-area-inset-left,0px) + 2.5vw)}
 #rfx.on{display:flex}
-#rfx .win{width:min(1000px,100%);height:100%;display:flex;flex-direction:column;border-radius:20px;overflow:hidden;background:radial-gradient(120% 70% at 85% 0%,rgba(127,227,245,.12),transparent 60%),linear-gradient(180deg,#16264a,#0d1830 70%,#0a1426);border:2px solid #e2bf67;box-shadow:0 18px 50px rgba(0,0,0,.6)}
-#rfx .hd{display:flex;align-items:center;gap:12px;padding:12px 14px 10px 16px;border-bottom:1px solid rgba(226,191,103,.3)}
-#rfx .hd .co{width:42px;height:42px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;background:radial-gradient(circle at 50% 35%,#f4d27a,#b8862e 62%,#7a5418);border:2px solid #ffe7a0}
-#rfx .hd .tt{flex:1;min-width:0}#rfx .hd h2{margin:0;font-size:21px;font-weight:900;color:#ffe7a8}#rfx .hd small{display:block;color:#9fb3cf;font-size:12.5px;margin-top:2px}
+#rfx .win{position:relative;width:min(1040px,100%);max-height:100%;display:flex;flex-direction:column;border-radius:20px;overflow:hidden;background:radial-gradient(90% 80% at 85% 10%,rgba(80,170,180,.35),transparent 60%),linear-gradient(180deg,#1f5560,#123844 55%,#0d2a36);border:2px solid #c9a24f;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+#rfx .hd{display:flex;align-items:center;gap:12px;padding:10px 14px 8px 16px}
+#rfx .hd .co{width:40px;height:40px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:radial-gradient(circle at 50% 35%,#f4d27a,#b8862e 62%,#7a5418);border:2px solid #ffe7a0}
+#rfx .hd .tt{flex:1;min-width:0}#rfx .hd h2{margin:0;font-size:20px;font-weight:900;color:#ffe7a8}#rfx .hd small{display:block;color:#a9c8cf;font-size:12.5px;margin-top:2px}
 #rfx .hd button{width:38px;height:38px;border-radius:12px;border:2px solid rgba(226,191,103,.55);background:rgba(255,255,255,.05);color:#ffe7a8;font-size:18px;font-weight:800;cursor:pointer}
-#rfx .lk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 14px 4px;padding:10px 12px;border-radius:14px;background:rgba(127,227,245,.08);border:1px solid rgba(127,227,245,.3)}
-#rfx .lk code{flex:1;min-width:180px;font:700 14px ui-monospace,monospace;color:#bff3ff;word-break:break-all}
-#rfx .lk button{padding:8px 14px;border-radius:12px;border:2px solid #e2bf67;background:linear-gradient(#5fb04a,#2f8a3a);color:#fff;font:800 13.5px system-ui,sans-serif;cursor:pointer}
+#rfx .lk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 14px 6px;padding:8px 12px;border-radius:12px;background:rgba(10,30,40,.45);border:1px solid rgba(127,227,245,.25)}
+#rfx .lk code{flex:1;min-width:180px;font:700 13.5px ui-monospace,monospace;color:#bff3ff;word-break:break-all}
+#rfx .lk button{padding:7px 13px;border-radius:11px;border:2px solid #e2bf67;background:linear-gradient(#5fb04a,#2f8a3a);color:#fff;font:800 13px system-ui,sans-serif;cursor:pointer}
 #rfx .lk button.o{background:linear-gradient(#f39a4a,#d9532e)}
-#rfx .lk small{flex-basis:100%;color:#a9bed6;font-size:12px}
-#rfx .rfb{flex:1;min-height:0;overflow:auto;padding:8px 14px 14px;-webkit-overflow-scrolling:touch}
-#rfx .grid{display:grid;grid-template-columns:minmax(170px,1.6fr) 58px repeat(5,58px) 76px;gap:6px 8px;align-items:center;min-width:640px}
-#rfx .h{font:800 11.5px system-ui,sans-serif;color:#8fa6c4;text-transform:uppercase;letter-spacing:.5px;text-align:center}#rfx .h.l{text-align:left;padding-left:6px}
-#rfx .pl{display:flex;align-items:center;gap:10px;min-width:0;padding:6px 8px;border-radius:12px;background:linear-gradient(180deg,rgba(31,52,92,.75),rgba(18,32,62,.75));border:1px solid rgba(226,191,103,.3);height:58px}
-#rfx .av{width:40px;height:40px;flex:none;border-radius:10px;display:flex;align-items:center;justify-content:center;font:900 18px system-ui,sans-serif;color:#2a1a06;background:radial-gradient(circle at 50% 35%,#ffe9a8,#d9a43a 70%);border:2px solid #fff3c8}
-#rfx .pl .nm{min-width:0}#rfx .pl b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#rfx .pl small{display:block;font-size:11.5px;color:#8fa6c4}#rfx .pl small.ago{color:#ffb38a}
-#rfx .lv{justify-self:center;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:900 16px system-ui,sans-serif;color:#2a1a06;background:radial-gradient(circle at 50% 35%,#ffe9a8,#d9a43a 70%);border:2px solid #fff3c8}
-#rfx .rw{position:relative;justify-self:center;width:54px;height:54px;border-radius:12px;border:2px solid rgba(226,191,103,.35);background:rgba(10,20,40,.6);display:flex;align-items:center;justify-content:center;padding:0;cursor:default;color:#fff}
-#rfx .rw .ic{font-size:24px;line-height:1;display:flex}#rfx .rw .ic img{width:34px;height:34px}
-#rfx .rw u{position:absolute;right:3px;bottom:1px;font:800 11px system-ui,sans-serif;text-decoration:none;color:#ffe7a8;text-shadow:0 1px 2px #000}
-#rfx .rw.lock{opacity:.4;filter:grayscale(.7)}
-#rfx .rw.ready{border-color:#ffd977;cursor:pointer;box-shadow:0 0 0 2px rgba(255,217,119,.35),0 0 14px rgba(255,217,119,.45);animation:rfp 1.4s ease-in-out infinite}
-#rfx .rw.done::after{content:'✔';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:900 26px system-ui,sans-serif;color:#7fe3f5;text-shadow:0 0 6px #000,0 0 2px #000;background:rgba(5,15,30,.35);border-radius:10px}
+#rfx .lk small{flex-basis:100%;color:#a9c8cf;font-size:11.5px}
+#rfx .rfb{flex:1;min-height:0;overflow:auto;padding:0 10px 12px;-webkit-overflow-scrolling:touch}
+#rfx .tb{--rh:clamp(62px,13vh,86px);--cw:clamp(48px,6.4vw,66px);--tw:76px;--gw:64px;--g:10px;--bw:118px;min-width:660px}
+@media (max-width:900px){#rfx .tb{--tw:54px;--gw:46px;--g:6px;--bw:96px}#rfx .top span{font-size:13px}#rfx .tr{font-size:28px!important}#rfx .rw u{font-size:13px}}
+#rfx .cols,#rfx .card{display:grid;grid-template-columns:minmax(140px,1fr) var(--tw) var(--gw) repeat(5,var(--cw));column-gap:var(--g);align-items:center}
+#rfx .top{display:flex;align-items:stretch;background:rgba(18,52,64,.85);border-radius:4px;margin:0 0 8px}
+#rfx .top .cols{flex:1;padding:0 14px}
+#rfx .top span{font:600 15px system-ui,sans-serif;color:#e6eef2;text-align:center;padding:5px 0;white-space:nowrap}
+#rfx .top .l{text-align:left;padding-left:10px}#rfx .top .bd{border-left:1px solid rgba(255,255,255,.12)}
+#rfx .top .bh{width:var(--bw);flex:none;border-left:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center}
+#rfx .main{display:flex;align-items:stretch}
+#rfx .rows{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+#rfx .card{position:relative;height:var(--rh);padding:0 14px;border:2px solid #b8913f;border-radius:10px;--sp:calc(100% - 14px - var(--tw) - var(--gw) - 5 * var(--cw) - 6.5 * var(--g));background:linear-gradient(90deg,#14243f 0,#14243f var(--sp),#1f4a5c var(--sp))}
+#rfx .card::before,#rfx .card::after{content:'';position:absolute;top:50%;width:8px;height:8px;margin-top:-5px;border:2px solid #b8913f;background:#0d2a36;transform:rotate(45deg)}
+#rfx .card::before{left:-6px}#rfx .card::after{right:-6px}
+#rfx .pl{display:flex;align-items:center;gap:clamp(8px,1.4vw,14px);min-width:0;height:100%}
+#rfx .av{position:relative;width:calc(var(--rh) - 16px);height:calc(var(--rh) - 16px);flex:none;border-radius:4px;display:flex;align-items:center;justify-content:center;font:900 calc(var(--rh) * .4) system-ui,sans-serif;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.5);background:radial-gradient(circle at 50% 30%,hsl(var(--h),70%,62%),hsl(var(--h),55%,26%));border:2px solid #cfd7e0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
+#rfx .av i{position:absolute;right:2px;bottom:0;font:800 15px system-ui,sans-serif;font-style:normal;color:#fff;text-shadow:0 0 3px #000,0 0 2px #000,0 1px 2px #000}
+#rfx .pl .nm{min-width:0;flex:1;padding-right:26px}#rfx .pl b{display:block;font-size:clamp(15px,2.2vw,19px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#rfx .pl small{display:block;font-size:clamp(13px,1.9vw,17px);color:#ff5b52;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#rfx .pl small.on{color:#6fe08a}
+#rfx .pl .id{font-size:11.5px;color:#8fa6c4;margin-left:6px;font-weight:600}
+#rfx .del{position:absolute;top:4px;left:calc(var(--sp) - 32px);width:28px;height:28px;border:0;padding:0;background:none;color:#5ab8e8;font:900 24px/1 system-ui,sans-serif;cursor:pointer;text-shadow:0 0 2px #000}
+#rfx .del:hover{color:#9fe0ff}
+#rfx .tr{justify-self:center;font-size:34px;line-height:1;filter:grayscale(1) brightness(.7);opacity:.75}#rfx .tr.on{filter:hue-rotate(160deg) saturate(1.6) brightness(1.15);opacity:1}
+#rfx .rw{position:relative;justify-self:center;width:var(--cw);height:var(--cw);max-height:calc(var(--rh) - 10px);max-width:calc(var(--rh) - 10px);border-radius:4px;border:2px solid #111a26;box-shadow:0 0 0 1px rgba(226,191,103,.35);background:radial-gradient(circle at 50% 40%,#3a3550,#14121e);display:flex;align-items:center;justify-content:center;padding:0;cursor:default;color:#fff}
+#rfx .rw .ic{font-size:calc(var(--cw) * .5);line-height:1;display:flex}#rfx .rw .ic img{width:calc(var(--cw) * .7);height:calc(var(--cw) * .7)}
+#rfx .rw u{position:absolute;left:0;right:0;bottom:0;text-align:center;font:700 15px system-ui,sans-serif;text-decoration:none;color:#fff;text-shadow:0 0 3px #000,0 0 2px #000}
+#rfx .rw.lock .ic{opacity:.45;filter:grayscale(.8)}
+#rfx .rw.ready{border-color:#ffd977;cursor:pointer;box-shadow:0 0 0 2px rgba(255,217,119,.4),0 0 14px rgba(255,217,119,.55);animation:rfp 1.4s ease-in-out infinite}
+#rfx .rw.done::after{content:'';position:absolute;left:18%;top:16%;width:64%;height:56%;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M2 11l6 6L22 3' fill='none' stroke='%23000' stroke-opacity='.55' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M2 11l6 6L22 3' fill='none' stroke='%2371d3f5' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
 @keyframes rfp{50%{transform:scale(1.06)}}
-#rfx .rw .crx{position:relative;width:40px;height:36px;display:block}#rfx .rw .crx img{position:absolute;width:24px!important;height:24px!important}#rfx .rw .crx img:nth-child(1){left:0;top:8px}#rfx .rw .crx img:nth-child(2){left:8px;top:0;z-index:1}#rfx .rw .crx img:nth-child(3){left:16px;top:8px}
+#rfx .rw .crx{position:relative;width:calc(var(--cw) * .7);height:calc(var(--cw) * .62);display:block}#rfx .rw .crx img{position:absolute;width:62%!important;height:auto!important}#rfx .rw .crx img:nth-child(1){left:0;top:22%}#rfx .rw .crx img:nth-child(2){left:19%;top:0;z-index:1}#rfx .rw .crx img:nth-child(3){left:38%;top:22%}
+#rfx .card.emp{background:rgba(14,36,52,.55);border-style:dashed;border-color:rgba(184,145,63,.6)}
+#rfx .card.emp .av{background:rgba(255,255,255,.06);border:2px dashed rgba(207,215,224,.45);color:rgba(255,255,255,.55);text-shadow:none}
+#rfx .card.emp b{color:#bcd0da}#rfx .card.emp small{color:#8fb0bd}
+#rfx .card.emp .rw{opacity:.35}
+#rfx .brk{position:relative;width:var(--bw);flex:none}
+#rfx .brk .v{position:absolute;left:14px;width:18px;border:2px solid #c9a24f;border-left:0;top:calc(var(--rh) / 2);bottom:calc(var(--rh) / 2)}
+#rfx .brk .m{position:absolute;left:14px;width:18px;height:0;border-top:2px solid #c9a24f;top:50%}
+#rfx .brk .h{position:absolute;left:34px;width:12px;height:0;border-top:2px solid #c9a24f;top:50%}
+#rfx .brk .bx{position:absolute;left:44px;right:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:4px}
+#rfx .brk small{font:700 11.5px system-ui,sans-serif;color:#d8e6ec;white-space:nowrap}
+#rfx .rw.mys{background:radial-gradient(circle at 50% 40%,#4a3486,#160e30);border-color:#2a1a50;box-shadow:0 0 0 1px #c9a24f,0 0 12px rgba(185,140,255,.5)}#rfx .rw.mys .ic{font:900 calc(var(--cw) * .55) system-ui,sans-serif;color:#e8d8ff;text-shadow:0 0 10px #b98cff}
+#rfx .more{margin:10px 4px 0;color:#bfe3ea;font-size:12.5px}
+#rfx .tip{margin:8px 4px 0;color:#a9c8cf;font-size:12px;line-height:1.45}
+#rfx .ld{margin:4px 4px 8px;color:#bfe3ea;font-size:13px}
+#rfx .em{margin:20px auto;max-width:520px;text-align:center;color:#c6d6e8;line-height:1.5}
 #rfx .rfch{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(4,10,22,.6)}
-#rfx .rfch .bx{width:min(560px,92%);padding:16px;border-radius:18px;background:linear-gradient(180deg,#1b2f58,#13234a);border:2px solid #e2bf67;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.6)}
+#rfx .rfch .bx{width:min(560px,92%);padding:16px;border-radius:18px;background:linear-gradient(180deg,#1b3f58,#13304a);border:2px solid #e2bf67;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.6)}
 #rfx .rfch h3{margin:0 0 4px;color:#ffe7a8;font-size:19px}#rfx .rfch p{margin:0 0 12px;color:#c9d6e8;font-size:13px}
 #rfx .rfch .gr{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 #rfx .rfch .gr button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:12px;border:2px solid rgba(226,191,103,.4);background:rgba(10,20,40,.6);color:#fff;cursor:pointer;font:700 12px system-ui,sans-serif}
 #rfx .rfch .gr button:hover{border-color:#ffd977}#rfx .rfch .gr img{width:44px;height:44px}
-#rfx .rfch .no{margin-top:12px;padding:8px 18px;border-radius:12px;border:2px solid rgba(226,191,103,.55);background:rgba(255,255,255,.05);color:#ffe7a8;font:800 13px system-ui,sans-serif;cursor:pointer}
-#rfx .rw.mys{width:62px;height:62px;border-color:#b98cff;background:radial-gradient(circle at 50% 40%,#3a2a6a,#160e30);box-shadow:0 0 14px rgba(185,140,255,.45)}#rfx .rw.mys .ic{font:900 34px system-ui,sans-serif;color:#e8d8ff;text-shadow:0 0 10px #b98cff}
-#rfx .bonus small.soon{color:#d8c4ff;font-weight:700}
-#rfx .bonus{grid-column:8;grid-row:2 / span var(--n,1);align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-left:2px solid rgba(226,191,103,.5);padding-left:8px}
-#rfx .bonus small{font-size:11px;color:#a9bed6;text-align:center;line-height:1.3}
-#rfx .em{margin:26px auto;max-width:520px;text-align:center;color:#c6d6e8;line-height:1.5}
-#rfx .tip{margin:12px 2px 0;color:#a9bed6;font-size:12.5px;line-height:1.45}
+#rfx .rfch .no,#rfx .rfch .yes{margin:12px 4px 0;padding:8px 18px;border-radius:12px;border:2px solid rgba(226,191,103,.55);background:rgba(255,255,255,.05);color:#ffe7a8;font:800 13px system-ui,sans-serif;cursor:pointer}
+#rfx .rfch .yes{background:linear-gradient(#e0533e,#a8301f);color:#fff;border-color:#ffb3a3}
 @media (prefers-reduced-motion:reduce){#rfx .rw.ready{animation:none}}`;document.head.appendChild(css);
 const X=document.createElement('section');X.id='rfx';X.setAttribute('aria-label','Реферальна програма');
-X.innerHTML="<div class='win'><div class='hd'><span class='co'>🤝</span><div class='tt'><h2>Запроси друга</h2><small>Друзі ростуть — ви отримуєте нагороди</small></div><button class='cl' aria-label='Закрити'>✕</button></div><div class='lkw'></div><div class='rfb'></div></div>";document.body.appendChild(X);
+X.innerHTML="<div class='win'><div class='hd'><span class='co'>🤝</span><div class='tt'><h2>Запроси друга</h2><small>До "+MAX+" друзів · друзі ростуть — ви отримуєте нагороди</small></div><button class='cl' aria-label='Закрити'>✕</button></div><div class='lkw'></div><div class='rfb'></div></div>";document.body.appendChild(X);
 const bd=X.querySelector('.rfb'),lkw=X.querySelector('.lkw');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ico=k=>window.plIcon?window.plIcon(k):(IT[k]?IT[k][0]:'🎁');
-const ago=t=>{if(!t)return'';const m=Math.max(0,Math.round((Date.now()-t)/60000));if(m<5)return'у грі зараз';if(m<60)return m+' хв тому';const h=Math.round(m/60);if(h<24)return h+' год тому';return Math.round(h/24)+' дн. тому'};
+const ONLINE=5*60000,TRUST=7*864e5;/* «довіра» — друг грав протягом останніх 7 днів */
+const ago=t=>{if(!t)return'давно';const m=Math.max(0,Math.round((Date.now()-t)/60000));if(m*60000<ONLINE)return'у грі зараз';if(m<60)return m+' хв тому';const h=Math.round(m/60);if(h<24)return h+' год тому';const d=Math.floor(h/24);if(d<7)return d+' дн. тому';const w=Math.floor(d/7),r=d%7;return w+' тиж.'+(r?' '+r+' дн.':'')+' тому'};
+const hue=s=>{let h=0;for(const c of String(s||''))h=(h*31+c.charCodeAt(0))%360;return h};
 const nm=i=>i=='_crx'?'Кристал стихії на вибір':(IT[i]?IT[i][1]:i);
-const cell=(items,st,attrs)=>{const[k,n]=Object.entries(items)[0];const ic=k=='_crx'?`<span class='crx'>${['cr2_fi','cr2_wa','cr2_gr'].map(x=>ico(x)).join('')}</span>`:ico(k);return`<button class='rw ${st}' ${attrs||''} title='${Object.entries(items).map(([i,c])=>nm(i)+' ×'+c).join(', ')}'><span class='ic'>${ic}</span><u>${Object.keys(items).length>1?'+':'×'+n}</u></button>`};
-let list=[];
+const cell=(items,st,attrs)=>{const[k,n]=Object.entries(items)[0];const ic=k=='_crx'?`<span class='crx'>${['cr2_fi','cr2_wa','cr2_gr'].map(x=>ico(x)).join('')}</span>`:ico(k);return`<button class='rw ${st}' ${attrs||''} title='${Object.entries(items).map(([i,c])=>nm(i)+' ×'+c).join(', ')}'><span class='ic'>${ic}</span><u>${Object.keys(items).length>1?'+':n}</u></button>`};
+let all=[],list=[],loading=false,err='';
+/* друзі займають місця назавжди (inv._refSlots); вільне місце займає наступний за рівнем */
+function slot(){const by=Object.fromEntries(all.map(f=>[f.uid,f]));
+ inv._refSlots=inv._refSlots.filter(u=>by[u]&&!inv._refHide[u]).slice(0,MAX);
+ const rest=all.filter(f=>!inv._refHide[f.uid]&&!inv._refSlots.includes(f.uid)).sort((a,b)=>(b.lv|0)-(a.lv|0));
+ while(inv._refSlots.length<MAX&&rest.length)inv._refSlots.push(rest.shift().uid);
+ list=inv._refSlots.map(u=>by[u]);try{save()}catch(_){}
+ return rest.length}
 function give(items){for(const[i,n]of Object.entries(items))addI(i,n);try{msg('🎁 Нагорода за друга: '+Object.entries(items).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', '));hud();save()}catch(_){}}
 function claim(uid,lv){const f=list.find(x=>x.uid===uid);if(!f||(f.lv|0)<lv)return;const got=inv._refc[uid]||(inv._refc[uid]=[]);if(got.includes(lv))return;
  if(REW[lv]._crx){choose(k=>{if(got.includes(lv))return;got.push(lv);give({[k]:1});render()});return}
@@ -93,29 +133,43 @@ function claim(uid,lv){const f=list.find(x=>x.uid===uid);if(!f||(f.lv|0)<lv)retu
 /* вибір кристала стихії */
 function choose(cb){const ks=window.EVO_CR||[];const d=document.createElement('div');d.className='rfch';
  d.innerHTML=`<div class='bx'><h3>Виберіть кристал стихії</h3><p>Кристал потрібен для другої форми попала цієї стихії з 25 рівня.</p><div class='gr'>${ks.map(k=>`<button data-k='${k}'>${ico(k)}<b>${IT[k]?IT[k][1]:k}</b></button>`).join('')}</div><button class='no'>Скасувати</button></div>`;
- X.appendChild(d);d.onclick=e=>{const b=e.target.closest('[data-k]');if(b){d.remove();cb(b.dataset.k);return}if(e.target.closest('.no')||e.target===d)d.remove()}}
+ X.querySelector('.win').appendChild(d);d.onclick=e=>{const b=e.target.closest('[data-k]');if(b){d.remove();cb(b.dataset.k);return}if(e.target.closest('.no')||e.target===d)d.remove()}}
+/* прибрати друга зі списку — звільняє місце */
+function drop(uid){const f=list.find(x=>x.uid===uid);if(!f)return;const d=document.createElement('div');d.className='rfch';
+ d.innerHTML=`<div class='bx'><h3>Прибрати друга?</h3><p><b translate='no'>${esc(f.name)}</b> зникне з вашого списку, а його місце стане вільним для нового друга. Повернути його не вийде.</p><button class='no'>Скасувати</button><button class='yes'>Прибрати</button></div>`;
+ X.querySelector('.win').appendChild(d);d.onclick=e=>{if(e.target.closest('.yes')){d.remove();inv._refHide[uid]=1;inv._refSlots=inv._refSlots.filter(u=>u!==uid);render();return}if(e.target.closest('.no')||e.target===d)d.remove()}}
 function claimBonus(){const n=list.filter(f=>(f.lv|0)>=BONUS.lv).length;if(n<BONUS.need||inv._refb||!BONUS.items)return;inv._refb=1;give(BONUS.items);render()}
 function linkBox(){if(!window.myPid){lkw.innerHTML="<div class='lk'><small>Увійдіть в акаунт у меню героя — отримаєте ID і власне посилання для друзів.</small></div>";return}
  lkw.innerHTML=`<div class='lk'><code translate='no'>${esc(link())}</code><button data-cp>📋 Копіювати</button>${navigator.share?"<button class='o' data-sh>📤 Поділитися</button>":''}<small>Друг відкриває гру за цим посиланням і входить в акаунт — і одразу отримує подарунок: ${Object.entries(REF_GIFT).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', ')}.</small></div>`;
  const cp=lkw.querySelector('[data-cp]');cp.onclick=()=>{const t=link();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>msg('📋 Посилання скопійовано')).catch(()=>{try{prompt('Скопіюйте посилання',t)}catch(_){}})};
  const sh=lkw.querySelector('[data-sh]');if(sh)sh.onclick=()=>{navigator.share({title:'Regnum Land',text:'Грай зі мною в Regnum Land — лови попалів і будуй базу!',url:link()}).catch(()=>{})}}
-function render(){linkBox();if(!list.length){bd.innerHTML="<div class='em'>Поки ніхто не прийшов за вашим посиланням. Надішліть його друзям — нагороди чекають на рівнях 10, 20, 30, 40 і 50.</div>"+tip();return}
+function row(f){const got=inv._refc[f.uid]||[],lv=f.lv|0,on=f.t&&Date.now()-f.t<ONLINE,tr=f.t&&Date.now()-f.t<TRUST;
+ let h=`<div class='card'><div class='pl'><span class='av' style='--h:${hue(f.name||f.uid)}' translate='no'>${esc((f.name||'?').slice(0,1).toUpperCase())}<i>${lv}</i></span><span class='nm'><b translate='no'>${esc(f.name)}<span class='id'>ID ${esc(f.pid)}</span></b><small class='${on?'on':''}'>${ago(f.t)}</small></span></div>`;
+ h+=`<span class='tr ${tr?'on':''}' title='${tr?'Активний друг — грав протягом тижня':'Друг давно не грав'}'>🤝</span><span></span>`;
+ for(const t of TIERS){const st=got.includes(t)?'done':lv>=t?'ready':'lock';h+=cell(REW[t],st,st=='ready'?`data-u='${esc(f.uid)}' data-l='${t}'`:'')}
+ return h+`<button class='del' data-x='${esc(f.uid)}' aria-label='Прибрати друга' title='Прибрати друга'>✕</button></div>`}
+const empty=()=>`<div class='card emp'><div class='pl'><span class='av'>+</span><span class='nm'><b>Вільне місце</b><small>Надішліть посилання другу</small></span></div><span></span><span></span>${TIERS.map(t=>cell(REW[t],'lock')).join('')}</div>`;
+function render(){linkBox();if(err){bd.innerHTML=err;return}
+ const wait=all.length?slot():0;
  const n50=list.filter(f=>(f.lv|0)>=BONUS.lv).length,bst=inv._refb?'done':n50>=BONUS.need?'ready':'lock';
- let h=`<div class='grid' style='--n:${list.length}'><span class='h l'>Гравець</span><span class='h'>Рівень</span>${TIERS.map(t=>`<span class='h'>${t}</span>`).join('')}<span class='h'>Бонус</span>`;
- list.forEach((f,i)=>{const got=inv._refc[f.uid]||[];
-  h+=`<div class='pl'><span class='av' translate='no'>${esc((f.name||'?').slice(0,1).toUpperCase())}</span><span class='nm'><b translate='no'>${esc(f.name)}</b><small>ID ${esc(f.pid)}</small><small class='ago'>${ago(f.t)}</small></span></div><span class='lv'>${f.lv|0}</span>`;
-  for(const t of TIERS){const st=got.includes(t)?'done':(f.lv|0)>=t?'ready':'lock';h+=cell(REW[t],st,st=='ready'?`data-u='${esc(f.uid)}' data-l='${t}'`:'')}
-  if(i==0)h+=`<div class='bonus'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${n50>=BONUS.need?'near':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n50} / ${BONUS.need} друзів<br>з ${BONUS.lv} рівнем</small><small class='soon'>Унікальний попал — скоро</small></div>`});
- bd.innerHTML=h+'</div>'+tip();
- bd.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>claim(b.dataset.u,+b.dataset.l));const bb=bd.querySelector('[data-b]');if(bb)bb.onclick=claimBonus}
+ let h=loading?"<div class='ld'>Завантаження друзів…</div>":'';
+ h+=`<div class='tb'><div class='top'><div class='cols'><span class='l'>Гравець</span><span class='bd'>Довіра</span><span class='bd'>Рівень</span>${TIERS.map(t=>`<span>${t}</span>`).join('')}</div><span class='bh'>Бонус</span></div><div class='main'><div class='rows'>`;
+ for(let i=0;i<MAX;i++)h+=list[i]?row(list[i]):empty();
+ h+=`</div><div class='brk'><span class='v'></span><span class='m'></span><span class='h'></span><span class='bx'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${inv._refb?'done':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n50} / ${BONUS.need} · ${BONUS.lv} рів.</small></span></div></div></div>`;
+ if(wait)h+=`<p class='more'>Ще ${wait} ${wait==1?'друг чекає':'друзів чекають'} на вільне місце.</p>`;
+ bd.innerHTML=h+tip();
+ bd.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>claim(b.dataset.u,+b.dataset.l));
+ bd.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>drop(b.dataset.x));
+ const bb=bd.querySelector('[data-b]');if(bb)bb.onclick=claimBonus}
 const tip=()=>`<p class='tip'>Нагороду за рівень друга можна забрати, коли він його досягне — торкніться клітинки, що світиться. За кожного друга: ${TIERS.map(t=>t+' рів. — '+Object.entries(REW[t]).map(([i,n])=>nm(i)+' ×'+n).join(', ')).join('; ')}. Три друзі з 50 рівнем — таємний бонус: незабаром тут буде унікальний попал.</p>`;
-async function load(){list=[];render();if(!ok()||!window.myPid){return}
- bd.insertAdjacentHTML('afterbegin',"<div class='em' data-ld>Завантаження…</div>");
- try{const q=await fbDb.collection('referrals').where('ref','==',window.myPid).limit(100).get();list=q.docs.map(d=>Object.assign({uid:d.id},d.data())).sort((a,b)=>(b.lv|0)-(a.lv|0));render()}
- catch(e){bd.innerHTML=e&&e.code=='permission-denied'?"<div class='em'>🤝 Реферальну програму ще не ввімкнено на сервері. Скоро запрацює!</div>":"<div class='em'>Не вдалося завантажити друзів. Перевірте інтернет і спробуйте ще раз.</div>";if(!(e&&e.code=='permission-denied'))console.warn('referral',e)}}
+async function load(){err='';if(!ok()||!window.myPid){all=[];render();return}
+ loading=true;render();
+ try{const q=await fbDb.collection('referrals').where('ref','==',window.myPid).limit(100).get();all=q.docs.map(d=>Object.assign({uid:d.id},d.data()))}
+ catch(e){err=e&&e.code=='permission-denied'?"<div class='em'>🤝 Реферальну програму ще не ввімкнено на сервері. Скоро запрацює!</div>":"<div class='em'>Не вдалося завантажити друзів. Перевірте інтернет і спробуйте ще раз.</div>";if(!(e&&e.code=='permission-denied'))console.warn('referral',e)}
+ loading=false;render()}
 function open(){X.classList.add('on');load()}
 function close(){X.classList.remove('on')}
 X.querySelector('.cl').onclick=close;
 addEventListener('keydown',e=>{if(e.key=='Escape'&&X.classList.contains('on'))close()});
-window.plReferral={open,close,isOpen:()=>X.classList.contains('on'),REW,BONUS,REF_GIFT};
+window.plReferral={open,close,isOpen:()=>X.classList.contains('on'),REW,BONUS,REF_GIFT,MAX,_demo(a){all=a||[];err='';X.classList.add('on');render()}};
 }catch(e){console.warn('referral',e)}})();
