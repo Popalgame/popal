@@ -114,7 +114,7 @@ const bd=X.querySelector('.rfb'),lkw=X.querySelector('.lkw');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ico=k=>window.plIcon?window.plIcon(k):(IT[k]?IT[k][0]:'🎁');
 const ONLINE=5*60000,TRUST=7*864e5;/* «довіра» — друг грав протягом останніх 7 днів */
-const ago=t=>{if(!t)return'давно';const m=Math.max(0,Math.round((Date.now()-t)/60000));if(m*60000<ONLINE)return'у грі зараз';if(m<60)return m+' хв тому';const h=Math.round(m/60);if(h<24)return h+' год тому';const d=Math.floor(h/24);if(d<7)return d+' дн. тому';const w=Math.floor(d/7),r=d%7;return w+' тиж.'+(r?' '+r+' дн.':'')+' тому'};
+const ago=t=>{if(!t)return'давно';const m=Math.max(0,Math.round((Date.now()-t)/60000));if(m*60000<ONLINE)return'у грі зараз';if(m<60)return m+' хв тому';const h=Math.round(m/60);if(h<24)return h+' год тому';const d=Math.floor(h/24);if(d<7)return d+' дн. тому';const w=Math.floor(d/7),r=d%7;return r?w+' тиж. '+r+' дн. тому':w+' тиж. тому'};
 const hue=s=>{let h=0;for(const c of String(s||''))h=(h*31+c.charCodeAt(0))%360;return h};
 const nm=i=>i=='_crx'?'Кристал стихії на вибір':(IT[i]?IT[i][1]:i);
 const cell=(items,st,attrs)=>{const[k,n]=Object.entries(items)[0];const ic=k=='_crx'?`<span class='crx'>${['cr2_fi','cr2_wa','cr2_gr'].map(x=>ico(x)).join('')}</span>`:ico(k);return`<button class='rw ${st}' ${attrs||''} title='${Object.entries(items).map(([i,c])=>nm(i)+' ×'+c).join(', ')}'><span class='ic'>${ic}</span><u>${Object.keys(items).length>1?'+':n}</u></button>`};
@@ -156,7 +156,7 @@ function render(){linkBox();if(err){bd.innerHTML=err;return}
  h+=`<div class='tb'><div class='top'><div class='cols'><span class='l'>Гравець</span><span class='bd'>Довіра</span><span class='bd'>Рівень</span>${TIERS.map(t=>`<span>${t}</span>`).join('')}</div><span class='bh'>Бонус</span></div><div class='main'><div class='rows'>`;
  for(let i=0;i<MAX;i++)h+=list[i]?row(list[i]):empty();
  h+=`</div><div class='brk'><span class='v'></span><span class='m'></span><span class='h'></span><span class='bx'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${inv._refb?'done':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n50} / ${BONUS.need} · ${BONUS.lv} рів.</small></span></div></div></div>`;
- if(wait)h+=`<p class='more'>Ще ${wait} ${wait==1?'друг чекає':'друзів чекають'} на вільне місце.</p>`;
+ if(wait)h+=`<p class='more'>Чекають на вільне місце: ${wait}</p>`;
  bd.innerHTML=h+tip();
  bd.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>claim(b.dataset.u,+b.dataset.l));
  bd.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>drop(b.dataset.x));
