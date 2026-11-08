@@ -5,6 +5,8 @@
    • Вікно — таблиця на MAX=3 місця (як список друзів у RPG): аватар з рівнем, імʼя, коли був у грі, «довіра» (грав за тиждень),
      нагороди за рівні друга 10 · 20 · 30 · 40 · 50 і бонус зі скобкою праворуч. Друг займає місце назавжди (inv._refSlots),
      ✕ прибирає його (inv._refHide) і звільняє місце наступному. Порожні місця — «Вільне місце».
+   • 0.2.17: раз на 10 хв гра сама перевіряє друзів; якщо є нагорода, яку можна забрати, — червона крапка на язичку меню
+     і на плитці «Запроси друга» (news.js, window.plMenuBadge).
      Нагорода стає доступною, коли друг досяг рівня; гравець забирає її натисканням (відмітка ✔ — inv._refc[uid] = [10,20,…]).
      Бонус за трьох друзів на 50 рівні — поки «?», згодом унікальний попал.
    • Правила Firestore для колекції referrals — docs/firestore-rules-mail-promo.md. Без них вікно пише «ще не ввімкнено на сервері». */
@@ -120,12 +122,21 @@ const nm=i=>i=='_crx'?'Кристал стихії на вибір':(IT[i]?IT[i]
 const cell=(items,st,attrs)=>{const[k,n]=Object.entries(items)[0];const ic=k=='_crx'?`<span class='crx'>${['cr2_fi','cr2_wa','cr2_gr'].map(x=>ico(x)).join('')}</span>`:ico(k);return`<button class='rw ${st}' ${attrs||''} title='${Object.entries(items).map(([i,c])=>nm(i)+' ×'+c).join(', ')}'><span class='ic'>${ic}</span><u>${Object.keys(items).length>1?'+':n}</u></button>`};
 let all=[],list=[],loading=false,err='';
 /* друзі займають місця назавжди (inv._refSlots); вільне місце займає наступний за рівнем */
+let saved=null;
 function slot(){const by=Object.fromEntries(all.map(f=>[f.uid,f]));
  inv._refSlots=inv._refSlots.filter(u=>by[u]&&!inv._refHide[u]).slice(0,MAX);
  const rest=all.filter(f=>!inv._refHide[f.uid]&&!inv._refSlots.includes(f.uid)).sort((a,b)=>(b.lv|0)-(a.lv|0));
  while(inv._refSlots.length<MAX&&rest.length)inv._refSlots.push(rest.shift().uid);
- list=inv._refSlots.map(u=>by[u]);try{save()}catch(_){}
+ list=inv._refSlots.map(u=>by[u]);const k=inv._refSlots.join(',');if(k!==saved){saved=k;try{save()}catch(_){}}
  return rest.length}
+/* скільки нагород можна забрати просто зараз — для червоної крапки в меню (news.js) */
+function ready(){let n=0;for(const f of list){const got=inv._refc[f.uid]||[];for(const t of TIERS)if((f.lv|0)>=t&&!got.includes(t))n++}
+ if(BONUS.items&&!inv._refb&&list.filter(f=>(f.lv|0)>=BONUS.lv).length>=BONUS.need)n++;return n}
+const dot=()=>{try{window.plMenuBadge&&window.plMenuBadge()}catch(_){}};
+/* фонова перевірка друзів: раз на 10 хв, поки вікно закрите */
+async function poll(){if(!ok()||!window.myPid||X.classList.contains('on')||document.hidden)return;
+ try{const q=await fbDb.collection('referrals').where('ref','==',window.myPid).limit(100).get();all=q.docs.map(d=>Object.assign({uid:d.id},d.data()));slot();dot()}catch(_){}}
+setTimeout(poll,20000);setInterval(poll,600000);
 function give(items){for(const[i,n]of Object.entries(items))addI(i,n);try{msg('🎁 Нагорода за друга: '+Object.entries(items).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', '));hud();save()}catch(_){}}
 function claim(uid,lv){const f=list.find(x=>x.uid===uid);if(!f||(f.lv|0)<lv)return;const got=inv._refc[uid]||(inv._refc[uid]=[]);if(got.includes(lv))return;
  if(REW[lv]._crx){choose(k=>{if(got.includes(lv))return;got.push(lv);give({[k]:1});render()});return}
@@ -157,7 +168,7 @@ function render(){linkBox();if(err){bd.innerHTML=err;return}
  for(let i=0;i<MAX;i++)h+=list[i]?row(list[i]):empty();
  h+=`</div><div class='brk'><span class='v'></span><span class='m'></span><span class='h'></span><span class='bx'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${inv._refb?'done':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n50} / ${BONUS.need} · ${BONUS.lv} рів.</small></span></div></div></div>`;
  if(wait)h+=`<p class='more'>Чекають на вільне місце: ${wait}</p>`;
- bd.innerHTML=h+tip();
+ bd.innerHTML=h+tip();dot();
  bd.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>claim(b.dataset.u,+b.dataset.l));
  bd.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>drop(b.dataset.x));
  const bb=bd.querySelector('[data-b]');if(bb)bb.onclick=claimBonus}
@@ -171,5 +182,5 @@ function open(){X.classList.add('on');load()}
 function close(){X.classList.remove('on')}
 X.querySelector('.cl').onclick=close;
 addEventListener('keydown',e=>{if(e.key=='Escape'&&X.classList.contains('on'))close()});
-window.plReferral={open,close,isOpen:()=>X.classList.contains('on'),REW,BONUS,REF_GIFT,MAX,_demo(a){all=a||[];err='';X.classList.add('on');render()}};
+window.plReferral={open,close,ready,isOpen:()=>X.classList.contains('on'),REW,BONUS,REF_GIFT,MAX,_demo(a){all=a||[];err='';X.classList.add('on');render()}};
 }catch(e){console.warn('referral',e)}})();
