@@ -26,6 +26,8 @@ function ctx(r){r.root.updateMatrixWorld(true);const box=(n,sz)=>{const b=new TH
 function put(node,mesh,p,rot,ol){node=node||mesh;const q=p.clone();node.worldToLocal(q);mesh.position.copy(q);if(rot)mesh.rotation.set(rot[0]||0,rot[1]||0,rot[2]||0);mesh.userData[TAG]=1;mesh.castShadow=true;node.add(mesh);
  if(ol!==0&&mesh.geometry&&!mesh.material.transparent){const o=new THREE.Mesh(mesh.geometry,olMat(ol||0x1a1a2a));o.scale.setScalar(1.07);o.userData[TAG]=1;mesh.add(o)}return mesh}
 const M=(geo,mat)=>new THREE.Mesh(geo,mat);
+/* м'яке кругле сяйво для спрайтів (без текстури спрайт — квадрат) */
+let _gt=null;const GT=()=>{if(_gt)return _gt;const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return _gt=new THREE.CanvasTexture(c)};
 const cone=(r,h,s)=>new THREE.ConeGeometry(r,h,s||7),cyl=(a,b,h,s)=>new THREE.CylinderGeometry(a,b,h,s||10),sph=(r,w,h)=>new THREE.SphereGeometry(r,w||14,h||10),oct=r=>new THREE.OctahedronGeometry(r,0);
 /* вигнутий ріг/вус: ланцюжок звужених циліндрів уздовж кривої (точки — у просторі моделі) */
 function horn(node,pts,r0,mat,ol){const c=new THREE.CatmullRomCurve3(pts),n=7,g=new THREE.Group();
@@ -122,7 +124,53 @@ const F={
   if(fm>=3){(r.wings||[]).forEach(w=>{const g=w.g||w,s=g.position.x>0?1:-1;g.scale.multiplyScalar(1.3);
     const fw=put(g,M(curveSlab([[0,0],[.2,.4],[.6,.75],[1.15,.6],[.9,.38],[1,.18],[.75,.08],[.55,.14],[.35,0],[.18,-.05],[.08,-.02],[0,0]],.02),FL),g.getWorldPosition(V()).add(V(0,.05,-.05)),[0,s>0?0:Math.PI,.2],0);fw.scale.setScalar(.75)});
    for(let i=0;i<5;i++)put(r.head,M(cone(.04,.18,5),GD),V(hc.x+(i-2)*.07,H.max.y+.06-Math.abs(i-2)*.02,hc.z+.02),[0,0,(i-2)*-.2],0x8a5a10);
-   for(let i=0;i<3;i++)put(t,M(cone(.08-.015*i,.42-.06*i,7),FL),V(bc.x+(i-1)*.08,bc.y-.15,B.min.z-.25-i*.05),[-1.9,0,(i-1)*.3],0)}}};
+   for(let i=0;i<3;i++)put(t,M(cone(.08-.015*i,.42-.06*i,7),FL),V(bc.x+(i-1)*.08,bc.y-.15,B.min.z-.25-i*.05),[-1.9,0,(i-1)*.3],0)}},
+ /* Ялинчук: кульки-прикраси й сніг → гірлянда, зірка на маківці, крижаний вінець */
+ 10(c,fm){const{r,H,hc}=c,t=r.torso||r.body,O=0x173d28,BC=[0xff4a4a,0xffc83a,0x4aa8ff,0xff7ad8],SN=std(0xffffff,{roughness:.9});
+  const P=(a,zr,k)=>{const kk=Math.sqrt(Math.max(.05,1-(zr/.6)*(zr/.6)));return V(Math.sin(a)*.5*kk*k,.52+Math.cos(a)*.44*kk*k,-.05+zr)};
+  const AB=[-.95,.55,-.25,.95,-.6,.15,.7,-1.05,.35,-.4,1.05],nb=fm>=3?11:7;for(let i=0;i<nb;i++){const a=AB[i],zr=.36-((i*4)%nb)/(nb-1)*.8;put(t,M(sph(fm>=3?.075:.065,12,9),glw(BC[i%4],BC[i%4],.55)),P(a,zr,1.5),null,O)}
+  for(let i=0;i<7;i++){const a=[-.5,.3,-.1,.6,-.75,.05,.4][i],zr=.34-i*.12,m=put(t,M(sph(.075,10,8),SN),P(a,zr,1.52),null,0);m.scale.set(1,.5,1)}
+  if(fm>=3){const GD=glw(0xffd34e,0xffb020,1.3),IC=ice(0xbff2ff);
+   put(t,M(cyl(.02,.025,.24,6),std(0x7a5a2a)),V(0,1.3,-.08),null,O);
+   const st=new THREE.Group();for(let i=0;i<5;i++){const a=i/5*Math.PI*2,sp=M(cone(.06,.2,4),GD);sp.position.set(Math.sin(a)*.1,Math.cos(a)*.1,0);sp.rotation.z=-a;st.add(sp)}st.add(M(sph(.085,10,8),GD));
+   put(t,st,V(0,1.5,-.08),null,0);const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:GT(),color:0xffe08a,transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));gl.scale.setScalar(.7);put(t,gl,V(0,1.5,-.08),null,0);
+   for(const zr of[.3,-.05,-.4])for(let i=0;i<9;i++){const a=(i/8-.5)*2.3,col=BC[(i+Math.round(zr*10)+8)%4];put(t,M(sph(.038,8,6),glw(col,col,1.5)),P(a,zr+Math.sin(i*1.6)*.05,1.28),null,0)}
+   for(let i=0;i<5;i++){const a=(i-2)*.36;put(r.head,M(cone(.04,.2+(i==2?.08:0),6),IC),V(hc.x+Math.sin(a)*.26,H.max.y-.02+Math.cos(a)*.05,hc.z+.1),[.25,0,-a],0)}}},
+ /* Попелюх: три хвости з жаринами, знак на лобі → вогняна грива, попеляста маска, палаючі лапи */
+ 11(c,fm){const{r,H,hc}=c,t=r.torso||r.body,O=0x1e1a22,FUR=std(0x7a7480,{roughness:.9}),EM=glw(0xffb04a,0xff5a1a,1.5),FL=glw(0xff8a2a,0xff3a0a,1.3);
+  for(const s of[-1,1]){const g=new THREE.Group(),a=M(sph(.17,12,9),FUR);a.scale.set(1,1,1.9);g.add(a);const o=new THREE.Mesh(a.geometry,olMat(O));o.scale.setScalar(1.07);a.add(o);const e=M(sph(.115,10,8),EM);e.position.z=-.27;e.scale.set(1,1,1.4);g.add(e);
+   put(t,g,V(s*.3,.82,-.74),[-.75,-s*.5,0],0)}
+  put(r.head,M(oct(.06),EM),V(0,.98+.2,.5+.335),[.5,0,0],0).scale.set(.8,1.5,.4);
+  if(fm>=3){for(let i=0;i<11;i++){const a=(i/10-.5)*4,L=.34+.1*Math.cos(a*1.3);put(t,M(cone(.085,L,6),i%2?FL:EM),V(Math.sin(a)*.42,.86+Math.cos(a)*.36,.2),[-.85,0,-a],0)}
+   const MK=std(0x2a252e,{roughness:.9});for(const s of[-1,1]){const m=put(r.head,M(sph(.15,12,9),MK),V(0+s*.19,.98+.07,.5+.335),[0,s*.45,s*.25],0);m.scale.set(1.05,.82,.3)}
+   legTips(c).forEach(l=>{put(l.n,M(sph(.1,10,8),FL),l.p.clone().add(V(0,.02,.05)),null,0).scale.set(1,.6,1.2)});
+   const SP=new THREE.SpriteMaterial({map:GT(),color:0xff9a3a,transparent:true,opacity:.8,depthWrite:false,blending:THREE.AdditiveBlending});
+   for(let i=0;i<7;i++){const sp=new THREE.Sprite(SP.clone());sp.scale.setScalar(.1+((i*37)%5)*.02);put(t,sp,V(Math.sin(i*2.1)*.5,1.2+((i*53)%7)*.09,-.2+Math.cos(i*1.7)*.5),null,0)}}},
+ /* Кораловик: панцир-риф із мушлями → кораловий замок на спині, перли на клешнях */
+ 12(c,fm){const{r}=c,t=r.torso||r.body,O=0x6a2218,C1=std(0xff7aa8,{roughness:.55}),C2=std(0x4ad8c8,{roughness:.55}),C3=std(0xffd34e,{roughness:.55}),SH=std(0xfff6ea,{roughness:.35});
+  const coral=(m,x,y,z,sc,lean)=>{const b=V(x,y,z);for(const d of[[0,0,0,0,.34,0],[0,.14,0,.17,.36,.03],[0,.2,0,-.15,.44,-.03],[0,.3,0,.04,.56,.04]]){const p0=b.clone().add(V(d[0]*sc+lean*d[1],d[1]*sc,d[2]*sc)),p1=b.clone().add(V(d[3]*sc+lean*d[4],d[4]*sc,d[5]*sc));
+    horn(t,[p0,p0.clone().lerp(p1,.5),p1],.05*sc,m,O);put(t,M(sph(.05*sc,8,6),m),p1,null,O)}};
+  coral(C2,-.34,.72,-.05,.8,-.3);coral(C3,.36,.7,.0,.6,.35);coral(C1,.1,.76,-.38,.7,.1);
+  for(const q of[[-.2,.8,.14,.3],[.18,.82,.1,-.4],[-.02,.8,-.3,.2]]){const g=new THREE.Group(),a=M(cone(.085,.15,9),SH);g.add(a);const k=M(sph(.05,8,6),SH);k.position.y=-.08;g.add(k);put(t,g,V(q[0],q[1],q[2]),[.3,0,q[3]],0)}
+  if(fm>=3){const WL=std(0xffe6ea,{roughness:.6}),RF=std(0xff5a8a,{roughness:.5}),WN=glw(0xffe08a,0xffc84a,1.2);
+   for(const q of[[0,.86,-.14,.13,.5],[-.24,.8,-.24,.09,.34],[.24,.8,-.24,.09,.34],[0,.8,.1,.08,.26]]){put(t,M(cyl(q[3]*.9,q[3],q[4],10),WL),V(q[0],q[1]+q[4]/2,q[2]),null,O);put(t,M(cone(q[3]*1.35,q[3]*2.2,10),RF),V(q[0],q[1]+q[4]+q[3]*1.05,q[2]),null,O);
+    put(t,M(sph(.032,8,6),WN),V(q[0],q[1]+q[4]*.62,q[2]+q[3]*.92),null,0)}
+   put(t,M(slab([[0,0],[.16,.05],[0,.1],[0,0]],.012),RF),V(0,1.74,-.14),null,0);put(t,M(cyl(.008,.008,.2,5),std(0x7a5a2a)),V(0,1.72,-.14),null,0);
+   const PR=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.15,clearcoat:1,emissive:0xbfe8ff,emissiveIntensity:.35});
+   (r.arms||[]).forEach(a=>{const b=new THREE.Box3().setFromObject(a),m=b.getCenter(V());put(a,M(sph(.085,12,9),PR),V(m.x,b.max.y+.03,m.z+.08),null,0);put(a,M(sph(.05,10,8),PR),V(m.x,b.max.y-.01,m.z-.1),null,0)})}},
+ /* Землерий: каска з кристалом-ліхтариком → бур на носі, кам'яна броня, сталеві кігті */
+ 13(c,fm){const{r,H,hc}=c,t=r.torso||r.body,O=0x2a1e22,HL=std(0xffc83a,{roughness:.45}),HD=std(0xd99a1a,{roughness:.5}),LG=glw(0x8af0ff,0x2ad0ff,1.8);
+  const hm=put(r.head,M(new THREE.SphereGeometry(.34,18,10,0,Math.PI*2,0,Math.PI/2),HL),V(hc.x,hc.y+.14,hc.z-.03),null,0x6a4a10);hm.scale.set(1.12,.95,1.1);
+  put(r.head,M(cyl(.4,.4,.035,20),HD),V(hc.x,hc.y+.15,hc.z+.02),[.08,0,0],0x6a4a10);
+  put(r.head,M(new THREE.BoxGeometry(.07,.3,.02),HD),V(hc.x,hc.y+.36,hc.z+.16),[-.9,0,0],0);
+  put(r.head,M(oct(.075),LG),V(hc.x,hc.y+.3,hc.z+.33),null,0).scale.set(1,1.25,.8);
+  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:GT(),color:0x8af0ff,transparent:true,opacity:.55,depthWrite:false,blending:THREE.AdditiveBlending}));gl.scale.setScalar(.5);put(r.head,gl,V(hc.x,hc.y+.3,hc.z+.36),null,0);
+  if(fm>=3){const ST=std(0xb8c2d0,{metalness:.75,roughness:.3}),RK=std(0x7a7a86,{roughness:.95,flatShading:true});
+   const dr=put(r.head,M(cone(.11,.42,10),ST),V(hc.x,hc.y-.04,H.max.z+.2),[Math.PI/2,0,0],0x3a4050);
+   for(let i=0;i<4;i++){const k=M(new THREE.TorusGeometry(.1-.022*i,.014,5,14),std(0x6a7486,{metalness:.7,roughness:.35}));k.rotation.x=Math.PI/2+.25;k.position.y=-.16+i*.1;k.userData[TAG]=1;dr.add(k)}
+   for(const q of[[0,1.0,.12,.24],[-.26,.9,-.12,.2],[.26,.9,-.12,.2],[0,.98,-.34,.22],[-.2,.84,-.48,.16],[.2,.84,-.48,.16]]){const m=put(t,M(new THREE.DodecahedronGeometry(q[3],0),RK),V(q[0],q[1],q[2]),[q[0]*2,q[2]*3,q[0]],O);m.scale.y=.5}
+   const CR=glw(0x8af0ff,0x2ad0ff,1.4);put(t,M(oct(.07),CR),V(0,1.12,-.1),null,0).scale.y=2;put(t,M(oct(.05),CR),V(.16,1.02,-.3),[0,0,-.4],0).scale.y=1.8;
+   legTips(c).slice(0,2).forEach(l=>{for(let k=0;k<3;k++)put(l.n,M(cone(.05,.28,6),ST),l.p.clone().add(V((k-1)*.09,.0,.22)),[1.85,0,-(k-1)*.25],0x3a4050)})}}};
 
 /* ---------- застосування ---------- */
 function clear(r){const kill=[];r.root.traverse(o=>{if(o.userData[TAG]&&o.parent&&!(o.parent.userData&&o.parent.userData[TAG]))kill.push(o)});

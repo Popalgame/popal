@@ -274,6 +274,52 @@ function buildSun(){outl(0x6a1a14);const rig=newRig(.95,1.3,'bi'),b=rig.body,tg=
  for(let i=0;i<3;i++)blob(b,0xe8583e,0xb83422,(i-1)*.12,.75,-.5,.1,.24,.08,-.7,0,(i-1)*.3,10);
  rig.flash=[SOFTM];rig.tick=t=>{sg.rotation.z=t*.4;SU.emissiveIntensity=1.2+.3*Math.sin(t*2)};return rig}
 
+/* ===== №11 Ялинчук 11.0.1 — їжачок із хвойними голками (Вода/Трава) ===== */
+function buildFir(){const rig=quad({ol:0x173d28,cy:.6,dist:1.15,top:0x46a565,bot:0x1f6a3c,belly:[0xfff3d6,0xecd9b0],body:{y:.52,z:-.05,rx:.52,ry:.46,rz:.6},
+  head:{y:.6,z:.6,rx:.4,ry:.36,rz:.38,top:0xfff3d6,bot:0xecd9b0},eye:{x:.17,y:.08,r:.082,iris:0x2a6a4a},muzzle:{c:[0xfff8e6,0xf0dfc0],y:-.08,rx:.15,ry:.11,rz:.2},nose:0x2a1a1a,
+  leg:{r:.11,len:.14,x:.28,zF:.32,zB:-.36,top:0xecd9b0,bot:0xd9c090,foot:0xc9a878},
+  ears:(h,rig)=>{for(const s of[-1,1])rig.ears.push(blob(h,0xecd9b0,0xd9c090,s*.27,.27,-.04,.09,.1,.06,0,0,0,10))},
+  tail:(b,rig)=>{rig.tail=piv(b,0,.4,-.62);blob(rig.tail,0x2f8a50,0x1f6a3c,0,0,-.04,.08,.08,.1,0,0,0,10)}}),tg=rig.torso,h=rig.head;
+ const N=[std(0x2f8a50,{flatShading:true}),std(0x1f6a3c,{flatShading:true}),std(0x58b872,{flatShading:true})];let k=0;
+ for(let r=0;r<6;r++){const zr=.38-r*.19,kk=Math.sqrt(Math.max(.05,1-(zr/.6)*(zr/.6))),n=r==0||r==5?4:r%2?5:6;
+  for(let i=0;i<n;i++){const a=(i-(n-1)/2)*(2.5/n);mk(tg,CON(.085,.36,6),N[k++%3],Math.sin(a)*.5*kk,.52+Math.cos(a)*.44*kk,-.05+zr,1,1,1,-.55,0,-a)}}
+ for(let i=0;i<3;i++)mk(h,CON(.06,.2,6),N[i],(i-1)*.12,.34-Math.abs(i-1)*.03,-.02,1,1,1,-.3,0,-(i-1)*.45);
+ rig.atk=(u,s)=>{rig.head.rotation.x+=.35*u-.6*s};return rig}
+/* ===== №12 Попелюх 12.0.1 — попелястий лис із жариною на хвості (Вогонь/Темрява) ===== */
+function buildAsh(){const EM=glw(0xffb04a,0xff5a1a,1.5),rig=quad({ol:0x1e1a22,cy:.8,dist:1.25,top:0x8f8996,bot:0x4a444e,belly:[0xf0e8e0,0xd8ccc2],body:{y:.6,z:-.05,rx:.4,ry:.38,rz:.55},
+  head:{y:.98,z:.5,rx:.44,ry:.4,rz:.4},eye:{x:.18,y:.05,r:.088,iris:0xff8a1a},muzzle:{c:[0xf0e8e0,0xd8ccc2],y:-.12,rx:.14,ry:.11,rz:.28},nose:0x1a1418,
+  leg:{r:.1,len:.28,x:.22,zF:.32,zB:-.36,top:0x6a6470,bot:0x2e2a32,foot:0x1e1a22},
+  ears:(h,rig)=>{for(const s of[-1,1]){rig.ears.push(blob(h,0x8f8996,0x2e2a32,s*.27,.44,-.02,.14,.3,.08,0,0,-s*.35,12));blob(h,0xffb07a,0xff7a3a,s*.27,.42,.04,.07,.19,.04,0,0,-s*.35,8);mk(h,CON(.07,.16,6),std(0x2e2a32),s*.38,.74,-.02,1,1,.6,0,0,-s*.35)}},
+  tail:(b,rig)=>{const t=rig.tail=piv(b,0,.62,-.52);blob(t,0x8f8996,0x4a444e,0,.16,-.24,.19,.19,.36,.75,0,0,12);mk(t,SPH(10,8),EM,0,.42,-.47,.13,.13,.19,.75,0,0)}}),h=rig.head;
+ blob(rig.torso,0xf0e8e0,0xd8ccc2,0,.66,.42,.24,.24,.18,0,0,0,12);
+ for(const s of[-1,1])blob(h,0xf0e8e0,0xd8ccc2,s*.34,-.14,.12,.12,.1,.1,0,0,s*.5,10);
+ rig.emb=[];for(let i=0;i<4;i++)rig.emb.push(mk(rig.tail,SPH(5,4),EM,0,.5,-.5,.022));
+ rig.tick=t=>{EM.emissiveIntensity=1.2+.5*Math.sin(t*3);rig.emb.forEach((p,i)=>{const f=(t*.5+i*.25)%1;p.position.set(Math.sin(t*2+i*2)*.08,.5+f*.45,-.5-f*.1);p.scale.setScalar(.03*(1-f))})};
+ rig.atk=(u,s)=>{rig.head.rotation.x+=.4*u-.7*s};return rig}
+/* ===== №13 Кораловик 13.0.1 — краб із коралом на спині (Вода/Земля) ===== */
+function coralM(g,m,x,y,z,sc,rz){const c=piv(g,x,y,z);c.scale.setScalar(sc);c.rotation.z=rz||0;
+ bone(c,m,[0,0,0],[0,.3,0],.055,.045);bone(c,m,[0,.14,0],[.14,.34,.02],.04,.032);bone(c,m,[0,.2,0],[-.12,.4,-.02],.038,.03);bone(c,m,[0,.3,0],[.03,.5,.03],.04,.03);
+ for(const q of[[.14,.34,.02],[-.12,.4,-.02],[.03,.5,.03]])mk(c,SPH(8,6),m,q[0],q[1],q[2],.045);return c}
+function buildCrab(){const CO=std(0xff7aa8,{roughness:.55}),rig=quad({ol:0x6a2218,cy:.5,dist:1.3,top:0xffa27a,bot:0xe0583a,belly:[0xfff0dc,0xf2d6b4],body:{y:.45,z:-.08,rx:.64,ry:.4,rz:.5},
+  head:{y:.5,z:.36,rx:.42,ry:.34,rz:.3,top:0xffb08a,bot:0xe86a48},eye:{x:.19,y:.12,r:.095,iris:0x2a3a5a},nose:0xd95a3c,
+  leg:{r:.075,len:.16,x:.52,zF:.12,zB:-.32,top:0xe0583a,bot:0xb83a24,foot:0xb83a24}}),b=rig.body,tg=rig.torso;
+ for(const s of[-1,1])sleg(rig,b,s*.6,.2,-.1,.07,.16,0xe0583a,0xb83a24,0xb83a24,9);
+ for(const s of[-1,1]){const a=piv(b,s*.5,.46,.26);a.userData.rz=0;blob(a,0xffa27a,0xe0583a,s*.06,-.02,.1,.12,.11,.16,0,0,0,10);
+  blob(a,0xffb08a,0xd9482e,s*.1,.03,.34,.21,.19,.24,0,0,0,12);blob(a,0xfff0dc,0xf2b894,s*.04,.13,.58,.075,.07,.15,-.4,0,0,9);blob(a,0xfff0dc,0xf2b894,s*.15,-.07,.57,.085,.06,.16,.3,0,0,9);rig.arms.push(a)}
+ coralM(tg,CO,-.05,.8,-.12,.9,.1);coralM(tg,CO,.26,.74,-.22,.55,-.35);
+ rig.flash=[SOFTM];rig.atk=(u,s)=>{rig.arms.forEach(a=>{a.rotation.x+=-.9*u+.6*s})};return rig}
+/* ===== №14 Землерий 14.0.1 — кріт-шахтар із великими кігтями (Земля) ===== */
+function buildMole(){const CL=std(0xfff2dc,{roughness:.4}),PK=std(0xff8aa0,{roughness:.35}),rig=quad({ol:0x2a1e22,cy:.6,dist:1.15,top:0x94788a,bot:0x55424a,belly:[0xeed8d4,0xcdb4b0],body:{y:.52,z:-.05,rx:.5,ry:.46,rz:.62},
+  head:{y:.62,z:.6,rx:.42,ry:.38,rz:.4},eye:{x:.17,y:.1,r:.062,iris:0x1a1a22},muzzle:{c:[0xf6e0da,0xe0c2bc],y:-.06,rx:.17,ry:.13,rz:.26},nose:0xff8aa0,
+  leg:{r:.13,len:.14,x:.33,zF:.36,zB:-.38,top:0x6a5560,bot:0x55424a,foot:0xf0b8b8},
+  ears:(h,rig)=>{for(const s of[-1,1])rig.ears.push(blob(h,0x94788a,0x55424a,s*.3,.26,-.06,.07,.07,.05,0,0,0,10))},
+  tail:(b,rig)=>{rig.tail=piv(b,0,.42,-.64);blob(rig.tail,0xffa8b4,0xf08a9a,0,0,-.06,.05,.05,.12,0,0,0,9)}}),h=rig.head;
+ mk(h,SPH(10,8),PK,0,-.02,.5,.085,.075,.07);
+ for(const s of[-1,1])for(let i=0;i<2;i++)bone(h,std(0x3a2a30),[s*.1,-.08+i*.04,.44],[s*.34,-.06+i*.1,.42],.008,.004,5);
+ for(const i of[0,1])for(let k=0;k<3;k++)mk(rig.legs[i],CON(.04,.2,6),CL,(k-1)*.08,-.17,.24,1,1,1,1.85,0,-(k-1)*.25);
+ for(const i of[2,3])for(let k=0;k<3;k++)mk(rig.legs[i],CON(.025,.09,5),CL,(k-1)*.06,-.17,.2,1,1,1,1.85,0,0);
+ rig.atk=(u,s)=>{rig.legs[0].rotation.x+=-1.1*u+1.3*s;rig.legs[1].rotation.x+=-1.1*u+1.3*s};return rig}
+
 /* ===== Список істот ===== */
 const PALS=[
  {k:'bambuzl',n:'Бамбузл',num:1,ver:'1.0.3',el:'Трав’яний',role:'Збір врожаю',b:buildBam},
@@ -285,7 +331,11 @@ const PALS=[
  {k:'mororyh',n:'Мороріг',num:7,ver:'7.0.2',el:'Лід',role:'',b:buildMoror},
  {k:'hrozovyk',n:'Грозовик',num:8,ver:'8.0.2',el:'Електро',role:'',b:buildWolf},
  {k:'khvylezub',n:'Хвилезуб',num:9,ver:'9.0.2',el:'Вода',role:'',b:buildShark},
- {k:'sontseklyv',n:'Сонцеклюв',num:10,ver:'10.0.2',el:'Вогонь / Повітря',role:'',b:buildSun}];
+ {k:'sontseklyv',n:'Сонцеклюв',num:10,ver:'10.0.2',el:'Вогонь / Повітря',role:'',b:buildSun},
+ {k:'yalynchuk',n:'Ялинчук',num:11,ver:'11.0.1',el:'Вода / Трава',role:'',b:buildFir},
+ {k:'popeliukh',n:'Попелюх',num:12,ver:'12.0.1',el:'Вогонь / Темрява',role:'',b:buildAsh},
+ {k:'koralovyk',n:'Кораловик',num:13,ver:'13.0.1',el:'Вода / Земля',role:'',b:buildCrab},
+ {k:'zemleryi',n:'Землерий',num:14,ver:'14.0.1',el:'Земля',role:'',b:buildMole}];
 
 window.PALMODEL={PALS,build:i=>{const r=PALS[i].b(),local=new Map();for(const geo of [...Object.values(_sg),OCT])geo.userData.sharedPalGeometry=1;r.root.traverse(m=>{if(!m.isMesh)return;const old=m.material;if(old===SOFTM||old===SOFTT){if(!local.has(old))local.set(old,old.clone());m.material=local.get(old)}});r.flash=[...(r.flash||[]).filter(m=>m!==SOFTM&&m!==SOFTT),...local.values()];return r},pose:poseAny,tris,
  dispose:r=>{if(r.mixer){r.mixer.stopAllAction();r.mixer.uncacheRoot(r.root)}const shared=new Set([...Object.values(_sg),OCT]),geos=new Set(),mats=new Set(),skeletons=new Set();r.root.traverse(m=>{if(!m.isMesh)return;if(m.isSkinnedMesh&&m.skeleton)skeletons.add(m.skeleton);if(m.geometry&&!shared.has(m.geometry))geos.add(m.geometry);if(m.material&&m.material!==MTE.W&&m.material!==MTE.P&&m.material!==SOFTM&&m.material!==SOFTT)mats.add(m.material)});skeletons.forEach(s=>s.dispose());geos.forEach(g=>g.dispose());mats.forEach(m=>m.dispose())}};
