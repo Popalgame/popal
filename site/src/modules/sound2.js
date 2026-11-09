@@ -3,7 +3,7 @@
 (function(){try{
 if(!window.Sound)return;
 const G=n=>{try{return eval(n)}catch(e){return undefined}},GC=(()=>{const c={};return n=>c[n]||(c[n]=G(n))})(),WL=()=>GC('wild')||[],PL=()=>GC('pals')||[],TL=()=>G('T')||[],SEL=()=>{const p=PL(),i=G('selP');return p[i|0]};
-const BASE='sounds/',PALS=['01_bambuzl','02_grumrok','03_ignis-vyverh','04_mirazhbr','05_pukhoklub','06_krylosha','07_mororih','08_hrozovyk','09_khvylezub','10_sontseklyuv'];
+const BASE='sounds/',PALS=['01_bambuzl','02_grumrok','03_ignis-vyverh','04_mirazhbr','05_pukhoklub','06_krylosha','07_mororih','08_hrozovyk','09_khvylezub','10_sontseklyuv','08_hrozovyk','09_khvylezub','02_grumrok'/* нові види поки що з голосами схожих попалів */];
 const SFX=['ball_hit','build','catch_fail','catch_ok','chop','click','close','craft','eat','error','gather','heal','hit','hurt','levelup','mine','open','pickup','quest_done','quest_new','shake','step','tab','throw'];
 const buf={},loading={},last={};
 let ready=0;

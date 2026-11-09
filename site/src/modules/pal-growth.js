@@ -14,7 +14,7 @@ if(typeof pals=='undefined'||typeof THREE=='undefined')return;
 
 /* ---------- ролі ---------- */
 const ROLE={dd:['⚔️','ДД','Ближній бій'],rdd:['🏹','РДД','Дальній бій'],heal:['💚','Хіл','Лікує героя'],tank:['🛡️','Танк','Забирає ворогів на себе']};
-const ROLES=['tank','tank','rdd','dd','heal','heal','rdd','dd','dd','rdd'];
+const ROLES=['tank','tank','rdd','dd','heal','heal','rdd','dd','dd','rdd','dd','tank','dd'];
 const COL={gr:0x5fdc7a,ea:0xc89a5a,cr:0x7fe3f5,fi:0xff7a2a,da:0xa77ae6,ne:0xfff4fa,pk:0xffa8c8,ai:0xe8f4ff,po:0xffd34e,ic:0x9fe8ff,el:0xffe14a,wa:0x3ad0ff,su:0xffc94a};
 
 /* ---------- атаки ----------
@@ -63,7 +63,19 @@ const SK=[
  /* 9 Сонцеклюв · вогонь/повітря · РДД */
  {s:A('Сонячне перо','shot',40,2,COL.su),
   a2:[A('Сонячний вінець','nova',55,8,COL.su,{R:3}),A('Вогняні пера','multi',30,6,COL.su,{n:3}),A('Сонячний промінь','beam',60,7,COL.su),A('Сліпучий спалах','aoe',45,9,COL.su,{R:3,slow:1})],
-  a3:[A('Пікірування фенікса','melee',95,8,COL.fi,{dash:1}),A('Сонячна буря','aoe',75,12,COL.su,{R:4.5}),A('Зоряний промінь','beam',100,9,COL.su),A('Дощ вогняних пер','multi',28,7,COL.su,{n:5})]}];
+  a3:[A('Пікірування фенікса','melee',95,8,COL.fi,{dash:1}),A('Сонячна буря','aoe',75,12,COL.su,{R:4.5}),A('Зоряний промінь','beam',100,9,COL.su),A('Дощ вогняних пер','multi',28,7,COL.su,{n:5})]},
+ /* 10 Попелюх · вогонь/темрява · ДД */
+ {s:A('Попелястий укус','melee',44,1.9,COL.fi),
+  a2:[A('Жаринки','multi',28,6,COL.fi,{n:3}),A('Стрибок із диму','melee',62,6,COL.da,{dash:1}),A('Тліюча мітка','dot',22,8,COL.fi,{dps:16}),A('Димова завіса','aoe',35,10,COL.da,{R:3,slow:1})],
+  a3:[A('Танець трьох хвостів','melee',34,7,COL.fi,{hits:3}),A('Попелястий вихор','nova',75,10,COL.da,{R:3.4}),A('Чорне полум’я','dot',30,10,COL.da,{dps:26}),A('Вогняний ривок','melee',98,8,COL.fi,{dash:1})]},
+ /* 11 Кораловик · вода/земля · танк */
+ {s:A('Удар клешнею','melee',41,2.3,COL.wa),
+  a2:[A('Клацання клешень','taunt',0,14,COL.wa,{R:8,d:6}),A('Кораловий щит','shield',0,16,COL.pk,{d:6}),A('Припливна хвиля','nova',50,9,COL.wa,{R:3.2,slow:1}),A('Залп мушель','multi',28,6,COL.ne,{n:3})],
+  a3:[A('Рифовий бастіон','taunt',0,18,COL.pk,{R:10,d:8}),A('Перлинний панцир','shield',0,20,COL.ne,{d:9}),A('Кораловий обвал','aoe',72,12,COL.ea,{R:4}),A('Сталеві клешні','melee',88,7,COL.wa)]},
+ /* 12 Землерий · земля · ДД */
+ {s:A('Удар кігтями','melee',43,2,COL.ea),
+  a2:[A('Підкоп','melee',64,6,COL.ea,{dash:1}),A('Град каміння','multi',29,6,COL.ea,{n:3}),A('Земляний поштовх','nova',50,9,COL.ea,{R:3,slow:1}),A('Шквал кігтів','melee',31,6,COL.ea,{hits:2})],
+  a3:[A('Бур','melee',100,8,COL.cr,{dash:1}),A('Землетрус','aoe',75,12,COL.ea,{R:4.2}),A('Промінь ліхтаря','beam',85,8,COL.cr),A('Кам’яний шторм','multi',30,7,COL.ea,{n:5})]}];
 const ELK={gr:'gr',ea:'ea',fi:'fi',da:'da',ne:'ne',ai:'ai',wa:'wa'};
 const elOf=(ty)=>{const e=(T[ty]&&T[ty].e)||['ne'];return ELK[e[0]]||'ne'};
 
@@ -185,7 +197,7 @@ window.wildVsPal=(w,dt,dHero)=>{if(w._tele>0)return 1e-4;/* замахуєтьс
 /* ---------- масові атаки диких: удар по площі зачіпає всіх у колі — і героя, і попала ----------
    Дика істота в бою раз на 7–11 с замахується: на землі 0.8 с росте червоне коло-попередження (можна відбігти),
    потім удар її стихійною навичкою по всіх у радіусі. Сила — 80% одиночного удару по кожному. */
-const AOE_R=[3,3.2,2.8,2.6,2.8,3,3,2.8,3,3];
+const AOE_R=[3,3.2,2.8,2.6,2.8,3,3,2.8,3,3,2.8,3.2,3];
 function teleFx(w,R){const m=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({color:0xff3a2a,transparent:true,opacity:.18,depthWrite:false,side:THREE.DoubleSide}));
  const rim=new THREE.Mesh(new THREE.RingGeometry(.94,1,48),new THREE.MeshBasicMaterial({color:0xff5a3a,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide}));
  const g=new THREE.Group();g.add(m,rim);g.rotation.x=-Math.PI/2;g.scale.setScalar(R);sc.add(g);

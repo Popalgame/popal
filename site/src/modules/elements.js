@@ -2,7 +2,7 @@
 const E={wa:['💧','Вода'],fi:['🔥','Вогонь'],ea:['⛰️','Земля'],ai:['🌪️','Повітря'],gr:['🌿','Трава'],da:['🌑','Темрява'],ne:['⚪','Нейтральний']};
 const BEATS={wa:['fi'],fi:['gr'],gr:['ea'],ea:['wa','ai'],ai:['gr','da'],da:['ne'],ne:[]};
 const J={chop:['🪓','Рубка дерева'],mine:['⛏️','Видобуток каменю'],gather:['🫐','Збір ягід і грибів'],carry:['📦','Перенесення їжі в годівницю'],cook:['🔥','Готування їжі'],smelt:['🔥','Плавлення руди'],water:['💧','Поливання'],cool:['❄️','Охолодження їжі']};
-const SP2=[{e:['gr'],w:{chop:2,gather:3}},{e:['ea'],w:{mine:3,carry:1}},{e:['fi'],w:{cook:3,mine:1}},{e:['da'],w:{carry:3}},{e:['ne'],w:{gather:2,carry:1}},{e:['ai'],w:{gather:3}},{e:['wa'],w:{cool:3,mine:2}},{e:['da','ai'],w:{carry:2,chop:1}},{e:['wa'],w:{water:3,chop:1}},{e:['fi','ai'],w:{cook:2,carry:2}}];
+const SP2=[{e:['gr'],w:{chop:2,gather:3}},{e:['ea'],w:{mine:3,carry:1}},{e:['fi'],w:{cook:3,mine:1}},{e:['da'],w:{carry:3}},{e:['ne'],w:{gather:2,carry:1}},{e:['ai'],w:{gather:3}},{e:['wa'],w:{cool:3,mine:2}},{e:['da','ai'],w:{carry:2,chop:1}},{e:['wa'],w:{water:3,chop:1}},{e:['fi','ai'],w:{cook:2,carry:2}},{e:['fi','da'],w:{cook:3,carry:1}},{e:['wa','ea'],w:{water:2,mine:2}},{e:['ea'],w:{mine:4}}];
 const pips=l=>'●'.repeat(l)+'○'.repeat(4-l);
 T.forEach((t,i)=>{const s=SP2[i];if(!s)return;t.e=s.e;t.wk=s.w;t.el=s.e.map(k=>E[k][1]).join(' / ');EL[i]=E[s.e[0]][0];t.sk=Object.entries(s.w).map(([k,l])=>J[k][0]+' '+J[k][1].split(' ')[0]+' '+l).join(' · ');t.d=s.w.mine?'s':'w'});
 window.elM=(a,b)=>{const A=(T[a]&&T[a].e)||[],B=(T[b]&&T[b].e)||[];let m=1;for(const x of A)for(const y of B){if(BEATS[x].includes(y))m=Math.max(m,1.5);if(BEATS[y].includes(x))m=Math.min(m,.75)}return m};

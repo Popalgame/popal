@@ -5,7 +5,7 @@ if(typeof wild=='undefined'||typeof T=='undefined')return;
 const ic=(k,e)=>(window.plIconSrc&&plIconSrc(k)&&window.plIcon)?plIcon(k):e;/* намальовані значки — icons.js */
 Object.assign(IT,{wool:[ic('wool','🧶'),'Шерсть'],lth:[ic('lth','🟫'),'Шкіра']});
 for(const k of['wool','lth'])if(inv[k]==null)inv[k]=0;
-const LOOT={'Пухоклуб':'wool','Мороріг':'lth','Грозовик':'lth','Бамбузл':'lth'},EMO={wool:'🧶',lth:'🟫'};window.PAL_LOOT=LOOT;/* msg і dmg виводять текст, тож там — емодзі */
+const LOOT={'Пухоклуб':'wool','Мороріг':'lth','Грозовик':'lth','Бамбузл':'lth','Попелюх':'lth'},EMO={wool:'🧶',lth:'🟫'};window.PAL_LOOT=LOOT;/* msg і dmg виводять текст, тож там — емодзі */
 function drop(w){const k=LOOT[(T[w.ty]||{}).n];if(!k)return;const n=1+(Math.random()<.4?1:0)+((w.lv||1)>=20?1:0);addI(k,n);
  const p=w.m&&w.m.position?w.m.position.clone():null;setTimeout(()=>{try{if(p)dmg('+'+n+' '+EMO[k],{position:p},'#ffe28a')}catch(_){}msg(EMO[k]+' '+IT[k][1]+' +'+n);try{hud()}catch(_){}},450)}
 /* переможена істота прибирається з масиву wild з hp<=0 (core-world.js, pal-defense.js); піймана — з hp>0 */

@@ -19,7 +19,10 @@ const BASE=[
  {hp:95,atk:85,def:95,sk:'Крижаний спалах',p:55},
  {hp:85,atk:105,def:80,sk:'Грозовий стрибок',p:65},
  {hp:90,atk:95,def:85,sk:'Хвильовий укус',p:55},
- {hp:85,atk:100,def:85,sk:'Сонячний вінець',p:70}];
+ {hp:85,atk:100,def:85,sk:'Сонячний вінець',p:70},
+ {hp:75,atk:108,def:72,sk:'Попелястий укус',p:60},
+ {hp:105,atk:80,def:112,sk:'Кораловий щит',p:50},
+ {hp:92,atk:98,def:88,sk:'Підкоп',p:60}];
 const DEF0={hp:80,atk:80,def:80,sk:'Удар',p:40};
 const base=ty=>BASE[ty]||DEF0;
 const els=ty=>(T[ty]&&T[ty].e&&T[ty].e.length)?T[ty].e:['ne'];
