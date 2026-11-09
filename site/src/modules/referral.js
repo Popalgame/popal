@@ -57,11 +57,11 @@ const css=document.createElement('style');css.textContent=`
 #rfx .lk small{flex-basis:100%;color:#a9c8cf;font-size:11.5px}
 #rfx .rfb{flex:1;min-height:0;overflow:auto;padding:0 10px 12px;-webkit-overflow-scrolling:touch}
 #rfx .tb{--rh:clamp(62px,13vh,86px);--cw:clamp(48px,6.4vw,66px);--tw:76px;--gw:64px;--g:10px;--bw:118px;min-width:660px}
-@media (max-width:900px){#rfx .tb{--tw:54px;--gw:46px;--g:6px;--bw:96px}#rfx .top span{font-size:13px}#rfx .tr{font-size:28px!important}#rfx .rw u{font-size:13px}}
+@media (max-width:1100px){#rfx .tb{--tw:74px;--gw:74px;--g:6px;--bw:96px}#rfx .top span{font-size:13px}#rfx .tr{font-size:28px!important}#rfx .rw u{font-size:13px}}
 #rfx .cols,#rfx .card{display:grid;grid-template-columns:minmax(140px,1fr) var(--tw) var(--gw) repeat(5,var(--cw));column-gap:var(--g);align-items:center}
 #rfx .top{display:flex;align-items:stretch;background:rgba(18,52,64,.85);border-radius:4px;margin:0 0 8px}
 #rfx .top .cols{flex:1;padding:0 14px}
-#rfx .top span{font:600 15px system-ui,sans-serif;color:#e6eef2;text-align:center;padding:5px 0;white-space:nowrap}
+#rfx .top span{font:600 15px system-ui,sans-serif;color:#e6eef2;text-align:center;padding:5px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #rfx .top .l{text-align:left;padding-left:10px}#rfx .top .bd{border-left:1px solid rgba(255,255,255,.12)}
 #rfx .top .bh{width:var(--bw);flex:none;border-left:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center}
 #rfx .main{display:flex;align-items:stretch}
@@ -88,7 +88,7 @@ const css=document.createElement('style');css.textContent=`
 #rfx .rw .crx{position:relative;width:calc(var(--cw) * .7);height:calc(var(--cw) * .62);display:block}#rfx .rw .crx img{position:absolute;width:62%!important;height:auto!important}#rfx .rw .crx img:nth-child(1){left:0;top:22%}#rfx .rw .crx img:nth-child(2){left:19%;top:0;z-index:1}#rfx .rw .crx img:nth-child(3){left:38%;top:22%}
 #rfx .card.emp{background:rgba(14,36,52,.55);border-style:dashed;border-color:rgba(184,145,63,.6)}
 #rfx .card.emp .av{background:rgba(255,255,255,.06);border:2px dashed rgba(207,215,224,.45);color:rgba(255,255,255,.55);text-shadow:none}
-#rfx .card.emp b{color:#bcd0da}#rfx .card.emp small{color:#8fb0bd}
+#rfx .card.emp .nm{padding-right:0}#rfx .card.emp b{font-size:15px}#rfx .card.emp small{font-size:12.5px}#rfx .card.emp b{color:#bcd0da}#rfx .card.emp small{color:#8fb0bd}
 #rfx .card.emp .rw{opacity:.35}
 #rfx .brk{position:relative;width:var(--bw);flex:none}
 #rfx .brk .v{position:absolute;left:14px;width:18px;border:2px solid #c9a24f;border-left:0;top:calc(var(--rh) / 2);bottom:calc(var(--rh) / 2)}
@@ -99,7 +99,7 @@ const css=document.createElement('style');css.textContent=`
 #rfx .rw.mys{background:radial-gradient(circle at 50% 40%,#4a3486,#160e30);border-color:#2a1a50;box-shadow:0 0 0 1px #c9a24f,0 0 12px rgba(185,140,255,.5)}#rfx .rw.mys .ic{font:900 calc(var(--cw) * .55) system-ui,sans-serif;color:#e8d8ff;text-shadow:0 0 10px #b98cff}
 #rfx .more{margin:10px 4px 0;color:#bfe3ea;font-size:12.5px}
 #rfx .tip{margin:8px 4px 0;color:#a9c8cf;font-size:12px;line-height:1.45}
-#rfx .ld{margin:4px 4px 8px;color:#bfe3ea;font-size:13px}
+#rfx .ld{margin:4px 4px 8px;color:#bfe3ea;font-size:13px}#rfx .ld.wr{padding:7px 12px;border-radius:10px;background:rgba(255,200,90,.1);border:1px solid rgba(255,200,90,.35);color:#ffe2a6}
 #rfx .em{margin:20px auto;max-width:520px;text-align:center;color:#c6d6e8;line-height:1.5}
 #rfx .rfch{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(4,10,22,.6)}
 #rfx .rfch .bx{width:min(560px,92%);padding:16px;border-radius:18px;background:linear-gradient(180deg,#1b3f58,#13304a);border:2px solid #e2bf67;text-align:center;box-shadow:0 14px 40px rgba(0,0,0,.6)}
@@ -160,10 +160,10 @@ function row(f){const got=inv._refc[f.uid]||[],lv=f.lv|0,on=f.t&&Date.now()-f.t<
  for(const t of TIERS){const st=got.includes(t)?'done':lv>=t?'ready':'lock';h+=cell(REW[t],st,st=='ready'?`data-u='${esc(f.uid)}' data-l='${t}'`:'')}
  return h+`<button class='del' data-x='${esc(f.uid)}' aria-label='Прибрати друга' title='Прибрати друга'>✕</button></div>`}
 const empty=()=>`<div class='card emp'><div class='pl'><span class='av'>+</span><span class='nm'><b>Вільне місце</b><small>Надішліть посилання другу</small></span></div><span></span><span></span>${TIERS.map(t=>cell(REW[t],'lock')).join('')}</div>`;
-function render(){linkBox();if(err){bd.innerHTML=err;return}
- const wait=all.length?slot():0;
+function render(){linkBox();
+ const wait=all.length?slot():(list=[],0);
  const n50=list.filter(f=>(f.lv|0)>=BONUS.lv).length,bst=inv._refb?'done':n50>=BONUS.need?'ready':'lock';
- let h=loading?"<div class='ld'>Завантаження друзів…</div>":'';
+ let h=err||(loading?"<div class='ld'>Завантаження друзів…</div>":'');
  h+=`<div class='tb'><div class='top'><div class='cols'><span class='l'>Гравець</span><span class='bd'>Довіра</span><span class='bd'>Рівень</span>${TIERS.map(t=>`<span>${t}</span>`).join('')}</div><span class='bh'>Бонус</span></div><div class='main'><div class='rows'>`;
  for(let i=0;i<MAX;i++)h+=list[i]?row(list[i]):empty();
  h+=`</div><div class='brk'><span class='v'></span><span class='m'></span><span class='h'></span><span class='bx'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${inv._refb?'done':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n50} / ${BONUS.need} · ${BONUS.lv} рів.</small></span></div></div></div>`;
@@ -176,7 +176,7 @@ const tip=()=>`<p class='tip'>Нагороду за рівень друга мо
 async function load(){err='';if(!ok()||!window.myPid){all=[];render();return}
  loading=true;render();
  try{const q=await fbDb.collection('referrals').where('ref','==',window.myPid).limit(100).get();all=q.docs.map(d=>Object.assign({uid:d.id},d.data()))}
- catch(e){err=e&&e.code=='permission-denied'?"<div class='em'>🤝 Реферальну програму ще не ввімкнено на сервері. Скоро запрацює!</div>":"<div class='em'>Не вдалося завантажити друзів. Перевірте інтернет і спробуйте ще раз.</div>";if(!(e&&e.code=='permission-denied'))console.warn('referral',e)}
+ catch(e){all=[];err=e&&e.code=='permission-denied'?"<div class='ld wr'>🤝 Реферальну програму ще не ввімкнено на сервері. Скоро запрацює!</div>":"<div class='ld wr'>Не вдалося завантажити друзів. Перевірте інтернет і спробуйте ще раз.</div>";if(!(e&&e.code=='permission-denied'))console.warn('referral',e)}
  loading=false;render()}
 function open(){X.classList.add('on');load()}
 function close(){X.classList.remove('on')}
