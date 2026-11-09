@@ -33,15 +33,19 @@ const elsOf=i=>(T[i].e||['ne']);
 const chip=k=>`<span class='dxe' style='background:${EC[k][0]}'>${EC[k][1]} ${EN[k]}</span>`;
 
 /* ---------- 3D-перегляд ---------- */
-let VR=null,VS=null,VC=null,VM=null,vTy=-1,vSil=false;const BLK=new THREE.MeshBasicMaterial({color:0x07080e});
+let VR=null,VS=null,VC=null,VM=null,vTy=-1,vSil=false,vFm=1;const BLK=new THREE.MeshBasicMaterial({color:0x07080e});
 function viewer(host){if(!VR){VR=new THREE.WebGLRenderer({antialias:true,alpha:true});VR.setPixelRatio(Math.min(devicePixelRatio,2));VR.outputEncoding=THREE.sRGBEncoding;VR.toneMapping=THREE.ACESFilmicToneMapping;
   VS=new THREE.Scene();VS.add(new THREE.HemisphereLight(0xe8f2ff,0x3a3050,1.1));const d=new THREE.DirectionalLight(0xfff0d8,1.6);d.position.set(2,4,3);VS.add(d);const r=new THREE.DirectionalLight(0x7fe3f5,.8);r.position.set(-3,2,-2);VS.add(r);
   VC=new THREE.PerspectiveCamera(32,1,.1,50)}
  host.appendChild(VR.domElement);const w=host.clientWidth||300,h=host.clientHeight||260;VR.setSize(w,h);VC.aspect=w/h;VC.updateProjectionMatrix()}
-function setModel(ty,sil){if(vTy===ty&&VM){vSil=sil;return}if(VM){VS.remove(VM.root);VM=null}vTy=ty;vSil=sil;
- try{VM=window.PALMODEL?PALMODEL.build(ty):null;if(VM)VM._pm=1}catch(e){VM=null}if(!VM)VM={root:mkPal(T[ty].c)};
- const b=new THREE.Box3().setFromObject(VM.root),s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),k=1.6/Math.max(s.x,s.y,s.z);
- VM.root.scale.multiplyScalar(k);VM.root.position.set(-c.x*k,-b.min.y*k-.8,-c.z*k);VS.add(VM.root);VC.position.set(0,.35,4.6);VC.lookAt(0,0,0)}
+/* модель вписується в кадр заново після зміни форми (замок Кораловика чи крила вищі за першу форму) */
+function fit(){const r=VM.root;r.scale.set(1,1,1);r.position.set(0,0,0);r.rotation.set(0,0,0);r.updateMatrixWorld(true);
+ const b=new THREE.Box3().setFromObject(r),s=b.getSize(new THREE.Vector3()),c=b.getCenter(new THREE.Vector3()),k=1.6/Math.max(s.x,s.y,s.z);
+ r.scale.setScalar(k);r.position.set(-c.x*k,-b.min.y*k-.8,-c.z*k)}
+function setModel(ty,sil,fm){fm=fm||1;if(vTy===ty&&VM){vSil=sil;if(VM._pm&&VM._fm!==fm&&window.PALFORM){try{VS.remove(VM.root);VM.root.scale.set(1,1,1);VM.root.position.set(0,0,0);VM.root.rotation.set(0,0,0);window.PALFORM.ensure(VM,ty,fm);VM._fm=fm;fit();VS.add(VM.root)}catch(e){console.warn('dex form',e)}}return}
+ if(VM){VS.remove(VM.root);VM=null}vTy=ty;vSil=sil;
+ try{VM=window.PALMODEL?PALMODEL.build(ty):null;if(VM){VM._pm=1;VM._fm=1;if(fm>1&&window.PALFORM){window.PALFORM.ensure(VM,ty,fm);VM._fm=fm}}}catch(e){VM=null}if(!VM)VM={root:mkPal(T[ty].c)};
+ fit();VS.add(VM.root);VC.position.set(0,.35,4.6);VC.lookAt(0,0,0)}
 let raf=0;function loop(t){raf=0;const host=document.querySelector('#ivc .dxv');if(!host||!VR||typeof ivO==='undefined'||!ivO||ivTab!='d'||tab!=0)return;
  if(VM){VM.root.rotation.y=t/1000*.6;if(VM._pm)try{PALMODEL.pose(VM,t/1000,'idle',0)}catch(_){}
   VS.overrideMaterial=vSil?BLK:null;VR.render(VS,VC)}
@@ -69,16 +73,29 @@ const css=document.createElement('style');css.id='dex-css';css.textContent=`
 #ivc .dxr .bx{font-size:11.5px;line-height:1.35;padding:2px 4px;opacity:.92}#ivc .dxr .bx b{display:block;font-size:13px;border-left:3px solid #e2bf67;padding-left:6px;margin-bottom:3px}
 #ivc .dxw{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:11.5px;padding:0 4px}#ivc .dxw span{display:flex;justify-content:space-between;gap:4px}#ivc .dxw span.no{opacity:.28}
 #ivc .dxp{display:flex;align-items:center;gap:3px;padding:0 4px;font-size:12px}#ivc .dxp i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25)}#ivc .dxp i.on{background:#7fe3f5;box-shadow:0 0 6px #7fe3f5}#ivc .dxp b{margin-left:auto}
-#ivc .dxmap{width:100%;height:100%;object-fit:contain}`;document.head.appendChild(css);
+#ivc .dxmap{width:100%;height:100%;object-fit:contain}
+#ivc .dxs{width:100%;border-collapse:collapse;font-size:11.5px;text-align:center}#ivc .dxs th{font-weight:600;opacity:.75;padding:1px 2px}#ivc .dxs td{padding:2px;border-top:1px solid rgba(255,255,255,.08)}#ivc .dxs td:first-child{text-align:left;opacity:.8;padding-left:4px}
+#ivc .dxw.dxa{grid-template-columns:1fr;margin-bottom:2px}#ivc .dxw.dxa b{opacity:.7;font-weight:400;white-space:nowrap}#ivc .dxw.dxa em{font-style:normal}
+#ivc .dxf{position:absolute;left:0;right:0;bottom:6px;display:flex;justify-content:center;gap:6px;z-index:1}#ivc .dxf button{background:rgba(10,14,28,.75);color:#cfe3ee;border:1px solid rgba(127,227,245,.4);border-radius:8px;padding:3px 10px;font:700 12px inherit;font-family:inherit;cursor:pointer}#ivc .dxf button.on{background:#7fb8c8;color:#0e1a2a}`;document.head.appendChild(css);
 let cur=0,tab=0;
 function card(i){const s=DX.s[i]>0,c=DX.c[i]>0,t=T[i];return `<div class='dxi ${i==cur?'on':''} ${s?'':'un'}' data-dx='${i}'><div class='nm'>No.${String(i+1).padStart(3,'0')} ${s?elsOf(i).map(chip).join(''):''}</div><b>${s?t.n:'???'}</b></div>`}
-function infoTab(i){const t=T[i],c=DX.c[i]>0,s=DX.s[i]>0,e0=elsOf(i)[0];
- if(!c)return `<h6>Навик супутника</h6><div class='bx'>${s?'Спіймайте цього попала, щоб дізнатися про нього більше.':'Ви ще не зустрічали цього попала.'}</div>`+capPips(i);
- const wk=t.wk||{};
- return `<h6>Навик супутника</h6><div class='bx'><b>${EC[e0][1]} ${ATK[e0]}</b>Поки попал призваний, він сам атакує агресивних істот поруч: 8 + 2 × рівень шкоди, ×1,5 проти слабшої стихії. А ще додає 4 + рівень до ваших ударів.</div>
- <h6>Робочі вміння</h6><div class='dxw'>${JOBS.map(([k,ic,nm])=>`<span class='${wk[k]?'':'no'}'><em>${ic} ${nm}</em>${wk[k]?'<b>Lv'+wk[k]+'</b>':''}</span>`).join('')}</div>
- <h6>Характеристики</h6><div class='bx'>❤️ Здоровʼя: ${t.hp} · ${t.ag?'😠 Нападає першим':'🙂 Мирний'}<br>Стихія: ${elsOf(i).map(k=>EC[k][1]+' '+EN[k]).join(' / ')}</div>
- <h6>Трофеї</h6><div class='bx'>${t.d=='s'?'🪨 Камінь ×2':'🪵 Деревина ×2'} — за перемогу</div>`+capPips(i)}
+/* 0.2.17: вкладка «Характеристики» показує чинну бойову систему — роль, показники за рівнем (combat.js),
+   усі 9 атак із правилом випадкового вибору (pal-growth.js), форми 2–3 (evolution.js), робочі вміння й трофеї. */
+const num=v=>String(v).replace('.',',');
+function infoTab(i){const t=T[i],c=DX.c[i]>0,s=DX.s[i]>0;
+ if(!c)return `<h6>Про попала</h6><div class='bx'>${s?'Спіймайте цього попала, щоб дізнатися про нього більше.':'Ви ще не зустрічали цього попала.'}</div>`+capPips(i);
+ const wk=t.wk||{},G=window.PALGROWTH,rl=G?G.ROLE[G.ROLES[i]||'dd']:null,k=G?G.SK[i]:null,KT=(G&&G.kindTxt)||{},F=(G&&G.FORM)||[1,1,1.2,1.45],ND=(window.EVOLUTION&&window.EVOLUTION.NEED)||{2:[25],3:[50]},
+  loot=(window.PAL_LOOT||{})[t.n],fire=elsOf(i).includes('fi');
+ const al=a=>`<span><em>${a.n}</em><b>${KT[a.k]||''}${a.p?' · '+a.p:''}</b></span>`;
+ let h=rl?`<h6>Роль у бою</h6><div class='bx'><b>${rl[0]} ${rl[1]} — ${rl[2]}</b>${t.ag?'😠 Дикий нападає першим':'🙂 Дикий мирний, доки його не зачепити'}</div>`:'';
+ if(window.PW)h+=`<h6>Показники за рівнем</h6><table class='dxs'><tr><th></th><th>❤️ Здоровʼя</th><th>⚔️ Атака</th><th>🛡️ Захист</th></tr>${[1,25,50].map(l=>{const v=PW.stats(i,l);return `<tr><td>рів. ${l}</td><td>${v.hp}</td><td>${v.atk}</td><td>${v.def}</td></tr>`}).join('')}</table>`;
+ if(k)h+=`<h6>Атаки</h6><div class='bx'><b>1 · ${k.s.n}</b>${KT[k.s.k]||''} · сила ${k.s.p} · з 1 рівня</div>
+  <div class='bx'><b>2 · з 10 рівня</b>Попал вивчає одну з чотирьох — випадково:</div><div class='dxw dxa'>${k.a2.map(al).join('')}</div>
+  <div class='bx'><b>3 · з 30 рівня</b>Ще одна з чотирьох — теж випадково:</div><div class='dxw dxa'>${k.a3.map(al).join('')}</div>`;
+ h+=`<h6>Форми</h6><div class='bx'>Форма 2 — з ${ND[2][0]} рівня, потрібен кристал стихії: показники ×${num(F[2])}<br>Форма 3 — з ${ND[3][0]} рівня, потрібен кристал вознесіння: показники ×${num(F[3])}<br><span style='opacity:.6'>Перетворення — в Колбі поліпшень. Рівень і атаки зберігаються.</span></div>
+  <h6>Робочі вміння</h6><div class='dxw'>${JOBS.map(([k,ic,nm])=>`<span class='${wk[k]?'':'no'}'><em>${ic} ${nm}</em>${wk[k]?'<b>Lv'+wk[k]+'</b>':''}</span>`).join('')}</div>${fire?"<div class='bx'>🔥 Вогняний: у бригаді плавить руду в печі</div>":''}
+  <h6>Трофеї</h6><div class='bx'>${t.d=='s'?'🪨 Камінь ×2':'🪵 Деревина ×2'} — за перемогу${loot?'<br>'+(loot=='wool'?'🧶 Шерсть':'🟫 Шкіра')+' — за перемогу, а в загоні дає її сам':''}</div>`;
+ return h+capPips(i)}
 function capPips(i){const n=Math.min(CB,DX.c[i]);return `<h6>Бонус за поїмку</h6><div class='dxp'>${Array.from({length:CB},(_,k)=>`<i class='${k<n?'on':''}'></i>`).join('')}<b>${n} / ${CB}</b></div><div class='bx' style='opacity:.6'>Кожен з перших ${CB} спійманих попалів цього виду дає +${CBXP} XP</div>`}
 function habitatTab(i){const ZN=[[0,'Бухта прибуття',1,5],[0,'Зелені луки',5,12],[0,'Старий ліс',12,20],[0,'Дикі землі',20,25]];const n=wild.filter(w=>w.ty===i).length;
  return `<h6>Зона проживання</h6><div class='bx'>${DX.s[i]?`Трапляється по всьому краю. Зараз у світі: <b style='display:inline;border:none;padding:0'>${n}</b> (на карті — сині точки).`:'Ви ще не зустрічали цього попала.'}</div>
@@ -94,13 +111,14 @@ function render(){const c=$('ivc');if(!c)return;const t=T[cur],s=DX.s[cur]>0,cc=
  const seenN=DX.s.filter(v=>v>0).length,caughtN=DX.c.filter(v=>v>0).length;
  c.innerHTML=`<div class='dx'><div class='dxl'><div class='dxls'>${T.map((_,i)=>card(i)).join('')}</div><div class='dxc'><span>👁 Зустрінуто: ${seenN} / ${N}</span><span>📖 Спіймано: ${caughtN} / ${N}</span></div></div>
  <div class='dxt'><button data-dt='0' class='${tab==0?'on':''}'>Характеристики</button><button data-dt='1' class='${tab==1?'on':''}'>Зона проживання</button></div>
- <div class='dxm'>${tab==0?`<div class='dxv'><div class='dxh'>No.${String(cur+1).padStart(3,'0')}<b>${s?t.n:'???'}</b>${s?elsOf(cur).map(chip).join(' '):''}</div></div>`:`<div class='dxv'><canvas class='dxmap' width='420' height='420'></canvas></div>`}
+ <div class='dxm'>${tab==0?`<div class='dxv'><div class='dxh'>No.${String(cur+1).padStart(3,'0')}<b>${s?t.n:'???'}</b>${s?elsOf(cur).map(chip).join(' '):''}</div>${cc?`<div class='dxf'>${[1,2,3].map(f=>`<button data-fm='${f}' class='${vFm==f?'on':''}'>Форма ${f}</button>`).join('')}</div>`:''}</div>`:`<div class='dxv'><canvas class='dxmap' width='420' height='420'></canvas></div>`}
  <div class='dxd'>${cc?LORE[cur]:s?'Ви бачили цього попала. Спіймайте його, щоб прочитати опис.':'Про цього попала поки нічого не відомо.'}</div></div>
  <div class='dxr'>${tab==0?infoTab(cur):habitatTab(cur)}</div></div>`;
- c.querySelectorAll('[data-dx]').forEach(e=>e.onclick=()=>{cur=+e.dataset.dx;render()});
+ c.querySelectorAll('[data-dx]').forEach(e=>e.onclick=()=>{cur=+e.dataset.dx;vFm=1;render()});
+ c.querySelectorAll('[data-fm]').forEach(e=>e.onclick=()=>{vFm=+e.dataset.fm;render()});
  c.querySelectorAll('[data-dt]').forEach(e=>e.onclick=()=>{tab=+e.dataset.dt;render()});
  const on=c.querySelector('.dxi.on');if(on)on.scrollIntoView({block:'nearest'});
- if(tab==0){const v=c.querySelector('.dxv');viewer(v);v.insertBefore(VR.domElement,v.firstChild);setModel(cur,!s);if(!raf)raf=requestAnimationFrame(loop)}
+ if(tab==0){const v=c.querySelector('.dxv');viewer(v);v.insertBefore(VR.domElement,v.firstChild);setModel(cur,!s,cc?vFm:1);if(!raf)raf=requestAnimationFrame(loop)}
  else drawMap(c.querySelector('.dxmap'),cur)}
 const _r=ivR;ivR=function(){_r.apply(this,arguments);if(ivTab=='d')render()};
 window.plDex={DX,open:i=>{if(i!=null)cur=i;ivOpen('d')}};

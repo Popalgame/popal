@@ -22,7 +22,8 @@ const COL={gr:0x5fdc7a,ea:0xc89a5a,cr:0x7fe3f5,fi:0xff7a2a,da:0xa77ae6,ne:0xfff4
       aoe — вибух навколо цілі (R); nova — хвиля навколо попала (R); dot — горіння/отрута (dps × 4 с);
       heal — лікує героя (h — частка HP); shield — щит на героя (d с, −40% урону); taunt — провокація (R, d с)
    slow: true — ціль сповільнюється на 3 с. p — сила, cd — перезарядка (с), r — дальність (м), c — колір */
-const A=(n,k,p,cd,c,x)=>Object.assign({n,k,p,cd,c,r:k=='melee'?2.4:k=='nova'||k=='heal'||k=='shield'||k=='taunt'?30:9},x||{});
+/* n у додаткових параметрах залпу — кількість снарядів; зберігаємо її як cnt, щоб не затерти назву атаки */
+const A=(n,k,p,cd,c,x)=>{const o=Object.assign({k,p,cd,c,r:k=='melee'?2.4:k=='nova'||k=='heal'||k=='shield'||k=='taunt'?30:9},x||{});if(x&&x.n!=null)o.cnt=x.n;o.n=n;return o};
 const SK=[
  /* 0 Бамбузл · трава · танк */
  {s:A('Бамбуковий удар','melee',40,2.2,COL.gr),
@@ -147,7 +148,7 @@ function healHero(p,a){const add=Math.round(HP()*a.h*(FORM[p.fm||1]||1));P.hp=Ma
 function cast(p,a,w){const c=a.c,from=new THREE.Vector3(p.x,(p.m.position.y||0)+.8,p.z),y=w?H(w.x,w.z):0;
  switch(a.k){
   case'shot':shoot(from,w,c,a.big,t=>hitWild(p,t,a));break;
-  case'multi':for(let i=0;i<a.n;i++)shoot(from,w,c,0,t=>hitWild(p,t,a),i*.12);break;
+  case'multi':for(let i=0;i<(a.cnt||3);i++)shoot(from,w,c,0,t=>hitWild(p,t,a),i*.12);break;
   case'beam':{beamFx(from,new THREE.Vector3(w.x,y+.8,w.z),c);burstFx(w.x,y+.8,w.z,c,8);hitWild(p,w,a);break}
   case'melee':{p._dash=a.dash?.35:.18;const n=a.hits||1;for(let i=0;i<n;i++)setTimeout(()=>{if(!wild.includes(w))return;ringFx(w.x,H(w.x,w.z),w.z,c,1.6,.35);burstFx(w.x,H(w.x,w.z)+.8,w.z,c,6);hitWild(p,w,a)},180+i*160);break}
   case'aoe':shoot(from,w,c,1,t=>{const x=t.x,z=t.z;ringFx(x,H(x,z),z,c,a.R*1.1,.6);burstFx(x,H(x,z)+.5,z,c,14);for(const o of wild.slice())if(Math.hypot(o.x-x,o.z-z)<=a.R)hitWild(p,o,a)});break;
@@ -251,5 +252,5 @@ ANI.push(()=>{const now=performance.now(),dt=Math.min(.1,(now-last)/1000);last=n
  gcd-=dt;if(gcd>0)return;
  const a=choose(p,target);if(!a)return;
  if(['heal','shield'].includes(a.k)||a.k=='taunt'||target){gcd=.6;(p._cds||(p._cds={}))[a.n]=a.cd;cast(p,a,target)}});
-window.PALGROWTH={ROLE,ROLES,SK,role,slots,stats,unlock,FORM};
+window.PALGROWTH={ROLE,ROLES,SK,role,slots,stats,unlock,FORM,get kindTxt(){return kindTxt}};
 }catch(e){console.warn('pal-growth',e)}})();

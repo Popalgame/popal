@@ -96,6 +96,7 @@ const css=document.createElement('style');css.id='cen-css';css.textContent=`
 #cen .tr canvas{width:34px;height:34px}#cen .tr span{flex:1;font-size:13px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #cen .tr button,#cen .dt button{background:linear-gradient(#f39a4a,#d9532e);border:2px solid #e2bf67;color:#fff;border-radius:10px;padding:3px 10px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap}
 #cen .tr button:disabled,#cen .dt button:disabled{opacity:.4;filter:grayscale(1)}
+#cen .dt .pi{flex:none;margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;line-height:1.4}
 #cen .dt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:13px}#cen .dt canvas{width:44px;height:44px;flex:none}#cen .dt div{flex:1 1 120px;min-width:0;line-height:1.35}#cen .dt button{flex:1 1 auto}
 #cen .em{opacity:.7;font-size:12px}
 #cen .tabs{display:flex;gap:6px;flex:1}#cen .tabs button{background:rgba(255,255,255,.06);border:2px solid rgba(226,191,103,.45);color:#e8dcc0;border-radius:10px;padding:4px 14px;font-weight:700;cursor:pointer;font-family:inherit;font-size:14px}
@@ -118,7 +119,16 @@ const css=document.createElement('style');css.id='cen-css';css.textContent=`
 const box=document.createElement('div');box.id='cen';document.body.appendChild(box);
 let page=0,sel=null,tab=0;
 const JI={chop:'🪓',mine:'⛏️',gather:'🫐',carry:'📦',cook:'🍳',water:'💧',cool:'❄️'},JN={chop:'рубає дерева',mine:'добуває камінь',gather:'збирає ягоди й гриби',carry:'носить їжу в годівницю',cook:'готує їжу'};
-const jobs=p=>Object.keys((T[p.ty]||{}).wk||{}).map(j=>JI[j]||'').join('');
+/* 0.2.17: скрізь у центрі — рівень кожної роботи (⛏️4 💧2), стихія й форма; у картці сховища — ще роль і показники */
+const jobsI=p=>Object.keys((T[p.ty]||{}).wk||{}).map(j=>JI[j]||'').join('');
+const isFi=p=>((T[p.ty]||{}).e||[]).includes('fi');
+const jobs=p=>Object.entries((T[p.ty]||{}).wk||{}).map(([j,l])=>(JI[j]||'')+l).join(' ')+(isFi(p)?' 🔥':'');
+const nmL=p=>`${(typeof EL!='undefined'&&EL[p.ty])||''} ${T[p.ty].n}`;
+const fmL=p=>(p.fm||1)>1?' · Форма '+p.fm:'';
+const JF={chop:'Рубка дерева',mine:'Видобуток каменю',gather:'Збір ягід і грибів',carry:'Перенесення їжі',cook:'Готування їжі',water:'Поливання',cool:'Охолодження їжі'};
+function palInfo(p){const G=window.PALGROWTH,wk=(T[p.ty]||{}).wk||{};let h='';
+ if(G){const r=G.ROLE[G.role(p)],s=G.stats(p);h+=`<div class='pi'>${r[0]} ${r[1]} · ❤️ ${s.hp} · ⚔️ ${s.atk} · 🛡️ ${s.def}</div>`}
+ h+=`<div class='pi'>${Object.entries(wk).map(([j,l])=>`${JI[j]||''} ${JF[j]||j} Lv${l}`).join('<br>')}${isFi(p)?'<br>🔥 Плавить руду в печі':''}</div>`;return h}
 const crL=p=>`🎒 Перенос Lv${p.cr||1} (${window.palCarry?palCarry(p):5} кг)`;
 const cv=(p,s)=>{const c=document.createElement('canvas');c.width=c.height=s;try{drawCrit(c,T[p.ty].c)}catch(_){}return c};
 function openCen(){ivO=1;box.style.display='flex';render()}
@@ -143,14 +153,14 @@ function crewHTML(){const g=upgradeState(),cost=g.next<=5?LVCOST[g.next]:null;re
  <div class='cr'><div class='box tm'><h5>Кого поставити на роботу</h5></div></div></div>`}
 function crewBind(){const g=box.querySelector('.wg'),cr=crew();
  for(let k=0;k<wMax();k++){const p=cr[k],d=document.createElement('div');
-  if(p){d.className='wc';d.appendChild(cv(p,96));d.insertAdjacentHTML('beforeend',`<div><b>${T[p.ty].n}</b><br>рів. ${p.lv||1} · ${jobs(p)}<br>${crL(p)}${window.palLoad?' · вантаж '+(Math.round(palLoad(p)*10)/10)+' кг':''}<br><span class='em'>${p.st||'⚙️ Береться до роботи'}</span></div><button>↩ Відпочити</button>`);d.querySelector('button').onclick=()=>offCrew(p)}
+  if(p){d.className='wc';d.appendChild(cv(p,96));d.insertAdjacentHTML('beforeend',`<div><b>${nmL(p)}</b><br>рів. ${p.lv||1}${fmL(p)} · ${jobs(p)}<br>${crL(p)}${window.palLoad?' · вантаж '+(Math.round(palLoad(p)*10)/10)+' кг':''}<br><span class='em'>${p.st||'⚙️ Береться до роботи'}</span></div><button>↩ Відпочити</button>`);d.querySelector('button').onclick=()=>offCrew(p)}
   else{d.className='wc e';d.textContent='＋ Вільне місце — оберіть попала праворуч'}
   g.appendChild(d)}
  const tl=box.querySelector('.tm'),full=cr.length>=wMax();
  const cand=pals.filter(p=>!(p.cs!=null&&p.wk)).sort((a,b)=>(a.cs==null)-(b.cs==null));
  if(!cand.length)tl.insertAdjacentHTML('beforeend',`<div class='em'>${pals.length?'Усі ваші попали вже в бригаді.':'Зловіть попала кулею 🔮 — і поставте сюди.'}</div>`);
  for(const p of cand){const i=pals.indexOf(p),r=document.createElement('div');r.className='tr';r.appendChild(cv(p,40));
-  r.insertAdjacentHTML('beforeend',`<span>${T[p.ty].n} · рів. ${p.lv||1} ${jobs(p)}<br><small class='em'>${crL(p)} · ${p.cs!=null?'🗄️ у сховищі':i===selP?'🚶 з вами':'🔮 з вами у сфері'}</small></span><button ${full?'disabled':''}>⚒️ На роботу</button>`);
+  r.insertAdjacentHTML('beforeend',`<span>${nmL(p)} · рів. ${p.lv||1}${fmL(p)} · ${jobs(p)}<br><small class='em'>${crL(p)} · ${p.cs!=null?'🗄️ у сховищі':i===selP?'🚶 з вами':'🔮 з вами у сфері'}</small></span><button ${full?'disabled':''}>⚒️ На роботу</button>`);
   r.querySelector('button').onclick=()=>toCrew(p);tl.appendChild(r)}}
 /* ---------- вкладка «Сховище» ---------- */
 function storeHTML(){const inC=pals.filter(p=>p.cs!=null),pages=[...Array(NP)].map((_,k)=>inC.some(p=>p.cs>=k*PG&&p.cs<(k+1)*PG));
@@ -160,17 +170,17 @@ function storeBind(){const inC=pals.filter(p=>p.cs!=null),tm=palTeam(),cap=windo
  box.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>{page=Math.max(0,Math.min(NP-1,page+ +b.dataset.pg));sel=null;render()});
  const g=box.querySelector('.cg');
  for(let k=0;k<PG;k++){const si=page*PG+k,p=inC.find(q=>q.cs===si),d=document.createElement('div');d.className='cs'+(p?' f':'')+(sel===si?' on':'');
-  if(p){d.appendChild(cv(p,64));d.insertAdjacentHTML('beforeend',`<span class='lv'>${p.lv||1}</span><span class='jb'>${jobs(p)}</span>${p.wk?"<span class='wb'>⚒️</span>":''}`)}else d.innerHTML=`<span class='pl'>＋</span>`;
+  if(p){d.appendChild(cv(p,64));d.insertAdjacentHTML('beforeend',`<span class='lv'>${p.lv||1}</span><span class='jb'>${jobsI(p)}</span>${p.wk?"<span class='wb'>⚒️</span>":''}`)}else d.innerHTML=`<span class='pl'>＋</span>`;
   d.onclick=()=>{sel=si;render()};g.appendChild(d)}
  const dt=box.querySelector('.dt'),sp=sel!=null&&inC.find(q=>q.cs===sel);
- if(sp){const t=T[sp.ty];dt.appendChild(cv(sp,88));dt.insertAdjacentHTML('beforeend',`<div><b>${t.n}</b> · рів. ${sp.lv||1}<br><span class='em'>${sp.wk?'⚒️ У бригаді — працює':'🗄️ Відпочиває'} ${jobs(sp)}<br>${crL(sp)}</span></div>${sp.wk?"<button data-off>↩ Відпочити</button>":`<button data-on ${crew().length>=wMax()?'disabled':''}>⚒️ На роботу</button>`}<button data-out ${tm.length>=cap?'disabled':''}>🎒 Забрати</button>`);
+ if(sp){const t=T[sp.ty];dt.appendChild(cv(sp,88));dt.insertAdjacentHTML('beforeend',`<div><b>${nmL(sp)}</b> · рів. ${sp.lv||1}${fmL(sp)}<br><span class='em'>${sp.wk?'⚒️ У бригаді — працює':'🗄️ Відпочиває'}<br>${crL(sp)}</span>${palInfo(sp)}</div>${sp.wk?"<button data-off>↩ Відпочити</button>":`<button data-on ${crew().length>=wMax()?'disabled':''}>⚒️ На роботу</button>`}<button data-out ${tm.length>=cap?'disabled':''}>🎒 Забрати</button>`);
   const on=dt.querySelector('[data-on]'),off=dt.querySelector('[data-off]');if(on)on.onclick=()=>toCrew(sp);if(off)off.onclick=()=>offCrew(sp);
   dt.querySelector('[data-out]').onclick=()=>{if(palTeam().length>=cap){msg('З вами вже повна команда');return}sp.cs=null;sp.wk=0;sel=null;done('🐾 '+t.n+' тепер з вами у сфері')}}
  else if(sel!=null)dt.innerHTML=`<div class='em'>Слот ${sel+1} вільний. Натисніть «➕ У сховище» біля попала праворуч.</div>`;
  else dt.innerHTML=`<div class='em'>У сховищі попали відпочивають. Працюють лише ті, що в бригаді (вкладка «⚒️ Бригада»). Оберіть слот, щоб побачити попала.</div>`;
  const tl=box.querySelector('.tm');
  if(!tm.length)tl.insertAdjacentHTML('beforeend',`<div class='em'>${pals.length?'Усі ваші попали вже в центрі.':'Зловіть попала кулею 🔮 — і покладіть сюди.'}</div>`);
- for(const i of tm){const p=pals[i],r=document.createElement('div');r.className='tr';r.appendChild(cv(p,40));r.insertAdjacentHTML('beforeend',`<span>${T[p.ty].n} · рів. ${p.lv||1} ${jobs(p)}${i===selP?' · 🚶 з вами':''}</span><button>➕ У сховище</button>`);
+ for(const i of tm){const p=pals[i],r=document.createElement('div');r.className='tr';r.appendChild(cv(p,40));r.insertAdjacentHTML('beforeend',`<span>${nmL(p)} · рів. ${p.lv||1}${fmL(p)} · ${jobs(p)}${i===selP?' · 🚶 з вами':''}</span><button>➕ У сховище</button>`);
   r.querySelector('button').onclick=()=>{const want=sel!=null&&!inC.some(q=>q.cs===sel)?sel:cenFree(page*PG);if(want<0){msg('🏠 Попал-центр заповнений');return}
    p.cs=want;p.wk=0;sel=want;page=Math.floor(want/PG);done('🗄️ '+T[p.ty].n+' у сховищі Попал-центру')};
   tl.appendChild(r)}}
