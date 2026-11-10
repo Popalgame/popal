@@ -57,7 +57,7 @@ const css=document.createElement('style');css.textContent=`
 #rfx .lk small{flex-basis:100%;color:#a9c8cf;font-size:11.5px}
 #rfx .rfb{flex:1;min-height:0;overflow:auto;padding:0 10px 12px;-webkit-overflow-scrolling:touch}
 #rfx .tb{--rh:clamp(62px,13vh,86px);--cw:clamp(48px,6.4vw,66px);--tw:76px;--gw:64px;--g:10px;--bw:118px;min-width:660px}
-@media (max-width:1100px){#rfx .tb{--tw:74px;--gw:74px;--g:6px;--bw:96px}#rfx .top span{font-size:13px}#rfx .tr{font-size:28px!important}#rfx .rw u{font-size:13px}}
+@media (max-width:1100px){#rfx .tb{--tw:74px;--gw:0px;--g:6px;--bw:96px}#rfx .top span{font-size:13px}#rfx .top .cols span:nth-child(3){font-size:0;border:0}#rfx .pl .id{display:none}#rfx .pl{gap:8px}#rfx .tr{font-size:28px!important}#rfx .rw u{font-size:13px}}
 #rfx .cols,#rfx .card{display:grid;grid-template-columns:minmax(140px,1fr) var(--tw) var(--gw) repeat(5,var(--cw));column-gap:var(--g);align-items:center}
 #rfx .top{display:flex;align-items:stretch;background:rgba(18,52,64,.85);border-radius:4px;margin:0 0 8px}
 #rfx .top .cols{flex:1;padding:0 14px}
