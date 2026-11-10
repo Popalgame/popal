@@ -7,7 +7,8 @@
      ✕ прибирає його (inv._refHide) і звільняє місце наступному. Порожні місця — «Вільне місце».
    • 0.2.17: раз на 10 хв гра сама перевіряє друзів; якщо є нагорода, яку можна забрати, — червона крапка на язичку меню
      і на плитці «Запроси друга» (news.js, window.plMenuBadge).
-     Нагорода стає доступною, коли друг досяг рівня; гравець забирає її натисканням (відмітка ✔ — inv._refc[uid] = [10,20,…]).
+     Нагорода стає доступною, коли друг досяг рівня; гравець забирає її натисканням. Відмітка ✔ зберігається за місцем у таблиці:
+     inv._refT[i] = [10,20,…] — щоб видаленням друга й запрошенням нового нагороду не можна було отримати вдруге.
      Бонус за трьох друзів на 50 рівні — поки «?», згодом унікальний попал.
    • Правила Firestore для колекції referrals — docs/firestore-rules-mail-promo.md. Без них вікно пише «ще не ввімкнено на сервері». */
 (function(){try{
@@ -41,6 +42,7 @@ setInterval(push,60000);setTimeout(push,9000);
 const MAX=3;/* скільки друзів поміщається; згодом можна збільшити */
 if(!Array.isArray(inv._refSlots))inv._refSlots=[];
 if(!inv._refHide||typeof inv._refHide!='object')inv._refHide={};
+if(!Array.isArray(inv._refT))inv._refT=[];for(let i=0;i<MAX;i++)if(!Array.isArray(inv._refT[i]))inv._refT[i]=[];
 const css=document.createElement('style');css.textContent=`
 #rfx{position:fixed;inset:0;z-index:44;display:none;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eef4ff;background:rgba(4,10,22,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
  padding:calc(env(safe-area-inset-top,0px) + 2.5vh) calc(env(safe-area-inset-right,0px) + 2.5vw) calc(env(safe-area-inset-bottom,0px) + 2.5vh) calc(env(safe-area-inset-left,0px) + 2.5vw)}
@@ -89,7 +91,7 @@ const css=document.createElement('style');css.textContent=`
 #rfx .card.emp{background:rgba(14,36,52,.55);border-style:dashed;border-color:rgba(184,145,63,.6)}
 #rfx .card.emp .av{background:rgba(255,255,255,.06);border:2px dashed rgba(207,215,224,.45);color:rgba(255,255,255,.55);text-shadow:none}
 #rfx .card.emp .nm{padding-right:0}#rfx .card.emp b{font-size:15px}#rfx .card.emp small{font-size:12.5px}#rfx .card.emp b{color:#bcd0da}#rfx .card.emp small{color:#8fb0bd}
-#rfx .card.emp .rw{opacity:.35}
+#rfx .card.emp .rw{opacity:.35}#rfx .card.emp .rw.done{opacity:.75}
 #rfx .brk{position:relative;width:var(--bw);flex:none}
 #rfx .brk .v{position:absolute;left:14px;width:18px;border:2px solid #c9a24f;border-left:0;top:calc(var(--rh) / 2);bottom:calc(var(--rh) / 2)}
 #rfx .brk .m{position:absolute;left:14px;width:18px;height:0;border-top:2px solid #c9a24f;top:50%}
@@ -123,22 +125,28 @@ const cell=(items,st,attrs)=>{const[k,n]=Object.entries(items)[0];const ic=k=='_
 let all=[],list=[],loading=false,err='';
 /* друзі займають місця назавжди (inv._refSlots); вільне місце займає наступний за рівнем */
 let saved=null;
-function slot(){const by=Object.fromEntries(all.map(f=>[f.uid,f]));
- inv._refSlots=inv._refSlots.filter(u=>by[u]&&!inv._refHide[u]).slice(0,MAX);
- const rest=all.filter(f=>!inv._refHide[f.uid]&&!inv._refSlots.includes(f.uid)).sort((a,b)=>(b.lv|0)-(a.lv|0));
- while(inv._refSlots.length<MAX&&rest.length)inv._refSlots.push(rest.shift().uid);
- list=inv._refSlots.map(u=>by[u]);const k=inv._refSlots.join(',');if(k!==saved){saved=k;try{save()}catch(_){}}
+/* 0.2.17: нагороди належать МІСЦЮ в таблиці, а не другові: inv._refT[i] — рівні, за які на місці i нагороду вже забрано.
+   Прибрали друга й запросили нового на те саме місце — доступні лише ще не забрані рівні, тож видаленням друга нагороди не повторити.
+   Місця не зсуваються: прибраний друг лишає порожнє місце i (inv._refSlots[i]=null), його займає наступний із черги. */
+function slot(){const by=Object.fromEntries(all.map(f=>[f.uid,f])),S=inv._refSlots,T_=inv._refT;
+ for(let i=0;i<MAX;i++){const u=S[i];if(!u||!by[u]||inv._refHide[u]||S.indexOf(u)<i)S[i]=null}S.length=MAX;
+ const rest=all.filter(f=>!inv._refHide[f.uid]&&!S.includes(f.uid)).sort((a,b)=>(b.lv|0)-(a.lv|0));
+ for(let i=0;i<MAX&&rest.length;i++)if(!S[i])S[i]=rest.shift().uid;
+ /* старі збереження (0.2.15–0.2.16) тримали забране за другом — переносимо на його місце */
+ for(let i=0;i<MAX;i++){const u=S[i],old=u&&inv._refc[u];if(Array.isArray(old)){for(const t of old)if(!T_[i].includes(t))T_[i].push(t);delete inv._refc[u]}}
+ list=S.map(u=>u?by[u]:null);const k=S.join(',')+'|'+T_.map(a=>a.join('.')).join(',');if(k!==saved){saved=k;try{save()}catch(_){}}
  return rest.length}
 /* скільки нагород можна забрати просто зараз — для червоної крапки в меню (news.js) */
-function ready(){let n=0;for(const f of list){const got=inv._refc[f.uid]||[];for(const t of TIERS)if((f.lv|0)>=t&&!got.includes(t))n++}
- if(BONUS.items&&!inv._refb&&list.filter(f=>(f.lv|0)>=BONUS.lv).length>=BONUS.need)n++;return n}
+function ready(){let n=0;list.forEach((f,i)=>{if(!f)return;const got=inv._refT[i]||[];for(const t of TIERS)if((f.lv|0)>=t&&!got.includes(t))n++});
+ if(BONUS.items&&!inv._refb&&n50()>=BONUS.need)n++;return n}
+const n50=()=>list.filter(f=>f&&(f.lv|0)>=BONUS.lv).length;
 const dot=()=>{try{window.plMenuBadge&&window.plMenuBadge()}catch(_){}};
 /* фонова перевірка друзів: раз на 10 хв, поки вікно закрите */
 async function poll(){if(!ok()||!window.myPid||X.classList.contains('on')||document.hidden)return;
  try{const q=await fbDb.collection('referrals').where('ref','==',window.myPid).limit(100).get();all=q.docs.map(d=>Object.assign({uid:d.id},d.data()));slot();dot()}catch(_){}}
 setTimeout(poll,20000);setInterval(poll,600000);
 function give(items){for(const[i,n]of Object.entries(items))addI(i,n);try{msg('🎁 Нагорода за друга: '+Object.entries(items).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', '));hud();save()}catch(_){}}
-function claim(uid,lv){const f=list.find(x=>x.uid===uid);if(!f||(f.lv|0)<lv)return;const got=inv._refc[uid]||(inv._refc[uid]=[]);if(got.includes(lv))return;
+function claim(uid,lv){const i=list.findIndex(x=>x&&x.uid===uid),f=list[i];if(!f||(f.lv|0)<lv||!REW[lv])return;const got=inv._refT[i];if(got.includes(lv))return;
  if(REW[lv]._crx){choose(k=>{if(got.includes(lv))return;got.push(lv);give({[k]:1});render()});return}
  got.push(lv);give(REW[lv]);render()}
 /* вибір кристала стихії */
@@ -146,33 +154,33 @@ function choose(cb){const ks=window.EVO_CR||[];const d=document.createElement('d
  d.innerHTML=`<div class='bx'><h3>Виберіть кристал стихії</h3><p>Кристал потрібен для другої форми попала цієї стихії з 25 рівня.</p><div class='gr'>${ks.map(k=>`<button data-k='${k}'>${ico(k)}<b>${IT[k]?IT[k][1]:k}</b></button>`).join('')}</div><button class='no'>Скасувати</button></div>`;
  X.querySelector('.win').appendChild(d);d.onclick=e=>{const b=e.target.closest('[data-k]');if(b){d.remove();cb(b.dataset.k);return}if(e.target.closest('.no')||e.target===d)d.remove()}}
 /* прибрати друга зі списку — звільняє місце */
-function drop(uid){const f=list.find(x=>x.uid===uid);if(!f)return;const d=document.createElement('div');d.className='rfch';
- d.innerHTML=`<div class='bx'><h3>Прибрати друга?</h3><p><b translate='no'>${esc(f.name)}</b> зникне з вашого списку, а його місце стане вільним для нового друга. Повернути його не вийде.</p><button class='no'>Скасувати</button><button class='yes'>Прибрати</button></div>`;
- X.querySelector('.win').appendChild(d);d.onclick=e=>{if(e.target.closest('.yes')){d.remove();inv._refHide[uid]=1;inv._refSlots=inv._refSlots.filter(u=>u!==uid);render();return}if(e.target.closest('.no')||e.target===d)d.remove()}}
-function claimBonus(){const n=list.filter(f=>(f.lv|0)>=BONUS.lv).length;if(n<BONUS.need||inv._refb||!BONUS.items)return;inv._refb=1;give(BONUS.items);render()}
+function drop(uid){const f=list.find(x=>x&&x.uid===uid);if(!f)return;const d=document.createElement('div');d.className='rfch';
+ d.innerHTML=`<div class='bx'><h3>Прибрати друга?</h3><p><b translate='no'>${esc(f.name)}</b> зникне з вашого списку, а його місце стане вільним для нового друга. Повернути його не вийде. Нагороди, які на цьому місці вже забрано, новий друг не дасть удруге.</p><button class='no'>Скасувати</button><button class='yes'>Прибрати</button></div>`;
+ X.querySelector('.win').appendChild(d);d.onclick=e=>{if(e.target.closest('.yes')){d.remove();inv._refHide[uid]=1;const i=inv._refSlots.indexOf(uid);if(i>=0)inv._refSlots[i]=null;render();return}if(e.target.closest('.no')||e.target===d)d.remove()}}
+function claimBonus(){const n=n50();if(n<BONUS.need||inv._refb||!BONUS.items)return;inv._refb=1;give(BONUS.items);render()}
 function linkBox(){if(!window.myPid){lkw.innerHTML="<div class='lk'><small>Увійдіть в акаунт у меню героя — отримаєте ID і власне посилання для друзів.</small></div>";return}
  lkw.innerHTML=`<div class='lk'><code translate='no'>${esc(link())}</code><button data-cp>📋 Копіювати</button>${navigator.share?"<button class='o' data-sh>📤 Поділитися</button>":''}<small>Друг відкриває гру за цим посиланням і входить в акаунт — і одразу отримує подарунок: ${Object.entries(REF_GIFT).map(([i,n])=>(IT[i]?IT[i][1]:i)+' ×'+n).join(', ')}.</small></div>`;
  const cp=lkw.querySelector('[data-cp]');cp.onclick=()=>{const t=link();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>msg('📋 Посилання скопійовано')).catch(()=>{try{prompt('Скопіюйте посилання',t)}catch(_){}})};
  const sh=lkw.querySelector('[data-sh]');if(sh)sh.onclick=()=>{navigator.share({title:'Regnum Land',text:'Грай зі мною в Regnum Land — лови попалів і будуй базу!',url:link()}).catch(()=>{})}}
-function row(f){const got=inv._refc[f.uid]||[],lv=f.lv|0,on=f.t&&Date.now()-f.t<ONLINE,tr=f.t&&Date.now()-f.t<TRUST;
+function row(f,i){const got=inv._refT[i]||[],lv=f.lv|0,on=f.t&&Date.now()-f.t<ONLINE,tr=f.t&&Date.now()-f.t<TRUST;
  let h=`<div class='card'><div class='pl'><span class='av' style='--h:${hue(f.name||f.uid)}' translate='no'>${esc((f.name||'?').slice(0,1).toUpperCase())}<i>${lv}</i></span><span class='nm'><b translate='no'>${esc(f.name)}<span class='id'>ID ${esc(f.pid)}</span></b><small class='${on?'on':''}'>${ago(f.t)}</small></span></div>`;
  h+=`<span class='tr ${tr?'on':''}' title='${tr?'Активний друг — грав протягом тижня':'Друг давно не грав'}'>🤝</span><span></span>`;
  for(const t of TIERS){const st=got.includes(t)?'done':lv>=t?'ready':'lock';h+=cell(REW[t],st,st=='ready'?`data-u='${esc(f.uid)}' data-l='${t}'`:'')}
  return h+`<button class='del' data-x='${esc(f.uid)}' aria-label='Прибрати друга' title='Прибрати друга'>✕</button></div>`}
-const empty=()=>`<div class='card emp'><div class='pl'><span class='av'>+</span><span class='nm'><b>Вільне місце</b><small>Надішліть посилання другу</small></span></div><span></span><span></span>${TIERS.map(t=>cell(REW[t],'lock')).join('')}</div>`;
+const empty=i=>`<div class='card emp'><div class='pl'><span class='av'>+</span><span class='nm'><b>Вільне місце</b><small>Надішліть посилання другу</small></span></div><span></span><span></span>${TIERS.map(t=>cell(REW[t],(inv._refT[i]||[]).includes(t)?'done':'lock')).join('')}</div>`;
 function render(){linkBox();
  const wait=all.length?slot():(list=[],0);
- const n50=list.filter(f=>(f.lv|0)>=BONUS.lv).length,bst=inv._refb?'done':n50>=BONUS.need?'ready':'lock';
+ const n5=n50(),bst=inv._refb?'done':n5>=BONUS.need?'ready':'lock';
  let h=err||(loading?"<div class='ld'>Завантаження друзів…</div>":'');
  h+=`<div class='tb'><div class='top'><div class='cols'><span class='l'>Гравець</span><span class='bd'>Довіра</span><span class='bd'>Рівень</span>${TIERS.map(t=>`<span>${t}</span>`).join('')}</div><span class='bh'>Бонус</span></div><div class='main'><div class='rows'>`;
- for(let i=0;i<MAX;i++)h+=list[i]?row(list[i]):empty();
- h+=`</div><div class='brk'><span class='v'></span><span class='m'></span><span class='h'></span><span class='bx'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${inv._refb?'done':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n50} / ${BONUS.need} · ${BONUS.lv} рів.</small></span></div></div></div>`;
+ for(let i=0;i<MAX;i++)h+=list[i]?row(list[i],i):empty(i);
+ h+=`</div><div class='brk'><span class='v'></span><span class='m'></span><span class='h'></span><span class='bx'>${BONUS.items?cell(BONUS.items,bst,bst=='ready'?'data-b':''):`<span class='rw mys ${inv._refb?'done':''}' title='Унікальний попал — скоро'><span class='ic'>?</span></span>`}<small>${n5} / ${BONUS.need} · ${BONUS.lv} рів.</small></span></div></div></div>`;
  if(wait)h+=`<p class='more'>Чекають на вільне місце: ${wait}</p>`;
  bd.innerHTML=h+tip();dot();
  bd.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>claim(b.dataset.u,+b.dataset.l));
  bd.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>drop(b.dataset.x));
  const bb=bd.querySelector('[data-b]');if(bb)bb.onclick=claimBonus}
-const tip=()=>`<p class='tip'>Нагороду за рівень друга можна забрати, коли він його досягне — торкніться клітинки, що світиться. За кожного друга: ${TIERS.map(t=>t+' рів. — '+Object.entries(REW[t]).map(([i,n])=>nm(i)+' ×'+n).join(', ')).join('; ')}. Три друзі з 50 рівнем — таємний бонус: незабаром тут буде унікальний попал.</p>`;
+const tip=()=>`<p class='tip'>Нагороду за рівень друга можна забрати, коли він його досягне — торкніться клітинки, що світиться. За кожного друга: ${TIERS.map(t=>t+' рів. — '+Object.entries(REW[t]).map(([i,n])=>nm(i)+' ×'+n).join(', ')).join('; ')}. Нагороду за кожен рівень на кожному місці дають один раз: якщо прибрати друга, новий на його місці дасть лише ще не забрані. Три друзі з 50 рівнем — таємний бонус: незабаром тут буде унікальний попал.</p>`;
 async function load(){err='';if(!ok()||!window.myPid){all=[];render();return}
  loading=true;render();
  try{const q=await fbDb.collection('referrals').where('ref','==',window.myPid).limit(100).get();all=q.docs.map(d=>Object.assign({uid:d.id},d.data()))}
