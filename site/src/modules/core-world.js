@@ -81,18 +81,26 @@ const FL_=110,GL_=64,GN=20000,FN=700,gm=new THREE.InstancedMesh(new THREE.ConeGe
 for(let i=0;i<GN;i++){grd0.push([rn(0,GL_),rn(0,GL_),rn(-.2,.2),rn(0,6),rn(-.2,.2),rn(.7,1.5)]);gm.setColorAt(i,new THREE.Color([0x66903e,0x739b47,0x608b3b,0x82a650,0x6d9442][i%5]))}sc.add(gm);gm.frustumCulled=false;
 const fm=new THREE.InstancedMesh(new THREE.SphereGeometry(.09,6,4),new THREE.MeshStandardMaterial({roughness:.6}),FN),fc=[0xffffff,0xffe040,0xff5c9a,0xa870ff];
 for(let i=0;i<FN;i++){fld0.push([rn(0,FL_),rn(0,FL_)]);fm.setColorAt(i,new THREE.Color(fc[i%4]))}sc.add(fm);fm.frustumCulled=false;
-let gcx=1e9,gcz=1e9;
+let gcx=1e9,gcz=1e9,grI=0,grN=0;
 const NOGR={lava:1,ash:1,snow:1},SPGR={desert:1,sand:1,rock:1};/* 0.1.16: без трави на лаві, попелі й снігу; рідка — на піску, у пустелі й на скелях */
-function regrass(cx,cz){gcx=cx;gcz=cz;
-for(let i=0;i<GN;i++){const d=grd0[i],x=d[0]+GL_*Math.round((cx-d[0])/GL_),z=d[1]+GL_*Math.round((cz-d[1])/GL_),h=H(x,z),bi=BIO(x,z);du.position.set(x,(h<-.35||h>5.5||NOGR[bi]||pathD(x,z)<1.05+.16*Math.sin(x*3+z*5)||(SPGR[bi]&&i%5))?-5:h,z);du.rotation.set(d[2],d[3],d[4]);du.scale.setScalar(d[5]);du.updateMatrix();gm.setMatrixAt(i,du.matrix)}
-for(let i=0;i<FN;i++){const d=fld0[i],x=d[0]+FL_*Math.round((cx-d[0])/FL_),z=d[1]+FL_*Math.round((cz-d[1])/FL_),h=H(x,z),bi=BIO(x,z);du.position.set(x,(h<-.35||h>5.5||NOGR[bi]||SPGR[bi]||pathD(x,z)<1.7)?-5:h+.1,z);du.rotation.set(0,0,0);du.scale.setScalar(1);du.updateMatrix();fm.setMatrixAt(i,du.matrix)}
-gm.instanceMatrix.needsUpdate=true;fm.instanceMatrix.needsUpdate=true}
-regrass(0,0);
+/* 0.2.18: траву переставляємо порціями по кілька тисяч кущиків за кадр і лише ті, що справді малюються (gm.count),
+   а на відеокарту йде тільки змінений шматок буфера. Раніше кожні 10 м руху всі 20 000 кущиків рахувалися за один кадр — це давало ривок.
+   window.plGrassBlocked — клітинки фундаментів, де трава не росте (building-vegetation.js). */
+function grassStep(max){const e=Math.min(grN,grI+max),cx=gcx,cz=gcz,BL=window.plGrassBlocked;
+for(let i=grI;i<e;i++){const d=grd0[i],x=d[0]+GL_*Math.round((cx-d[0])/GL_),z=d[1]+GL_*Math.round((cz-d[1])/GL_),h=H(x,z),bi=BIO(x,z);du.position.set(x,(h<-.35||h>5.5||NOGR[bi]||pathD(x,z)<1.05+.16*Math.sin(x*3+z*5)||(SPGR[bi]&&i%5)||(BL&&BL.has(Math.floor(x/3)+','+Math.floor(z/3))))?-5:h,z);du.rotation.set(d[2],d[3],d[4]);du.scale.setScalar(d[5]);du.updateMatrix();gm.setMatrixAt(i,du.matrix)}
+if(e>grI){const at=gm.instanceMatrix,r=at.updateRange;/* кілька порцій за один кадр зливаються в один діапазон */
+ if(r.count>0&&at._grV===at.version){const lo=Math.min(r.offset,grI*16),hi=Math.max(r.offset+r.count,e*16);r.offset=lo;r.count=hi-lo}else{r.offset=grI*16;r.count=(e-grI)*16}
+ at.needsUpdate=true;at._grV=at.version}
+grI=e}
+function regrass(cx,cz,now){gcx=cx;gcz=cz;grN=Math.min(GN,Math.max(1,gm.count|0));grI=0;const BL=window.plGrassBlocked;
+for(let i=0;i<FN;i++){const d=fld0[i],x=d[0]+FL_*Math.round((cx-d[0])/FL_),z=d[1]+FL_*Math.round((cz-d[1])/FL_),h=H(x,z),bi=BIO(x,z);du.position.set(x,(h<-.35||h>5.5||NOGR[bi]||SPGR[bi]||pathD(x,z)<1.7||(BL&&BL.has(Math.floor(x/3)+','+Math.floor(z/3))))?-5:h+.1,z);du.rotation.set(0,0,0);du.scale.setScalar(1);du.updateMatrix();fm.setMatrixAt(i,du.matrix)}
+fm.instanceMatrix.needsUpdate=true;if(now)grassStep(GN)}
+regrass(0,0,1);
 /* base */
 const base=new THREE.Group();sc.add(base);
 /* camp & world art */
 const ANI=[];function envUp(t){for(const f of ANI)f(t)}
-ANI.push(()=>{if(gm.visible&&Math.hypot(P.x-gcx,P.z-gcz)>10)regrass(P.x,P.z)});
+ANI.push(()=>{if(!gm.visible)return;if(grI<grN)grassStep(2500);else if(Math.hypot(P.x-gcx,P.z-gcz)>10||gm.count>grN)regrass(P.x,P.z)});
 const woodT=cv2(128,(x,n)=>{x.fillStyle='#fff';x.fillRect(0,0,n,n);for(let i=0;i<8;i++){const l=200+Math.random()*50|0;x.fillStyle='rgb('+l+','+l+','+l+')';x.fillRect(i*16+1,0,14,n);x.fillStyle='rgba(50,25,8,.4)';x.fillRect(i*16,0,2,n);for(let k=0;k<4;k++)x.fillRect(i*16+3+Math.random()*9,Math.random()*n,1,8+Math.random()*16)}});
 const tileT=cv2(128,(x,n)=>{x.fillStyle='#bbb';x.fillRect(0,0,n,n);for(let r=0;r<9;r++)for(let c=-1;c<9;c++){const l=185+Math.random()*70|0;x.fillStyle='rgb('+l+','+l+','+l+')';x.beginPath();x.arc(c*16+(r%2)*8+8,r*14,9,0,Math.PI);x.rect(c*16+(r%2)*8-1,r*14-14,18,14);x.fill();x.strokeStyle='rgba(0,0,0,.4)';x.lineWidth=1.5;x.stroke()}});
 const pathT=cv2(128,(x,n)=>{x.fillStyle='#b99a62';x.fillRect(0,0,n,n);for(let r=0;r<8;r++)for(let c=0;c<5;c++){const w=n/5,l=170+Math.random()*55|0;x.fillStyle='rgb('+l+','+(l-14)+','+(l-34)+')';x.fillRect(c*w+(r%2)*w/2+2,r*16+2,w-4,12)}x.globalCompositeOperation='destination-in';const g=x.createLinearGradient(0,0,n,0);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.14,'#000');g.addColorStop(.86,'#000');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,n,n)});

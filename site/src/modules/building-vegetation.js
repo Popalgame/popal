@@ -3,18 +3,13 @@
 (function(){
 if(!window.BUILD)return;
 const cells=()=>window.BUILD.pieces.filter(p=>p.t===0).map(p=>p.cx+','+p.cz);
+/* 0.2.18: трава переставляється порціями (core-world.js), тому клітинки фундаментів передаємо їй наперед,
+   а не правимо готовий буфер після перестановки. */
 const original=regrass;
 regrass=function(){
- original.apply(this,arguments);
- const blocked=new Set(cells());
- if(!blocked.size)return;
- for(const mesh of [gm,fm]){
-  const values=mesh.instanceMatrix.array;
-  for(let i=0;i<values.length;i+=16){
-   if(values[i+13]>-4&&blocked.has(Math.floor(values[i+12]/3)+','+Math.floor(values[i+14]/3)))values[i+13]=-5;
-  }
-  mesh.instanceMatrix.needsUpdate=true;
- }
+ const list=cells();
+ window.plGrassBlocked=list.length?new Set(list):null;
+ return original.apply(this,arguments);
 };
 let last='';
 window.plRefreshVegetation=function(){

@@ -11,7 +11,9 @@ test('plants disappear under saved foundations and return after removal',()=>{
  const env={gm,fm,P,BUILD:{pieces},regrass(){
   refreshes++;
   for(const m of [gm,fm])for(const [i,x,z] of [[0,1,1],[16,-1,-1],[32,4,1]]){
-   m.instanceMatrix.array[i+12]=x;m.instanceMatrix.array[i+13]=.5;m.instanceMatrix.array[i+14]=z;
+   /* 0.2.18: core-world.js сам ховає рослини в клітинках із window.plGrassBlocked, які готує building-vegetation.js */
+   const blocked=env.plGrassBlocked&&env.plGrassBlocked.has(Math.floor(x/3)+','+Math.floor(z/3));
+   m.instanceMatrix.array[i+12]=x;m.instanceMatrix.array[i+13]=blocked?-5:.5;m.instanceMatrix.array[i+14]=z;
   }
  }};
  env.window=env;vm.createContext(env);vm.runInContext(source,env);
