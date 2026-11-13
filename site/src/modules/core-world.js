@@ -92,15 +92,39 @@ if(e>grI){const at=gm.instanceMatrix,r=at.updateRange;/* кілька порці
  if(r.count>0&&at._grV===at.version){const lo=Math.min(r.offset,grI*16),hi=Math.max(r.offset+r.count,e*16);r.offset=lo;r.count=hi-lo}else{r.offset=grI*16;r.count=(e-grI)*16}
  at.needsUpdate=true;at._grV=at.version}
 grI=e}
+/* 0.2.18: траву й квіти малюємо лише в кадрі. Головні сітки gm і fm (з ними працюють perf.js, visuals.js, grass-quality.js) більше
+   не малюються самі: їхні екземпляри розкладаються по GK×GK клітинках навколо героя, кожна клітинка — своя сітка зі сферою меж,
+   тож three.js пропускає клітинки за спиною камери й за дальністю прорисовки. Сховані під землю кущики (y<-4) не малюються взагалі. */
+const GK=4;
+function mkSplit(master,tile,cap){const subs=[],T={geo:null,n:-1};master.layers.set(31);
+ for(let k=0;k<GK*GK;k++){const m=new THREE.InstancedMesh(master.geometry,master.material,cap);m.count=0;m.frustumCulled=true;m.matrixAutoUpdate=false;m.userData.noFreeze=1;m.userData.chunked=1;
+  m.instanceColor=new THREE.BufferAttribute(new Float32Array(cap*3),3);sc.add(m);subs.push(m)}
+ /* геометрія й матеріал головної сітки можуть змінитися (якість трави, вітер) — підхоплюємо */
+ T.sync=()=>{if(T.geo!==master.geometry){T.geo=master.geometry;for(const m of subs){const g=new THREE.BufferGeometry(),o=m.geometry.boundingSphere;m.userData.ia=[];for(const k in T.geo.attributes){const at=T.geo.attributes[k];/* атрибут на екземпляр (відтінок квітки) — власна копія в порядку клітинки */
+     if(at.isInstancedBufferAttribute){const cp=new THREE.InstancedBufferAttribute(new at.array.constructor(cap*at.itemSize),at.itemSize,at.normalized,at.meshPerAttribute);g.setAttribute(k,cp);m.userData.ia.push([at,cp])}else g.setAttribute(k,at)}if(T.geo.index)g.setIndex(T.geo.index);T.n=-1;
+    g.userData.sharedWorldGeometry=1;g.boundingSphere=o&&m.geometry!==master.geometry&&m.geometry.userData.sharedWorldGeometry?o:new THREE.Sphere(new THREE.Vector3(),1e4);m.geometry=g}}
+  for(const m of subs){if(m.material!==master.material)m.material=master.material;m.visible=master.visible;m.receiveShadow=master.receiveShadow}};
+ T.split=(cx,cz,n)=>{T.sync();const src=master.instanceMatrix.array,sc_=master.instanceColor&&master.instanceColor.array,C=tile/GK,x0=cx-tile/2,z0=cz-tile/2,cnt=new Int32Array(GK*GK),lo=new Float32Array(GK*GK).fill(1e9),hi=new Float32Array(GK*GK).fill(-1e9);
+  n=Math.min(n,master.instanceMatrix.count);
+  for(let i=0;i<n;i++){const o=i*16,y=src[o+13];if(y<-4)continue;let kx=Math.floor((src[o+12]-x0)/C),kz=Math.floor((src[o+14]-z0)/C);kx=kx<0?0:kx>=GK?GK-1:kx;kz=kz<0?0:kz>=GK?GK-1:kz;
+   const k=kx*GK+kz,j=cnt[k];if(j>=cap)continue;const m=subs[k],dst=m.instanceMatrix.array,p=j*16;for(let q=0;q<16;q++)dst[p+q]=src[o+q];
+   for(const[at,cp]of m.userData.ia){const w=at.itemSize;if(i<at.count)for(let q=0;q<w;q++)cp.array[j*w+q]=at.array[i*w+q];cp.needsUpdate=true}
+   if(sc_){const dc=m.instanceColor.array;dc[j*3]=sc_[i*3];dc[j*3+1]=sc_[i*3+1];dc[j*3+2]=sc_[i*3+2]}cnt[k]=j+1;if(y<lo[k])lo[k]=y;if(y>hi[k])hi[k]=y}
+  for(let k=0;k<GK*GK;k++){const m=subs[k],c=cnt[k];m.count=c;if(!c)continue;m.instanceMatrix.updateRange.offset=0;m.instanceMatrix.updateRange.count=c*16;m.instanceMatrix.needsUpdate=true;
+   m.instanceColor.updateRange.offset=0;m.instanceColor.updateRange.count=c*3;m.instanceColor.needsUpdate=true;
+   const kx=(k/GK)|0,kz=k%GK,bs=m.geometry.boundingSphere;bs.center.set(x0+(kx+.5)*C,(lo[k]+hi[k])/2,z0+(kz+.5)*C);bs.radius=Math.hypot(C*.7072+1.5,(hi[k]-lo[k])/2+1.5)}
+  T.n=n};
+ return T}
+const GSP=mkSplit(gm,GL_,Math.ceil(GN/(GK*GK)*1.4)),FSP=mkSplit(fm,FL_,Math.ceil(FN/(GK*GK)*1.8)+8);
 function regrass(cx,cz,now){gcx=cx;gcz=cz;grN=Math.min(GN,Math.max(1,gm.count|0));grI=0;const BL=window.plGrassBlocked;
 for(let i=0;i<FN;i++){const d=fld0[i],x=d[0]+FL_*Math.round((cx-d[0])/FL_),z=d[1]+FL_*Math.round((cz-d[1])/FL_),h=H(x,z),bi=BIO(x,z);du.position.set(x,(h<-.35||h>5.5||NOGR[bi]||SPGR[bi]||pathD(x,z)<1.7||(BL&&BL.has(Math.floor(x/3)+','+Math.floor(z/3))))?-5:h+.1,z);du.rotation.set(0,0,0);du.scale.setScalar(1);du.updateMatrix();fm.setMatrixAt(i,du.matrix)}
-fm.instanceMatrix.needsUpdate=true;if(now)grassStep(GN)}
+fm.instanceMatrix.needsUpdate=true;FSP.split(cx,cz,FN);if(now){grassStep(GN);GSP.split(gcx,gcz,Math.min(grN,gm.count))}}
 regrass(0,0,1);
 /* base */
 const base=new THREE.Group();sc.add(base);
 /* camp & world art */
 const ANI=[];function envUp(t){for(const f of ANI)f(t)}
-ANI.push(()=>{if(!gm.visible)return;if(grI<grN)grassStep(2500);else if(Math.hypot(P.x-gcx,P.z-gcz)>10||gm.count>grN)regrass(P.x,P.z)});
+ANI.push(()=>{GSP.sync();FSP.sync();if(FSP.n<0)FSP.split(gcx,gcz,FN);if(!gm.visible)return;if(grI<grN){grassStep(2500);if(grI>=grN)GSP.split(gcx,gcz,Math.min(grN,gm.count))}else if(Math.hypot(P.x-gcx,P.z-gcz)>10||gm.count>grN)regrass(P.x,P.z);else if(Math.min(grN,gm.count)!==GSP.n)GSP.split(gcx,gcz,Math.min(grN,gm.count))});
 const woodT=cv2(128,(x,n)=>{x.fillStyle='#fff';x.fillRect(0,0,n,n);for(let i=0;i<8;i++){const l=200+Math.random()*50|0;x.fillStyle='rgb('+l+','+l+','+l+')';x.fillRect(i*16+1,0,14,n);x.fillStyle='rgba(50,25,8,.4)';x.fillRect(i*16,0,2,n);for(let k=0;k<4;k++)x.fillRect(i*16+3+Math.random()*9,Math.random()*n,1,8+Math.random()*16)}});
 const tileT=cv2(128,(x,n)=>{x.fillStyle='#bbb';x.fillRect(0,0,n,n);for(let r=0;r<9;r++)for(let c=-1;c<9;c++){const l=185+Math.random()*70|0;x.fillStyle='rgb('+l+','+l+','+l+')';x.beginPath();x.arc(c*16+(r%2)*8+8,r*14,9,0,Math.PI);x.rect(c*16+(r%2)*8-1,r*14-14,18,14);x.fill();x.strokeStyle='rgba(0,0,0,.4)';x.lineWidth=1.5;x.stroke()}});
 const pathT=cv2(128,(x,n)=>{x.fillStyle='#b99a62';x.fillRect(0,0,n,n);for(let r=0;r<8;r++)for(let c=0;c<5;c++){const w=n/5,l=170+Math.random()*55|0;x.fillStyle='rgb('+l+','+(l-14)+','+(l-34)+')';x.fillRect(c*w+(r%2)*w/2+2,r*16+2,w-4,12)}x.globalCompositeOperation='destination-in';const g=x.createLinearGradient(0,0,n,0);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.14,'#000');g.addColorStop(.86,'#000');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,n,n)});
