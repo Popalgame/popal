@@ -10,7 +10,7 @@
    Траву й квіти (gm, fm у core-world.js) не чіпаємо — вони щокадру переставляються навколо героя. */
 (function(){try{
 if(typeof THREE==='undefined'||typeof sc==='undefined')return;
-const CELL=40,TILES=8,MIN=24;
+const CELL=60,TILES=6,MIN=24;
 const skip=new Set();try{skip.add(gm);skip.add(fm)}catch(_){}
 
 function share(geo){const g=new THREE.BufferGeometry();for(const k in geo.attributes)g.setAttribute(k,geo.attributes[k]);
