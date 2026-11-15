@@ -59,6 +59,7 @@ const b0=window.BLDC;
 window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);if(!blocked(P_.x,P_.z,0))return;
  if(!blocked(P_.x,oz,0)){P_.z=oz;return}if(!blocked(ox,P_.z,0)){P_.x=ox;return}P_.x=ox;P_.z=oz};
 const cb0=window.colBlocked;
+/* 0.2.20: для камери (premium-fx.js) */(window.plSolidAt=window.plSolidAt||[]).push((x,z)=>blocked(x,z,0));
 window.colBlocked=function(x0,z0,x1,z1,r){if(blocked(x1,z1,.4))return true;return cb0?cb0.apply(this,arguments):false};
 window.SPAWN_CAVE={MO,RU,RV,blocked};
 /* гравцям, які ще не проходили навчання, — підказка про острів (раз за запуск гри) */

@@ -88,6 +88,10 @@ else{for(const x of[-.8,0,.8])add(g,B(.12,.8,.12),W,x,.4,0);for(const y of[.3,.6
 return g}
 window.mkBuilding=mkB;/* 0.2.9: модель будівлі для значків (evolution.js) */
 const placed=[];window.BPLACED=placed;
+/* 0.2.20: будівлі без власного вікна (ліжко вдень, верстаки, стіл зіль, лежанки, ліхтар, паркан) — «Дія» поруч пояснює, навіщо вони,
+   замість «Поруч нічого немає» (core-world.js) */
+const INFO=['B_bed','B_wb','B_wb2','B_wb3','B_alch','B_nest2','B_nest5','B_lamp','B_fen'],CRAFT=['B_wb','B_wb2','B_wb3','B_alch'];
+window.plBuildingInfo=()=>{let b=null,bd=2.8;for(const q of placed){if(!INFO.includes(q.id))continue;const d=Math.hypot(q.x-P.x,q.z-P.z);if(d<bd){bd=d;b=q}}if(!b||!BI[b.id])return null;const o=BI[b.id];return o.i+' '+o.n+': '+o.d+(CRAFT.includes(b.id)?' — відкрийте 🔨 Крафт':'')};
 /* 0.1.27: будівлю ставлять вільно (x,z,ry у сейві); старі записи без координат — на місці слота в кільці */
 function spawnB(id,si,X,Z,RY){const[x,z]=X!=null?[X,Z]:spos(si),g=mkB(id);const C=inv._cen||[0,0];g.position.set(x,H(x,z),z);g.rotation.y=RY!=null?RY:Math.atan2(C[0]-x,C[1]-z);sc.add(g);placed.push({id,g,x,z});for(let i=trees.length-1;i>=0;i--){const t=trees[i];if(Math.hypot(t.x-x,t.z-z)<2.2){sc.remove(t.m);trees.splice(i,1)}}}
 if(inv._cen||window.REALM==='isle')inv._b.forEach(rec=>{const[id,si,x,z,ry]=rec;if(BI[id]){spawnB(id,si,x,z,ry);placed[placed.length-1].rec=rec}});

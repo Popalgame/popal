@@ -29,7 +29,12 @@ window.colBlocked=(ax,az,bx,bz,r)=>{if(wall(ax,az,bx,bz))return true;for(const c
 
 /* ---------- гравець: стіни вже обробляє building.js (BLDC), тут — кола ---------- */
 const b0=window.BLDC;
-window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);const q=circles(P.x,P.z,.38,cols(P.x,P.z));P.x=q[0];P.z=q[1]};
+window.BLDC=function(ox,oz){if(b0)b0.apply(this,arguments);const q=circles(P.x,P.z,.38,cols(P.x,P.z));P.x=q[0];P.z=q[1];bodies()};
+/* 0.2.20: герой не заходить усередину диких істот (раніше модель героя ховалась у Бамбузлі). Радіус тіла рахуємо один раз
+   з розміру моделі (80% півширини), у боса — його _r. Лише виштовхуємо героя — істоти й бій не змінюються. */
+const bx3=new THREE.Box3(),sz3=new THREE.Vector3();
+function bodyR(w){if(w._r)return w._r;if(w._cr==null){w._cr=.5;try{if(w.m){bx3.setFromObject(w.m);bx3.getSize(sz3);if(isFinite(sz3.x)&&sz3.x>0)w._cr=Math.max(.3,Math.min(2,Math.max(sz3.x,sz3.z)*.4))}}catch(_){}}return w._cr}
+function bodies(){let W;try{W=wild}catch(_){return}if(!W)return;for(const w of W){if(!w||w.hp<=0)continue;const dx=P.x-w.x,dz=P.z-w.z;if(Math.abs(dx)>4||Math.abs(dz)>4)continue;const d=Math.hypot(dx,dz),R=bodyR(w)+.3;if(d<R&&d>1e-4){P.x=w.x+dx/d*R;P.z=w.z+dz/d*R}}}
 
 /* ---------- попал-супутник ---------- */
 window.colPal=function(p,ox,oz,dd){const q=step(ox,oz,p.x,p.z,.4);p.x=q[0];p.z=q[1];

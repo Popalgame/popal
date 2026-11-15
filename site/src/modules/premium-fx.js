@@ -245,6 +245,8 @@ function pullHit(hx,hy,hz,cx,cy,cz){
  try{if(typeof colList==='function'){const lc=window.plBaseFade?(window.plSceneryObstacles||[]):colList();/* 0.2.7: Попал-центр, скрині й будівлі бази не відводять камеру — стають напівпрозорими (tree-fade.js) */for(let qi=0;qi<lc.length;qi++){const w2=lc[qi];if(!w2)continue;
   const ddx=w2.x-hx,ddz=w2.z-hz;if(ddx*ddx+ddz*ddz>400)continue;
   const baseY=oHt?oHt(w2.x,w2.z):0;test(w2.x,w2.z,(w2.r||.8)+.35,baseY,baseY+(w2.h||2.6))}}}catch(_){}
+ /* 0.2.20: гірські хребти й скелі біля бухти — камера не заходить у камінь (раніше біля входу в печеру екран закривала скеля) */
+ try{const S=window.plSolidAt;if(S&&S.length)for(let k=1;k<=12;k++){const tt=k/12;if(hit&&tt>=hit.t)break;const x=hx+dx*tt,z=hz+dz*tt;if(S.some(f=>f(x,z))){hit={t:Math.max(.02,tt-.06),tp:-1e9};break}}}catch(_){}
  if(hit)hit.Lh=Lh;
  return hit;
 }
@@ -304,8 +306,8 @@ oAni.push(()=>{
      }
     }
     if(!ok){
-     if(dC>=4.3){                                  /* далеко: зупиняємось перед перешкодою */
-      tx=pl.x+uX*dC;tz=pl.z+uZ*dC;
+     if(dC>=4.3||h0.tp===-1e9){                    /* далеко (або скеля — 0.2.20): зупиняємось перед перешкодою */
+      tx=pl.x+uX*Math.max(1.2,dC);tz=pl.z+uZ*Math.max(1.2,dC);
      }else{                                        /* близько: хід назад до 4.3 м + підйом над кроною */
       tx=pl.x+uX*4.3;tz=pl.z+uZ*4.3;
       const tt2=(h0.t*Lo)/4.3;

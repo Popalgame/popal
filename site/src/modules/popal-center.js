@@ -44,6 +44,8 @@ function mkCen(){const g=new THREE.Group(),m=(geo,mat,x,y,z)=>{const o=new THREE
  const lt=new THREE.PointLight(0x7fe3f5,0,9);lt.position.y=2.2;g.add(lt);g.userData.light=lt;
  const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.font='bold 46px system-ui';x.textAlign='center';x.textBaseline='middle';x.lineWidth=8;x.strokeStyle='#1a1430';x.strokeText('🏠 Попал-центр',256,48);x.fillStyle='#ffe7a8';x.fillText('🏠 Попал-центр',256,48);
  const tx=new THREE.CanvasTexture(c);tx.encoding=THREE.sRGBEncoding;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthTest:false}));sp.scale.set(3.2,.6,1);sp.position.y=3.3;g.add(sp);
+ /* 0.2.20: напис малюється поверх усього, тож коли камера зовсім поруч, він ставав величезним і налазив на кнопки — плавно ховаємо його ближче 7 м */
+ {const wp=new THREE.Vector3();sp.onBeforeRender=(r,s,camera)=>{sp.getWorldPosition(wp);const d=camera.position.distanceTo(wp);sp.material.opacity=Math.max(0,Math.min(1,(d-7)/4))}}
  return g}
 function showCen(){if(cenG){sc.remove(cenG);cenG=null;window.plCenG=null}const C=inv._cen;if(!C)return;cenG=mkCen();cenG.position.set(C[0],Math.max(-.2,H(C[0],C[1]))-.05,C[1]);sc.add(cenG);window.plCenG=cenG;/* для tree-fade.js */
  for(const L of[trees,rocks,bushes,shrooms])for(let i=L.length-1;i>=0;i--){const o=L[i];if(Math.hypot(o.x-C[0],o.z-C[1])<3.6){sc.remove(o.m);L.splice(i,1)}}}
@@ -93,7 +95,7 @@ const css=document.createElement('style');css.id='cen-css';css.textContent=`
 #cen h5{margin:0 0 6px;color:#e2bf67;font-size:13px}
 #cen .tm{flex:1;overflow:auto;display:flex;flex-direction:column;gap:5px;min-height:0}
 #cen .tr{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border-radius:10px;padding:3px 6px}
-#cen .tr canvas{width:34px;height:34px}#cen .tr span{flex:1;font-size:13px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cen .tr canvas{width:34px;height:34px}#cen .tr span{flex:1;font-size:13px;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.25}/* 0.2.20: на телефоні ім'я й «Перенос Lv1 (5 кг)» обрізались — тепер переносяться */#cen .tr button{flex:none}
 #cen .tr button,#cen .dt button{background:linear-gradient(#f39a4a,#d9532e);border:2px solid #e2bf67;color:#fff;border-radius:10px;padding:3px 10px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap}
 #cen .tr button:disabled,#cen .dt button:disabled{opacity:.4;filter:grayscale(1)}
 #cen .dt .pi{flex:none;margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;line-height:1.4}
