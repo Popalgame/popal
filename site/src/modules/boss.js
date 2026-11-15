@@ -55,7 +55,7 @@ const css=document.createElement('style');css.textContent=`#bossbar{position:fix
 #bossloot .lg{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}#bossloot .lg span{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:66px;padding:6px;border-radius:10px;background:rgba(255,255,255,.06)}
 #bossloot .lg img{width:40px;height:40px}#bossloot .lg b{color:#ffe28a}#bossloot .lg small{font-size:11px;color:#c9d6e4}#bossloot .nx{display:block;margin-top:8px;color:#9fb6d8;font-size:12px}`;document.head.appendChild(css);
 const $b=s=>bar.querySelector(s);
-function showBar(b){bar.style.display='block';$b('.bn').textContent=b.name+' · рів. '+b.lv;const w=b.w;$b('.hp u').style.width=Math.max(0,w.hp/w.mh*100)+'%';$b('.hv').textContent=hpOf(w).toLocaleString('uk-UA')+' / '+w.mh.toLocaleString('uk-UA');
+function showBar(b){bar.style.display='block';const low=typeof plv!='undefined'&&plv<b.lv;$b('.bn').textContent=b.name+' · рів. '+b.lv+(low?' · ⚠️ від рівня '+b.lv:'');const w=b.w;$b('.hp u').style.width=Math.max(0,w.hp/w.mh*100)+'%';$b('.hv').textContent=hpOf(w).toLocaleString('uk-UA')+' / '+w.mh.toLocaleString('uk-UA');
  const c=b.cast,cs=$b('.cs');if(c){cs.classList.add('on');$b('.cs em').textContent='🔮 '+c.a.n+' · '+Math.max(0,c.T-c.t).toFixed(1)+' с';$b('.cs u').style.width=Math.min(100,c.t/c.T*100)+'%'}else cs.classList.remove('on')}
 
 /* ---------- один бос ---------- */
@@ -77,9 +77,9 @@ ANI.push(()=>{const t0=performance.now(),dt=Math.min(.05,(t0-last)/1000);last=t0
   if(!b.w||!wild.includes(b.w)){if(b.cast){for(const z of b.cast.zones)sc.remove(z.v.g);b.cast=null}if(b.enabled()&&(!inv._boss[b.id]||now()>=inv._boss[b.id]))spawn(b);continue}
   const w=b.w;w.m.scale.setScalar(b.scale);w.fm=b.fm;
   const inA=b.enabled()&&Math.hypot(P.x-b.home[0],P.z-b.home[1])<b.arena+2;
-  if(!inA){w.ag=0;w._fightT=0;if(b.cast){for(const z of b.cast.zones)sc.remove(z.v.g);b.cast=null}const dh=Math.hypot(w.x-b.home[0],w.z-b.home[1]);
+  if(!inA){b._in=0;w.ag=0;w._fightT=0;if(b.cast){for(const z of b.cast.zones)sc.remove(z.v.g);b.cast=null}const dh=Math.hypot(w.x-b.home[0],w.z-b.home[1]);
    if(dh>1.5){w.a=Math.atan2(b.home[0]-w.x,b.home[1]-w.z);w.x+=Math.sin(w.a)*3*dt;w.z+=Math.cos(w.a)*3*dt}/* 0.2.20: 3 хв після того, як героя повалили, бос не лікується — можна повернутися й добити */if(!(window.plDownAt&&Date.now()-window.plDownAt<180000))w.hp=Math.min(w.mh,w.hp+w.mh*.03*dt)}
-  else{w.ag=1;show=b;const dH=Math.hypot(P.x-w.x,P.z-w.z);
+  else{w.ag=1;show=b;/* 0.2.21: бос — для героїв від свого рівня; попереджаємо при вході на арену */if(!b._in){b._in=1;if(typeof plv!='undefined'&&plv<b.lv)try{msg('⚠️ '+b.name+' — для героїв від рівня '+b.lv+'. Ваш рівень: '+plv+'. Його заклинання можуть повалити з одного удару')}catch(_){}}const dH=Math.hypot(P.x-w.x,P.z-w.z);
    if(b.cast){b.cast.t+=dt;w.x=b.cast.px;w.z=b.cast.pz;for(const z of b.cast.zones){z.v.d.scale.setScalar(Math.min(1,b.cast.t/b.cast.T));z.v.r.material.opacity=.55+.45*Math.sin(b.cast.t*14)}if(b.cast.t>=b.cast.T)release(b)}
    else{w.a=Math.atan2(P.x-w.x,P.z-w.z);const reach=(w._r||2)+.9;if(dH>reach&&b.chase){w.x+=Math.sin(w.a)*2.4*dt;w.z+=Math.cos(w.a)*2.4*dt}
     const rage=w.hp<w.mh*.35;if(rage&&!b.raged){b.raged=1;try{dmg('😡 Лють!',w.m,'#ff4a2a');msg('😡 '+b.name+' у люті: заклинання частіше!')}catch(_){}}
