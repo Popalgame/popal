@@ -73,7 +73,7 @@ addEventListener('keydown',e=>{if(e.key=='Escape'&&W.style.display=='flex')bkClo
 setInterval(()=>{if(cur&&W.style.display=='flex'&&!W.matches(':hover'))bkR()},2000);/* видно, як попали їдять */
 function fill(b){bkOpen(b)}
 {const hb=document.getElementById('hit');if(hb){const h0=hb.onclick;hb.onclick=function(){const b=near();if(b&&!nearest(wild,2.6)){bkOpen(b);return}return h0&&h0.apply(this,arguments)};
- let was=null,hit0=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML=(window.plIcon?plIcon('B_bask'):'🧺')+'<small>Кошик</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}})}}
+ let was=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(window.plHitLabel)window.plHitLabel('basket',n?(window.plIcon?plIcon('B_bask'):'🧺')+'<small>Кошик</small>':null)})}}
 
 /* ---------- рух і положення (як у pal-ai.js) ---------- */
 function moveTo(p,x,z,dt,stop){const dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);if(d<=stop+.08)return true;const s=Math.min(d-stop,2.2*dt),nx=p.x+dx/d*s,nz=p.z+dz/d*s;p.a=Math.atan2(dx,dz);

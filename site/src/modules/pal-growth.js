@@ -93,7 +93,7 @@ function roll(pool,not){const L=pool.map((_,i)=>i).filter(i=>i!==not);return L[M
 function unlock(p,quiet){p.at=p.at||[-1,-1];const k=kit(p),lv=p.lv||1,nm=(T[p.ty]||{}).n||'Попал';let got=null;
  if(lv>=10&&p.at[0]<0){p.at[0]=roll(k.a2);got=k.a2[p.at[0]]}
  if(lv>=30&&p.at[1]<0){p.at[1]=roll(k.a3);got=k.a3[p.at[1]]}
- if(got&&!quiet){try{msg('✨ '+nm+' вивчив нову атаку: «'+got.n+'»!');if(window.PSFX)PSFX.sfx('level')}catch(_){}}}
+ if(got&&!quiet){try{msg('✨ '+nm+' вивчив нову атаку: «'+got.n+'»!');if(window.PSFX)PSFX.sfx('levelup')}catch(_){}}}
 pals.forEach(p=>unlock(p,true));
 /* нові попали: форма 1, атаки за рівнем (спійманий 12-го рівня одразу знає другу атаку) */
 setInterval(()=>{for(const p of pals){if(p.fm==null)p.fm=1;const L=p.lv||1;if(p._lvSeen!==L){p._lvSeen=L;unlock(p,p._seen0==null);p._seen0=1}}},700);

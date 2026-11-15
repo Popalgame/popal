@@ -51,6 +51,6 @@ let iv=0;function open(){ivO=1;box.style.display='flex';render();clearInterval(i
 function close(){box.style.display='none';ivO=0;clearInterval(iv);save()}
 const near=()=>{const b=kit();return b&&Math.hypot(b.x-P.x,b.z-P.z)<2.3};
 const hb=$('hit'),h0=hb.onclick;hb.onclick=function(){if(near()&&!nearest(wild,2.6)){open();return}return h0.apply(this,arguments)};
-let was=null,hit0=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML=ico('B_kit')+'<small>Кухня</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}});
+let was=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(window.plHitLabel)window.plHitLabel('cooking',n?ico('B_kit')+'<small>Кухня</small>':null)});
 addEventListener('keydown',e=>{if(e.key=='Escape'&&box.style.display=='flex')close()});
 }catch(e){console.warn('cooking',e)}})();

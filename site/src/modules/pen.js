@@ -94,6 +94,6 @@ function render(){if(!cur)return;const o=rec(cur),list=inPen(cur),cand=pals.filt
 addEventListener('keydown',e=>{if(e.key=='Escape'&&W.style.display=='flex')close_()});
 setInterval(()=>{if(cur&&W.style.display=='flex'&&!W.matches(':hover'))render()},2000);
 {const hb=document.getElementById('hit');if(hb){const h0=hb.onclick;hb.onclick=function(){const b=near();if(b&&!nearest(wild,2.6)){open_(b);return}return h0&&h0.apply(this,arguments)};
- let was=null,hit0=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML=(window.plIcon?plIcon('B_ch'):'📦')+'<small>Загін</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}})}}
+ let was=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(window.plHitLabel)window.plHitLabel('pen',n?(window.plIcon?plIcon('B_ch'):'📦')+'<small>Загін</small>':null)})}}
 window.PEN={pens,inPen,open:open_,every};
 }catch(e){console.warn('pen',e)}})();

@@ -229,7 +229,7 @@ const $=id=>document.getElementById(id);let mt;
 /* 0.3.2: у текст повідомлень потрапляють значки-картинки предметів (IT[k][0] — <img>) — показуємо замість них емодзі */
 function plainTxt(s){s=String(s);if(s.indexOf('<')<0)return s;return s.replace(/<img[^>]*alt=['"]([^'"]*)['"][^>]*>/g,(m,a)=>{for(const k in IT)if(IT[k][1]==a)return IT[k].e||'';return ''}).replace(/<[^>]+>/g,'')}
 function msg(s){s=plainTxt(s);$('msg').textContent=s;$('msg').style.display='block';clearTimeout(mt);mt=setTimeout(()=>$('msg').style.display='none',3500)}
-function hud(){$('a').textContent='🪵 '+res.w;$('b').textContent='🪨 '+res.s;$('c').textContent='🔮 '+res.b;$('d').textContent='❤️ '+Math.ceil(P.hp)+'/'+HPM;$('hpf').style.width=(Math.max(0,P.hp)/HPM*100)+'%';$('hpt').textContent='❤ '+Math.ceil(P.hp)+' / '+HPM;$('hf').style.width=(Math.max(0,P.hp)/HPM*100)+'%';$('ht').textContent='❤ '+Math.ceil(Math.max(0,P.hp))+' / '+HPM;$('e').textContent='🐾 '+palTeam().length+'/'+(window.palCap?palCap():8);pcUp();qUp();pwUp();eqUp();$('quest').textContent=''}
+function hud(){$('a').textContent='🪵 '+res.w;$('b').textContent='🪨 '+res.s;$('c').textContent='🔮 '+res.b;$('d').textContent='❤️ '+Math.ceil(Math.max(0,P.hp))+'/'+HPM;$('hpf').style.width=(Math.max(0,P.hp)/HPM*100)+'%';$('hpt').textContent='❤ '+Math.ceil(Math.max(0,P.hp))+' / '+HPM;$('hf').style.width=(Math.max(0,P.hp)/HPM*100)+'%';$('ht').textContent='❤ '+Math.ceil(Math.max(0,P.hp))+' / '+HPM;$('e').textContent='🐾 '+palTeam().length+'/'+(window.palCap?palCap():8);pcUp();qUp();pwUp();eqUp();$('quest').textContent=''}
 /* input */
 let jx=0,jy=0,jid=null;const joy=$('joy'),kn=$('knob');
 function jm(e){const r=joy.getBoundingClientRect(),hw2=r.width/2;let dx=e.clientX-r.left-hw2,dy=e.clientY-r.top-hw2;const l=Math.hypot(dx,dy);if(l>45){dx*=45/l;dy*=45/l}kn.style.left=45+dx+'px';kn.style.top=45+dy+'px';jx=dx/45;jy=dy/45}
@@ -260,7 +260,7 @@ fx.push({s,w,t:0,x0:P.x,z0:P.z,bk})};
 /* loop */
 let T0=0,spT=0,hurt=0,fpsA=0,fpsN=0,motionX=0,motionY=0,heroFacing=0;
 /* 0.2.9: героя повалили — спільне для одиночних і масових ударів (pal-growth.js) */
-function plHeroDown(){if(window.plDeath)plDeath(P.x,P.z);P.hp=HPM;const C=inv._cen,S0=window.SPAWN||[0,3];P.x=C?C[0]:S0[0];P.z=C?C[1]+3:S0[1];msg(C?'Вас повалили! Ви прокинулись біля Попал-центру.':'Вас повалили! Ви прокинулись у Тихій бухті.')}
+function plHeroDown(){if(window.plDeath)plDeath(P.x,P.z);P.hp=HPM;const C=inv._cen,S0=window.SPAWN||[0,3];P.x=C?C[0]:S0[0];P.z=C?C[1]+3:S0[1];msg(C?'Вас повалили! Ви прокинулись біля Попал-центру.':'Вас повалили! Ви прокинулись у Тихій бухті.');/* 0.2.20: без цього HUD лишався з «❤ 0 / 975» після воскресіння */hud()}
 window.plHeroDown=plHeroDown;
 function frame(ts){const tm=ts/1000,dt=Math.min(.05,tm-T0);T0=tm;if(menuO){ang+=dt*.08;jx=jy=0}fpsA+=dt;if(++fpsN==90){if(!window.plQuality&&fpsA/90>(window.gfxFps?1.35/window.gfxFps:.03)&&R.getPixelRatio()>1.25){R.setPixelRatio(1.25);rs()}fpsA=fpsN=0}
 const blocked=menuO||ivO||pfO||ccO,blend=1-Math.exp(-dt*18);if(blocked){motionX=motionY=0}else{motionX+=(jx-motionX)*blend;motionY+=(jy-motionY)*blend}const f=[-Math.sin(ang),-Math.cos(ang)],rt=[Math.cos(ang),-Math.sin(ang)],mx=f[0]*-motionY+rt[0]*motionX,mz=f[1]*-motionY+rt[1]*motionX,ml=Math.hypot(mx,mz);
@@ -452,3 +452,11 @@ else if(ty==12){const K=0x94788a,D=0x55424a;add(g,S(.45),K,0,.5,0).scale.set(1,.
 else{const RD=0xc8382a;add(g,S(.3),RD,0,.9,0).scale.set(1,1.2,1.1);add(g,Cy(.07,.09,.4,8),RD,0,1.3,.1);add(g,S(.14),0xf4e2c8,0,1.52,.15);add(g,Co(.05,.18,5),0xe2bf67,0,1.5,.32).rotation.x=Math.PI/2;eyes(g,.06,1.55,.25,.03);const ring=addM(g,new THREE.TorusGeometry(.32,.03,6,24),MX.SUN,0,1.55,-.05);for(let i=0;i<10;i++){const a=i/10*6.28,r=addM(g,Co(.04,.16,4),MX.SUN,Math.cos(a)*.42,1.55+Math.sin(a)*.42,-.06);r.rotation.z=a-Math.PI/2}for(const s of[-1,1]){add(g,Cy(.025,.02,.6,5),0xe2bf67,s*.1,.3,0);add(g,S(.22),0x8a2a20,s*.27,.92,-.02).scale.set(.3,.9,1)}for(let i=0;i<3;i++)add(g,Co(.07,.5,4),i==1?0xe2bf67:RD,(i-1)*.1,.7,-.42).rotation.x=-2.3}}
 return g}
 wild.forEach(w=>{const np=mkPal(T[w.ty].c);np.position.copy(w.m.position);np.rotation.y=w.m.rotation.y;sc.remove(w.m);sc.add(np);w.m=np});pals.forEach(p=>{const np=mkPal(T[p.ty].c);np.position.copy(p.m.position);sc.remove(p.m);sc.add(np);p.m=np});pwUp();
+
+/* 0.2.20: підпис кнопки «Дія» — в одному місці. Раніше кожен модуль (скриня, кухня, кошик, колба, загін…) сам запамʼятовував
+   «старий» підпис і повертав його, коли герой відходив. Якщо герой стояв біля двох речей одразу, вони перебивали одна одну,
+   і на кнопці лишалось, наприклад, «Кошик» навіть за 300 м від бази. Тепер модуль каже plHitLabel(ключ, підпис) або plHitLabel(ключ, null);
+   кнопка показує підпис того, до чого герой підійшов останнім, а коли поруч нічого — звичайне «⚔️ Дія». */
+{const hb=$('hit'),own=new Map();let DEF=hb.innerHTML,shown=DEF;
+ /* звичайний підпис беремо в момент, коли зʼявляється перший «власник»: icons.js міняє емодзі ⚔️ на картинку вже після core-world */
+ window.plHitLabel=(k,html)=>{if(!own.size&&html!=null)DEF=shown=hb.innerHTML;own.delete(k);if(html!=null)own.set(k,html);const v=own.size?[...own.values()].pop():DEF;if(v!==shown){shown=v;hb.innerHTML=v}}}

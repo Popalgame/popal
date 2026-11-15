@@ -48,7 +48,7 @@ function tendByHand(b){const a=plots(b);let got=0,gs=0,sown=0;for(let i=0;i<NS;i
 /* «Дія» біля грядки (як кухня в cooking.js) */
 const hb=document.getElementById('hit');
 if(hb){const h0=hb.onclick;hb.onclick=function(){const b=playerGarden();if(b&&!nearest(wild,2.6)&&!nearest(bushes,2.2)){tendByHand(b);return}return h0&&h0.apply(this,arguments)};
- let was=null,hit0=null;ANI.push(()=>{const n=!!playerGarden();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML=(window.plIcon?plIcon('B_garden'):'🌱')+'<small>Грядка</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}})}
+ let was=null;ANI.push(()=>{const n=!!playerGarden();if(n===was)return;was=n;if(window.plHitLabel)window.plHitLabel('garden',n?(window.plIcon?plIcon('B_garden'):'🌱')+'<small>Грядка</small>':null)})}
 
 /* ---------- насіння з ягідних кущів ---------- */
 window.onBerryPick=fo=>{if(Math.random()<.4){inv.sd=(inv.sd||0)+1;setTimeout(()=>{try{dmg('+1 🌰',fo.m,'#d9b56a')}catch(_){}},350)}};

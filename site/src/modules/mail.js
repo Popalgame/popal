@@ -54,7 +54,7 @@ async function redeem(raw){const code=String(raw||'').trim().toUpperCase().repla
   if(r.e){say(r.e);return}
   inv._promos=(inv._promos||[]).concat(code);
   sendLocal({from:'🎟️ Промокод '+code,title:r.p.title||'Подарунок за промокодом',text:r.p.text||'Дякуємо, що граєте в Regnum Land!',items:r.p.items});
-  say('✅ Промокод прийнято! Подарунок — у пошті нижче');try{if(window.PSFX)PSFX.sfx('level')}catch(_){}}
+  say('✅ Промокод прийнято! Подарунок — у пошті нижче');try{if(window.PSFX)PSFX.sfx('levelup')}catch(_){}}
  catch(e){say(e&&e.code=='permission-denied'?'⚠️ Промокоди ще не ввімкнені на сервері':'⚠️ Не вдалося перевірити код. Спробуйте пізніше')}
  finally{busy=0}}
 

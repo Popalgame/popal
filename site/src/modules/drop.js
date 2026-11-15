@@ -31,6 +31,6 @@ const nearG=()=>{let b=null,bd=1e9;for(const g of GD){const d=Math.hypot(g.x-P.x
 function pick(g){const parts=[];for(const[k,n]of Object.entries(g.it)){addI(k,n);parts.push((IT[k]?IT[k][1]:k)+(n>1?' ×'+n:''))}
  GD.splice(GD.indexOf(g),1);show();msg((g.d?'☠️ Ви повернули свої речі: ':'👜 Підібрано: ')+parts.join(', '));if(window.plBurst)plBurst(g.x,H(g.x,g.z)+.5,g.z,0xffe28a,12,1.4,.3);try{eqUp()}catch(_){}hud();save()}
 const hb=$('hit'),h0=hb.onclick;hb.onclick=function(){const g=nearG();if(g&&!nearest(wild,2.6)){pick(g);return}return h0.apply(this,arguments)};
-let was=0,hit0=null;ANI.push(t=>{for(const e of live){e.m.userData.sp.position.y=1+Math.sin(t*2.4+e.g.x)*.08}
- const g=nearG(),n=g?(g.d?2:1):0;if(n===was)return;if(n&&hit0==null)hit0=hb.innerHTML;was=n;if(n)hb.innerHTML=n==2?'☠️<small>Забрати</small>':'👜<small>Підібрати</small>';else if(hit0!=null){hb.innerHTML=hit0;hit0=null}});
+let was=0;ANI.push(t=>{for(const e of live){e.m.userData.sp.position.y=1+Math.sin(t*2.4+e.g.x)*.08}
+ const g=nearG(),n=g?(g.d?2:1):0;if(n===was)return;was=n;if(window.plHitLabel)window.plHitLabel('drop',n?(n==2?'☠️<small>Забрати</small>':'👜<small>Підібрати</small>'):null)});
 }catch(e){console.warn('drop',e)}})();

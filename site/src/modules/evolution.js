@@ -137,7 +137,7 @@ function show(v){open=v;box.style.display=v?'flex':'none';if(v)render()}
 box.addEventListener('click',e=>{if(e.target.closest('.cx')){show(0);return}const b=e.target.closest('[data-e]');if(!b||b.disabled)return;const p=pals[+b.dataset.e];if(p)evolve(p)});
 const hb=document.getElementById('hit');
 if(hb){const h0=hb.onclick;hb.onclick=function(){if(nearFlask()&&!(typeof nearest=='function'&&nearest(wild,2.6))&&!anim){show(1);return}return h0&&h0.apply(this,arguments)};
- let was=null,hit0=null;ANI.push(()=>{const n=!!nearFlask();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML='🧪<small>Колба</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}})}
+ let was=null;ANI.push(()=>{const n=!!nearFlask();if(n===was)return;was=n;if(window.plHitLabel)window.plHitLabel('flask',n?'🧪<small>Колба</small>':null)})}
 
 /* ---------- перетворення ---------- */
 let anim=null;
@@ -161,7 +161,7 @@ ANI.push(()=>{if(!anim)return;const A=anim,dt=Math.min(.05,(performance.now()-(A
  A.beam.material.opacity=Math.min(.45,t*.25)*(t<3?1:Math.max(0,(4.4-t)/1.4));A.beam.scale.set(1+Math.sin(t*9)*.08,1,1+Math.sin(t*9)*.08);
  for(const s of A.sparks){const u=s.userData;u.y=(u.y+dt*u.v*(.5+t*.4))%1;const a=u.a+t*(2+t);s.position.set(A.b.x+Math.cos(a)*u.r,A.y0+.5+u.y*1.4,A.b.z+Math.sin(a)*u.r);s.material.opacity=Math.min(1,t)*(t<3.2?1:Math.max(0,(4.4-t)/1.2))}
  if(t>2.4&&t<3){const q=(t-2.4)/.6;R.scale.setScalar(A.base*(1+Math.sin(q*Math.PI*6)*.12*q))}
- if(t>=3&&!A.done){A.done=1;if(A.p.m)A.p.m.scale.setScalar(.0001);A.p.fm=A.to;if(A.r&&window.PALFORM)window.PALFORM.ensure(A.r,A.p.ty,A.to);applyForm(R,A.to,A.p.ty);R.scale.setScalar(A.base*FS[A.to]);try{save();if(window.PSFX)PSFX.sfx('level')}catch(_){}}
+ if(t>=3&&!A.done){A.done=1;if(A.p.m)A.p.m.scale.setScalar(.0001);A.p.fm=A.to;if(A.r&&window.PALFORM)window.PALFORM.ensure(A.r,A.p.ty,A.to);applyForm(R,A.to,A.p.ty);R.scale.setScalar(A.base*FS[A.to]);try{save();if(window.PSFX)PSFX.sfx('levelup')}catch(_){}}
  if(t>2.85&&t<3.6){const q=(t-2.85)/.75;A.flash.scale.setScalar(.3+q*2.6);A.flash.material.opacity=.9*(1-q)}else A.flash.material.opacity=0;
  if(t>=4.6){for(const o of[A.beam,A.flash,...A.sparks]){sc.remove(o);if(o.geometry&&!o.isSprite)o.geometry.dispose();o.material.dispose()}
   sc.remove(R);try{if(A.r&&window.PALMODEL)PALMODEL.dispose(A.r)}catch(_){}

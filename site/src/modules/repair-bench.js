@@ -33,6 +33,6 @@ function render(){const ts=tools();
 function open(){ivO=1;box.style.display='flex';render()}
 function close(){box.style.display='none';ivO=0;save()}
 const hb=$('hit'),h0=hb.onclick;hb.onclick=function(){if(near()&&!nearest(wild,2.6)){open();return}return h0.apply(this,arguments)};
-let was=null,hit0=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(n){hit0=hb.innerHTML;hb.innerHTML=ico('B_rep')+'<small>Ремонт</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}});
+let was=null;ANI.push(()=>{const n=!!near();if(n===was)return;was=n;if(window.plHitLabel)window.plHitLabel('repair',n?ico('B_rep')+'<small>Ремонт</small>':null)});
 addEventListener('keydown',e=>{if(e.key=='Escape'&&box.style.display=='flex')close()});
 }catch(e){console.warn('repair-bench',e)}})();

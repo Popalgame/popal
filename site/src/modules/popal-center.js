@@ -70,7 +70,7 @@ const _r=ivR;ivR=function(){_r.apply(this,arguments);const c=$('ivc');if(!c)retu
 /* ---------- взаємодія: «Дія» біля центру відкриває його ---------- */
 const nearCen=()=>inv._cen&&Math.hypot(P.x-inv._cen[0],P.z-inv._cen[1])<NEAR;window.nearCen=nearCen;
 const hb=$('hit'),h0=hb.onclick;hb.onclick=function(){if(nearCen()&&!nearest(wild,2.6)){openCen();return}return h0.apply(this,arguments)};
-let wasNear=null,hit0=null;ANI.push(()=>{const n=!!nearCen();if(n===wasNear)return;wasNear=n;if(n){hit0=hb.innerHTML;hb.innerHTML=(window.plIcon?plIcon('B_cen'):'🏠')+'<small>Центр</small>'}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}});
+let wasNear=null;ANI.push(()=>{const n=!!nearCen();if(n===wasNear)return;wasNear=n;if(window.plHitLabel)window.plHitLabel('center',n?(window.plIcon?plIcon('B_cen'):'🏠')+'<small>Центр</small>':null)});
 
 /* ---------- вікно центру ---------- */
 const css=document.createElement('style');css.id='cen-css';css.textContent=`

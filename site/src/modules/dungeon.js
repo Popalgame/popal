@@ -173,8 +173,8 @@ if(!Array.isArray(inv._dgl))inv._dgl=[];
 function lightUp(s){if(inv._dgl.includes(s.i)){msg('🏮 Тут уже світить ліхтар');return}if(!(inv.B_lamp>0)){msg('🏮 Потрібен Ліхтар: скрафтіть його (🪵 2, 🪨 1) і поверніться');return}
  inv.B_lamp--;inv._dgl.push(s.i);msg('🏮 Ліхтар поставлено ('+inv._dgl.length+' / '+SCON.length+')');try{hud();save()}catch(_){}}
 {const hb=document.getElementById('hit');if(hb){const h0=hb.onclick;hb.onclick=function(){if(!nearest(wild,2.6)){const s=nearSconce();if(s&&!inv._dgl.includes(s.i)){lightUp(s);return}if(nearExit()){leave();return}if(nearPortal()){enter();return}}return h0&&h0.apply(this,arguments)};
- let was=null,hit0=null;ANI.push(()=>{const s=nearSconce(),k=s&&!inv._dgl.includes(s.i)?'lamp':nearExit()?'exit':nearPortal()?'in':'';if(k===was)return;was=k;
-  if(k){if(hit0==null)hit0=hb.innerHTML;hb.innerHTML=(k=='lamp'?(window.plIcon?plIcon('B_lamp'):'🏮')+'<small>Ліхтар</small>':'🌀<small>'+(k=='exit'?'Вийти':'У печеру')+'</small>')}else if(hit0!=null){hb.innerHTML=hit0;hit0=null}})}}
+ let was=null;ANI.push(()=>{const s=nearSconce(),k=s&&!inv._dgl.includes(s.i)?'lamp':nearExit()?'exit':nearPortal()?'in':'';if(k===was)return;was=k;
+  if(window.plHitLabel)window.plHitLabel('dungeon',k?(k=='lamp'?(window.plIcon?plIcon('B_lamp'):'🏮')+'<small>Ліхтар</small>':'🌀<small>'+(k=='exit'?'Вийти':'У печеру')+'</small>'):null)})}}
 
 /* ---------- кадр ---------- */
 let last=performance.now();
