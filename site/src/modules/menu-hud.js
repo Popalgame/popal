@@ -20,7 +20,7 @@ new MutationObserver(sync).observe(mm,{attributes:true,attributeFilter:['style']
  mm.appendChild(ig);
  const tg=document.createElement('a');tg.id='mmtg';tg.href='https://t.me/+wpdLV01LLrRmOGM0';tg.target='_blank';tg.rel='noopener';tg.setAttribute('aria-label','Telegram-група розробників Regnum Land');tg.title='Telegram-група розробників';
  tg.innerHTML=`<svg viewBox='0 0 24 24' aria-hidden='true'><defs><linearGradient id='tgg' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#37bbfe'/><stop offset='1' stop-color='#007dbb'/></linearGradient></defs><rect width='24' height='24' fill='url(#tgg)'/><path d='M5.2 11.6l11.9-4.6c.55-.2 1.03.13.85.96l-2.03 9.55c-.15.68-.55.85-1.12.53l-3.1-2.28-1.5 1.44c-.16.16-.3.3-.62.3l.22-3.15 5.73-5.18c.25-.22-.05-.34-.39-.12L7.97 13.5l-3.05-.95c-.66-.21-.68-.66.28-.95z' fill='#fff'/></svg>`;
- mm.appendChild(tg)}
+ /* 0.2.20: Telegram-групу з меню гри поки прибрано (кнопку не додаємо; код лишаємо, щоб легко повернути) */if(window.plShowTg)mm.appendChild(tg)}
 let hid=0;if(typeof ANI!='undefined')ANI.push(()=>{if(typeof pl=='undefined'||!pl)return;
  let u=null;try{u=eval('fbU')}catch(_){}const off=!look||(document.body.classList.contains('mmon')&&!u);
  if(off){if(pl.visible){pl.visible=false;hid=1}}else if(hid){hid=0;pl.visible=true}});
