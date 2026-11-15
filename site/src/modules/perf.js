@@ -1,14 +1,14 @@
 /* 0.3.0: адаптивна роздільність, пакетування світу та бюджет кадру.
    0.2.8: якість графіки — 4 режими (Слабкі / Середні / Високі / Ультра). Режим виставляє ВСІ параметри разом:
    роздільність, обмеження FPS, дальність, траву, тіні й ефекти. Будь-який параметр можна змінити окремо — тоді режим «Свої».
-   Слабкі — для телефонів, що гріються: 30 FPS, 1× роздільність, без тіней і без постобробки (кадр малюється одразу на екран).
-   Адаптивна роздільність (крім Ультра): якщо кадр не встигає, роздільність тимчасово знижується до 60%. */
+   Слабкі — для телефонів, що гріються: 30 FPS, 1,5× роздільність (0.2.20), без тіней і без постобробки (кадр малюється одразу на екран).
+   Адаптивна роздільність (крім Ультра): якщо кадр не встигає, роздільність тимчасово знижується до 75%, але не нижче 1×. */
 (function(){try{
 const read=n=>{try{return eval(n)}catch(_){return undefined}};
 const worldScene=read('sc'),renderer=read('R');if(!worldScene||!renderer)return;
 let coarse=false;try{coarse=matchMedia('(pointer:coarse)').matches}catch(_){}
 const KEY='zi_quality',KEYS=['res','fps','dist','grass','shadow','fx'];
-const PRESETS={low:{name:'Слабкі',res:0,fps:30,dist:0,grass:0,shadow:0,fx:0},med:{name:'Середні',res:1,fps:60,dist:1,grass:1,shadow:1,fx:1},
+const PRESETS={low:{name:'Слабкі',res:0,fps:30,dist:1,grass:0,shadow:0,fx:0},med:{name:'Середні',res:1,fps:60,dist:2,grass:1,shadow:1,fx:1},
  high:{name:'Високі',res:2,fps:60,dist:2,grass:2,shadow:2,fx:2},ultra:{name:'Ультра',res:3,fps:0,dist:3,grass:3,shadow:3,fx:3}};
 const OPT={res:{n:'Роздільність',l:['Низька','Середня','Висока','Ультра'],note:'Найбільше впливає на нагрів телефона'},
  fps:{n:'Обмеження FPS',v:[30,60,0],l:['30','60','Без обмеження'],note:'30 — економить батарею, телефон менше гріється'},
@@ -16,7 +16,9 @@ const OPT={res:{n:'Роздільність',l:['Низька','Середня',
  grass:{n:'Трава',l:['Мало','Середньо','Густо','Ультра']},
  shadow:{n:'Тіні',l:['Вимкнено','Низькі','Високі','Ультра']},
  fx:{n:'Ефекти',l:['Вимкнено','Звичайні','Світіння','Ультра'],note:'Звичайні — кольорокорекція й згладжування; Світіння — ще й сяйво вогню та ліхтарів'}};
-const RES_CAP=[1,1.25,2,3],GRASS_N=[4000,9000,15000,1e9],GRASS_GEO=[0,1,2,2],SHADOW=[0,1024,2048,4096];
+/* 0.2.20: було [1,1.25,2,3] — на телефоні з екраном 3× «Слабкі» малювали в 9 разів менше пікселів, картинка була розмита.
+   Після відсікання невидимого світу (0.2.18) запасу вистачає на чіткіший кадр. */
+const RES_CAP=[1.5,1.75,2,3],GRASS_N=[4000,9000,15000,1e9],GRASS_GEO=[0,1,2,2],SHADOW=[0,1024,2048,4096];
 const weak=()=>{try{return (navigator.deviceMemory&&navigator.deviceMemory<=3)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)}catch(_){return false}};
 const defPreset=()=>coarse?(weak()?'low':'med'):'high';
 let preset=defPreset(),S={...PRESETS[preset]},scale=1,averageMs=16.7,slowWindows=0,fastWindows=0,qualityAt=0;delete S.name;
@@ -29,7 +31,8 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify({preset,s:S}))}catch
 const longEdge=()=>{const el=renderer.domElement||{};return Math.max(1,el.clientWidth||(typeof innerWidth==='number'?innerWidth:1280),el.clientHeight||(typeof innerHeight==='number'?innerHeight:720))};
 /* Ультра на екрані з малою щільністю пікселів (ПК) — суперсемплінг до 2560 px по довшій стороні */
 function ratio(){const dpr=devicePixelRatio||1;if(S.res===3)return Math.max(Math.min(dpr,RES_CAP[3]),Math.min(2.5,2560/longEdge()),1);
- return Math.max(.6,Math.min(dpr,RES_CAP[S.res])*scale)}
+ /* адаптивне зниження — не нижче 1× (раніше аж до 0,6×, що й давало «мило») */
+ return Math.max(Math.min(dpr,1),Math.min(dpr,RES_CAP[S.res])*scale)}
 function setShadow(lv){try{const sun=read('sun');if(!sun||!sun.shadow)return;const on=lv>0;if(sun.castShadow!==on)sun.castShadow=on;if(!on)return;const size=SHADOW[lv];
  if(sun.shadow.mapSize.x!==size){sun.shadow.mapSize.set(size,size);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}}catch(_){}}
 function applyQuality(reset){const r=ratio();
@@ -103,7 +106,7 @@ function monitor(now){requestAnimationFrame(monitor);const dt=now-last;last=now;
  if(dt<=0||dt>150)return;samples.push(dt);elapsed+=dt;if(elapsed<2500)return;
  averageMs=samples.reduce((a,b)=>a+b,0)/samples.length;samples=[];elapsed=0;if(S.res===3||performance.now()-qualityAt<5000)return;
  const target=1000/(window.gfxFps||60);slowWindows=averageMs>target*1.25?slowWindows+1:0;fastWindows=averageMs<target*1.08?fastWindows+1:0;
- if(slowWindows>=2&&scale>.6){scale=Math.max(.6,scale-.12);slowWindows=fastWindows=0;applyQuality(false)}
+ if(slowWindows>=2&&scale>.75){scale=Math.max(.75,scale-.08);slowWindows=fastWindows=0;applyQuality(false)}
  else if(fastWindows>=8&&scale<1){scale=Math.min(1,scale+.08);slowWindows=fastWindows=0;applyQuality(false)}
 }
 requestAnimationFrame(monitor);

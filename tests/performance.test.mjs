@@ -18,9 +18,9 @@ function runtime(){
 test('quality presets drive every graphics setting, custom tweaks and persist the choice',()=>{
  const {env,saved,settings,effects}=runtime();const sun=env.sun=new env.THREE.DirectionalLight();sun.castShadow=true;
  env.plQuality.set('low');
- assert.equal(env.R.ratio,1);assert.equal(env.gm.count,4000);assert.equal(settings.at(-1).fps,30);assert.equal(settings.at(-1).dist,0);
+ assert.equal(env.R.ratio,1.5);assert.equal(env.gm.count,4000);assert.equal(settings.at(-1).fps,30);assert.equal(settings.at(-1).dist,1);
  assert.equal(effects.at(-1),false);assert.equal(env.plFxLevel,0);assert.equal(sun.castShadow,false);
- env.plQuality.set('med');assert.equal(env.R.ratio,1.25);assert.equal(env.gm.count,9000);assert.equal(settings.at(-1).fps,60);assert.equal(env.plFxLevel,1);
+ env.plQuality.set('med');assert.equal(env.R.ratio,1.75);assert.equal(settings.at(-1).dist,2);assert.equal(env.gm.count,9000);assert.equal(settings.at(-1).fps,60);assert.equal(env.plFxLevel,1);
  assert.equal(sun.castShadow,true);assert.equal(sun.shadow.mapSize.x,1024);
  env.plQuality.set('high');assert.equal(env.R.ratio,2);assert.equal(env.gm.count,15000);assert.equal(effects.at(-1),true);assert.equal(sun.shadow.mapSize.x,2048);
  env.plQuality.set('ultra');assert.equal(env.gm.count,20000);assert.equal(settings.at(-1).fps,0);assert.equal(settings.at(-1).dist,3);assert.equal(env.plFxLevel,3);
