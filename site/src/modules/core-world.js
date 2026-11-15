@@ -258,13 +258,13 @@ if(ec(eq.ball)<1){msg(BALL.some(b=>ec(b.id)>0)?'Обрана куля закін
 const bk=eq.ball,bd=BALL.find(b=>b.id==bk)||BALL[0];addI(bk,-1);hud();const s=new THREE.Mesh(new THREE.SphereGeometry(.24,18,14),(window.plBallMat?plBallMat(bk,bd):M(bd.h)));s.position.set(P.x,1,P.z);sc.add(s);
 fx.push({s,w,t:0,x0:P.x,z0:P.z,bk})};
 /* loop */
-let rgT=0,rgHp=0,rgH=0;let T0=0,spT=0,hurt=0,fpsA=0,fpsN=0,motionX=0,motionY=0,heroFacing=0;
+let T0=0,spT=0,hurt=0,fpsA=0,fpsN=0,motionX=0,motionY=0,heroFacing=0;
 /* 0.2.9: героя повалили — спільне для одиночних і масових ударів (pal-growth.js) */
 function plHeroDown(){window.plDownAt=Date.now();if(window.plDeath)plDeath(P.x,P.z);P.hp=HPM;const C=inv._cen,S0=window.SPAWN||[0,3];P.x=C?C[0]:S0[0];P.z=C?C[1]+3:S0[1];msg(C?'Вас повалили! Ви прокинулись біля Попал-центру.':'Вас повалили! Ви прокинулись у Тихій бухті.');/* 0.2.20: без цього HUD лишався з «❤ 0 / 975» після воскресіння */hud();downScreen(!!C)}
 /* 0.2.20: екран «Вас повалили» — раніше було лише коротке повідомлення, яке легко пропустити */
 function downScreen(cen){let d=$('pldown');if(!d){d=document.createElement('div');d.id='pldown';document.body.appendChild(d);d.onclick=()=>{d.classList.remove('on')}}
  const boss=window.BOSSKIT&&window.BOSSKIT.list.some(b=>b.w&&wild.includes(b.w)&&b.w.hp<b.w.mh);
- d.innerHTML=`<div><b>💫 Вас повалили</b><p>${cen?'Ви прокинулись біля Попал-центру.':'Ви прокинулись у Тихій бухті.'}</p>${boss?'<p>Бос 3 хвилини не лікуватиметься — встигніть повернутися.</p>':''}<p>Біля Попал-центру здоровʼя відновлюється швидше.</p><button>Далі</button></div>`;
+ d.innerHTML=`<div><b>💫 Вас повалили</b><p>${cen?'Ви прокинулись біля Попал-центру.':'Ви прокинулись у Тихій бухті.'}</p>${boss?'<p>Бос 3 хвилини не лікуватиметься — встигніть повернутися.</p>':''}<p>Здоровʼя відновлюється біля Попал-центру, а в бою — зіллям.</p><button>Далі</button></div>`;
  d.classList.add('on');clearTimeout(d._t);d._t=setTimeout(()=>d.classList.remove('on'),6000)}
 window.plHeroDown=plHeroDown;
 function frame(ts){const tm=ts/1000,dt=Math.min(.05,tm-T0);T0=tm;if(menuO){ang+=dt*.08;jx=jy=0}fpsA+=dt;if(++fpsN==90){if(!window.plQuality&&fpsA/90>(window.gfxFps?1.35/window.gfxFps:.03)&&R.getPixelRatio()>1.25){R.setPixelRatio(1.25);rs()}fpsA=fpsN=0}
@@ -283,7 +283,7 @@ cl[0]=P.x+Math.sin(P.face||0)*LA;cl[1]=gy+1.02;cl[2]=P.z+Math.cos(P.face||0)*LA;
 cam.lookAt(cl[0],cl[1],cl[2]);
 const tfov=50+(sprinting?5:0);if(Math.abs(tfov-fovCur)>.02){fovCur+=(tfov-fovCur)*(1-Math.exp(-dt*6));cam.fov=fovCur;cam.updateProjectionMatrix()}
 sun.position.set(P.x+14,14,P.z+6);sun.target.position.set(P.x,0,P.z);
-if(inv._cen&&Math.hypot(P.x-inv._cen[0],P.z-inv._cen[1])<4&&P.hp<HPM){P.hp=Math.min(HPM,P.hp+HPM*.15*dt);hud()}/* 0.2.20: поза боєм (8 с без шкоди) здоровʼя відновлюється всюди — 1,5% за секунду; біля центру, як і раніше, швидко */else{if(P.hp<rgHp-.5)rgT=tm;rgHp=P.hp;if(P.hp>0&&P.hp<HPM&&tm-rgT>8){P.hp=Math.min(HPM,P.hp+HPM*.015*dt);rgHp=P.hp;if(tm-rgH>.5){rgH=tm;hud()}}}
+if(inv._cen&&Math.hypot(P.x-inv._cen[0],P.z-inv._cen[1])<4&&P.hp<HPM){P.hp=Math.min(HPM,P.hp+HPM*.15*dt);hud()}
 for(const w of wild){w.t-=dt;const d=Math.hypot(P.x-w.x,P.z-w.z);let sp=0;
 const vp=window.wildVsPal&&!menuO&&!ivO?window.wildVsPal(w,dt,d):0;/* 0.2.9: б'є попала-супутника (pal-growth.js) */
 if(vp){sp=vp}else if(w.ag&&d<8&&!menuO&&!ivO){w.a=Math.atan2(P.x-w.x,P.z-w.z);sp=2.6;w.cd-=dt;if(d<Math.max(1.3,(w._r||0)+.8)&&w.cd<=0){w.cd=1;/* 0.2.9: великі істоти теж дістають героя */const wd=Math.max(1,Math.round((window.PW?PW.wildHit(w):(w.dm||10))*(window.plHeroDmgK?window.plHeroDmgK():1)));P.hp-=wd;dmg('-'+wd,pl,'#ff6b6b');if(window.palDefend)palDefend(w);hud();if(P.hp<=0)plHeroDown()}}
