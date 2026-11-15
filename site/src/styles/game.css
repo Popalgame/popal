@@ -226,6 +226,7 @@ html body .i2ghost{z-index:50!important}
 #bld small{display:block;font-size:9.5px;margin-top:2px}
 #bld:active{transform:scale(.93)}
 body.bmode #bld{display:none}
+body.in-dg #bld{display:none!important}
 body.bmode #eqp,body.bmode #pw2,body.bmode #btns{display:none!important}
 #bbar,#bside,#btip{display:none}
 body.bmode #bbar{display:flex;position:fixed;z-index:22;left:calc(env(safe-area-inset-left,0px) + 168px);right:calc(env(safe-area-inset-right,0px) + 108px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);flex-direction:column;gap:5px}
@@ -266,3 +267,11 @@ body.bmode #btip{display:block;position:fixed;z-index:22;left:50%;transform:tran
 /* Regnum Land: прозорий логотип — без маски, вміщується в ширину телефона */
 #spt img,#mmb h1 img{-webkit-mask-image:none;mask-image:none;max-width:88vw;object-fit:contain}
 #spt img{height:min(46vh,300px)}
+
+/* 0.2.20: екран «Вас повалили» */
+#pldown{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(60,8,8,.55),rgba(8,4,12,.82));animation:plFade .3s ease-out}
+#pldown.on{display:flex}
+#pldown>div{max-width:min(360px,calc(100vw - 32px));padding:18px 22px;border-radius:16px;background:linear-gradient(#2a1a2a,#160e18);border:2px solid #e2bf67;color:#fff4e6;text-align:center;font:15px/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#pldown b{display:block;font-size:22px;color:#ffcf7a;margin-bottom:6px}
+#pldown p{margin:4px 0}
+#pldown button{margin-top:12px;padding:8px 26px;border-radius:10px;border:2px solid #e2bf67;background:linear-gradient(#ffa356,#c8431f);color:#fff;font-weight:800;font-size:15px}

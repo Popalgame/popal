@@ -8,7 +8,7 @@ const steps=[
  {title:'Поставте Попал-центр',hint:'Зберіть 20 🪵 і 15 🪨, створіть центр у 🔨 Крафт і поставте з рюкзака.',done:()=>!!inv._cen},
  {title:'Збудуйте й поставте скриню',hint:'Створіть 📦 скриню у 🔨 Крафт і поставте її біля центру.',done:()=>(inv._ch||[]).length>0},
  {title:'Додайте працівника',hint:'Біля центру натисніть ⚔️ Дія й призначте попала до бригади.',done:()=>pals.some(p=>p.cs!=null&&p.wk)},
- {title:'Наповніть годівницю',hint:'Зберіть ягоди або гриби. Біля центру відкрийте 🎒 й натисніть «Нагодувати».',done:()=>cf>0}
+ {title:'Наповніть годівницю',hint:'Зберіть ягоди або гриби. Біля центру відкрийте 🎒, торкніться ягід і натисніть «Нагодувати».',done:()=>cf>0}
 ];
 const style=document.createElement('style');style.textContent=`
 #guide{position:fixed;z-index:18;top:calc(env(safe-area-inset-top,0px) + 90px);left:calc(env(safe-area-inset-left,0px) + 12px);width:min(240px,calc(100vw - 24px));box-sizing:border-box;color:#fff8e7;background:rgba(17,25,48,.91);border:1px solid rgba(226,191,103,.7);border-radius:12px;box-shadow:0 5px 20px #0006;padding:8px 10px;font:12px/1.35 system-ui,sans-serif;pointer-events:auto}
@@ -24,7 +24,10 @@ function blocked(){return document.body.classList.contains('bmode')||document.bo
 function advance(){let n=Math.max(0,Math.min(steps.length,Math.trunc(Number(inv._guideStep)||0)));
  while(n<steps.length&&steps[n].done())n++;
  if(n!==inv._guideStep){inv._guideStep=n;save()}return n}
+let doneAt=0;
 function refresh(){const n=advance(),hide=!!inv._guideHidden||blocked();box.hidden=hide;if(hide)return;
+ /* 0.2.20: «Основи опановано» висить 12 с і ховається сам (повернути — «Інфо» → «Показати підказки») */
+ if(n>=steps.length){if(!doneAt)doneAt=Date.now();else if(Date.now()-doneAt>12000){inv._guideHidden=1;doneAt=0;save();box.hidden=true;return}}else doneAt=0;
  const key=n+'|'+collapsed;if(key===last)return;last=key;
  box.innerHTML=`<div class='gh'><strong>✦ Підказка ${Math.min(n+1,steps.length)}/${steps.length}</strong><button type='button' data-collapse aria-label='${collapsed?'Розгорнути підказку':'Згорнути підказку'}' aria-expanded='${!collapsed}'>${collapsed?'▸':'▾'}</button><button type='button' data-dismiss aria-label='Приховати підказки' title='Приховати підказки'>×</button></div>${collapsed?'':`<div class='gt'>${n===steps.length?'🎉 Основи опановано':steps[n].title}</div><div class='gd'>${n===steps.length?'Ви готові розвивати базу далі. Підказки можна відкрити в «Інфо».':steps[n].hint}</div><div class='gp' role='progressbar' aria-label='Кроки провідника' aria-valuemin='0' aria-valuemax='${steps.length}' aria-valuenow='${n}'><i style='width:${n/steps.length*100}%'></i></div>`}`}
 box.addEventListener('click',e=>{if(e.target.closest('[data-collapse]')){collapsed=!collapsed;last='';refresh()}else if(e.target.closest('[data-dismiss]')){inv._guideHidden=1;save();refresh()}});

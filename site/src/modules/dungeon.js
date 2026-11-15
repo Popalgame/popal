@@ -20,6 +20,8 @@ function walkL(u,v,m){for(const r of ROOMS)if(Math.hypot(u-r[0],v-r[1])<r[2]-m)r
 const walk=(x,z,m)=>walkL(x-O[0],z-O[1],m||0);
 const inHall=(x,z)=>Math.hypot(x-O[0]-HALL[0],z-O[1]-HALL[1])<HALL[2]+1;
 window.DG={inBox,walk};
+/* 0.2.20: у печері будувати не можна — ховаємо кнопку «Будова» (і вимикаємо режим будівництва, якщо він був увімкнений) */
+{let was=null;ANI.push(()=>{const n=inBox(P.x,P.z);if(n===was)return;was=n;document.body.classList.toggle('in-dg',n);if(n&&window.BUILD&&document.body.classList.contains('bmode'))try{window.BUILD.setOn(false)}catch(_){}})}
 
 /* ---------- висота: підлога печери (window.H і BLDY — для героя, моделей і анімації) ---------- */
 {const H0=window.H;window.H=(x,z)=>inBox(x,z)?FLOOR:H0(x,z);

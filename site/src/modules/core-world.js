@@ -223,7 +223,7 @@ try{const s=JSON.parse(localStorage.getItem('zi')||'null');if(s){hasSave=1;/* 0.
    0.1.21: wk — попал у бригаді центру: лише такі ходять базою й працюють, решта в сховищі відпочиває */
 function addPal(ty,quiet,lv,cs){const m=mkPal(T[ty].c);const a=rn(0,6);m.position.set(Math.cos(a)*3,0,Math.sin(a)*3);sc.add(m);pals.push({m,ty,lv:lv||1,t:rn(0,6),x:m.position.x,z:m.position.z,a:0,cs:cs==null?null:cs})}
 const palTeam=()=>pals.reduce((a,p,i)=>(p.cs==null&&a.push(i),a),[]);window.palTeam=palTeam;
-function save(){if(window.zNoSave)return;/* вихід з акаунта: не записуємо прогрес назад до перезавантаження */try{localStorage.setItem('zi',JSON.stringify({res,plv,xp,qi,qa,st,pname,look,inv,eq,cf,t:Date.now(),pals:pals.map(p=>[p.ty,p.lv||1,p.cs==null?-1:p.cs,p.wk&&p.cs!=null?1:0,p.cr||0,palCargo(p.ai)]),pos:[+P.x.toFixed(1),+P.z.toFixed(1),+(P.face||0).toFixed(2)]}))}catch(e){}cloudPush()}setInterval(save,5000);
+function save(){if(window.zNoSave)return;/* вихід з акаунта: не записуємо прогрес назад до перезавантаження */try{localStorage.setItem('zi',JSON.stringify({res,plv,xp,qi,qa,st,pname,look,inv,eq,cf,t:Date.now(),pals:pals.map(p=>[p.ty,p.lv||1,p.cs==null?-1:p.cs,p.wk&&p.cs!=null?1:0,p.cr||0,palCargo(p.ai)]),pos:[+P.x.toFixed(1),+P.z.toFixed(1),+(P.face||0).toFixed(2)]}))}catch(e){}cloudPush()}setInterval(save,5000);/* 0.2.20: і при закритті чи згортанні вкладки — щоб не губити останні секунди */try{addEventListener('pagehide',()=>{try{save()}catch(_){}});document.addEventListener('visibilitychange',()=>{if(document.hidden)try{save()}catch(_){}})}catch(_){};
 /* ui */
 const $=id=>document.getElementById(id);let mt;
 /* 0.3.2: у текст повідомлень потрапляють значки-картинки предметів (IT[k][0] — <img>) — показуємо замість них емодзі */
@@ -258,9 +258,14 @@ if(ec(eq.ball)<1){msg(BALL.some(b=>ec(b.id)>0)?'Обрана куля закін
 const bk=eq.ball,bd=BALL.find(b=>b.id==bk)||BALL[0];addI(bk,-1);hud();const s=new THREE.Mesh(new THREE.SphereGeometry(.24,18,14),(window.plBallMat?plBallMat(bk,bd):M(bd.h)));s.position.set(P.x,1,P.z);sc.add(s);
 fx.push({s,w,t:0,x0:P.x,z0:P.z,bk})};
 /* loop */
-let T0=0,spT=0,hurt=0,fpsA=0,fpsN=0,motionX=0,motionY=0,heroFacing=0;
+let rgT=0,rgHp=0,rgH=0;let T0=0,spT=0,hurt=0,fpsA=0,fpsN=0,motionX=0,motionY=0,heroFacing=0;
 /* 0.2.9: героя повалили — спільне для одиночних і масових ударів (pal-growth.js) */
-function plHeroDown(){if(window.plDeath)plDeath(P.x,P.z);P.hp=HPM;const C=inv._cen,S0=window.SPAWN||[0,3];P.x=C?C[0]:S0[0];P.z=C?C[1]+3:S0[1];msg(C?'Вас повалили! Ви прокинулись біля Попал-центру.':'Вас повалили! Ви прокинулись у Тихій бухті.');/* 0.2.20: без цього HUD лишався з «❤ 0 / 975» після воскресіння */hud()}
+function plHeroDown(){window.plDownAt=Date.now();if(window.plDeath)plDeath(P.x,P.z);P.hp=HPM;const C=inv._cen,S0=window.SPAWN||[0,3];P.x=C?C[0]:S0[0];P.z=C?C[1]+3:S0[1];msg(C?'Вас повалили! Ви прокинулись біля Попал-центру.':'Вас повалили! Ви прокинулись у Тихій бухті.');/* 0.2.20: без цього HUD лишався з «❤ 0 / 975» після воскресіння */hud();downScreen(!!C)}
+/* 0.2.20: екран «Вас повалили» — раніше було лише коротке повідомлення, яке легко пропустити */
+function downScreen(cen){let d=$('pldown');if(!d){d=document.createElement('div');d.id='pldown';document.body.appendChild(d);d.onclick=()=>{d.classList.remove('on')}}
+ const boss=window.BOSSKIT&&window.BOSSKIT.list.some(b=>b.w&&wild.includes(b.w)&&b.w.hp<b.w.mh);
+ d.innerHTML=`<div><b>💫 Вас повалили</b><p>${cen?'Ви прокинулись біля Попал-центру.':'Ви прокинулись у Тихій бухті.'}</p>${boss?'<p>Бос 3 хвилини не лікуватиметься — встигніть повернутися.</p>':''}<p>Біля Попал-центру здоровʼя відновлюється швидше.</p><button>Далі</button></div>`;
+ d.classList.add('on');clearTimeout(d._t);d._t=setTimeout(()=>d.classList.remove('on'),6000)}
 window.plHeroDown=plHeroDown;
 function frame(ts){const tm=ts/1000,dt=Math.min(.05,tm-T0);T0=tm;if(menuO){ang+=dt*.08;jx=jy=0}fpsA+=dt;if(++fpsN==90){if(!window.plQuality&&fpsA/90>(window.gfxFps?1.35/window.gfxFps:.03)&&R.getPixelRatio()>1.25){R.setPixelRatio(1.25);rs()}fpsA=fpsN=0}
 const blocked=menuO||ivO||pfO||ccO,blend=1-Math.exp(-dt*18);if(blocked){motionX=motionY=0}else{motionX+=(jx-motionX)*blend;motionY+=(jy-motionY)*blend}const f=[-Math.sin(ang),-Math.cos(ang)],rt=[Math.cos(ang),-Math.sin(ang)],mx=f[0]*-motionY+rt[0]*motionX,mz=f[1]*-motionY+rt[1]*motionX,ml=Math.hypot(mx,mz);
@@ -278,7 +283,7 @@ cl[0]=P.x+Math.sin(P.face||0)*LA;cl[1]=gy+1.02;cl[2]=P.z+Math.cos(P.face||0)*LA;
 cam.lookAt(cl[0],cl[1],cl[2]);
 const tfov=50+(sprinting?5:0);if(Math.abs(tfov-fovCur)>.02){fovCur+=(tfov-fovCur)*(1-Math.exp(-dt*6));cam.fov=fovCur;cam.updateProjectionMatrix()}
 sun.position.set(P.x+14,14,P.z+6);sun.target.position.set(P.x,0,P.z);
-if(inv._cen&&Math.hypot(P.x-inv._cen[0],P.z-inv._cen[1])<4&&P.hp<HPM){P.hp=Math.min(HPM,P.hp+HPM*.15*dt);hud()}
+if(inv._cen&&Math.hypot(P.x-inv._cen[0],P.z-inv._cen[1])<4&&P.hp<HPM){P.hp=Math.min(HPM,P.hp+HPM*.15*dt);hud()}/* 0.2.20: поза боєм (8 с без шкоди) здоровʼя відновлюється всюди — 1,5% за секунду; біля центру, як і раніше, швидко */else{if(P.hp<rgHp-.5)rgT=tm;rgHp=P.hp;if(P.hp>0&&P.hp<HPM&&tm-rgT>8){P.hp=Math.min(HPM,P.hp+HPM*.015*dt);rgHp=P.hp;if(tm-rgH>.5){rgH=tm;hud()}}}
 for(const w of wild){w.t-=dt;const d=Math.hypot(P.x-w.x,P.z-w.z);let sp=0;
 const vp=window.wildVsPal&&!menuO&&!ivO?window.wildVsPal(w,dt,d):0;/* 0.2.9: б'є попала-супутника (pal-growth.js) */
 if(vp){sp=vp}else if(w.ag&&d<8&&!menuO&&!ivO){w.a=Math.atan2(P.x-w.x,P.z-w.z);sp=2.6;w.cd-=dt;if(d<Math.max(1.3,(w._r||0)+.8)&&w.cd<=0){w.cd=1;/* 0.2.9: великі істоти теж дістають героя */const wd=Math.max(1,Math.round((window.PW?PW.wildHit(w):(w.dm||10))*(window.plHeroDmgK?window.plHeroDmgK():1)));P.hp-=wd;dmg('-'+wd,pl,'#ff6b6b');if(window.palDefend)palDefend(w);hud();if(P.hp<=0)plHeroDown()}}
@@ -387,7 +392,7 @@ function ivR(){document.querySelectorAll('#ivh [data-t]').forEach(b=>b.classList
 if(ivTab=='i'){const ks=Object.keys(IT).filter(k=>cnt(k)>0);c.innerHTML=`<div class='ivn'>🍖 Годівниця Попал-центру: <b>${cf}</b>. Поки в ній є їжа, попали в центрі працюють утричі швидше.</div><div class='ivg'>${ks.map(k=>`<div class='ivs'><span>${IT[k][0]}</span><b>${cnt(k)}</b><small>${IT[k][1]}</small>${FOOD[k]?`<button data-f='${k}'>Нагодувати +${FOOD[k]}</button>`:''}</div>`).join('')||'<small>Рюкзак порожній. Збирайте ресурси кнопкою ⚔️</small>'}</div>`}
 else c.innerHTML=RC.map((r,i)=>{const ok=Object.entries(r.c).every(([k,n])=>cnt(k)>=n),own=r.one&&cnt(r.id)>0;return `<div class='rc'><span class='ri'>${IT[r.id][0]}</span><div class='rt'><b>${r.n}</b><small>${r.d}</small><div class='rcost'>${Object.entries(r.c).map(([k,n])=>`<i class='${cnt(k)>=n?'':'no'}'>${IT[k][0]} ${cnt(k)}/${n}</i>`).join('')}</div></div><button data-r='${i}' ${ok&&!own?'':'disabled'}>${own?'✔ Є':'Створити'}</button></div>`}).join('')}
 $('ivc').addEventListener('click',e=>{const f=e.target.closest('[data-f]'),r=e.target.closest('[data-r]');
-if(f){const k=f.dataset.f;if(!inv._cen||Math.hypot(P.x-inv._cen[0],P.z-inv._cen[1])>8){msg('🏠 Годувати попалів можна лише біля Попал-центру');return}if(inv[k]>0){inv[k]--;cf+=FOOD[k];msg('🍖 Істоти нагодовані! Годівниця: '+cf);save();ivR()}}
+if(f){const k=f.dataset.f;if(!inv._cen||Math.hypot(P.x-inv._cen[0],P.z-inv._cen[1])>8){msg('🏠 Годувати попалів можна лише біля Попал-центру');return}if(inv[k]>0){const n=f.dataset.n==='all'?inv[k]:1;inv[k]-=n;cf+=FOOD[k]*n;msg('🍖 Істоти нагодовані! Годівниця: '+cf);save();ivR()}}
 if(r&&!r.disabled){const R=RC[+r.dataset.r];for(const[k,n]of Object.entries(R.c))addI(k,-n);addI(R.id,R.q||1);if(window.TT&&TT[R.id]){const c=TT[eq.tool];if(!c||(c.k==TT[R.id].k&&c.t<TT[R.id].t))eq.tool=R.id;buildHero(pl,look||DLOOK);try{eqUp()}catch(_){}}msg('🔨 Створено: '+R.n);addXp(window.gXp?gXp(5):5);ivR()}});
 document.querySelectorAll('#ivh [data-t]').forEach(b=>b.onclick=()=>{ivTab=b.dataset.t;ivR()});
 $('ivx').onclick=()=>{ivO=0;$('iv').style.display='none'};$('bag').onclick=()=>ivOpen('i');$('craft').onclick=()=>ivOpen('c');
