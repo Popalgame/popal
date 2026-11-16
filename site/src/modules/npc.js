@@ -28,6 +28,14 @@ const NPC=window.NPC={list:L,add(o){const g=new THREE.Group();g.add(o.model);g.p
  get:id=>byId[id],
  mark(id,m){const n=byId[id];if(!n)return;n.mark=m||null;n.mk.visible=!!m;if(m)n.mk.material.map=MK[m];n.mk.material.needsUpdate=true},
  near(d){let b=null,bd=d||2.6;for(const n of L){const k=Math.hypot(n.x-P_.x,n.z-P_.z)-n.r;if(k<bd){bd=k;b=n}}return b}};
+/* 0.2.21: «Дія» біля NPC — розмова, лише якщо NPC «ближчий» за інші речі поруч (дерево, скелю, кущ, гриб, кухню, скриню…).
+   Близькість = відстань до краю + поправка на те, куди дивиться герой: що попереду — те й обираємо.
+   Раніше NPC перехоплював кнопку в радіусі ~3 м: біля Шкварки не зрубати дерево, а біля Діда Вітрила не відкрити кухню (підпис «Кухня», а відкривалась розмова). */
+const score=(x,z,r)=>{const dx=x-P_.x,dz=z-P_.z,d=Math.hypot(dx,dz),f=P_.face||0;const c=d>.01?(dx*Math.sin(f)+dz*Math.cos(f))/d:1;return d-r+1.2*(1-c)};
+const otherS=()=>{let m=1e9;
+ for(const nm of['trees','rocks','bushes','shrooms']){const A=G(nm);if(!Array.isArray(A))continue;for(const o of A){if(!o||o.hp!=null&&!(o.hp>0)||o.m&&o.m.visible===false||Math.hypot(o.x-P_.x,o.z-P_.z)>3)continue;const v=score(o.x,o.z,.4);if(v<m)m=v}}
+ for(const o of(window.BPLACED||[])){if(!o||Math.hypot(o.x-P_.x,o.z-P_.z)>3)continue;const v=score(o.x,o.z,.5);if(v<m)m=v}return m};
+NPC.talkable=()=>{const n=NPC.near();if(!n)return null;return score(n.x,n.z,n.r)<=otherS()?n:null};
 
 /* ---------- вікно діалогу ---------- */
 const st=document.createElement('style');st.textContent=`
@@ -67,7 +75,7 @@ function talk(n){if(NPC.onTalk&&NPC.onTalk(n.id)!==false)return;NPC.say(n.id,n.l
 
 /* ---------- кнопка «Дія» біля NPC ---------- */
 const hb=document.getElementById('hit');
-if(hb){const h0=hb.onclick;hb.onclick=function(){const n=NPC.near();if(n){talk(n);return}return h0&&h0.apply(this,arguments)}}
+if(hb){const h0=hb.onclick;hb.onclick=function(){const n=NPC.talkable();if(n){talk(n);return}return h0&&h0.apply(this,arguments)}}
 let was=null;
 /* ---------- компас: ◆ і одне слово в напрямку мети ---------- */
 let hint=null;const cs=document.getElementById('cmps');let qEls=[];
@@ -86,7 +94,7 @@ const tick=()=>{const dt=.016;walkTick();
   const o=n.nm.material;o.opacity+=((d<9?1:0)-o.opacity)*.08;
   if(cur===n&&d>5)NPC.close()}
  /* кнопка «Дія» */
- if(hb){const n=NPC.near(),k=n?n.id:null;if(k!==was){was=k;if(window.plHitLabel)window.plHitLabel('npc',n?'💬<small>Говорити</small>':null)}}
+ if(hb){const n=NPC.talkable(),k=n?n.id:null;/* поки «Дія» веде до розмови, підпис NPC — останній (головний), інакше його перебивала б «Кухня» тощо */if((k!==was||n)&&window.plHitLabel)window.plHitLabel('npc',n?'💬<small>Говорити</small>':null);was=k}
  /* компас */
  if(hint&&qEls.length){const a=Math.atan2(-(hint.x-P_.x),-(hint.z-P_.z));const Hd=((-a*57.2958)%360+360)%360;qEls.forEach((e,i)=>{e.style.left=((Hd-360+i*360)+360)*2+'px'});
   const near_=Math.hypot(hint.x-P_.x,hint.z-P_.z)<5;qEls.forEach(e=>{e.style.opacity=near_?.35:1})}
