@@ -1,0 +1,4 @@
+mirazhbr_form1 sha=bf424ff84cd30e0e tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=11364 17 14 2 0 0 0 0 603 reimport_finite=14/14
+mirazhbr_form2 sha=f134004cca43f8cf tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=12100 17 14 2 0 0 0 0 635 reimport_finite=14/14
+mirazhbr_form3 sha=e7152a19ce584311 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=13118 17 14 2 0 0 0 0 674 reimport_finite=14/14
+mirazhbr_fx sha=c59d06550bcd542b tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=19720 75 9 1 0 0 0 0 922 reimport_finite=9/9

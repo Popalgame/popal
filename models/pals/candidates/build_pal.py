@@ -8,7 +8,7 @@ KS = {1: 1.0, 2: 1.06, 3: 1.12}
 spec = importlib.import_module(key)
 A = pal_lib.attacks(key)
 def body(form):
-    P = spec.build(form, KS[form]).build()
+    P0 = spec.build(form, KS[form]); P = P0.build(ao_k=getattr(P0, 'ao', .68))
     extra = getattr(spec, 'extra_clip', None)
     for name, (F, keys) in body_clips.base_clips(**getattr(spec, 'RIG', {})).items(): P.clip(name, F, keys)
     for i, a in enumerate(A, 1):

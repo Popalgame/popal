@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Тіньовий кіготь",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "shadow",
+  "slot": 1,
+  "frames": 26
+ },
+ {
+  "clip": "atk_2",
+  "name": "Тіньовий двійник",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "shadow",
+  "slot": 2,
+  "frames": 26
+ },
+ {
+  "clip": "atk_3",
+  "name": "Удар із тіні",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "shadow",
+  "slot": 2,
+  "frames": 30
+ },
+ {
+  "clip": "atk_4",
+  "name": "Отрута сутінків",
+  "kind": "dot",
+  "anim": "dot",
+  "elem": "shadow",
+  "slot": 2,
+  "frames": 36
+ },
+ {
+  "clip": "atk_5",
+  "name": "Міражний ривок",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "shadow",
+  "slot": 2,
+  "frames": 30
+ },
+ {
+  "clip": "atk_6",
+  "name": "Безодня",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "shadow",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_7",
+  "name": "Тіньовий шквал",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "shadow",
+  "slot": 3,
+  "frames": 30
+ },
+ {
+  "clip": "atk_8",
+  "name": "Прокляття тіні",
+  "kind": "dot",
+  "anim": "dot",
+  "elem": "shadow",
+  "slot": 3,
+  "frames": 36
+ },
+ {
+  "clip": "atk_9",
+  "name": "Примарний вир",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "shadow",
+  "slot": 3,
+  "frames": 40
+ }
+]
