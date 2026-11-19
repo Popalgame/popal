@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Бамбуковий удар",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "grass",
+  "slot": 1,
+  "frames": 26
+ },
+ {
+  "clip": "atk_2",
+  "name": "Кличний рик",
+  "kind": "taunt",
+  "anim": "taunt",
+  "elem": "grass",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_3",
+  "name": "Бамбуковий смерч",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "grass",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_4",
+  "name": "Листяний щит",
+  "kind": "shield",
+  "anim": "shield",
+  "elem": "grass",
+  "slot": 2,
+  "frames": 36
+ },
+ {
+  "clip": "atk_5",
+  "name": "Пастка коріння",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "grass",
+  "slot": 2,
+  "frames": 54
+ },
+ {
+  "clip": "atk_6",
+  "name": "Панда-таран",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "grass",
+  "slot": 3,
+  "frames": 30
+ },
+ {
+  "clip": "atk_7",
+  "name": "Бамбуковий гай",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "grass",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_8",
+  "name": "Непохитна панда",
+  "kind": "taunt",
+  "anim": "taunt",
+  "elem": "grass",
+  "slot": 3,
+  "frames": 40
+ },
+ {
+  "clip": "atk_9",
+  "name": "Бамбуковий град",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "grass",
+  "slot": 3,
+  "frames": 42
+ }
+]

@@ -1,0 +1,4 @@
+bambuzl_form1 sha=1136f0f6aa55b203 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=10866 18 14 2 0 0 0 0 613 reimport_finite=14/14
+bambuzl_form2 sha=0b2ac8324623fe1a tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=13450 18 14 2 0 0 0 0 739 reimport_finite=14/14
+bambuzl_form3 sha=78f9077d153264ec tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=17210 18 14 2 0 0 0 0 915 reimport_finite=14/14
+bambuzl_fx sha=4a7c92e86168ba0c tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=11456 72 9 1 0 0 0 0 764 reimport_finite=9/9
