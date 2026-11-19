@@ -434,7 +434,7 @@ def leg(ph, amp=.55):
 def knee(ph):
     return lambda t: (max(0, S(TAU * (t + ph) + 1.2)) * .7, 0, 0)
 clip('walk', F, {
-    'PuffBase': {'loc': cyc(8, F, lambda t: (0, 0, .025 * abs(S(TAU * t))))},
+    'PuffBase': {'loc': cyc(8, F, lambda t: (0, .31 * .025 * abs(S(TAU * t)), -.95 * .025 * abs(S(TAU * t))))},  # вісь Z кістки дивиться вниз — підйом = (0, .31, -.95)
     'PuffChest': {'rot': cyc(8, F, lambda t: (.04 * S(TAU * t * 2), 0, 0))},
     'PuffHead': {'rot': cyc(8, F, lambda t: (-.05 * S(TAU * t * 2), .07 * S(TAU * t), .05 * S(TAU * t)))},
     'PuffNeck': {'rot': cyc(8, F, lambda t: (.03 * S(TAU * t * 2 - .6), 0, 0))},
@@ -463,7 +463,7 @@ clip('attack', F, {
 # happy 1.05 c: підскок, похитування, вуха й хвіст
 F = 32
 clip('happy', F, {
-    'PuffBase': {'loc': cyc(8, F, lambda t: (0, 0, .09 * abs(S(TAU * t))))},
+    'PuffBase': {'loc': cyc(8, F, lambda t: (0, .31 * .09 * abs(S(TAU * t)), -.95 * .09 * abs(S(TAU * t))))},
     'PuffChest': {'rot': cyc(8, F, lambda t: (0, .1 * S(TAU * t), 0))},
     'PuffHead': {'rot': cyc(8, F, lambda t: (0, -.16 * S(TAU * t), 0))},
     'PuffEarL': {'rot': cyc(8, F, lambda t: (0, 0, .3 * S(TAU * t * 2)))},
@@ -476,6 +476,11 @@ clip('happy', F, {
 })
 if LIDS:
     clip('blink', 8, {n_: {'rot': [(1, (0, 0, 0)), (4, (BLINK, 0, 0)), (6, (BLINK * .6, 0, 0)), (9, (0, 0, 0))]} for n_, _, _s in LIDS}, cyclic=False)
+# атаки (спільні з ефектами в build_fx.py; кістки, яких у цій формі немає, пропускаємо)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fx_clips import CLIPS as FXC
+for nm_, (fr_, keys_) in FXC['body'].items():
+    clip(nm_, fr_, {b_: ch_ for b_, ch_ in keys_.items() if b_ in PB}, cyclic=False)
 for p in PB: p.rotation_euler = (0, 0, 0); p.location = (0, 0, 0)
 bpy.ops.object.mode_set(mode='OBJECT')
 
