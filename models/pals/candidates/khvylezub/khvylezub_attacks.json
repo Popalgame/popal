@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Хвильовий укус",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "water",
+  "slot": 1,
+  "frames": 26
+ },
+ {
+  "clip": "atk_2",
+  "name": "Акулячий ривок",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "water",
+  "slot": 2,
+  "frames": 30
+ },
+ {
+  "clip": "atk_3",
+  "name": "Водяний вир",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "water",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_4",
+  "name": "Кровожерний укус",
+  "kind": "dot",
+  "anim": "dot",
+  "elem": "water",
+  "slot": 2,
+  "frames": 36
+ },
+ {
+  "clip": "atk_5",
+  "name": "Водяний струмінь",
+  "kind": "beam",
+  "anim": "beam",
+  "elem": "water",
+  "slot": 2,
+  "frames": 48
+ },
+ {
+  "clip": "atk_6",
+  "name": "Цунамі",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "water",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_7",
+  "name": "Пожирач",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "water",
+  "slot": 3,
+  "frames": 30
+ },
+ {
+  "clip": "atk_8",
+  "name": "Глибинний вир",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "water",
+  "slot": 3,
+  "frames": 40
+ },
+ {
+  "clip": "atk_9",
+  "name": "Шторм іклів",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "water",
+  "slot": 3,
+  "frames": 26
+ }
+]

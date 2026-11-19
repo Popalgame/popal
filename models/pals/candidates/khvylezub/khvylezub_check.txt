@@ -1,0 +1,4 @@
+khvylezub_form1 sha=e7174bdbeb6fda7e tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=9734 17 14 2 0 0 0 0 548 reimport_finite=14/14
+khvylezub_form2 sha=e5c681ab16d985b3 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=9782 17 14 2 0 0 0 0 551 reimport_finite=14/14
+khvylezub_form3 sha=3bc76528272590fd tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=10414 17 14 2 0 0 0 0 577 reimport_finite=14/14
+khvylezub_fx sha=5ebbde060dba379d tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=13728 75 9 1 0 0 0 0 735 reimport_finite=9/9
