@@ -1,7 +1,7 @@
 # Ефекти атак попалів — окремий GLB на попала, кліпи atk_1..atk_9 (порядок як у pal-growth.js: 1 — стандартна, 2–5 — слот 2, 6–9 — слот 3).
 # Ефект = жорсткі сітки на своїх кістках; поява/зникнення — масштаб кістки (0 = сховано). Тривалість кліпу = тривалість руху тіла (body_clips.DUR).
 # Початок координат — лапи попала, морда в +z. Ціль: дальні атаки — 2,6 м попереду, ближні — 1,7 м. У грі корінь ефекту ставиться до цілі/попала.
-import bpy, bmesh, math, os, random, sys
+import bpy, bmesh, math, os, random, sys, colorsys
 from mathutils import Vector, Matrix
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pal_lib import V, hexrgb, lin, TAU, S, C
@@ -25,8 +25,15 @@ def elem_of(pal, a):
 # поведінка частинок у вибуху по площі: rise — з-під землі вгору, fall — згори, orbit — кружляють
 AOE_MODE = {'fire': 'rise', 'crystal': 'rise', 'grass': 'rise', 'water': 'rise', 'smoke': 'rise', 'earth': 'fall', 'ice': 'fall', 'coral': 'fall',
             'shadow': 'orbit', 'pollen': 'orbit', 'air': 'orbit', 'wool': 'orbit', 'electric': 'bolts'}
-GLOW = {'fire': 0xffb347, 'ice': 0xbff4ff, 'electric': 0xfff27a, 'water': 0x7fdcff, 'grass': 0xb6f27c, 'crystal': 0x9ff0ff, 'earth': 0xe8c38a,
+GLOW = {'fire': 0xffb347, 'ice': 0x7fd8ff, 'electric': 0xfff27a, 'water': 0x7fdcff, 'grass': 0xb6f27c, 'crystal': 0x9ff0ff, 'earth': 0xe8c38a,
         'shadow': 0xb48cff, 'pollen': 0xffe68a, 'coral': 0xffb3c8, 'air': 0xeaf6ff, 'wool': 0xffffff, 'smoke': 0xffa860}
+
+def vivid(col):
+    """Надто світлий колір (лід, пилок, біле) — насиченіший і темніший, щоб ефект читався і на світлій землі."""
+    r, g, b = [((col >> s) & 255) / 255 for s in (16, 8, 0)]; h, s_, v = colorsys.rgb_to_hsv(r, g, b)
+    if .3 * r + .59 * g + .11 * b < .62: return col
+    s_ = min(1, s_ * 1.6 + .25); v = min(v, .9); r, g, b = colorsys.hsv_to_rgb(h, s_, v)
+    return (int(r * 255) << 16) | (int(g * 255) << 8) | int(b * 255)
 
 class Fx:
     def __init__(self, pal):
@@ -128,7 +135,8 @@ class Fx:
             self.cone(name, (c[0], c[1] - s * .4, c[2]), (c[0], c[1] + s * .9, c[2]), s * .45, self.mat('p', 0xff7a2a, 2.0), bone)
             self.cone(name, (c[0], c[1] - s * .35, c[2]), (c[0], c[1] + s * .45, c[2]), s * .28, self.mat('p', 0xffe066, 2.5), bone)
         elif el in ('ice', 'crystal'):
-            self.gem(name, c, s * .35, s * .8, self.mat('p', col if el == 'crystal' else 0xbfefff, 1.0, .85, .15), bone, tilt=random.Random(seed).uniform(-.5, .5))
+            self.gem(name, c, s * .45, s * 1.0, self.mat('p', col if el == 'crystal' else 0x5cc4f4, 1.2, .9, .15), bone, tilt=random.Random(seed).uniform(-.5, .5))
+            self.gem(name + 'G', c, s * .6, s * 1.2, glow, bone)
         elif el == 'electric':
             self.bolt(name, (c[0], c[1] + s * .8, c[2]), (c[0] + s * .2, c[1] - s * .8, c[2]), self.mat('p', 0xfffbe0, 3.5), self.mat('g', col, 2.2, .5), bone, seed, th=s * .1)
         elif el == 'water':
@@ -155,7 +163,7 @@ class Fx:
         self.clips[name] = (frames, keys)
     # ключі: (кадр, зсув (x, вгору, вперед) або None, масштаб або None[, оберт])
     def build_attack(self, idx, a):
-        el = elem_of(self.pal, a); kind = kind_of(a); F = DUR[kind]; col = int(a['c'][1:], 16)
+        el = elem_of(self.pal, a); kind = kind_of(a); F = DUR[kind]; col = vivid(int(a['c'][1:], 16))
         if el in ('wool',) and col == 0xfff4fa: col = 0xf6f0e4
         P = 'A%d_' % idx; k = {}; rnd = random.Random(idx * 17 + len(self.pal))
         MOUTH = (0, 1.0, .95); TG = (0, 0, 2.6); TM = (0, 0, 1.7)
@@ -172,7 +180,7 @@ class Fx:
             for i in range(n):
                 f0 = 11 if kind == 'shot' else 9 + 9 * i
                 dx = 0 if n == 1 else (i - (n - 1) / 2) * .45
-                b = self.bone(P + 'Proj%d' % i, MOUTH); s = .32 if kind == 'shot' else .22
+                b = self.bone(P + 'Proj%d' % i, MOUTH); s = .42 if kind == 'shot' else .3
                 self.particle(el, b, MOUTH, s, col, b, i); self.ell(b + 'Gl', MOUTH, (s * .7, s * .7, s * .7), self.mat('g', GLOW.get(el, col), 1.6, .3), b, 10, 7)
                 k[b] = [(1, (0, 0, 0), 0), (f0 - 1, (0, 0, 0), 0), (f0, (0, 0, 0), 1, (0, 0, 0)), (f0 + 5, (dx * .5, .35, .8), 1, (0, 3, 0)), (f0 + 11, (dx, -.2, 1.65), 1, (0, 6, 0)), (f0 + 12, (dx, -.2, 1.65), 0)]
                 gring((TG[0] + dx, .03, TG[2]), f0 + 11, f0 + 18, .45, 1.6, 'R%d' % i)

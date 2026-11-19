@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Крижаний спис",
+  "kind": "shot",
+  "anim": "shot",
+  "elem": "ice",
+  "slot": 1,
+  "frames": 30
+ },
+ {
+  "clip": "atk_2",
+  "name": "Крижаний спалах",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "ice",
+  "slot": 2,
+  "frames": 54
+ },
+ {
+  "clip": "atk_3",
+  "name": "Град",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "ice",
+  "slot": 2,
+  "frames": 42
+ },
+ {
+  "clip": "atk_4",
+  "name": "Морозний подих",
+  "kind": "beam",
+  "anim": "beam",
+  "elem": "ice",
+  "slot": 2,
+  "frames": 48
+ },
+ {
+  "clip": "atk_5",
+  "name": "Ожеледь",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "ice",
+  "slot": 2,
+  "frames": 54
+ },
+ {
+  "clip": "atk_6",
+  "name": "Крижана комета",
+  "kind": "shot",
+  "anim": "shot",
+  "elem": "ice",
+  "slot": 3,
+  "frames": 30
+ },
+ {
+  "clip": "atk_7",
+  "name": "Хуртовина",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "ice",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_8",
+  "name": "Абсолютний нуль",
+  "kind": "beam",
+  "anim": "beam",
+  "elem": "ice",
+  "slot": 3,
+  "frames": 48
+ },
+ {
+  "clip": "atk_9",
+  "name": "Крижані роги",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "ice",
+  "slot": 3,
+  "frames": 42
+ }
+]

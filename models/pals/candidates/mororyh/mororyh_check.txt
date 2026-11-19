@@ -1,0 +1,4 @@
+mororyh_form1 sha=bb293e87439fd888 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=10816 18 14 2 0 0 0 0 590 reimport_finite=14/14
+mororyh_form2 sha=354923f03136b0bc tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=11872 18 14 2 0 0 0 0 640 reimport_finite=14/14
+mororyh_form3 sha=8a59fa493c3525b1 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=12392 18 14 2 0 0 0 0 686 reimport_finite=14/14
+mororyh_fx sha=0c26f712bde74c24 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=9224 76 9 1 0 0 0 0 689 reimport_finite=9/9
