@@ -1,0 +1,4 @@
+popeliukh_form1 sha=2780538eddac05e9 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=9830 19 14 2 0 0 0 0 579 reimport_finite=14/14
+popeliukh_form2 sha=8031dddfc3e93388 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=10310 19 14 2 0 0 0 0 600 reimport_finite=14/14
+popeliukh_form3 sha=deb09f63eb4a114f tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=11626 19 14 2 0 0 0 0 681 reimport_finite=14/14
+popeliukh_fx sha=94108b3b582a0048 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=19336 77 9 1 0 0 0 0 1035 reimport_finite=9/9

@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Попелястий укус",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "smoke",
+  "slot": 1,
+  "frames": 26
+ },
+ {
+  "clip": "atk_2",
+  "name": "Жаринки",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 42
+ },
+ {
+  "clip": "atk_3",
+  "name": "Стрибок із диму",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "smoke",
+  "slot": 2,
+  "frames": 30
+ },
+ {
+  "clip": "atk_4",
+  "name": "Тліюча мітка",
+  "kind": "dot",
+  "anim": "dot",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 36
+ },
+ {
+  "clip": "atk_5",
+  "name": "Димова завіса",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "smoke",
+  "slot": 2,
+  "frames": 54
+ },
+ {
+  "clip": "atk_6",
+  "name": "Танець трьох хвостів",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 26
+ },
+ {
+  "clip": "atk_7",
+  "name": "Попелястий вихор",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "smoke",
+  "slot": 3,
+  "frames": 40
+ },
+ {
+  "clip": "atk_8",
+  "name": "Чорне полум’я",
+  "kind": "dot",
+  "anim": "dot",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 36
+ },
+ {
+  "clip": "atk_9",
+  "name": "Вогняний ривок",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 30
+ }
+]
