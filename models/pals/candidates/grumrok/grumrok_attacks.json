@@ -22,7 +22,7 @@
   "name": "Кристальна лавина",
   "kind": "aoe",
   "anim": "aoe",
-  "elem": "fire",
+  "elem": "crystal",
   "slot": 2,
   "frames": 54
  },
