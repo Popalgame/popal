@@ -1,0 +1,4 @@
+sontseklyv_form1 sha=da30f0ea8bc72645 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=8026 17 14 2 0 0 0 0 542 reimport_finite=14/14
+sontseklyv_form2 sha=4b6e6a4145b52995 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=8354 17 14 2 0 0 0 0 561 reimport_finite=14/14
+sontseklyv_form3 sha=c47dd12e8f2e1113 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=8602 17 14 2 0 0 0 0 589 reimport_finite=14/14
+sontseklyv_fx sha=1fe43a98beafb73e tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=13152 82 9 1 0 0 0 0 989 reimport_finite=9/9

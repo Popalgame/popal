@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Сонячне перо",
+  "kind": "shot",
+  "anim": "shot",
+  "elem": "fire",
+  "slot": 1,
+  "frames": 30
+ },
+ {
+  "clip": "atk_2",
+  "name": "Сонячний вінець",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_3",
+  "name": "Вогняні пера",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 42
+ },
+ {
+  "clip": "atk_4",
+  "name": "Сонячний промінь",
+  "kind": "beam",
+  "anim": "beam",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 48
+ },
+ {
+  "clip": "atk_5",
+  "name": "Сліпучий спалах",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 54
+ },
+ {
+  "clip": "atk_6",
+  "name": "Пікірування фенікса",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 30
+ },
+ {
+  "clip": "atk_7",
+  "name": "Сонячна буря",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_8",
+  "name": "Зоряний промінь",
+  "kind": "beam",
+  "anim": "beam",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 48
+ },
+ {
+  "clip": "atk_9",
+  "name": "Дощ вогняних пер",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 42
+ }
+]
