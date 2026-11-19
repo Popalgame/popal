@@ -43,6 +43,9 @@ M = dict(
     eyeDark=mat('EyeDark', 0x2e2228, .2), irisWarm=mat('IrisWarm', 0x8a5634, .25), irisTex=texmat('IrisTex', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'iris.png')), cornea=glass('Cornea'), blush=mat('Blush', 0xf49a9e, .8), nose=mat('Nose', 0x4a3240, .35),
     cloud=mat('CloudWool', 0xc8d7ee, .95), storm=mat('StormWool', 0x667aa6, .95), horn=mat('Horn', 0xd8b26a, .45),
     bolt=mat('Bolt', 0xffe866, .3, emis=3.0))
+M['boltGlow'] = mat('BoltGlow', 0xfff0a0, .5, emis=2.0); M['boltGlow'].node_tree.nodes['Principled BSDF'].inputs['Alpha'].default_value = .28
+try: M['boltGlow'].surface_render_method = 'BLENDED'
+except Exception: M['boltGlow'].blend_method = 'BLEND'
 
 # ---------- допоміжні ----------
 parts = []  # (obj, {bone: weight} or callable(co_code)->{bone:w})
@@ -87,7 +90,7 @@ def fluff(obj, freq, amp, seed=0, mask=None):
         h = max(0.0, 1 - (d[0] / .9) ** 2) ** .6  # центр клубка — 1, межа — 0
         k = 1.0 if mask is None else mask(v.co)
         v.co += v.normal * (h - .45) * amp * k
-fluff(body, 9.0, .045, 1)
+fluff(body, 9.0, .06, 1)
 sm = body.modifiers.new('Smooth', 'SMOOTH'); sm.factor = .5; sm.iterations = 3
 bpy.ops.object.modifier_apply(modifier='Smooth')
 dc = body.modifiers.new('Dec', 'DECIMATE'); dc.ratio = .055
@@ -116,6 +119,7 @@ for (dx, dy, dz, r) in [(0, .30, -.02, .17), (-.14, .27, .04, .12), (.14, .27, .
 # мордочка
 ellipsoid('Muzzle', hd(0, -.12, .25), (.24, .17, .14), 'face', {'PuffHead': 1}, 18, 12)
 ellipsoid('Nose', hd(0, -.06, .385), (.045, .03, .025), 'nose', {'PuffHead': 1}, 14, 8)
+ellipsoid('NoseShine', hd(-.012, -.048, .405), (.012, .007, .006), 'shine', {'PuffHead': 1}, 8, 6)
 for s in (-1, 1):
     ellipsoid('Blush', hd(s * .225, -.11, .30), (.055, .028, .012), 'blush', {'PuffHead': 1}, 14, 8, rot=rotZ(-s * .1) @ rotY(s * .55))
     # великі очі: білок-контур (ink) + райдужка + 2 відблиски
@@ -210,6 +214,7 @@ for k, (x, y, z) in LEGS.items():
     o = parts[-1][0]
     for v in o.data.vertices:  # пласка підошва
         if v.co.z < .03: v.co.z = .03 + (v.co.z - .03) * .25
+    ellipsoid('HoofSplit', (x, .065, z + .125), (.011, .042, .028), 'ink', {lo: 1}, 8, 6)
 
 # ---------- хвіст ----------
 ellipsoid('Tail', (0, .9, -.82), (.17, .17, .2), 'wool', {'PuffTail': 1}, 18, 12)
@@ -275,17 +280,18 @@ if FORM >= 3:
     CC = (0, 1.66, -.3)
     for (dx, dy, dz, r) in [(0, 0, 0, .2), (-.2, -.03, .05, .15), (.2, -.03, .05, .15), (-.1, .07, -.12, .14), (.12, .06, -.13, .14), (0, -.02, .17, .13)]:
         ellipsoid('SkyCloud', (CC[0] + dx, CC[1] + dy, CC[2] + dz), (r, r * .8, r), 'storm', {'PuffCloud': 1}, 10, 7)
-    def zap(name, x0, z0, h, w):
+    def zap(name, x0, z0, h, w, th=.05, m='bolt'):
         pts = [(0, 0), (.09, -.08), (-.04, -.14), (.09, -.22), (-.02, -.28), (.04, -.36)]
         cu = bpy.data.curves.new(name, 'CURVE'); cu.dimensions = '3D'; sp = cu.splines.new('POLY'); sp.points.add(len(pts) - 1)
         for i, (p, (u, v)) in enumerate(zip(sp.points, pts)):
             p.co = (*V(x0 + u * h * .75, CC[1] - .12 + v * h, z0 + u * h * .75), 1); p.radius = 1 - .75 * i / (len(pts) - 1)  # зигзаг по діагоналі — видно з усіх боків
-        cu.bevel_depth = .05; cu.bevel_resolution = 2; cu.use_fill_caps = True
+        cu.bevel_depth = th; cu.bevel_resolution = 2; cu.use_fill_caps = True
         o = bpy.data.objects.new(name, cu); sc.collection.objects.link(o)
         bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); bpy.context.view_layer.objects.active = o
         bpy.ops.object.convert(target='MESH'); o = bpy.context.view_layer.objects.active
-        o.data.materials.append(M['bolt']); parts.append((o, w)); return o
+        o.data.materials.append(M[m]); parts.append((o, w)); return o
     zap('Zap1', -.1, CC[2] + .02, 1.2, {'PuffCloud': 1}); zap('Zap2', .12, CC[2] - .06, 1.0, {'PuffCloud': 1})
+    zap('ZapGlow1', -.1, CC[2] + .02, 1.2, {'PuffCloud': 1}, .11, 'boltGlow'); zap('ZapGlow2', .12, CC[2] - .06, 1.0, {'PuffCloud': 1}, .1, 'boltGlow')
 for i, (o, w) in enumerate(parts):
     if o.name.startswith(('Tail', 'Ruff', 'HeadFluff', 'Thigh', 'Cloud', 'Storm', 'SkyCloud', 'EarTip')):
         big = o.name.startswith(('Cloud', 'Storm', 'SkyCloud'))
@@ -335,15 +341,48 @@ bpy.context.view_layer.objects.active = body; bpy.ops.object.join()
 mesh = bpy.context.view_layer.objects.active; mesh.name = 'Pukhoklub'
 for v in mesh.data.vertices: v.co = v.co * KS
 # нижня частина вовни трохи темніша (як «тінь» у грі): кольоровий атрибут
-ca = mesh.data.color_attributes.new('Col', 'BYTE_COLOR', 'CORNER')
-for poly in mesh.data.polygons:
+# ---------- затінення (ambient occlusion) у кольорах вершин ----------
+# Для кожної вершини пускаємо промені в півсферу над нею: що більше їх упирається в сусідні клубки поруч, то темніше.
+# Так западини між клубками вовни, під коміром, під хмарою й під животом стають глибшими. Очі (яблуко, райдужка, рогівка, відблиск) і блискавки не темнимо.
+from mathutils.bvhtree import BVHTree
+me_ = mesh.data
+bvh = BVHTree.FromPolygons([v.co.copy() for v in me_.vertices], [tuple(p.vertices) for p in me_.polygons])
+random.seed(7); DIRS = []
+for i in range(18):  # косинусний розподіл, фіксований набір
+    u, w_ = (i + .5) / 18, (i * .618034) % 1
+    r_ = math.sqrt(u); a_ = 2 * math.pi * w_
+    DIRS.append(Vector((r_ * math.cos(a_), r_ * math.sin(a_), math.sqrt(max(0, 1 - u)))))
+AOD = .32 * KS
+NOAO = {'EyeDark', 'IrisTex', 'Cornea', 'Shine', 'Bolt', 'BoltGlow', 'Ink'}
+vmat = {}
+for p in me_.polygons:
+    for vi in p.vertices: vmat.setdefault(vi, set()).add(me_.materials[p.material_index].name)
+ao = [1.0] * len(me_.vertices)
+for v in me_.vertices:
+    if vmat.get(v.index, set()) <= NOAO: continue
+    n = v.normal; t = n.orthogonal().normalized(); b = n.cross(t)
+    o = v.co + n * .006; occ = 0.0
+    for d in DIRS:
+        dd = (t * d.x + b * d.y + n * d.z).normalized()
+        hit, _, _, dist = bvh.ray_cast(o, dd, AOD)
+        if hit is not None: occ += (1 - dist / AOD) ** .7
+    ao[v.index] = 1 - .7 * min(1, occ / len(DIRS) * 1.8)
+ca = me_.color_attributes.new('Col', 'BYTE_COLOR', 'CORNER')
+WOOLC = (0xf4 / 255, 0xed / 255, 0xe0 / 255)
+for poly in me_.polygons:
+    mname = me_.materials[poly.material_index].name
     for li in poly.loop_indices:
-        z = mesh.data.vertices[mesh.data.loops[li].vertex_index].co.z / KS
-        if mesh.data.materials[poly.material_index].name != 'Wool':
-            ca.data[li].color = (1, 1, 1, 1); continue
-        k = max(0, min(1, (.8 - z) * .7)) * .22
-        base = (0xf4 / 255, 0xed / 255, 0xe0 / 255)
-        ca.data[li].color = (base[0] * (1 - k * .9), base[1] * (1 - k), base[2] * (1 - k * .8), 1)
+        vi = me_.loops[li].vertex_index; z = me_.vertices[vi].co.z / KS
+        if mname in NOAO: ca.data[li].color = (1, 1, 1, 1); continue
+        a = ao[vi]
+        if mname == 'Wool':
+            k = max(0, min(1, (.8 - z) * .7)) * .18   # знизу трохи тепліше й темніше
+            col = (WOOLC[0] * (1 - k * .8), WOOLC[1] * (1 - k), WOOLC[2] * (1 - k * 1.1))
+            # тінь у западинах — з легким теплим відтінком (як у справжньої вовни), а не сіра
+            ca.data[li].color = (col[0] * (a ** .85), col[1] * (a ** .95), col[2] * (a ** 1.1), 1)
+        else:
+            a2 = 1 - (1 - a) * .7
+            ca.data[li].color = (a2, a2, a2, 1)
 useVC(M['wool'])
 mesh.parent = arm; mod = mesh.modifiers.new('Armature', 'ARMATURE'); mod.object = arm
 # не більше 4 впливів (контракт), нормалізація
@@ -397,13 +436,14 @@ def knee(ph):
 clip('walk', F, {
     'PuffBase': {'loc': cyc(8, F, lambda t: (0, 0, .025 * abs(S(TAU * t))))},
     'PuffChest': {'rot': cyc(8, F, lambda t: (.04 * S(TAU * t * 2), 0, 0))},
-    'PuffHead': {'rot': cyc(8, F, lambda t: (-.04 * S(TAU * t * 2), 0, 0))},
+    'PuffHead': {'rot': cyc(8, F, lambda t: (-.05 * S(TAU * t * 2), .07 * S(TAU * t), .05 * S(TAU * t)))},
+    'PuffNeck': {'rot': cyc(8, F, lambda t: (.03 * S(TAU * t * 2 - .6), 0, 0))},
     'PuffLegLF': {'rot': cyc(8, F, leg(0))}, 'PuffLegRB': {'rot': cyc(8, F, leg(0))},
     'PuffLegRF': {'rot': cyc(8, F, leg(.5))}, 'PuffLegLB': {'rot': cyc(8, F, leg(.5))},
     'PuffLegLF2': {'rot': cyc(8, F, knee(0))}, 'PuffLegRB2': {'rot': cyc(8, F, knee(0))},
     'PuffLegRF2': {'rot': cyc(8, F, knee(.5))}, 'PuffLegLB2': {'rot': cyc(8, F, knee(.5))},
-    'PuffEarL': {'rot': cyc(8, F, lambda t: (0, 0, .12 * S(TAU * t * 2)))},
-    'PuffEarR': {'rot': cyc(8, F, lambda t: (0, 0, -.12 * S(TAU * t * 2)))},
+    'PuffEarL': {'rot': cyc(8, F, lambda t: (.1 * S(TAU * t * 2 - 1.2), 0, .14 * S(TAU * t * 2 - 1)))},
+    'PuffEarR': {'rot': cyc(8, F, lambda t: (.1 * S(TAU * t * 2 - 1.2), 0, -.14 * S(TAU * t * 2 - 1)))},
     'PuffTail': {'rot': cyc(8, F, lambda t: (0, 0, .28 * S(TAU * t)))},
     'PuffTailTip': {'rot': cyc(8, F, lambda t: (0, 0, .2 * S(TAU * t - 1)))},
 })
