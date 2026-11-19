@@ -1,4 +1,4 @@
-# Пухоклуб (форма 1) — кандидат GLB зі скелетом і кліпами idle / walk / attack / happy.
+# Пухоклуб (форми 1, 2, 3: FORM=1|2|3) — кандидат GLB зі скелетом і кліпами idle / walk / attack / happy / blink.
 # Одноразовий скрипт: щоразу починає з порожньої сцени (read_factory_settings) і зберігає .blend + .glb поруч.
 # Координати в коді — як у грі (x, y-вгору, z-вперед); у Blender: (x, -z, y). Експортер glTF перетворює назад (+Y вгору, морда +Z).
 import bpy, bmesh, math, sys, os, random
@@ -10,6 +10,7 @@ sc = bpy.context.scene
 sc.render.fps = 30
 
 def V(x, y, z): return Vector((x, -z, y))
+FORM = int(os.environ.get('FORM', '1')); KS = {1: 1.0, 2: 1.06, 3: 1.12}[FORM]  # розмір форми — як у грі (pal-forms.js)
 
 # ---------- матеріали ----------
 def mat(name, hexc, rough=.9, emis=None, metal=0.0):
@@ -39,7 +40,9 @@ M = dict(
     wool=mat('Wool', 0xf4ede0, .97), woolShade=mat('WoolShade', 0xe6dccd, .97),
     face=mat('Face', 0xf6cdb3, .8), inner=mat('EarInner', 0xe39a98, .85), hoof=mat('Hoof', 0x6e5468, .6),
     ink=mat('Ink', 0x2b2236, .3), iris=mat('Iris', 0x5fb3a6, .25), shine=mat('Shine', 0xffffff, .1, emis=.6),
-    eyeDark=mat('EyeDark', 0x2e2228, .2), irisWarm=mat('IrisWarm', 0x8a5634, .25), irisTex=texmat('IrisTex', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'iris.png')), cornea=glass('Cornea'), blush=mat('Blush', 0xf49a9e, .8), nose=mat('Nose', 0x4a3240, .35))
+    eyeDark=mat('EyeDark', 0x2e2228, .2), irisWarm=mat('IrisWarm', 0x8a5634, .25), irisTex=texmat('IrisTex', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'iris.png')), cornea=glass('Cornea'), blush=mat('Blush', 0xf49a9e, .8), nose=mat('Nose', 0x4a3240, .35),
+    cloud=mat('CloudWool', 0xc8d7ee, .95), storm=mat('StormWool', 0x667aa6, .95), horn=mat('Horn', 0xd8b26a, .45),
+    bolt=mat('Bolt', 0xffe866, .3, emis=3.0))
 
 # ---------- допоміжні ----------
 parts = []  # (obj, {bone: weight} or callable(co_code)->{bone:w})
@@ -211,9 +214,82 @@ for k, (x, y, z) in LEGS.items():
 # ---------- хвіст ----------
 ellipsoid('Tail', (0, .9, -.82), (.17, .17, .2), 'wool', {'PuffTail': 1}, 18, 12)
 ellipsoid('TailTip', (0, 1.0, -1.0), (.14, .14, .15), 'wool', {'PuffTailTip': 1}, 16, 10)
+
+
+# ---------- еволюції ----------
+def spiral(name, base, s, R0, turns, th, out, m, w):
+    """Ріжок-спіраль збоку голови: закручується назад і вниз, тоншає до кінця."""
+    pts = []
+    for i in range(29):
+        t = i / 28; a = t * turns * 2 * math.pi; r = R0 * (1 - .55 * t)
+        pts.append((Vector(V(base[0] + s * out * t, base[1] + math.sin(a) * r, base[2] - (1 - math.cos(a)) * r * .9 - t * .02)), 1 - .72 * t))
+    cu = bpy.data.curves.new(name, 'CURVE'); cu.dimensions = '3D'; sp = cu.splines.new('POLY'); sp.points.add(len(pts) - 1)
+    for p, (q, rad) in zip(sp.points, pts): p.co = (*q, 1); p.radius = rad
+    cu.bevel_depth = th; cu.bevel_resolution = 3; cu.use_fill_caps = True
+    o = bpy.data.objects.new(name, cu); sc.collection.objects.link(o)
+    bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); bpy.context.view_layer.objects.active = o
+    bpy.ops.object.convert(target='MESH'); o = bpy.context.view_layer.objects.active
+    for p in o.data.polygons: p.use_smooth = True
+    o.data.materials.append(M[m]); parts.append((o, w)); return o
+def bolt(name, c, scale, yaw, w):
+    """Блискавка-зигзаг (товщина 4 см), два хрестоподібні листи — видно з будь-якого боку."""
+    P2 = [(-.05, .32), (.08, .32), (.01, .17), (.09, .17), (-.08, -.08), (-.01, .09), (-.08, .09)]
+    me = bpy.data.meshes.new(name); bm = bmesh.new()
+    vs = [bm.verts.new(V(c[0], c[1] + v_ * scale, c[2] + u * scale)) for u, v_ in P2]
+    f = bm.faces.new(vs); r = bmesh.ops.extrude_face_region(bm, geom=[f])
+    bmesh.ops.translate(bm, vec=Vector((.04 * scale, 0, 0)), verts=[e for e in r['geom'] if isinstance(e, bmesh.types.BMVert)])
+    bmesh.ops.translate(bm, vec=Vector((-.02 * scale, 0, 0)), verts=bm.verts)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    piv = V(*c); bmesh.ops.transform(bm, matrix=Matrix.Translation(piv) @ rotZ(yaw) @ Matrix.Translation(-piv), verts=bm.verts)
+    bm.to_mesh(me); bm.free()
+    o = bpy.data.objects.new(name, me); sc.collection.objects.link(o); o.data.materials.append(M['bolt']); parts.append((o, w)); return o
+if FORM >= 2:
+    # пишніший комір
+    for i in range(7):
+        a = i / 7 * 2 * math.pi + .4
+        ellipsoid('Ruff2_%d' % i, (math.sin(a) * .34, .97 + math.cos(a) * .2, .4), (.15, .14, .13), 'wool', {'PuffNeck': .7, 'PuffChest': .3}, 10, 7)
+    # хмаринки вовни: форма 2 — світло-блакитні плями з боків, форма 3 — ще й темна грозова хмара на спині
+    # купки з 3 клубків, наполовину втоплені у вовну (поверхня тулуба на боці — x≈0.46)
+    for s in (-1, 1):
+        for (y, z) in ((.86, .12), (.8, -.3), (.98, -.5)):
+            for (dy, dz, r) in ((0, 0, .15), (.09, .1, .11), (-.07, .11, .1)):
+                ellipsoid('Cloud', (s * .39, y + dy, z + dz), (r * .75, r, r), 'cloud', bodyW, 10, 6)
+    # ріжки
+    for s in (-1, 1):
+        if FORM == 2: spiral('Horn', hd(s * .3, .12, .08), s, .15, .95, .045, .12, 'horn', {'PuffHead': 1})
+        else: spiral('Horn', hd(s * .24, .2, .0), s, .2, 1.15, .052, .17, 'horn', {'PuffHead': 1})
+if FORM >= 2:
+    SM = 'cloud' if FORM == 2 else 'storm'
+    for (x, y, z, r) in [(0, 1.14, -.15, .22), (-.17, 1.1, .05, .18), (.17, 1.1, .05, .18), (-.15, 1.1, -.36, .19), (.15, 1.1, -.36, .19),
+                         (0, 1.12, -.55, .17), (0, 1.16, .16, .16), (-.25, 1.02, -.15, .17), (.25, 1.02, -.15, .17)]:
+        ellipsoid('Storm', (x, y, z), (r, r * .85, r), SM, bodyW, 10, 7)
+    ellipsoid('StormTail', (0, 1.0, -1.0), (.17, .16, .18), SM, {'PuffTailTip': 1}, 12, 8)
+    ellipsoid('StormTail2', (0, .92, -.84), (.13, .12, .13), SM, {'PuffTail': 1}, 10, 7)
+    ellipsoid('StormTuft', hd(0, .33, .0), (.15, .12, .14), SM, {'PuffHead': 1}, 12, 8)
+    for s in (-1, 1):  # кінчики вух
+        o = ellipsoid('EarTip', hd(s * .27, .55, -.03), (.09, .1, .065), SM, {'PuffEarL' if s < 0 else 'PuffEarR': 1}, 10, 7)
+        pivot = V(s * .25, HC[1] + .16, HC[2]); Mx = Matrix.Translation(pivot) @ rotY(-s * .35) @ Matrix.Translation(-pivot)
+        for v in o.data.vertices: v.co = Mx @ v.co  # той самий нахил, що й у вуха
+if FORM >= 3:
+    # хмаринка над спиною (своя кістка PuffCloud) і дві блискавки, що б'ють з неї вниз
+    CC = (0, 1.66, -.3)
+    for (dx, dy, dz, r) in [(0, 0, 0, .2), (-.2, -.03, .05, .15), (.2, -.03, .05, .15), (-.1, .07, -.12, .14), (.12, .06, -.13, .14), (0, -.02, .17, .13)]:
+        ellipsoid('SkyCloud', (CC[0] + dx, CC[1] + dy, CC[2] + dz), (r, r * .8, r), 'storm', {'PuffCloud': 1}, 10, 7)
+    def zap(name, x0, z0, h, w):
+        pts = [(0, 0), (.09, -.08), (-.04, -.14), (.09, -.22), (-.02, -.28), (.04, -.36)]
+        cu = bpy.data.curves.new(name, 'CURVE'); cu.dimensions = '3D'; sp = cu.splines.new('POLY'); sp.points.add(len(pts) - 1)
+        for i, (p, (u, v)) in enumerate(zip(sp.points, pts)):
+            p.co = (*V(x0 + u * h * .75, CC[1] - .12 + v * h, z0 + u * h * .75), 1); p.radius = 1 - .75 * i / (len(pts) - 1)  # зигзаг по діагоналі — видно з усіх боків
+        cu.bevel_depth = .05; cu.bevel_resolution = 2; cu.use_fill_caps = True
+        o = bpy.data.objects.new(name, cu); sc.collection.objects.link(o)
+        bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); bpy.context.view_layer.objects.active = o
+        bpy.ops.object.convert(target='MESH'); o = bpy.context.view_layer.objects.active
+        o.data.materials.append(M['bolt']); parts.append((o, w)); return o
+    zap('Zap1', -.1, CC[2] + .02, 1.2, {'PuffCloud': 1}); zap('Zap2', .12, CC[2] - .06, 1.0, {'PuffCloud': 1})
 for i, (o, w) in enumerate(parts):
-    if o.name.startswith(('Tail', 'Ruff', 'HeadFluff', 'Thigh')):
-        fluff(o, 11.0, .025, i)
+    if o.name.startswith(('Tail', 'Ruff', 'HeadFluff', 'Thigh', 'Cloud', 'Storm', 'SkyCloud', 'EarTip')):
+        big = o.name.startswith(('Cloud', 'Storm', 'SkyCloud'))
+        fluff(o, 13.0 if big else 11.0, .035 if big else .025, i)
 
 # ---------- скелет ----------
 arm_data = bpy.data.armatures.new('PuffRig'); arm = bpy.data.objects.new('Pukhoklub_Rig', arm_data); sc.collection.objects.link(arm)
@@ -239,6 +315,9 @@ for nm_, ec, s_ in LIDS:
     a_ = s_ * .42; bone(nm_, ec, (ec[0] + math.sin(a_) * .12, ec[1], ec[2] + math.cos(a_) * .12), 'PuffHead')
 bone('PuffTail', (0, .82, -.62), (0, .92, -.86), 'PuffBase')
 bone('PuffTailTip', (0, .92, -.86), (0, 1.02, -1.1), 'PuffTail', True)
+if FORM >= 3: bone('PuffCloud', (0, 1.5, -.3), (0, 1.85, -.3), 'PuffBase')
+for b_ in E:  # розмір форми: масштабуємо кістки (сітку — після об'єднання), доки сітка ще не прив'язана
+    b_.head = b_.head * KS; b_.tail = b_.tail * KS
 bpy.ops.object.mode_set(mode='OBJECT')
 BONES = [b.name for b in arm_data.bones]
 
@@ -254,11 +333,12 @@ bpy.ops.object.select_all(action='DESELECT')
 for o, _ in parts: o.select_set(True)
 bpy.context.view_layer.objects.active = body; bpy.ops.object.join()
 mesh = bpy.context.view_layer.objects.active; mesh.name = 'Pukhoklub'
+for v in mesh.data.vertices: v.co = v.co * KS
 # нижня частина вовни трохи темніша (як «тінь» у грі): кольоровий атрибут
 ca = mesh.data.color_attributes.new('Col', 'BYTE_COLOR', 'CORNER')
 for poly in mesh.data.polygons:
     for li in poly.loop_indices:
-        z = mesh.data.vertices[mesh.data.loops[li].vertex_index].co.z
+        z = mesh.data.vertices[mesh.data.loops[li].vertex_index].co.z / KS
         if mesh.data.materials[poly.material_index].name != 'Wool':
             ca.data[li].color = (1, 1, 1, 1); continue
         k = max(0, min(1, (.8 - z) * .7)) * .22
@@ -306,6 +386,7 @@ clip('idle', F, {
     'PuffTail': {'rot': cyc(8, F, lambda t: (0, 0, .2 * S(TAU * t)))},
     'PuffTailTip': {'rot': cyc(8, F, lambda t: (0, 0, .15 * S(TAU * t - 1)))},
     **{n_: {'rot': [(1, (0, 0, 0)), (44, (0, 0, 0)), (47, (BLINK, 0, 0)), (50, (0, 0, 0)), (73, (0, 0, 0))]} for n_, _, _s in LIDS},
+    **({'PuffCloud': {'loc': cyc(8, F, lambda t: (0, .05 * S(TAU * t), 0)), 'rot': cyc(8, F, lambda t: (0, .2 * S(TAU * t), 0))}} if FORM >= 3 else {}),
 })
 # walk 0.8 c: рись (ліва передня + права задня разом), коліна згинаються
 F = 24
@@ -351,6 +432,7 @@ clip('happy', F, {
     'PuffLegRF': {'rot': cyc(8, F, lambda t: (.3 * max(0, S(TAU * t)), 0, 0))},
     'PuffTail': {'rot': cyc(8, F, lambda t: (0, 0, .45 * S(TAU * t * 2)))},
     'PuffTailTip': {'rot': cyc(8, F, lambda t: (0, 0, .35 * S(TAU * t * 2 - 1)))},
+    **({'PuffCloud': {'loc': cyc(8, F, lambda t: (0, .08 * abs(S(TAU * t)), 0)), 'rot': cyc(8, F, lambda t: (0, .3 * S(TAU * t * 2), 0))}} if FORM >= 3 else {}),
 })
 if LIDS:
     clip('blink', 8, {n_: {'rot': [(1, (0, 0, 0)), (4, (BLINK, 0, 0)), (6, (BLINK * .6, 0, 0)), (9, (0, 0, 0))]} for n_, _, _s in LIDS}, cyclic=False)
@@ -358,7 +440,7 @@ for p in PB: p.rotation_euler = (0, 0, 0); p.location = (0, 0, 0)
 bpy.ops.object.mode_set(mode='OBJECT')
 
 # ---------- збереження й експорт ----------
-SUF = os.environ.get('SUF', ''); blend = os.path.join(OUT, 'pukhoklub_form1_candidate%s.blend' % SUF); glb = os.path.join(OUT, 'pukhoklub_form1_candidate%s.glb' % SUF)
+SUF = os.environ.get('SUF', ''); blend = os.path.join(OUT, 'pukhoklub_form%d_candidate%s.blend' % (FORM, SUF)); glb = os.path.join(OUT, 'pukhoklub_form%d_candidate%s.glb' % (FORM, SUF))
 bpy.ops.file.pack_all()
 bpy.ops.wm.save_as_mainfile(filepath=blend)
 bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); mesh.select_set(True); bpy.context.view_layer.objects.active = arm
