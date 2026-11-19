@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Удар кігтями",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "earth",
+  "slot": 1,
+  "frames": 26
+ },
+ {
+  "clip": "atk_2",
+  "name": "Підкоп",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "earth",
+  "slot": 2,
+  "frames": 30
+ },
+ {
+  "clip": "atk_3",
+  "name": "Град каміння",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "earth",
+  "slot": 2,
+  "frames": 42
+ },
+ {
+  "clip": "atk_4",
+  "name": "Земляний поштовх",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "earth",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_5",
+  "name": "Шквал кігтів",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "earth",
+  "slot": 2,
+  "frames": 30
+ },
+ {
+  "clip": "atk_6",
+  "name": "Бур",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "earth",
+  "slot": 3,
+  "frames": 30
+ },
+ {
+  "clip": "atk_7",
+  "name": "Землетрус",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "earth",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_8",
+  "name": "Промінь ліхтаря",
+  "kind": "beam",
+  "anim": "beam",
+  "elem": "earth",
+  "slot": 3,
+  "frames": 48
+ },
+ {
+  "clip": "atk_9",
+  "name": "Кам’яний шторм",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "earth",
+  "slot": 3,
+  "frames": 42
+ }
+]

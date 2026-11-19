@@ -1,0 +1,4 @@
+zemleryi_form1 sha=eac8b0d7c4cc4d17 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=9296 18 14 2 0 0 0 0 573 reimport_finite=14/14
+zemleryi_form2 sha=7b590fdae371f385 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=10284 18 14 2 0 0 0 0 617 reimport_finite=14/14
+zemleryi_form3 sha=5cfe3f886224569e tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=11244 18 14 2 0 0 0 0 661 reimport_finite=14/14
+zemleryi_fx sha=e95241cef141d76f tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=13548 89 9 1 0 0 0 0 951 reimport_finite=9/9
