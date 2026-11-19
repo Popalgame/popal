@@ -1,0 +1,4 @@
+hrozovyk_form1 sha=2fa8c21d406c295a tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=12104 19 14 2 0 0 0 0 665 reimport_finite=14/14
+hrozovyk_form2 sha=fff0693112b1ca88 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=12416 19 14 2 0 0 0 0 703 reimport_finite=14/14
+hrozovyk_form3 sha=37e02b05669234b6 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=13588 19 14 2 0 0 0 0 772 reimport_finite=14/14
+hrozovyk_fx sha=e774fcecdaea8642 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=19120 81 9 1 0 0 0 0 1010 reimport_finite=9/9

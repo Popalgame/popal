@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Грозовий укус",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "electric",
+  "slot": 1,
+  "frames": 26
+ },
+ {
+  "clip": "atk_2",
+  "name": "Грозовий стрибок",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "electric",
+  "slot": 2,
+  "frames": 30
+ },
+ {
+  "clip": "atk_3",
+  "name": "Ланцюгова блискавка",
+  "kind": "beam",
+  "anim": "beam",
+  "elem": "electric",
+  "slot": 2,
+  "frames": 48
+ },
+ {
+  "clip": "atk_4",
+  "name": "Іскристі кігті",
+  "kind": "dot",
+  "anim": "dot",
+  "elem": "electric",
+  "slot": 2,
+  "frames": 36
+ },
+ {
+  "clip": "atk_5",
+  "name": "Тіньовий рик",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "shadow",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_6",
+  "name": "Громовий удар",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "electric",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_7",
+  "name": "Блискавичний шквал",
+  "kind": "melee",
+  "anim": "dash",
+  "elem": "electric",
+  "slot": 3,
+  "frames": 30
+ },
+ {
+  "clip": "atk_8",
+  "name": "Буря тіней",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "shadow",
+  "slot": 3,
+  "frames": 40
+ },
+ {
+  "clip": "atk_9",
+  "name": "Розряд",
+  "kind": "beam",
+  "anim": "beam",
+  "elem": "electric",
+  "slot": 3,
+  "frames": 48
+ }
+]
