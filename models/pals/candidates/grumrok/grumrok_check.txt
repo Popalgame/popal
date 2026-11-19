@@ -1,0 +1,4 @@
+grumrok_form1 sha=c133a9c14567aaf8 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=11654 18 14 2 0 0 0 0 629 reimport_finite=14/14
+grumrok_form2 sha=f42ea4c811bfc112 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=12526 18 14 2 0 0 0 0 680 reimport_finite=14/14
+grumrok_form3 sha=48682cb06c78e683 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=13102 18 14 2 0 0 0 0 713 reimport_finite=14/14
+grumrok_fx sha=4c09c112e6fbf407 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=10100 70 9 1 0 0 0 0 743 reimport_finite=9/9

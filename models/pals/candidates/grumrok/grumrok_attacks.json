@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Кам’яний удар",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "earth",
+  "slot": 1,
+  "frames": 26
+ },
+ {
+  "clip": "atk_2",
+  "name": "Гірський рев",
+  "kind": "taunt",
+  "anim": "taunt",
+  "elem": "earth",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_3",
+  "name": "Кристальна лавина",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 54
+ },
+ {
+  "clip": "atk_4",
+  "name": "Кам’яна шкіра",
+  "kind": "shield",
+  "anim": "shield",
+  "elem": "earth",
+  "slot": 2,
+  "frames": 36
+ },
+ {
+  "clip": "atk_5",
+  "name": "Земляний поштовх",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "earth",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_6",
+  "name": "Кристалевий бур",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "crystal",
+  "slot": 3,
+  "frames": 26
+ },
+ {
+  "clip": "atk_7",
+  "name": "Обвал",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "earth",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_8",
+  "name": "Кристальний бастіон",
+  "kind": "taunt",
+  "anim": "taunt",
+  "elem": "crystal",
+  "slot": 3,
+  "frames": 40
+ },
+ {
+  "clip": "atk_9",
+  "name": "Самоцвітний залп",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "crystal",
+  "slot": 3,
+  "frames": 42
+ }
+]
