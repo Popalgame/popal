@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Удар клешнею",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "coral",
+  "slot": 1,
+  "frames": 26
+ },
+ {
+  "clip": "atk_2",
+  "name": "Клацання клешень",
+  "kind": "taunt",
+  "anim": "taunt",
+  "elem": "coral",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_3",
+  "name": "Кораловий щит",
+  "kind": "shield",
+  "anim": "shield",
+  "elem": "coral",
+  "slot": 2,
+  "frames": 36
+ },
+ {
+  "clip": "atk_4",
+  "name": "Припливна хвиля",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "water",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_5",
+  "name": "Залп мушель",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "coral",
+  "slot": 2,
+  "frames": 42
+ },
+ {
+  "clip": "atk_6",
+  "name": "Рифовий бастіон",
+  "kind": "taunt",
+  "anim": "taunt",
+  "elem": "coral",
+  "slot": 3,
+  "frames": 40
+ },
+ {
+  "clip": "atk_7",
+  "name": "Перлинний панцир",
+  "kind": "shield",
+  "anim": "shield",
+  "elem": "coral",
+  "slot": 3,
+  "frames": 36
+ },
+ {
+  "clip": "atk_8",
+  "name": "Кораловий обвал",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "coral",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_9",
+  "name": "Сталеві клешні",
+  "kind": "melee",
+  "anim": "melee",
+  "elem": "coral",
+  "slot": 3,
+  "frames": 26
+ }
+]

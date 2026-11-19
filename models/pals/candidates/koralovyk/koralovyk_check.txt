@@ -1,0 +1,4 @@
+koralovyk_form1 sha=20dc4ea6430d23fc tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=8958 17 14 2 0 0 0 0 531 reimport_finite=14/14
+koralovyk_form2 sha=0a7d8d3fbdecb8e1 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=10058 17 14 2 0 0 0 0 596 reimport_finite=14/14
+koralovyk_form3 sha=6e58c36aebb8867c tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=11030 17 14 2 0 0 0 0 654 reimport_finite=14/14
+koralovyk_fx sha=f0a9c7d5dffb7ec3 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=17112 69 9 1 0 0 0 0 837 reimport_finite=9/9
