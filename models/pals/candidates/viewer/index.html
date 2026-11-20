@@ -1,0 +1,149 @@
+<title>Попали 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Макет: сцена-«луг» на всю ширину, під нею панель: попали → форма → анімації → атаки. */
+:root{
+  --bg:#eef3f8; --fg:#1f2a3a; --muted:#5f6d80; --panel:#ffffff; --line:#d6dfea;
+  --accent:#4f7fd6; --accent-fg:#ffffff; --chip:#e7eef8; --atk:#fff1df; --atk-fg:#6a3a08;
+  --sky-top:#cfe6ff; --sky-bot:#f4f8fc;
+  --display:"Nunito",ui-rounded,"Segoe UI",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121822; --fg:#e8eef7; --muted:#9aa8bb; --panel:#1a2230; --line:#2a3546;
+  --accent:#7ea6f0; --accent-fg:#0e1420; --chip:#222d3f; --atk:#3a2a18; --atk-fg:#ffd9a8;
+  --sky-top:#1d2a40; --sky-bot:#141b27; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121822; --fg:#e8eef7; --muted:#9aa8bb; --panel:#1a2230; --line:#2a3546;
+  --accent:#7ea6f0; --accent-fg:#0e1420; --chip:#222d3f; --atk:#3a2a18; --atk-fg:#ffd9a8;
+  --sky-top:#1d2a40; --sky-bot:#141b27; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0}
+.wrap{max-width:1000px;margin:0 auto;padding-block:16px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(26px,5vw,36px);margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:14px}
+.stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(var(--sky-top),var(--sky-bot));aspect-ratio:16/10;max-width:100%;touch-action:none}
+@media (max-width:560px){.stage{aspect-ratio:4/5}}
+canvas{display:block;width:100%;height:100%;cursor:grab}
+canvas:active{cursor:grabbing}
+.hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--panel) 80%,transparent);padding:4px 9px;border-radius:999px;pointer-events:none}
+.badge{position:absolute;right:12px;top:10px;font:800 13px var(--display);color:var(--fg);background:color-mix(in srgb,var(--panel) 85%,transparent);padding:5px 11px;border-radius:999px;pointer-events:none;max-width:calc(100% - 24px)}
+.load{position:absolute;inset:0;display:grid;place-items:center;font:700 15px var(--display);color:var(--muted);background:color-mix(in srgb,var(--sky-bot) 55%,transparent)}
+.load[hidden]{display:none}
+.panel{display:grid;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:84px}
+button{font:700 15px var(--display);color:var(--fg);background:var(--chip);border:1.5px solid transparent;border-radius:12px;padding:8px 13px;cursor:pointer;min-height:40px}
+button:hover{border-color:var(--line)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.pal{font-size:14px}
+.atk{background:var(--atk);color:var(--atk-fg);font-size:14px}
+.atk small{font:500 11px var(--body);opacity:.75;margin-left:4px}
+.note{font-size:13px;color:var(--muted);line-height:1.5;max-width:70ch;margin:0}
+.stats{font-variant-numeric:tabular-nums}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Попали 3D</h1>
+    <span class="sub">13 попалів · форми 1–3 · анімації й 9 атак кожного · кандидати з Blender, у гру ще не підключено</span>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="3D-модель попала. Тягніть, щоб обертати; щипок або колесо — наблизити."></canvas>
+    <div class="load" id="load">Завантаження…</div>
+    <div class="badge" id="badge">—</div>
+    <div class="hint">Тягніть — обертати · щипок / колесо — наблизити</div>
+  </div>
+
+  <div class="panel">
+    <div class="row" role="group" aria-label="Попал" id="pals"><span class="lbl">Попал</span></div>
+    <div class="row" role="group" aria-label="Форма">
+      <span class="lbl">Форма</span>
+      <button class="form" id="f1" data-f="1" aria-pressed="true">1</button>
+      <button class="form" id="f2" data-f="2" aria-pressed="false">2</button>
+      <button class="form" id="f3" data-f="3" aria-pressed="false">3</button>
+    </div>
+    <div class="row" role="group" aria-label="Анімація">
+      <span class="lbl">Анімація</span>
+      <button class="anim" data-a="idle" aria-pressed="true">Спокій</button>
+      <button class="anim" data-a="walk" aria-pressed="false">Хода</button>
+      <button class="anim" data-a="attack" aria-pressed="false">Удар</button>
+      <button class="anim" data-a="happy" aria-pressed="false">Радість</button>
+      <button id="blink">Моргнути</button>
+      <button id="spin" aria-pressed="true">Обертання</button>
+    </div>
+    <div class="row" role="group" aria-label="Атаки" id="atks"><span class="lbl">Атаки</span></div>
+    <p class="note"><span class="stats" id="stats"></span> Атаки повторюються з паузою; ефекти — окрема модель на кожного попала, ціль стоїть за 2,6 м попереду. Номер біля атаки — слот у грі (1 — з 1 рівня, 2 — з 10, 3 — з 30).</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const stage=$('stage'),cv=$('cv');
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});R.outputEncoding=THREE.sRGBEncoding;R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+R.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+const sc=new THREE.Scene();
+sc.add(new THREE.HemisphereLight(0xeaf6ff,0x8a9a7a,.8));
+const sun=new THREE.DirectionalLight(0xfff3e0,1.1);sun.position.set(3,6,4);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
+Object.assign(sun.shadow.camera,{left:-4,right:4,top:4,bottom:-4});sc.add(sun);
+const ground=new THREE.Mesh(new THREE.CircleGeometry(8,64),new THREE.MeshStandardMaterial({color:0x9fc77a,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;sc.add(ground);
+const cam=new THREE.PerspectiveCamera(32,1,.05,80);
+const orb={a:.6,e:.22,d:5.4,ty:1,tz:0};let spin=true;
+function place(){const c=Math.cos(orb.e);cam.position.set(Math.sin(orb.a)*orb.d*c,orb.ty+Math.sin(orb.e)*orb.d,orb.tz+Math.cos(orb.a)*orb.d*c);cam.lookAt(0,orb.ty,orb.tz)}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(stage);resize();
+const pts=new Map();let pinch0=0,d0=0;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===2){const[a,b]=[...pts.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);d0=orb.d}});
+cv.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p)return;
+  if(pts.size===1){orb.a-=(e.clientX-p.x)*.008;orb.e=Math.max(-.05,Math.min(1.2,orb.e+(e.clientY-p.y)*.006));setSpin(false)}
+  p.x=e.clientX;p.y=e.clientY;
+  if(pts.size===2){const[a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0)orb.d=Math.max(2,Math.min(16,d0*pinch0/d))}});
+const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch0=0};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();orb.d=Math.max(2,Math.min(16,orb.d*(1+Math.sign(e.deltaY)*.08)))},{passive:false});
+
+const loader=new THREE.GLTFLoader(),cache={};let MAN=null,pal=null,form='1',anim='idle',cur=null,fx=null,last0=0,token=0;
+function fetchGlb(name){return fetch(name+'.glb.txt').then(r=>{if(!r.ok)throw new Error(r.status);return r.text()}).then(t=>{const s=atob(t.trim()),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u.buffer})}
+function load(name){if(cache[name])return Promise.resolve(cache[name]);
+  return fetchGlb(name).then(buf=>new Promise((res,rej)=>loader.parse(buf,'',g=>{const m=g.scene;m.traverse(o=>{if(o.isMesh)o.castShadow=true});
+    const mx=new THREE.AnimationMixer(m),A={},D={};for(const c of g.animations){A[c.name]=mx.clipAction(c);D[c.name]=c.duration}
+    cache[name]={m,mx,A,D};res(cache[name])},rej)))}
+const isAtk=a=>a.startsWith('atk');
+function frame(){if(isAtk(anim)){orb.tz=1.3;orb.d=9.4;orb.ty=1.05}else{orb.tz=0;orb.d=5.4;orb.ty=1}}
+function play(a){anim=a;if(!cur)return;
+  for(const k in cur.A)if(k!=='blink')cur.A[k].stop();
+  const act=cur.A[a];if(act){if(isAtk(a)||a==='attack'){act.setLoop(THREE.LoopOnce);act.clampWhenFinished=false}else act.setLoop(THREE.LoopRepeat);act.reset().play()}
+  if(fx){for(const k in fx.A)fx.A[k].stop();fx.m.visible=isAtk(a);const f=fx.A[a];if(f){f.setLoop(THREE.LoopOnce);f.clampWhenFinished=true;f.reset().play()}}
+  frame();last0=performance.now()}
+function press(sel,el){document.querySelectorAll(sel).forEach(b=>b.setAttribute('aria-pressed',String(b===el)))}
+function setSpin(v){spin=v;$('spin').setAttribute('aria-pressed',String(v))}
+function show(){const P=MAN.find(p=>p.key===pal),my=++token;$('load').hidden=false;$('load').textContent='Завантаження: '+P.name+'…';
+  Promise.all([load(P.files[form]),load(P.files.fx)]).then(([b,f])=>{if(my!==token)return;
+    if(cur)sc.remove(cur.m);if(fx)sc.remove(fx.m);cur=b;fx=f;sc.add(b.m);sc.add(f.m);f.m.visible=false;
+    $('badge').textContent=P.name+' · форма '+form;$('stats').textContent=P.name+': '+P.tris[form-1].toLocaleString('uk-UA')+' трикутників, '+P.el+'.';
+    const box=$('atks');box.querySelectorAll('button').forEach(x=>x.remove());
+    P.attacks.forEach(a=>{const bt=document.createElement('button');bt.className='anim atk';bt.dataset.a=a.clip;bt.setAttribute('aria-pressed',String(anim===a.clip));bt.innerHTML=a.name+'<small>'+a.slot+'</small>';bt.onclick=()=>{press('.anim',bt);play(a.clip)};box.appendChild(bt)});
+    if(isAtk(anim)&&!P.attacks.some(a=>a.clip===anim)){anim='idle';press('.anim',document.querySelector('.anim[data-a="idle"]'))}
+    $('load').hidden=true;play(anim)}).catch(()=>{if(my===token)$('load').textContent='Не вдалося завантажити модель. Оновіть сторінку.'})}
+document.querySelectorAll('.form').forEach(b=>b.addEventListener('click',()=>{press('.form',b);form=b.dataset.f;show()}));
+document.querySelectorAll('.anim:not(.atk)').forEach(b=>b.addEventListener('click',()=>{press('.anim',b);play(b.dataset.a)}));
+$('blink').addEventListener('click',()=>{if(cur&&cur.A.blink)cur.A.blink.setLoop(THREE.LoopOnce),cur.A.blink.reset().play()});
+$('spin').addEventListener('click',()=>setSpin(!spin));
+if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)setSpin(false);
+let last=performance.now();
+function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(spin&&!pts.size)orb.a+=dt*.35;
+  if(cur){const d=cur.D[anim]||1;if((isAtk(anim)&&now-last0>(d+.9)*1000)||(anim==='attack'&&now-last0>1000))play(anim);cur.mx.update(dt)}
+  if(fx&&fx.m.visible)fx.mx.update(dt);
+  place();R.render(sc,cam);requestAnimationFrame(tick)}
+fetch('manifest.json').then(r=>r.json()).then(m=>{MAN=m;const box=$('pals');
+  m.forEach((p,i)=>{const b=document.createElement('button');b.className='pal';b.textContent=p.name;b.setAttribute('aria-pressed',String(i===0));b.onclick=()=>{press('.pal',b);pal=p.key;show()};box.appendChild(b)});
+  pal=m[0].key;show();requestAnimationFrame(tick)}).catch(()=>{$('load').textContent='Не вдалося завантажити список попалів.'});
+})();
+</script>
