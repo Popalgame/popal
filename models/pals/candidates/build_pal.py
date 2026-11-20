@@ -10,7 +10,10 @@ A = pal_lib.attacks(key)
 def body(form):
     P0 = spec.build(form, KS[form]); P = P0.build(ao_k=getattr(P0, 'ao', .68))
     extra = getattr(spec, 'extra_clip', None)
-    for name, (F, keys) in body_clips.base_clips(**getattr(spec, 'RIG', {})).items(): P.clip(name, F, keys)
+    eb = getattr(spec, 'extra_base', None)
+    for name, (F, keys) in body_clips.base_clips(**getattr(spec, 'RIG', {})).items():
+        if eb: keys.update(eb(name, F))
+        P.clip(name, F, keys)
     for i, a in enumerate(A, 1):
         F, keys = body_clips.attack_clip(body_clips.kind_of(a), extra=extra, **getattr(spec, 'RIG', {})); P.clip('atk_%d' % i, F, keys)
     return P.export(out, '%s_form%d' % (key, form))

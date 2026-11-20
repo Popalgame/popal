@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Пилковий постріл",
+  "kind": "shot",
+  "anim": "shot",
+  "elem": "pollen",
+  "slot": 1,
+  "frames": 30
+ },
+ {
+  "clip": "atk_2",
+  "name": "Цілющий пилок",
+  "kind": "heal",
+  "anim": "heal",
+  "elem": "pollen",
+  "slot": 2,
+  "frames": 40
+ },
+ {
+  "clip": "atk_3",
+  "name": "Пилковий вихор",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "pollen",
+  "slot": 2,
+  "frames": 54
+ },
+ {
+  "clip": "atk_4",
+  "name": "Крилатий щит",
+  "kind": "shield",
+  "anim": "shield",
+  "elem": "air",
+  "slot": 2,
+  "frames": 36
+ },
+ {
+  "clip": "atk_5",
+  "name": "Сонний пилок",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "pollen",
+  "slot": 2,
+  "frames": 54
+ },
+ {
+  "clip": "atk_6",
+  "name": "Квітковий дощ",
+  "kind": "heal",
+  "anim": "heal",
+  "elem": "pollen",
+  "slot": 3,
+  "frames": 40
+ },
+ {
+  "clip": "atk_7",
+  "name": "Буревій",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "air",
+  "slot": 3,
+  "frames": 40
+ },
+ {
+  "clip": "atk_8",
+  "name": "Веселкова завіса",
+  "kind": "shield",
+  "anim": "shield",
+  "elem": "pollen",
+  "slot": 3,
+  "frames": 36
+ },
+ {
+  "clip": "atk_9",
+  "name": "Метеликова зграя",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "pollen",
+  "slot": 3,
+  "frames": 42
+ }
+]

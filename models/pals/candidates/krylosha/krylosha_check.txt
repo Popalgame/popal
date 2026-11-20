@@ -1,0 +1,4 @@
+krylosha_form1 sha=b40bbe25177598f8 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=6952 17 14 2 0 0 0 0 467 reimport_finite=14/14
+krylosha_form2 sha=b190ee4accbb5fe4 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=7296 17 14 2 0 0 0 0 484 reimport_finite=14/14
+krylosha_form3 sha=d23c34090bb48673 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=9248 17 14 2 0 0 0 0 559 reimport_finite=14/14
+krylosha_fx sha=1e08994953f9b572 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=17512 77 9 1 0 0 0 0 818 reimport_finite=9/9
