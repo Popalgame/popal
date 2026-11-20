@@ -1,0 +1,4 @@
+ignis_form1 sha=e5118ea89fde8027 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=8870 19 14 2 0 0 0 0 533 reimport_finite=14/14
+ignis_form2 sha=f2400925b3e21188 tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=9098 19 14 2 0 0 0 0 558 reimport_finite=14/14
+ignis_form3 sha=1072b69cdf09938d tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=9306 19 14 2 0 0 0 0 581 reimport_finite=14/14
+ignis_fx sha=58a0cbda4674a39e tris/joints/clips/maxInf/badSum/neg/nonfin/cams/KB=9856 70 9 1 0 0 0 0 805 reimport_finite=9/9

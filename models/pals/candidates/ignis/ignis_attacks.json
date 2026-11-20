@@ -1,0 +1,83 @@
+[
+ {
+  "clip": "atk_1",
+  "name": "Вогняний плювок",
+  "kind": "shot",
+  "anim": "shot",
+  "elem": "fire",
+  "slot": 1,
+  "frames": 30
+ },
+ {
+  "clip": "atk_2",
+  "name": "Плазмова павутина",
+  "kind": "shot",
+  "anim": "shot",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 30
+ },
+ {
+  "clip": "atk_3",
+  "name": "Вогняна злива",
+  "kind": "multi",
+  "anim": "multi",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 42
+ },
+ {
+  "clip": "atk_4",
+  "name": "Палаюча мітка",
+  "kind": "dot",
+  "anim": "dot",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 36
+ },
+ {
+  "clip": "atk_5",
+  "name": "Вибух лави",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "fire",
+  "slot": 2,
+  "frames": 54
+ },
+ {
+  "clip": "atk_6",
+  "name": "Плазмовий промінь",
+  "kind": "beam",
+  "anim": "beam",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 48
+ },
+ {
+  "clip": "atk_7",
+  "name": "Вулканічний дощ",
+  "kind": "aoe",
+  "anim": "aoe",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 54
+ },
+ {
+  "clip": "atk_8",
+  "name": "Пекельна сітка",
+  "kind": "dot",
+  "anim": "dot",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 36
+ },
+ {
+  "clip": "atk_9",
+  "name": "Вогняний вихор",
+  "kind": "nova",
+  "anim": "nova",
+  "elem": "fire",
+  "slot": 3,
+  "frames": 40
+ }
+]
