@@ -27,7 +27,7 @@ const WHAT={chop:['🪓','рубає дерево','дерев'],mine:['⛏️',
 /* ---------- рух ---------- */
 function moveTo(p,x,z,dt,stop){const dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);if(d<=stop+.08)return true;const s=Math.min(d-stop,SPD*(cf>0?1.2:1)*dt),nx=p.x+dx/d*s,nz=p.z+dz/d*s;p.a=Math.atan2(dx,dz);
  if(window.colPalStep)colPalStep(p,nx,nz,x,z,stop,dt);else{p.x=nx;p.z=nz}return false}/* 0.1.23: обходить будівлі (collide.js) */
-function place(p,tm,moving){if(!p.ai||p.ai.s!='rest'){if(p.sleep&&window.NEST)window.NEST.release(p);p.sleep=0}p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(p.sleep?.18:0)+(moving?Math.abs(Math.sin(tm*9+p.x))*.06:0),p.z);if(window.plTurn)plTurn(p.m,p.a||0,.18);else p.m.rotation.y=p.a||0}
+function place(p,tm,moving){if(!p.ai||p.ai.s!='rest'){if(p.sleep&&window.NEST)window.NEST.release(p);p.sleep=0}p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(p.sleep?.18:0)+(moving?Math.abs(Math.sin(tm*9+p.x))*.06:0),p.z);if(window.plTurn)window.plTurn(p.m,p.a||0,.18);else p.m.rotation.y=p.a||0}
 const bagW=A=>Object.entries(A.bag).reduce((a,[k,n])=>a+W(k)*n,0);
 const workRate=()=>1+.15*pals.reduce((level,q)=>q.wk&&q.cs!=null?Math.max(level,(T[q.ty].wk||{}).water||0):level,0);
 const say=(t,o,c)=>{if(o&&Math.hypot(P.x-o.position.x,P.z-o.position.z)<18)dmg(t,o,c||'#bdf5c9')};

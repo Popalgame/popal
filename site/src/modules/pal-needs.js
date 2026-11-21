@@ -78,7 +78,7 @@ function fill(b){bkOpen(b)}
 /* ---------- рух і положення (як у pal-ai.js) ---------- */
 function moveTo(p,x,z,dt,stop){const dx=x-p.x,dz=z-p.z,d=Math.hypot(dx,dz);if(d<=stop+.08)return true;const s=Math.min(d-stop,2.2*dt),nx=p.x+dx/d*s,nz=p.z+dz/d*s;p.a=Math.atan2(dx,dz);
  if(window.colPalStep)colPalStep(p,nx,nz,x,z,stop,dt);else{p.x=nx;p.z=nz}return false}
-function place(p,tm,moving){p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(p.sleep?.18:0)+(moving?Math.abs(Math.sin(tm*9+p.x))*.06:0),p.z);if(window.plTurn)plTurn(p.m,p.a||0,.18);else p.m.rotation.y=p.a||0}
+function place(p,tm,moving){p.m.position.set(p.x,Math.max(-1.3,H(p.x,p.z))+(p.sleep?.18:0)+(moving?Math.abs(Math.sin(tm*9+p.x))*.06:0),p.z);if(window.plTurn)window.plTurn(p.m,p.a||0,.18);else p.m.rotation.y=p.a||0}
 const say=(t,o,c)=>{if(o&&Math.hypot(P.x-o.position.x,P.z-o.position.z)<18)dmg(t,o,c||'#bdf5c9')};
 const night=()=>!!(window.isNight&&isNight());
 function leave(p){const A=p.ai;if(A){if(A.tg&&A.tg._cl===p)A.tg._cl=null;A.tg=null;A.s='pick';A.t=0}if(p.sleep&&window.NEST)window.NEST.release(p);p.sleep=0;p.nd=null}
