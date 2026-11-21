@@ -22,7 +22,7 @@ let seen=new Set();try{seen=new Set((localStorage.getItem('zi_news')||'').split(
 const keep=()=>{try{localStorage.setItem('zi_news',[...seen].join(','))}catch(_){}};
 const unread=n=>!seen.has(n.id);
 const css=document.createElement('style');css.textContent=`
-#nwb{position:fixed;left:0;top:calc(46% - 38px);z-index:19;width:calc(env(safe-area-inset-left,0px) + 34px);height:76px;padding:0 0 0 env(safe-area-inset-left,0px);box-sizing:border-box;border:1px solid rgba(205,230,229,.25);border-left:0;border-radius:0 18px 18px 0;
+#nwb{position:fixed;left:env(safe-area-inset-left,0px);top:calc(46% - 38px);z-index:19;width:34px;height:76px;padding:0;box-sizing:border-box;border:1px solid rgba(205,230,229,.25);border-left-width:min(1px,calc(env(safe-area-inset-left,0px)*100));border-radius:min(18px,calc(env(safe-area-inset-left,0px)*100)) 18px 18px min(18px,calc(env(safe-area-inset-left,0px)*100));/* з вирізом (iPhone) — окрема кнопка праворуч від нього, без вирізу — язичок біля краю */
  background:rgba(13,28,36,.9);box-shadow:0 4px 14px #05151d40;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}
 #nwb i{display:block;width:17px;height:4px;border-radius:2px;background:#eef3f4;box-shadow:0 -8px 0 #eef3f4,0 8px 0 #eef3f4}
 #nwb b{position:absolute;right:-6px;top:-6px;width:13px;height:13px;border-radius:50%;background:#ff4a3a;border:2px solid #0f2029;display:none}#nwb.new b{display:block}
