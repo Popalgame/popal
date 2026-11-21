@@ -332,7 +332,9 @@ window.PALMODEL={PALS,build:i=>{const r=PALS[i].b(),local=new Map();for(const ge
 (function(){try{
 if(!window.PALMODEL)return;
 const G=n=>{try{return eval(n)}catch(e){return undefined}};const GC=(()=>{const c={};return n=>c[n]||(c[n]=G(n))})();
-const SC=.8,MOBILE=!!(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches),NEAR=MOBILE?26:32,MAXHI=MOBILE?8:12,pool={};
+/* 0.2.22: нова модель — на всю відстань видимості (до туману), а не лише до 26 м: старі прості моделі вдалині виглядали як інші попали.
+   За ціною це те саме (≈35 сіток у новій проти ≈38 у старій); далекі пози рахуємо рідше. Гістерезис 6 м — модель не мерехтить на межі. */
+const SC=.8,MOBILE=!!(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches),FAR=()=>{const s=GC('sc');return Math.min(90,s&&s.fog&&s.fog.far?s.fog.far+4:80)},MAXHI=MOBILE?18:26,pool={};
 const getR=ty=>{const p=pool[ty];if(p&&p.length)return p.pop();const r=PALMODEL.build(ty);r.root.scale.setScalar(SC);
 // Keep directly animated meshes intact when the optional static batcher is present.
 if(window.plBatchModel){const protectedNodes=new Set([r.torso,r.head,r.tail,r.jaw,r.sprout,...r.ears,...r.eyes,...r.legs,...r.arms,...r.wings.map(w=>w.g),...(r.flames||[]),...(r.wisps||[]),...(r.puffs||[]),...(r.pollen||[]),...(r.sp||[])]);
@@ -358,9 +360,9 @@ let lt=performance.now(),acc=1;
 (function loop(){requestAnimationFrame(loop);const n=performance.now(),dt=Math.min(.05,(n-lt)/1000);lt=n;const t=n/1000;
  const P=GC('P');if(!P)return;const PL=GC('pals')||[],sel=PL[G('selP')|0];
  acc+=dt;if(acc>.3){acc=0;
-  const W=GC('wild')||[],list=[...W,...PL.filter(o=>o===sel?(!window.palShown||window.palShown()):!!(o.wk&&o.cs!=null&&o.m&&o.m.visible))];
+  const W=GC('wild')||[],list=[...W,...PL.filter(o=>o===sel?(!window.palShown||window.palShown()):!!(o.m&&o.m.visible))];/* 0.2.22: усі видимі спіймані — і в загоні, і на лежанках, не лише бригада */
   for(const o of [...live])if(!list.includes(o)||!o.m||!o.m.parent)detach(o);
-  const c=list.filter(o=>o.m&&o.m.parent&&o.ty!=null).map(o=>[o,Math.hypot(o.x-P.x,o.z-P.z)]).filter(a=>a[1]<NEAR).sort((a,b)=>(a[0]===sel?-1:0)-(b[0]===sel?-1:0)||a[1]-b[1]).slice(0,MAXHI).map(a=>a[0]);
+  const NEAR=FAR();const c=list.filter(o=>o.m&&o.m.parent&&o.ty!=null).map(o=>[o,Math.hypot(o.x-P.x,o.z-P.z)]).filter(a=>a[1]<(a[0]._hi?NEAR+6:NEAR)).sort((a,b)=>(a[0]===sel?-1:0)-(b[0]===sel?-1:0)||a[1]-b[1]).slice(0,MAXHI).map(a=>a[0]);
   const want=new Set(c);for(const o of [...live])if(!want.has(o))detach(o);for(const o of c)attach(o)}
  const menu=G('menuO');
  for(const o of live){const r=o._hi;if(!r)continue;
@@ -371,6 +373,7 @@ let lt=performance.now(),acc=1;
   if(o._happy>0){o._happy-=dt;mode='happy'}
   else if(PL.includes(o)&&o!==sel&&mode=='idle'){o._ht=(o._ht||Math.random()*12)-dt;if(o._ht<=0){o._ht=8+Math.random()*12;o._happy=1.4}}
   let h=0;if(o._hurt>0){o._hurt+=dt/.45;if(o._hurt>=1)o._hurt=0;h=o._hurt}
+  {const dd=Math.hypot(o.x-P.x,o.z-P.z),k=dd>45?3:dd>28?2:1;o._pf=((o._pf|0)+1)%k;if(o._pf&&!h)continue}/* далекі — поза кожен 2-й/3-й кадр */
   try{PALMODEL.pose(r,t+o._ph,mode,h)}catch(e){}}
 })();
 }catch(e){console.warn('pal-hi',e)}})();
