@@ -147,10 +147,11 @@ function surf(x,z,cur){const cx=Math.floor(x/C),cz=Math.floor(z/C);let best=-99;
 window.BLDY=function(x,z,dt){const gh=H(x,z);if(py==null)py=gh;const s=surf(x,z,py);if(s<-90){py=gh;return gh}
  const tgt=Math.max(gh,s);if(tgt>=py)py=tgt;else py=Math.max(tgt,py-14*(dt||.016));return py};
 const blocks=(ax,az,bx,bz,y)=>{for(const p of pieces){if(p.t==6){if(p.y>y+1.25){const T=triPts(p);if(inTri(bx,bz,T)&&!inTri(ax,az,T))return true}continue}if(p.t==0){if(p.y>y+1.25){const x0=p.cx*C-.3,z0=p.cz*C-.3,x1=x0+C+.6,z1=z0+C+.6;if(bx>x0&&bx<x1&&bz>z0&&bz<z1&&!(ax>x0&&ax<x1&&az>z0&&az<z1))return true}continue}
-  if(p.t!=1||p.v==1||p.v==3)continue;if(y<p.y-.6||y>p.y+WH-.4)continue;
+  if(p.t!=1||p.v==1||p.v==3)continue;if(y<p.y-1.25||y>p.y+WH-.4)continue;/* 0.2.22: було −0.6 — з землі біля фундаменту (вищого за 0.6 м) герой проходив крізь стіну */
   const[cx,cz]=cxz(p.cx,p.cz),[dx,dz]=DIRS[p.s],ex=cx+dx*C/2,ez=cz+dz*C/2,R=.45;
-  if(p.s%2){if((ax-ex)*(bx-ex)<=0||Math.abs(bx-ex)<R){if(Math.abs(bz-ez)<C/2+.1&&(Math.abs(bx-ex)<R||(ax-ex)*(bx-ex)<0))return true}}
-  else{if((az-ez)*(bz-ez)<=0||Math.abs(bz-ez)<R){if(Math.abs(bx-ex)<C/2+.1&&(Math.abs(bz-ez)<R||(az-ez)*(bz-ez)<0))return true}}}return false};
+  /* 0.2.22: якщо стіну поставили просто на героя (чи попала), з неї можна вийти — крок, що віддаляє від площини стіни, не блокуємо */
+  if(p.s%2){if(Math.abs(ax-ex)<R&&Math.abs(bx-ex)>Math.abs(ax-ex)&&(ax-ex)*(bx-ex)>=0)continue;if((ax-ex)*(bx-ex)<=0||Math.abs(bx-ex)<R){if(Math.abs(bz-ez)<C/2+.1&&(Math.abs(bx-ex)<R||(ax-ex)*(bx-ex)<0))return true}}
+  else{if(Math.abs(az-ez)<R&&Math.abs(bz-ez)>Math.abs(az-ez)&&(az-ez)*(bz-ez)>=0)continue;if((az-ez)*(bz-ez)<=0||Math.abs(bz-ez)<R){if(Math.abs(bx-ex)<C/2+.1&&(Math.abs(bz-ez)<R||(az-ez)*(bz-ez)<0))return true}}}return false};
 window.BLDBLK=blocks;/* 0.1.23: та сама перевірка стін — для попалів і диких істот (collide.js) */
 window.BLDC=function(ox,oz){const P=GC('P');if(!P||!pieces.length)return;const y=py==null?H(P.x,P.z):py;
  if(!blocks(ox,oz,P.x,P.z,y))return;if(!blocks(ox,oz,P.x,oz,y)){P.z=oz;return}if(!blocks(ox,oz,ox,P.z,y)){P.x=ox;return}P.x=ox;P.z=oz};
