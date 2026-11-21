@@ -181,11 +181,11 @@ reg.innerHTML=`<div style="max-width:380px;margin:16px;padding:20px 22px;border-
 <p style="margin:8px 0 14px">Руни світяться, але не пропускають безіменних. Назвіть себе — створіть акаунт, і портал відкриється. Усе з рюкзака й ваші попали вирушать із вами.</p>
 <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button id="isg" style="padding:10px 14px;border-radius:10px;border:0;background:#fff;color:#123;font-weight:800">Увійти через Google</button><button id="ise" style="padding:10px 14px;border-radius:10px;border:0;background:#ffb04a;color:#2a1600;font-weight:800">Через пошту</button></div>
 <button id="isx" style="margin-top:12px;background:none;border:0;color:#9fb8cc;text-decoration:underline">Пізніше</button></div>`;
-document.body.appendChild(reg);let regT=0;
+document.body.appendChild(reg);let regT=0,inP=0;
 reg.querySelector('#isg').onclick=()=>{reg.style.display='none';try{G('googleAuth')()}catch(_){}};
 reg.querySelector('#ise').onclick=()=>{reg.style.display='none';const e=document.getElementById('em');if(e)e.style.display='flex'};
 reg.querySelector('#isx').onclick=()=>{reg.style.display='none';regT=Date.now()};
-I.travel=()=>{if(going)return;if(!G('fbU')){if(reg.style.display!='flex'&&Date.now()-regT>6000)reg.style.display='flex';return}
+I.travel=()=>{if(going)return;if(!G('fbU')){if(!inP&&reg.style.display!='flex'&&Date.now()-regT>6000)reg.style.display='flex';inP=1;return}/* вікно — лише при вході в портал: інакше воно знову вистрибує поверх форми входу через пошту */
  going=true;fade.style.opacity='1';try{if(window.msg)msg('✨ Портал підхоплює вас…')}catch(_){}
  setTimeout(()=>{try{INV._rl='main';INV._arr=1;localStorage.setItem('zi_arrive','1');if(window.save)save();const cp=G('cloudPush');if(cp)cp(true)}catch(_){}
   const u=new URL(location.href);u.searchParams.delete('realm');u.searchParams.delete('gate');location.replace(u.toString())},1400)};
@@ -198,6 +198,6 @@ let t=0;const ANI_=G('ANI');
 const tick=()=>{t+=.016;PU.t.value=t;PU.on.value+=((open?1:0)-PU.on.value)*.03;pl2.intensity=.6+PU.on.value*1.4+Math.sin(t*3)*.15;
  arch.userData.key.rotation.y=t;const kp=sg.attributes.position;for(let i=0;i<SPN;i++){const s=sv[i];s[1]+=s[3]*.016;if(s[1]>5.5)s[1]=0;kp.setXYZ(i,s[0]+Math.sin(t+i)*.1,s[1],s[2])}kp.needsUpdate=true;
  const f=fire.userData.fl;f.scale.set(1+Math.sin(t*9)*.1,1+Math.sin(t*7+1)*.18,1);
- if(open&&!going&&Math.hypot(P_.x-AX,P_.z-AZ)<1.6)I.travel()};
+ if(open&&!going&&Math.hypot(P_.x-AX,P_.z-AZ)<1.6)I.travel();else inP=0};
 if(ANI_)ANI_.push(tick);else setInterval(tick,16);
 }catch(e){console.warn('isle:',e)}})();

@@ -39,7 +39,7 @@ const css=document.createElement('style');css.textContent=`
 #nwp .mt .ci i{position:absolute;right:-2px;top:-2px;width:15px;height:15px;border-radius:50%;background:#ff3a2a;border:2px solid #fff;display:none}#nwp .mt.new .ci i{display:block}
 #nwp .mt:active .ci{transform:scale(.94)}
 body.hedit #nwp,body.hedit #nwx{display:none}
-#guide{left:calc(env(safe-area-inset-left,0px) + 52px)!important}/* підказка — правіше язичка, щоб не перекривала його */
+#guide,#qj{left:calc(env(safe-area-inset-left,0px) + 52px)!important}/* підказка — правіше язичка, щоб не перекривала його */
 /* ---------- вікно новин — у стилі вікон гри (рюкзак, скрині): темно-синя панель, золото й бірюза, заокруглені кути ---------- */
 #nwx{position:fixed;inset:0;z-index:44;display:none;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eef4ff;
  background:rgba(4,10,22,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);

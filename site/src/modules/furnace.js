@@ -85,7 +85,7 @@ function render(){const s=smelter(),fc=fireCrew(),t=s?tIngot(s):fc.length?tIngot
  else if(!fc.length){st='⚠️ Плавить лише вогняний попал у бригаді: Ігніс-Виверг, Сонцеклюв або Попелюх';no=1}
  else if(!can)st=`${T[fc[0].ty].n} чекає: потрібні 2 руди й паливо (деревина або вугілля) — у печі чи у скрині`;
  else st=`${T[fc[0].ty].n} іде до печі…`;
- box.innerHTML=`<header><b>🔥 Плавильня</b><button class='cx'>✕</button></header>
+ const h=`<header><b>🔥 Плавильня</b><button class='cx'>✕</button></header>
  <div class='fl'><div class='bx'><i>${IT.ore[0]}</i><b>${F.ore}</b><small>руда</small></div><div class='bx'><i>🔥</i><b>${F.fuel}</b><small>паливо</small></div>
  <div class='ar'>➜<div class='pb'><i style='width:${pc}%'></i></div></div><div class='bx'><i>🔩</i><b>${F.ing}</b><small>злитки</small></div></div>
  <div class='od'><span>📋 Замовлення: <b>${F.ord}</b> 🔩</span><button data-o='-1' ${F.ord?'':'disabled'}>−1</button><button data-o='1'>+1</button><button data-o='5'>+5</button><button data-o='10'>+10</button><button data-o='max' ${mk>F.ord?'':'disabled'}>Усе можливе (${mk})</button><button data-o='0' ${F.ord?'':'disabled'}>✖</button></div>
@@ -93,6 +93,7 @@ function render(){const s=smelter(),fc=fireCrew(),t=s?tIngot(s):fc.length?tIngot
  <div class='bt'><button data-a='ore2' ${cnt('ore')>=2?'':'disabled'}>${IT.ore[0]} Покласти 2 руди</button><button data-a='oreA' ${cnt('ore')>=1?'':'disabled'}>${IT.ore[0]} Усю руду (${cnt('ore')||0})</button>
  <button data-a='w1' ${cnt('w')>=1?'':'disabled'}>🪵 +1 деревина</button><button data-a='wA' ${cnt('w')>=1?'':'disabled'}>🪵 Усю (${cnt('w')||0})</button><button data-a='c1' ${cnt('coal')>=1?'':'disabled'}>${IT.coal?IT.coal[0]:'⚫'} +1 вугілля</button><button data-a='cA' ${cnt('coal')>=1?'':'disabled'}>${IT.coal?IT.coal[0]:'⚫'} Усе (${cnt('coal')||0})</button><button class='g' data-a='take' ${F.ing?'':'disabled'}>🔩 Забрати злитки</button></div>
  <div class='em'>2 руди + 1 паливо → 1 залізний злиток. Паливо: деревина = 1, вугілля = 3. Задайте замовлення — і вогняний попал з бригади виплавить саме стільки злитків: сам носить руду й паливо зі скринь (спершу вугілля), плавить і відносить злитки у скриню.</div>`;
+ {const k=h.replace(/width:[\d.]+%/,'');if(box.__k===k){const b=box.querySelector('.pb i');if(b)b.style.width=pc+'%';return}box.__k=k;box.innerHTML=h}/* перемальовуємо лише при зміні (крім смужки) — інакше дотик губиться */
  box.querySelector('.cx').onclick=close;
  box.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const o=b.dataset.o;F.ord=o=='0'?0:o=='max'?canMake():Math.max(0,Math.min(999,F.ord+ +o));save();render()});
  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;

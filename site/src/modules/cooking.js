@@ -39,11 +39,12 @@ function render(){const cs=cooks(),busy=cs.find(p=>p.ai&&p.ai.s=='cook');let st,
  else if(busy)st=`🍳 ${T[busy.ty].n}: ${busy.st||'готує'}`;
  else if(!KIT.any())st=`📋 Задайте замовлення — і ${T[cs[0].ty].n} приготує саме стільки страв`;
  else st=KIT.dish()?`${T[cs[0].ty].n} іде по продукти…`:'⚠️ У скринях бракує продуктів для замовлення';
- box.innerHTML=`<header><b>${ico('B_kit')} Кухня-багаття</b><button class='cx'>✕</button></header>`+DISH.map(d=>{const c=rc(d),r=RC.find(x=>x.id==d),mine=Object.keys(c).every(k=>cnt(k)>=c[k]);
+ const h=`<header><b>${ico('B_kit')} Кухня-багаття</b><button class='cx'>✕</button></header>`+DISH.map(d=>{const c=rc(d),r=RC.find(x=>x.id==d),mine=Object.keys(c).every(k=>cnt(k)>=c[k]);
   return `<div class='dh'><div class='ic'>${ico(d)}</div><div class='nm'><b>${IT[d][1]}</b><small>${Object.keys(c).map(k=>ico(k)+'×'+c[k]).join(' + ')} · у скринях вистачить на ${avail(d)} · ${r?r.d:''}</small></div>
   <div class='od'><span>📋 <b>${O[d]}</b></span><button class='q' data-d='${d}' data-o='-1' ${O[d]?'':'disabled'}>−1</button><button class='q' data-d='${d}' data-o='1'>+1</button><button class='q' data-d='${d}' data-o='5'>+5</button><button class='q' data-d='${d}' data-o='max' ${avail(d)>O[d]?'':'disabled'}>Усе (${avail(d)})</button><button class='q' data-d='${d}' data-o='0' ${O[d]?'':'disabled'}>✖</button>
   <button class='me' data-me='${d}' ${mine?'':'disabled'}>Приготувати самому</button></div></div>`}).join('')+
  `<div class='st ${no?'no':''}'>${st}</div><div class='em'>Замовлення: попал-кухар з бригади сам бере продукти й деревину зі скринь, готує тут на вогні рівно стільки страв і відносить їх у скриню.</div>`;
+ if(box.__h===h)return;box.__h=h;box.innerHTML=h;/* перемальовуємо лише при зміні: інакше дотик, що припав на оновлення, губиться */
  box.querySelector('.cx').onclick=close;
  box.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{const d=b.dataset.d,o=b.dataset.o;O[d]=o=='0'?0:o=='max'?avail(d):Math.max(0,Math.min(999,O[d]+ +o));save();render()});
  box.querySelectorAll('[data-me]').forEach(b=>b.onclick=()=>{const d=b.dataset.me,c=rc(d);if(!Object.keys(c).every(k=>cnt(k)>=c[k]))return;for(const k in c)addI(k,-c[k]);addI(d,1);window.KIT_ACT=Date.now();msg('🍲 Приготовано: '+IT[d][1].toLowerCase());hud();save();render()})}
